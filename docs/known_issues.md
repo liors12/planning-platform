@@ -287,6 +287,35 @@ Re-check after any new batch of corpus PDFs is added.
 
 ---
 
+## Task #26 — Migrate `google-generativeai` → `google-genai` (post-M0)
+
+**Symptom**: `vision_scanner/clause_inventory/extract.py` imports
+`google.generativeai`, which prints a `FutureWarning` on every run:
+
+```
+All support for the `google.generativeai` package has ended. It will no
+longer be receiving updates or bug fixes. Please switch to the
+`google.genai` package as soon as possible.
+```
+
+**Root cause**: Google replaced the SDK. The old package still works for
+`gemini-2.5-pro` calls today, but receives no fixes — any future server
+behavior change or quota / auth tweak could break us with no recourse.
+
+**Workaround in use today**: keep using the deprecated SDK for M0. It
+works correctly with `response_schema=ClausesResponse`, key rotation on
+429, and `usage_metadata`.
+
+**Real fix (deferred)**: swap to `google-genai`. The new API surface
+differs (client object instead of module-level `configure`, different
+generation-config shape, different exception classes) — touching
+`config.py` (rotator) and `extract.py` (call site + 429 handling). Add
+a regression run against `canonical_clauses.json` to confirm the new
+SDK produces a faithfully-comparable output before deleting the old
+import. Not blocking M0 acceptance.
+
+---
+
 ## Adding entries
 
 When you defer a fix here, follow this template:

@@ -52,6 +52,7 @@ app/tauri/binaries/
 submissions/
 projects/
 data/
+!data/projects/*/canonical_clauses.json
 output/
 audit_outputs/*/
 
