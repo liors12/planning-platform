@@ -74,7 +74,14 @@ def _gemini_clean(node: Any, defs: Dict[str, Any]) -> Any:
     for k, v in node.items():
         if k in _GEMINI_UNSUPPORTED_KEYS:
             continue
-        out[k] = _gemini_clean(v, defs)
+        if k == "properties" and isinstance(v, dict):
+            # `properties` maps property names → schemas. The keys here are
+            # field names (e.g. "title", "type") and must NOT be filtered
+            # against the unsupported-metadata list. Only their values are
+            # schemas to be cleaned recursively.
+            out[k] = {pname: _gemini_clean(pschema, defs) for pname, pschema in v.items()}
+        else:
+            out[k] = _gemini_clean(v, defs)
     return out
 
 
