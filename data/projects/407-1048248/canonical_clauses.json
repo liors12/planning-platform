@@ -1,0 +1,2605 @@
+{
+  "plan_id": "407-1048248",
+  "source_doc": "takanon.pdf",
+  "source_doc_sha256": "17ccdf1448ef8de129602e01f5509e7937e2d9c66e8028877ff58b309041acfe",
+  "source_doc_text_sha256": "c5310165157d257941d5c5ca9dd6c8ee9949c25bd77f486aafd6b4a50a74c7d2",
+  "extracted_at": "2026-05-23T19:31:37Z",
+  "extractor": "gemini-2.5-pro",
+  "extractor_version": "m0-v1",
+  "page_count": 20,
+  "clauses": [
+    {
+      "clause_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית"
+      ],
+      "clause_text": "זיהוי וסיווג התכנית",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.1",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "שם התכנית ומספר התכנית"
+      ],
+      "clause_text": "שם התכנית ומספר התכנית",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.1.1",
+      "parent_id": "1.1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "שם התכנית ומספר התכנית",
+        "שם התכנית: הטייסים, נס-התחדשות עירונית במתחם ההסתדרות ציונה"
+      ],
+      "clause_text": "שם התכנית: הטייסים, נס-התחדשות עירונית במתחם ההסתדרות ציונה",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.1.2",
+      "parent_id": "1.1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "שם התכנית ומספר התכנית",
+        "מספר התכנית: 407-1048248"
+      ],
+      "clause_text": "מספר התכנית: 407-1048248",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.2",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית"
+      ],
+      "clause_text": "שטח התכנית: 22.432 דונם",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": true,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.4",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית"
+      ],
+      "clause_text": "סיווג התכנית",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.4.1",
+      "parent_id": "1.4",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית",
+        "סוג התכנית: תכנית מתאר מקומית"
+      ],
+      "clause_text": "סוג התכנית: תכנית מתאר מקומית",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.4.2",
+      "parent_id": "1.4",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית",
+        "האם מכילה הוראות של תכנית מפורטת: כן"
+      ],
+      "clause_text": "האם מכילה הוראות של תכנית מפורטת: כן",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.4.3",
+      "parent_id": "1.4",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית",
+        "ועדת התכנון המוסמכת להפקיד את התכנית: מחוזית"
+      ],
+      "clause_text": "ועדת התכנון המוסמכת להפקיד את התכנית: מחוזית",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.4.4",
+      "parent_id": "1.4",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית",
+        "לפי סעיף בחוק: ל''ר"
+      ],
+      "clause_text": "לפי סעיף בחוק: ל''ר",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.4.5",
+      "parent_id": "1.4",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית"
+      ],
+      "clause_text": "היתרים או הרשאות: תכנית שמכוחה ניתן להוציא היתרים או הרשאות",
+      "page": 3,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "1.4.6",
+      "parent_id": "1.4",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית",
+        "סוג איחוד וחלוקה: איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/בחלק מתחום התכנית"
+      ],
+      "clause_text": "סוג איחוד וחלוקה: איחוד ו/או חלוקה ללא הסכמת כל הבעלים בכל תחום התכנית/בחלק מתחום התכנית",
+      "page": 3,
+      "category": "unification_subdivision",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.4.7",
+      "parent_id": "1.4",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "סיווג התכנית",
+        "האם כוללת הוראות לענין תכנון תלת מימדי: לא"
+      ],
+      "clause_text": "האם כוללת הוראות לענין תכנון תלת מימדי: לא",
+      "page": 3,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית"
+      ],
+      "clause_text": "מקום התכנית",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.1",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "נתונים כלליים"
+      ],
+      "clause_text": "נתונים כלליים",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.2",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית"
+      ],
+      "clause_text": "תיאור מקום: מתחם התכנית תחום ברח' ההסתדרות במערב , רחוב ששת הימים בצפון ורחוב הטייסים במזרח. מדרום גובל המתחם בהסתדרות 32 ובטייסים 18.",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": true,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.3",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "רשויות מקומיות בתכנית והתייחסות לתחום הרשות ,נפה"
+      ],
+      "clause_text": "רשויות מקומיות בתכנית והתייחסות לתחום הרשות ,נפה",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.4",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "כתובות שבהן חלה התכנית"
+      ],
+      "clause_text": "כתובות שבהן חלה התכנית",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.5",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "גושים וחלקות בתכנית"
+      ],
+      "clause_text": "גושים וחלקות בתכנית",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.5.1",
+      "parent_id": "1.5.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "גושים וחלקות בתכנית"
+      ],
+      "clause_text": "הכל על-פי הגבולות המסומנים בתשריט בקו הכחול .",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "1.5.6",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "גושים ישנים: לא רלוונטי"
+      ],
+      "clause_text": "גושים ישנים: לא רלוונטי",
+      "page": 4,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.7",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "מגרשים /תאי שטח מתכניות קודמות שלא נרשמו כחלקות: לא רלוונטי"
+      ],
+      "clause_text": "מגרשים /תאי שטח מתכניות קודמות שלא נרשמו כחלקות: לא רלוונטי",
+      "page": 5,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.5.8",
+      "parent_id": "1.5",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מקום התכנית",
+        "מרחבי תכנון גובלים בתכנית: לא רלוונטי"
+      ],
+      "clause_text": "מרחבי תכנון גובלים בתכנית: לא רלוונטי",
+      "page": 5,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.6",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "יחס בין התכנית לבין תכניות מאושרות קודמות"
+      ],
+      "clause_text": "יחס בין התכנית לבין תכניות מאושרות קודמות",
+      "page": 6,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.7",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מסמכי התכנית"
+      ],
+      "clause_text": "מסמכי התכנית",
+      "page": 7,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.7.1",
+      "parent_id": "1.7",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "מסמכי התכנית"
+      ],
+      "clause_text": "כל מסמכי התכנית מהווים חלק בלתי נפרד ממנה ,משלימים זה את זה ויקראו כמקשה אחת .במקרה של סתירה בין המסמכים המחייבים לבין המנחים יגברו המסמכים המחייבים .במקרה של סתירה בין המסמכים המחייבים לבין עצמם תגברנה ההוראות על התשריטים",
+      "page": 7,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "1.8",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "בעלי עניין/ בעלי זכויות בקרקע /עורך התכנית ובעלי מקצוע"
+      ],
+      "clause_text": "בעלי עניין/ בעלי זכויות בקרקע /עורך התכנית ובעלי מקצוע",
+      "page": 8,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.8.1",
+      "parent_id": "1.8",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "בעלי עניין/ בעלי זכויות בקרקע /עורך התכנית ובעלי מקצוע",
+        "מגיש התכנית"
+      ],
+      "clause_text": "מגיש התכנית",
+      "page": 8,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.8.2",
+      "parent_id": "1.8",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "בעלי עניין/ בעלי זכויות בקרקע /עורך התכנית ובעלי מקצוע",
+        "יזם"
+      ],
+      "clause_text": "יזם",
+      "page": 8,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.8.4",
+      "parent_id": "1.8",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "בעלי עניין/ בעלי זכויות בקרקע /עורך התכנית ובעלי מקצוע",
+        "עורך התכנית ובעלי מקצוע"
+      ],
+      "clause_text": "עורך התכנית ובעלי מקצוע",
+      "page": 8,
+      "category": "identification",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.9",
+      "parent_id": "1",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "הגדרות בתכנית"
+      ],
+      "clause_text": "הגדרות בתכנית",
+      "page": 10,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "1.9.1",
+      "parent_id": "1.9",
+      "section_title_chain": [
+        "זיהוי וסיווג התכנית",
+        "הגדרות בתכנית"
+      ],
+      "clause_text": "כל מונח אשר לא הוגדר בתכנית זו ,תהיה נודעת לו המשמעות הנתונה לו בחוק התכנון והבניה התשכ\" – ה1965 ) להלן\"החוק ( \"או בתקנות שהותקנו מכוחו ,וזאת בהיעדר כוונה אחרת משתמעת.",
+      "page": 10,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה"
+      ],
+      "clause_text": "מטרת התכנית ועיקרי הוראותיה",
+      "page": 10,
+      "category": "objectives",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.1",
+      "parent_id": "2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה"
+      ],
+      "clause_text": "מטרת התכנית: הקמת מתחם מגורים במסגרת התחדשות עירונית במתווה של \"פנוי- בינוי\" הכולל 700 יח\"ד והקצאת שטחים לצרכי ציבור.",
+      "page": 10,
+      "category": "objectives",
+      "is_quantitative": true,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2",
+      "parent_id": "2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית"
+      ],
+      "clause_text": "עיקרי הוראות התכנית",
+      "page": 10,
+      "category": "objectives",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.1",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "שינוי יעוד קרקע מדיור מיוחד למגורים ד'."
+      ],
+      "clause_text": "שינוי יעוד קרקע מדיור מיוחד למגורים ד'.",
+      "page": 10,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.2",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "שינוי יעוד קרקע מדרך מאושרת למבנים ומוסדות ציבור."
+      ],
+      "clause_text": "שינוי יעוד קרקע מדרך מאושרת למבנים ומוסדות ציבור.",
+      "page": 10,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.3",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "שינוי יעוד משטח ציבורי פתוח למגורים ד'."
+      ],
+      "clause_text": "שינוי יעוד משטח ציבורי פתוח למגורים ד'.",
+      "page": 10,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.4",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "שינוי יעוד מדיור מיוחד לשטח ציבורי פתוח."
+      ],
+      "clause_text": "שינוי יעוד מדיור מיוחד לשטח ציבורי פתוח.",
+      "page": 10,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.5",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "שינוי יעוד מדיור מיוחד ושטח ציבורי פתוח לדרך מוצעת."
+      ],
+      "clause_text": "שינוי יעוד מדיור מיוחד ושטח ציבורי פתוח לדרך מוצעת.",
+      "page": 10,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.6",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "שינוי יעוד משביל למבנים לצורכי ציבור."
+      ],
+      "clause_text": "שינוי יעוד משביל למבנים לצורכי ציבור.",
+      "page": 10,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.7",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "שינוי בגובה הבניינים ומספר הקומות."
+      ],
+      "clause_text": "שינוי בגובה הבניינים ומספר הקומות.",
+      "page": 10,
+      "category": "building_geometry",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.8",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "קביעת הוראות לאיחוד וחלוקה ללא הסכמת בעלים."
+      ],
+      "clause_text": "קביעת הוראות לאיחוד וחלוקה ללא הסכמת בעלים.",
+      "page": 10,
+      "category": "unification_subdivision",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.9",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "קביעת הוראות ותוספת זכויות בניה למגורים ומבני ציבור."
+      ],
+      "clause_text": "קביעת הוראות ותוספת זכויות בניה למגורים ומבני ציבור.",
+      "page": 10,
+      "category": "building_rights",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.11",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "הסדרת תנועה וחניה בתחום התכנית."
+      ],
+      "clause_text": "הסדרת תנועה וחניה בתחום התכנית.",
+      "page": 10,
+      "category": "parking",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.12",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "קביעת זיקות הנאה למעבר הולכי רגל."
+      ],
+      "clause_text": "קביעת זיקות הנאה למעבר הולכי רגל.",
+      "page": 10,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.13",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "הקצאת שטחים לצורכי ציבור."
+      ],
+      "clause_text": "הקצאת שטחים לצורכי ציבור.",
+      "page": 10,
+      "category": "public_areas",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.14",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "קביעת הוראות לפינוי והריסת מבנים קיימים בשטח התכנית."
+      ],
+      "clause_text": "קביעת הוראות לפינוי והריסת מבנים קיימים בשטח התכנית.",
+      "page": 10,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "2.2.15",
+      "parent_id": "2.2",
+      "section_title_chain": [
+        "מטרת התכנית ועיקרי הוראותיה",
+        "עיקרי הוראות התכנית",
+        "קביעת קווי בניין."
+      ],
+      "clause_text": "קביעת קווי בניין.",
+      "page": 10,
+      "category": "building_geometry",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "3",
+      "section_title_chain": [
+        "טבלת יעודי קרקע ותאי שטח בתכנית"
+      ],
+      "clause_text": "טבלת יעודי קרקע ותאי שטח בתכנית",
+      "page": 11,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "3.1",
+      "parent_id": "3",
+      "section_title_chain": [
+        "טבלת יעודי קרקע ותאי שטח בתכנית",
+        "טבלת יעודי קרקע ותאי שטח בתכנית"
+      ],
+      "clause_text": "טבלת יעודי קרקע ותאי שטח בתכנית",
+      "page": 11,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "3.2",
+      "parent_id": "3",
+      "section_title_chain": [
+        "טבלת יעודי קרקע ותאי שטח בתכנית",
+        "טבלת שטחים"
+      ],
+      "clause_text": "טבלת שטחים",
+      "page": 11,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים"
+      ],
+      "clause_text": "יעודי קרקע ושימושים",
+      "page": 13,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.1",
+      "parent_id": "4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד"
+      ],
+      "clause_text": "'מגורים ד",
+      "page": 13,
+      "category": "land_use_zoning",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.1.1",
+      "parent_id": "4.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "שימושים"
+      ],
+      "clause_text": "שימושים",
+      "page": 13,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.1.1.1",
+      "parent_id": "4.1.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "שימושים"
+      ],
+      "clause_text": "מגורים.",
+      "page": 13,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.1.2",
+      "parent_id": "4.1.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "שימושים"
+      ],
+      "clause_text": "בתא שטח 1 בקומת הקרקע ו/או בקומה 1, יותרו שימושים עבור מבני ציבור לרבות חינוך, דת, רווחה, בריאות, ספריות.",
+      "page": 13,
+      "category": "building_use",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2",
+      "parent_id": "4.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "הוראות בינוי ו/או פיתוח",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.1.2.1",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "תתאפשר הקמת מספר מבנים במגרש. הבינוי לאורך רחוב הטייסים לא יעלה על 9 קומות + סה\"כ קומה טכנית. הבינוי לאורך רחובות ההסתדרות וששת הימים לא יעלה על 10 קומות + סה\"כ קומה טכנית. בעורף המגרשים תותר בניה גבוהה יותר בהתאם למופיע בטבלת הזכויות.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.2",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "הקומה האחרונה תהיה בנסיגה של 3 מטר לפחות כלפי החזית הקדמית וכלפי השצ\"פים שבתאי שטח 6,8.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.3",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "תותר בניית דירות גן במפלס הקרקע. לא תינתן אפשרות להפנות את הגינות לחזית רחובות הטייסים, ההסתדרות, ששת-הימים והדרך המוצעת בתא שטח 10.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.4",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "מרחק מינימלי בין מבנים לא יפחת מ-9 מ' כולל מרפסות.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.5",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "ישמר מרחק מינימלי של 1 מטר לפחות מגבול המגרש לבינוי המרפסות.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.6",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "קו הבנין לרחוב ההסתדרות: לא יפחת מ-1 מטר , יותרו חריגות נקודתית בהן יותר קו בנין קדמי אפס.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.7",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "יותרו מחסנים בקומת הקרקע, בקומת המרתף ובקומת הגלריה.",
+      "page": 13,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.8",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "נטיעות מעל שימוש בתת הקרקע יבוצע בבתי גידול בנפחים אשר יבטיחו גדילת עצים בוגרים ויכללו פתרונות לניקוז, איטום והשקיה.",
+      "page": 13,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.9",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "מוסדות ציבור ושטחי החצר הצמודים בתא שטח 1 יתוכננו כחלק בלתי נפרד ממבנה המגורים וירשמו על שם הרשות המקומית. לכל כיתת גן תוצמד חצר.",
+      "page": 13,
+      "category": "public_areas",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.10",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "תהייה הפרדה בין שימוש המגורים לשימוש הציבורי- בכניסות, במערכות המבנה, בתשתיות ובהסדרי התנועה והחנייה.",
+      "page": 13,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.11",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "מבני תשתית, ארונות וחדרים טכניים יהוו חלק אינטגרלי מאדריכלות הבניין והפיתוח.",
+      "page": 13,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.12",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "הבינוי יאפשר פתרון לחניות אופניים. חניות אופניים ימוקמו בחללים ייעודיים בקומת הקרקע ו/או בקומות המרתף. ככל וימוקמו בקומות המרתף, תתאפשר אליהם גישה במעלית ככל הניתן.",
+      "page": 13,
+      "category": "parking",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.13",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "גובה קומת הכניסה (לובי) לא יפחת מ-4.5 מ', במבני המגורים הגבוהים מ-10 קומות, ולא יפחת מ-4 מ' בבינוי המרקמי.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.א",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "מרתפים"
+      ],
+      "clause_text": "מרתפים",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.1.2.א.1",
+      "parent_id": "4.1.2.א",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "מרתפים"
+      ],
+      "clause_text": "תותר בניית מרתפים עד לגבול מגרש.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.א.2",
+      "parent_id": "4.1.2.א",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "מרתפים"
+      ],
+      "clause_text": "תכסית המרתף לא תעלה על 85% משטח המגרש. תותר תכסית של למעלה מכך בכפוף לעמידה באמור בסעיף ניהול מי נגר.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.א.3",
+      "parent_id": "4.1.2.א",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "מרתפים"
+      ],
+      "clause_text": "ניתן יהיה לבנות מרתף חניה משותף למגרשים סמוכים עם כניסה משותפת.",
+      "page": 13,
+      "category": "building_geometry",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.א.4",
+      "parent_id": "4.1.2.א",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "מרתפים"
+      ],
+      "clause_text": "פתרונות האוורור במרתפים ישולבו במבנים ונקודות הפליטה יהיו בגגות המבנים ככל הניתן ולא יבלטו ממפלס הפיתוח.",
+      "page": 13,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.ב",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "בתכנון החניונים תינתן עדיפות לאוורור ותאורה טבעיים ככל הניתן.",
+      "page": 13,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.ב.1",
+      "parent_id": "4.1.2.ב",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "בתכנון החניונים תינתן עדיפות לאוורור ותאורה טבעיים ככל הניתן."
+      ],
+      "clause_text": "מיקום פתחי כניסות האוויר המאולץ יעשה באופן שיכניס אויר בעל ריכוז מזהמי אויר נמוך ככל הניתן. פתרונות האוורור לא יהוו מטרד עבור הולכי רגל ככל הניתן.",
+      "page": 14,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.ג",
+      "parent_id": "4.1.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "זכות מעבר"
+      ],
+      "clause_text": "זכות מעבר",
+      "page": 14,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.1.2.ג.1",
+      "parent_id": "4.1.2.ג",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "זכות מעבר"
+      ],
+      "clause_text": "בשטחים המסומנים כזיקת הנאה להולכי רגל, הזיקה מיועדת לאפשר מעבר חופשי של ציבור. בשטחים אלה תאסר כל בניה וגידור. שטחים אלה ירשמו בלשכת המקרקעין.",
+      "page": 14,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.ג.2",
+      "parent_id": "4.1.2.ג",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "זכות מעבר"
+      ],
+      "clause_text": "בתחום זיקת ההנאה תותר העברת תשתיות ציבוריות תת-קרקעיות.",
+      "page": 14,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.1.2.ג.3",
+      "parent_id": "4.1.2.ג",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "'מגורים ד",
+        "הוראות בינוי ו/או פיתוח",
+        "זכות מעבר"
+      ],
+      "clause_text": "זיקת הנאה במרתפים - תותר זיקת הנאה למעבר בין מרתפים לכלי רכב והולכי רגל.",
+      "page": 14,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2",
+      "parent_id": "4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור"
+      ],
+      "clause_text": "מבנים ומוסדות ציבור",
+      "page": 14,
+      "category": "public_areas",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.2.1",
+      "parent_id": "4.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "שימושים"
+      ],
+      "clause_text": "שימושים",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.2.1.1",
+      "parent_id": "4.2.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "שימושים"
+      ],
+      "clause_text": "בנייני ציבור לרבות מבני חינוך, תרבות, דת, שירותים קהילתיים, בריאות ורווחה.",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2.1.2",
+      "parent_id": "4.2.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "שימושים"
+      ],
+      "clause_text": "שטחים לצורכי ציבור לרבות שבילים, שטחים פתוחים, גינון ונטיעות, מתקני ספורט ושעשועים, מגרשי ספורט.",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2.1.3",
+      "parent_id": "4.2.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "שימושים"
+      ],
+      "clause_text": "יותר שימוש מסחר הנלווה לשימוש הציבורי בתכנית זו בהתאם לטבלת הזכויות.",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2.1.4",
+      "parent_id": "4.2.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "שימושים"
+      ],
+      "clause_text": "בתת-הקרקע יותרו חניות, מקלטים ומתקני תשתיות, אחסנה ושטחים טכניים.",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2.2",
+      "parent_id": "4.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "הוראות בינוי ו/או פיתוח",
+      "page": 14,
+      "category": "building_geometry",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.2.2.1",
+      "parent_id": "4.2.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "מתקני מיזוג אויר ואוורור יותקנו באופן שימזער את ההפרעה ויזואלית ו/או אקוסטית למבני המגורים השכנים.",
+      "page": 14,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2.2.2",
+      "parent_id": "4.2.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "מבני תשתית, ארונות וחדרים טכניים יהוו חלק אינטגרלי מאדריכלות הבנין והפיתוח.",
+      "page": 14,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2.2.3",
+      "parent_id": "4.2.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "הקצאת שטחי מסחר לא יתאפשר במבני ציבור המיועדים לגני ילדים ובתי כנסת.",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.2.2.4",
+      "parent_id": "4.2.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "מבנים ומוסדות ציבור",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "בתא שטח 9, יישמר מעבר להולכי רגל בתחום המרווח הצפוני ברוחב של 3 מ', לצורך קישוריות וכהמשך לשביל המוצע בתכנית הסמוכה ממזרח.",
+      "page": 14,
+      "category": "easements",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.3",
+      "parent_id": "4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שטח ציבורי פתוח"
+      ],
+      "clause_text": "שטח ציבורי פתוח",
+      "page": 14,
+      "category": "public_areas",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.3.1",
+      "parent_id": "4.3",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שטח ציבורי פתוח",
+        "שימושים"
+      ],
+      "clause_text": "שימושים",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.3.1.1",
+      "parent_id": "4.3.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שטח ציבורי פתוח",
+        "שימושים"
+      ],
+      "clause_text": "גינון ונטיעות, פינות ישיבה ומצללות, מתקני משחק וכושר, שבילים ומעברים, תשתיות על ותת קרקעיות.",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.3.2",
+      "parent_id": "4.3",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שטח ציבורי פתוח",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "הוראות בינוי ו/או פיתוח",
+      "page": 14,
+      "category": "public_areas",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.3.2.1",
+      "parent_id": "4.3.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שטח ציבורי פתוח",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "שטחי ציבור יבוצעו בד בבד עם ביצוע המתחם.",
+      "page": 14,
+      "category": "phasing",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.3.2.2",
+      "parent_id": "4.3.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שטח ציבורי פתוח",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "רוחב השצ\"פ בתא שטח 7 לא יקטן מ-10 מטרים.",
+      "page": 14,
+      "category": "building_geometry",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.3.2.3",
+      "parent_id": "4.3.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שטח ציבורי פתוח",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "תשתיות עיליות יותרו בפריסה שלא תעלה על 5% מהשטח.",
+      "page": 14,
+      "category": "infrastructure",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.4",
+      "parent_id": "4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "דרך מוצעת"
+      ],
+      "clause_text": "דרך מוצעת",
+      "page": 14,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.4.1",
+      "parent_id": "4.4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "דרך מוצעת",
+        "שימושים"
+      ],
+      "clause_text": "שימושים",
+      "page": 14,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.4.1.1",
+      "parent_id": "4.4.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "דרך מוצעת",
+        "שימושים"
+      ],
+      "clause_text": "דרך כמשמעותה בחוק התכנון והבניה התשכ\"ה1965 למעט מסילות ברזל, מעבר תשתיות בתת הקרקע.",
+      "page": 15,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.4.2",
+      "parent_id": "4.4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "דרך מוצעת",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "הוראות בינוי ו/או פיתוח",
+      "page": 15,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.4.2.1",
+      "parent_id": "4.4.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "דרך מוצעת",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "רוחב זכות הדרך כמסומן בתשריט.",
+      "page": 15,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.4.2.2",
+      "parent_id": "4.4.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "דרך מוצעת",
+        "הוראות בינוי ו/או פיתוח"
+      ],
+      "clause_text": "כניסות רכב למגרשים יבוצעו במפלס המדרכה באופן שיבטיח את רציפותה.",
+      "page": 15,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.5",
+      "parent_id": "4",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שביל"
+      ],
+      "clause_text": "שביל",
+      "page": 15,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.5.1",
+      "parent_id": "4.5",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שביל",
+        "שימושים"
+      ],
+      "clause_text": "שימושים",
+      "page": 15,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.5.1.1",
+      "parent_id": "4.5.1",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שביל",
+        "שימושים"
+      ],
+      "clause_text": "מעבר להולכי רגל ולכלי רכב, תשתיות עיליות ותת קרקעיות, גינון.",
+      "page": 15,
+      "category": "building_use",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "4.5.2",
+      "parent_id": "4.5",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שביל",
+        "הוראות בינוי"
+      ],
+      "clause_text": "הוראות בינוי",
+      "page": 15,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "4.5.2.1",
+      "parent_id": "4.5.2",
+      "section_title_chain": [
+        "יעודי קרקע ושימושים",
+        "שביל",
+        "הוראות בינוי"
+      ],
+      "clause_text": "תשתיות עיליות יותרו בפריסה שלא תעלה על 5% מהשטח.",
+      "page": 15,
+      "category": "infrastructure",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "5",
+      "parent_id": null,
+      "section_title_chain": [
+        "מצב מוצע- טבלת זכויות והוראות בניה"
+      ],
+      "clause_text": "מצב מוצע- טבלת זכויות והוראות בניה",
+      "page": 16,
+      "category": "building_rights",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "5.table",
+      "section_title_chain": [
+        "מצב מוצע- טבלת זכויות והוראות בניה"
+      ],
+      "clause_text": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "page": 16,
+      "category": "building_rights",
+      "is_quantitative": true,
+      "is_normative": true,
+      "structured_values": [
+        {
+          "ta_shetach": 1,
+          "use": "מגורים",
+          "plot_area_m2": 5197.0,
+          "primary_area_m2": 20616.0,
+          "service_area_above_m2": 9278.0,
+          "service_area_below_m2": 17660.0,
+          "total_built_m2": 47554.0,
+          "units": 232,
+          "max_height_m": 49.0,
+          "floors_above": 14,
+          "floors_below": 5,
+          "setbacks": "(4)",
+          "balcony_area_m2": 3480.0,
+          "cell_footnote_refs": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "ta_shetach": 1,
+          "use": "מבנים ומוסדות ציבור",
+          "plot_area_m2": 5197.0,
+          "primary_area_m2": 600.0,
+          "service_area_below_m2": 900.0,
+          "total_built_m2": 1500.0,
+          "floors_below": 1,
+          "setbacks": "(4)",
+          "cell_footnote_refs": [
+            4,
+            5
+          ]
+        },
+        {
+          "ta_shetach": 2,
+          "use": "מגורים",
+          "plot_area_m2": 1078.0,
+          "primary_area_m2": 3922.0,
+          "service_area_above_m2": 1765.0,
+          "service_area_below_m2": 3670.0,
+          "total_built_m2": 9357.0,
+          "units": 44,
+          "max_height_m": 37.0,
+          "floors_above": 10,
+          "floors_below": 5,
+          "setbacks": "(4)",
+          "balcony_area_m2": 660.0,
+          "cell_footnote_refs": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "ta_shetach": 3,
+          "use": "מגורים",
+          "plot_area_m2": 3585.0,
+          "primary_area_m2": 11590.0,
+          "service_area_above_m2": 5216.0,
+          "service_area_below_m2": 9142.0,
+          "total_built_m2": 25948.0,
+          "units": 130,
+          "max_height_m": 37.0,
+          "floors_above": 10,
+          "floors_below": 4,
+          "setbacks": "(4)",
+          "balcony_area_m2": 1950.0,
+          "cell_footnote_refs": [
+            1,
+            2,
+            3,
+            4
+          ]
+        },
+        {
+          "ta_shetach": 4,
+          "use": "מגורים",
+          "plot_area_m2": 2269.0,
+          "primary_area_m2": 8724.0,
+          "service_area_above_m2": 3926.0,
+          "service_area_below_m2": 7715.0,
+          "total_built_m2": 20365.0,
+          "units": 98,
+          "max_height_m": 45.0,
+          "floors_above": 13,
+          "floors_below": 5,
+          "setbacks": "(4)",
+          "balcony_area_m2": 1470.0,
+          "cell_footnote_refs": [
+            1,
+            2,
+            4,
+            6
+          ]
+        },
+        {
+          "ta_shetach": 5,
+          "use": "מגורים",
+          "plot_area_m2": 4396.0,
+          "primary_area_m2": 17448.0,
+          "service_area_above_m2": 7852.0,
+          "service_area_below_m2": 11210.0,
+          "total_built_m2": 36510.0,
+          "units": 196,
+          "max_height_m": 45.0,
+          "floors_above": 13,
+          "floors_below": 4,
+          "setbacks": "(4)",
+          "balcony_area_m2": 2535.0,
+          "cell_footnote_refs": [
+            1,
+            2,
+            4,
+            6
+          ]
+        },
+        {
+          "ta_shetach": 9,
+          "use": "מבנים ומוסדות ציבור",
+          "plot_area_m2": 1202.0,
+          "primary_area_m2": 1020.0,
+          "service_area_below_m2": 250.0,
+          "total_built_m2": 1270.0,
+          "max_height_m": 12.0,
+          "floors_above": 3,
+          "setbacks": "(4)",
+          "cell_footnote_refs": [
+            4
+          ]
+        },
+        {
+          "ta_shetach": 9,
+          "use": "מסחר",
+          "plot_area_m2": 1202.0,
+          "primary_area_m2": 100.0,
+          "service_area_below_m2": 50.0,
+          "total_built_m2": 150.0,
+          "setbacks": "(4)",
+          "cell_footnote_refs": [
+            4
+          ]
+        }
+      ],
+      "general_footnotes": [
+        {
+          "id": "א",
+          "text": "לפחות 5% מסך יחידות הדיור בתוכנית תהינה דירות קטנות מאוד בשטח כולל של עד 55 מ\"ר לדירה. לפחות 15% מסך יחידות הדיור בתוכנית תהינה דירות קטנות בשטח כולל של עד 56-75 מ\"ר לדירה."
+        },
+        {
+          "id": "ב",
+          "text": "גודל יח\"ד בממוצע יהיה 100 מ\"ר (עיקרי + ממ\"ד)."
+        },
+        {
+          "id": "ג",
+          "text": "ניתן יהיה לנייד שטחי בנייה ו/או יח\"ד בין מגרשי המגורים בשיעור של עד 10%. אין בהעברת השטחים בין המגרשים לאפשר תוספת קומות."
+        },
+        {
+          "id": "ד",
+          "text": "ביעוד המגורים יותרו מחסנים בשטח של עד 6 מ\"ר ליח\"ד."
+        }
+      ],
+      "cell_footnotes": [
+        {
+          "id": 1,
+          "text": "כולל שטחים לרווחת דיירים בשיעור של 50 מ\"ר לבניין. ניצול שטח זה לכל שימוש אחר מלבד רווחת דיירים יהווה סטיה ניכרת לתוכנית."
+        },
+        {
+          "id": 2,
+          "text": "מס קומות הרשום בטבלה + קומת גג שתכלול מבני מסתור עבור מערכות טכניות על הגג ומבנה יציאה לגג ובכפוף למגבלות הגובה כפי שמפורט בסעיף גובה מבנים ובטיחות טיסה."
+        },
+        {
+          "id": 3,
+          "text": "הבינוי לאורך רחוב ההסתדרות לא יעלה על 10 קומות סה\"כ + קומה טכנית. בעורף המגרשים תותר בניה גבוהה יותר בהתאם למצוין בטבלה."
+        },
+        {
+          "id": 4,
+          "text": "עפ\"י תשריט."
+        },
+        {
+          "id": 5,
+          "text": "800 מ\"ר ישמשו את מבני הציבור עבור חצרות מקורות."
+        },
+        {
+          "id": 6,
+          "text": "הבינוי לאורך רחוב הטייסים לא יעלה על 9 קומות סה\"כ + קומה טכנית. בעורף המגרשים תותר בניה גבוהה יותר בהתאם למצוין בטבלה."
+        }
+      ],
+      "parent_id": "5"
+    },
+    {
+      "clause_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות"
+      ],
+      "clause_text": "הוראות נוספות",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.1",
+      "parent_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה"
+      ],
+      "clause_text": "תנאים למתן היתרי בניה",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.1.1",
+      "parent_id": "6.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה"
+      ],
+      "clause_text": "תנאי להגשת בקשה להיתר, יהיה הכנת תכנית בינוי ופיתוח לכל המתחם, לאישור הוועדה המקומית. שתהיה בקנ\"מ 1:250 ותכלול בין היתר את הנושאים הבאים:",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.1.א",
+      "parent_id": "6.1.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה",
+        "תנאי להגשת בקשה להיתר, יהיה הכנת תכנית בינוי ופיתוח לכל המתחם, לאישור הוועדה המקומית. שתהיה בקנ\"מ 1:250 ותכלול בין היתר את הנושאים הבאים:"
+      ],
+      "clause_text": "מיקום המבנים, אופן העמדתם, אופן דירוגם ביחס לרחוב וביחס לשצ\"פ, מפלס ה0.00 שלהם, החזית החמישית, המעברים המקורים, החזיתות, גידור, אשפה, גינון ונטיעות.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.1.ב",
+      "parent_id": "6.1.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה",
+        "תנאי להגשת בקשה להיתר, יהיה הכנת תכנית בינוי ופיתוח לכל המתחם, לאישור הוועדה המקומית. שתהיה בקנ\"מ 1:250 ותכלול בין היתר את הנושאים הבאים:"
+      ],
+      "clause_text": "קביעת עקרונות הפיתוח: ציון הפרשי מפלסי הפיתוח וגדרות, טיפול במי נגר ושטחי חלחול, לרבות גינות צמודות לשטחים הפתוחים ולשטחי הציבור.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.1.ג",
+      "parent_id": "6.1.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה",
+        "תנאי להגשת בקשה להיתר, יהיה הכנת תכנית בינוי ופיתוח לכל המתחם, לאישור הוועדה המקומית. שתהיה בקנ\"מ 1:250 ותכלול בין היתר את הנושאים הבאים:"
+      ],
+      "clause_text": "הבטחת רצף תפקודי של תנועת הולכי הרגל ורוכבי האופניים בתחום תכנית פיתוח המגרש.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.1.ד",
+      "parent_id": "6.1.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה",
+        "תנאי להגשת בקשה להיתר, יהיה הכנת תכנית בינוי ופיתוח לכל המתחם, לאישור הוועדה המקומית. שתהיה בקנ\"מ 1:250 ותכלול בין היתר את הנושאים הבאים:"
+      ],
+      "clause_text": "הגדרת מיקומן של כניסות למבנים ולחניונים התת קרקעיים.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.2",
+      "parent_id": "6.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה"
+      ],
+      "clause_text": "בקשה להיתר בניה למגורים תכלול את השטח הציבורי המבונה שבתוך מבנה המגורים.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.3",
+      "parent_id": "6.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה"
+      ],
+      "clause_text": "תנאי להגשת בקשה להיתר ולהקמת עגורנים יהיה קבלת אישור נציג שר הביטחון ורת\"א לנושא גובה בהתאם לסעיף גובה מבנים ובטיחות טיסה.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.4",
+      "parent_id": "6.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה"
+      ],
+      "clause_text": "בקשה להיתר בניה תבטיח פתרונות לעמידה ביעד נפח הנגר לניהול של לפחות 75% מנפח הנגר היממתי בתחומה לתקופת חזרה של 1:50. ובכפוף לאמור בסעיף ניהול מי נגר.",
+      "page": 18,
+      "category": "stormwater",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.5",
+      "parent_id": "6.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה"
+      ],
+      "clause_text": "תנאי לתחילת עבודות בתא שטח יהיה הריסת כל המבנים המיועדים להריסה באותו תא שטח כולל בשצ\"פ.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.1.6",
+      "parent_id": "6.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תנאים למתן היתרי בניה"
+      ],
+      "clause_text": "לא יינתנו היתרי בניה בתא שטח מס' 5 (שייעודו הקיים שצ\"פ ובו עוברים קווי מים וביוב קיימים) אלא לאחר הריסת המבנים בתחום השצ\"פ המוצע (תא שטח מס' 6) ובתחום הדרך המוצעת (תא שטח 10) והנחת קווי מים וביוב במקום הקווים הקיימים, או פתרון אחר שיאושר ע\"י הגורם המוסמך מטעם משרד הבריאות.",
+      "page": 18,
+      "category": "procedural",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.2",
+      "parent_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "חניה"
+      ],
+      "clause_text": "חניה",
+      "page": 18,
+      "category": "parking",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.2.1",
+      "parent_id": "6.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "חניה"
+      ],
+      "clause_text": "החניה עבור מגורים ואורחים תהיה בתת הקרקע.",
+      "page": 18,
+      "category": "parking",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.2.2",
+      "parent_id": "6.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "חניה"
+      ],
+      "clause_text": "תותר כניסה אחת לחניון התת קרקעי מרחוב הטייסים.",
+      "page": 18,
+      "category": "parking",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.2.3",
+      "parent_id": "6.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "חניה"
+      ],
+      "clause_text": "חניות אורחים ישמשו את כלל דיירי המתחם ולא יוצמדו לדירות.",
+      "page": 18,
+      "category": "parking",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.3",
+      "parent_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות"
+      ],
+      "clause_text": "תשתיות",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.3.1",
+      "parent_id": "6.3",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "ביוב"
+      ],
+      "clause_text": "ביוב",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.3.1.א",
+      "parent_id": "6.3.1",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "ביוב"
+      ],
+      "clause_text": "קווי ביוב ציבוריים קיימים בתחום התכנית יוחלפו לקווים חדשים.",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.3.2",
+      "parent_id": "6.3",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "תשתיות"
+      ],
+      "clause_text": "תשתיות",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.3.2.א",
+      "parent_id": "6.3.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "תשתיות"
+      ],
+      "clause_text": "כלל התשתיות בתחום התכנית יהיו ככל הניתן בתת הקרקע לרבות קווי חשמל.",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.3.2.ב",
+      "parent_id": "6.3.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "תשתיות"
+      ],
+      "clause_text": "פיתוח התשתיות יהיה בד בבד עם ביצוע המתחם.",
+      "page": 18,
+      "category": "phasing",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.3.2.ג",
+      "parent_id": "6.3.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "תשתיות"
+      ],
+      "clause_text": "מתקנים טכניים ופתחי איוורור לא יפונו לחצרות גני ילדים.",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.3.3",
+      "parent_id": "6.3",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "אשפה פנאומטית"
+      ],
+      "clause_text": "אשפה פנאומטית",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.3.3.א",
+      "parent_id": "6.3.3",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "תשתיות",
+        "אשפה פנאומטית"
+      ],
+      "clause_text": "יותר הקמת פתרון אשפה באמצעות מערכת פנאומטית. בהתאם לכך ניתן להעביר תשתיות ומערכות פנאומטיות מתחת לדרך בתת הקרקע. בשצ\"פ רק מעברים לצנרת פנאומטית.",
+      "page": 18,
+      "category": "infrastructure",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4",
+      "parent_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "ניהול מי נגר",
+      "page": 18,
+      "category": "stormwater",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.4.1",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "התוכנית תידרש לווסת את הנגר בתחומה.",
+      "page": 18,
+      "category": "stormwater",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.2",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "נפח האיגום הנדרש בתחום התוכנית הינו 450 מ\"ק. ניהול ויסות הנגר יהיה לפי תמ\"א 1 ולפי נספח הניקוז.",
+      "page": 18,
+      "category": "stormwater",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.3",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "שטח הגינון במגרשי הבינוי בתוכנית הינו כ-4.6 דונם. לפחות 75% משטח הגינון יתוכנן מונמך בכ-10 ס\"מ מסביבתו ליצירת נפח איגום של כ-345 מ\"ק.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.4",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "ניתן להמיר את אוגר ההשהייה בסל פתרונות הכולל גגות כחולים/ירוקים, איגום מעל תקרת המרתף, בורות חלחול או כל פתרון אחר.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.5",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "בתוכנית בינוי ופיתוח 1:500 ניתן יהיה לנייד את נפחי ניהול הנגר בכל מתחם ובתנאי שישמר הנפח הכללי הנדרש לניהול על פי הנחיות מנהל התכנון ויובטח פתרון הבאת הנגר לאזורי הוויסות והחלחול מהשטחים האטומים.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.6",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "כניסה לחניונים תתוכנן מוגבהת כך שמי נגר מהכביש לא יכנסו לתוך החניון התת קרקעי. מפתן הכניסה לחניון יהיה לפחות 30 ס\"מ מעל גובה פני הכביש.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.7",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "חיבור הצמג\"ים יהיו לאזורי ניהול הנגר והקידוחים.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.8",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "נדרשת העתקת התעלה לתוכנית סמוכה ממזרח בטרם פיתוח תא שטח 1 וביטול התעלה.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.9",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "עודפי ניקוז בלבד יופנו ככל הניתן לשצ\"פ סמוך או למערכת התיעול העירונית.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.4.10",
+      "parent_id": "6.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "ניהול מי נגר"
+      ],
+      "clause_text": "ככל הניתן השטחים הירוקים יהיו במפלס נמוך מהשבילים כך שיהוו שטחי השהייה למי הנגר. בשטחים הציבוריים ישולבו אמצעים להשהיית נגר עילי.",
+      "page": 19,
+      "category": "stormwater",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5",
+      "parent_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים"
+      ],
+      "clause_text": "שמירה על עצים בוגרים",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.5.1",
+      "parent_id": "6.5",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים"
+      ],
+      "clause_text": "לתכנית זו מצורף \"נספח עצים בוגרים\" הכולל הסברים והנחיות בנוגע לטיפול בעצים הבוגרים הקיימים בתחום התכנית.",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5.2",
+      "parent_id": "6.5",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "עצים המסומנים לשימור:"
+      ],
+      "clause_text": "עצים המסומנים לשימור:",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.5.2.א",
+      "parent_id": "6.5.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "עצים המסומנים לשימור:"
+      ],
+      "clause_text": "עץ המסומן לשימור ישולב בתכנון ולא תותר כריתתו או פגיעה בו.",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5.2.ב",
+      "parent_id": "6.5.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "עצים המסומנים לשימור:"
+      ],
+      "clause_text": "הבינוי יתרחק מהעצים לשימור בהתאם לרדיוס השורשים לכל גובה הבינוי.",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5.2.ג",
+      "parent_id": "6.5.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "עצים המסומנים לשימור:"
+      ],
+      "clause_text": "עץ המסומן לשימור יגודר בגידור קשיח. הגדר תשולט וגזעו יוגן.",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5.2.ד",
+      "parent_id": "6.5.2",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "עצים המסומנים לשימור:"
+      ],
+      "clause_text": "במסגרת היתר הבניה תשולב ככל הניתן נטיעת עצים חדשים במקום העצים שנכרתו.",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5.3",
+      "parent_id": "6.5",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "נטיעת עצים חדשים:"
+      ],
+      "clause_text": "נטיעת עצים חדשים:",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.5.3.א",
+      "parent_id": "6.5.3",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "נטיעת עצים חדשים:"
+      ],
+      "clause_text": "נטיעת עצים במדרכות ורחבות ושטחים מרוצפים תתבצע תוך מתן פתרון מלא לבית הגידול התת קרקעי לשורשי העץ.",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5.4",
+      "parent_id": "6.5",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "שטחים ציבוריים פתוחים:"
+      ],
+      "clause_text": "שטחים ציבוריים פתוחים:",
+      "page": 19,
+      "category": "public_areas",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.5.4.א",
+      "parent_id": "6.5.4",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים",
+        "שטחים ציבוריים פתוחים:"
+      ],
+      "clause_text": "שטח השצ\"פ יתוכנן כך שלפחות מחצית משטחו יהיה בלתי מרוצף ככל הניתן.",
+      "page": 19,
+      "category": "public_areas",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.5.5",
+      "parent_id": "6.5",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "שמירה על עצים בוגרים"
+      ],
+      "clause_text": "שינוי סטטוס עצים שאינו בגדר שינוי ניכר לתכנית במקרים מיוחדים בלבד, בהם נדרש שינוי-סיווג עץ בוגר שסומן כעץ לשימור לסיווג אחר, לעת הגשת בקשה להיתר בנייה (ולא יותר מ-10% מכמות העצים הבוגרים שסווגו בתכנית לשימור), יוגש עדכון לנספח עצים בוגרים לאישור ועדה מקומית, לאחר תאום וקבלת חוו\"ד בכתב מפקיד היערות.",
+      "page": 19,
+      "category": "tree_preservation",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.6",
+      "parent_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "זכות מעבר"
+      ],
+      "clause_text": "זכות מעבר",
+      "page": 19,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.6.1",
+      "parent_id": "6.6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "זכות מעבר"
+      ],
+      "clause_text": "תירשם בלשכת רישום המקרקעין זיקת הנאה לכלל הציבור לטובת מעבר הולכי רגל ורוכבי אופנים.",
+      "page": 19,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.6.2",
+      "parent_id": "6.6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "זכות מעבר"
+      ],
+      "clause_text": "תתאפשר זכות מעבר לתשתיות עירוניות בתת הקרקע.",
+      "page": 19,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.6.3",
+      "parent_id": "6.6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "זכות מעבר"
+      ],
+      "clause_text": "תרשם זיקת הנאה למעבר בין מרתפים לכלי רכב.",
+      "page": 19,
+      "category": "easements",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.6.4",
+      "parent_id": "6.6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "זכות מעבר"
+      ],
+      "clause_text": "תרשם זיקת הנאה תת הקרקע למעבר ברכב ולחניה, מתא שטח 2 לחלקה 12, הצמודה מצפון וממזרח.",
+      "page": 19,
+      "category": "easements",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.7",
+      "parent_id": "6",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "גובה מבנים ו/או בטיחות טיסה"
+      ],
+      "clause_text": "גובה מבנים ו/או בטיחות טיסה",
+      "page": 19,
+      "category": "building_height_safety",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "6.7.1",
+      "parent_id": "6.7",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "גובה מבנים ו/או בטיחות טיסה"
+      ],
+      "clause_text": "תנאי בהיתר למבנה שגובהו הכולל 40 מ' מעל פני השטח ומעלה הינו תיאום עם רשות התעופה האזרחית ולשם מתן הנחיות לסימון ותאורה לאזהרה מפני מכשולי טיסה.",
+      "page": 19,
+      "category": "building_height_safety",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.7.2",
+      "parent_id": "6.7",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "גובה מבנים ו/או בטיחות טיסה"
+      ],
+      "clause_text": "הקמת מתקני עזר לבניה לגובה העולה על 40 מטר מעל פני הקרקע ומעלה בתחום התכנית מותנית באישור רת\"א לגובה המתקן ולשם מתן הנחיות לסימון ותאורה לאזהרה מפני מכשולי טיסה.",
+      "page": 19,
+      "category": "building_height_safety",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.7.3",
+      "parent_id": "6.7",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "גובה מבנים ו/או בטיחות טיסה"
+      ],
+      "clause_text": "תחום התכנית מצוי תחת נתיב טיסה נמוך. בהתאם לכך, אין לתת הקלות לגובה הבניה בתכנית זו.",
+      "page": 20,
+      "category": "building_height_safety",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.7.4",
+      "parent_id": "6.7",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "גובה מבנים ו/או בטיחות טיסה"
+      ],
+      "clause_text": "הגובה המבנים המקסימלי בתכנית לא יחרוג מגובה 91 מ' מעפ\"י.",
+      "page": 20,
+      "category": "building_height_safety",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "6.7.5",
+      "parent_id": "6.7",
+      "section_title_chain": [
+        "הוראות נוספות",
+        "גובה מבנים ו/או בטיחות טיסה"
+      ],
+      "clause_text": "הגובה המבוקש בתכנית זו, הינו הגובה המירבי לבניה וכולל מתקני עזר טכניים על המבנה ועזרי בנייה ולא תתאפשר סטיה ממנו.",
+      "page": 20,
+      "category": "building_height_safety",
+      "is_quantitative": false,
+      "is_normative": true
+    },
+    {
+      "clause_id": "7",
+      "section_title_chain": [
+        "ביצוע התכנית"
+      ],
+      "clause_text": "ביצוע התכנית",
+      "page": 20,
+      "category": "phasing",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "7.1",
+      "parent_id": "7",
+      "section_title_chain": [
+        "ביצוע התכנית",
+        "שלבי ביצוע"
+      ],
+      "clause_text": "שלבי ביצוע",
+      "page": 20,
+      "category": "phasing",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "7.1.1",
+      "parent_id": "7.1",
+      "section_title_chain": [
+        "ביצוע התכנית",
+        "שלבי ביצוע"
+      ],
+      "clause_text": "התכנית תבנה בהינף אחד או בשני שלבים: שלב א' - החלק הדרומי הכולל את תאי שטח 1 ו-2 והשצ\"פ בתא שטח 8. שלב ב' - תנאי למימוש המתחם הצפוני הכולל את תאי שטח 3, 4, 5, השצ\"פ בתאי שטח 6, 7, יהיה תחילת סלילת הדרך בתא שטח 10.",
+      "page": 20,
+      "category": "phasing",
+      "is_quantitative": true,
+      "is_normative": true
+    },
+    {
+      "clause_id": "7.2",
+      "parent_id": "7",
+      "section_title_chain": [
+        "ביצוע התכנית",
+        "מימוש התכנית"
+      ],
+      "clause_text": "מימוש התכנית",
+      "page": 20,
+      "category": "procedural",
+      "is_quantitative": false,
+      "is_normative": false
+    },
+    {
+      "clause_id": "7.2.1",
+      "parent_id": "7.2",
+      "section_title_chain": [
+        "ביצוע התכנית",
+        "מימוש התכנית"
+      ],
+      "clause_text": "תוך 10 שנים מיום כניסתה של התכנית לתוקף.",
+      "page": 20,
+      "category": "procedural",
+      "is_quantitative": true,
+      "is_normative": true
+    }
+  ]
+}

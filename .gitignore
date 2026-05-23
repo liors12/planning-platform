@@ -51,8 +51,11 @@ app/tauri/binaries/
 # IS committed — it lives outside these dirs.
 submissions/
 projects/
-data/
+data/**
+!data/projects/
+!data/projects/*/
 !data/projects/*/canonical_clauses.json
+!data/projects/*/m0_audit_report.md
 output/
 audit_outputs/*/
 

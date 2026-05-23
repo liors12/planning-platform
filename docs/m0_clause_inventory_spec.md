@@ -181,7 +181,9 @@ OUTPUT: {clauses: [...]}
 Extractor prints to stdout in this exact order:
 1. 10 randomly-sampled clauses (full record)
 2. ALL of §5 (the `5.table` clause in pretty-printed JSON)
-3. ALL clauses of §6 (sections 6.1 through 6.9, full records)
+3. ALL clauses of §6 (sections 6.1 through 6.7, full records)
+
+Leishur version: §6 has 7 subsections (deposit version had 9; restructured per public objections).
 
 Lior eyeballs faithfulness against the PDF. Estimated time: 45 minutes. If any clause shows translation/paraphrase/hallucination → file an issue, iterate prompt, re-run.
 
