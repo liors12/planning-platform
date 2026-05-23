@@ -1,0 +1,368 @@
+/* Compliance opinion — חוות דעת מהנדס.
+   Built for headless-Chrome PDF rendering (see src/render_report_pdf.py for
+   the rationale; macOS WeasyPrint requires brew-installed pango). Imports
+   the project's Heebo + Arial Unicode MS stack rather than the wkhtmltopdf
+   font-base64 path used by hebrew-rtl-base.css. */
+
+@import url('https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&display=swap');
+
+@page {
+  size: A4;
+  margin: 18mm 16mm 22mm 16mm;
+  @bottom-center {
+    content: "עמוד " counter(page) " מתוך " counter(pages);
+    font-family: 'Heebo', 'Arial Unicode MS', sans-serif;
+    font-size: 9pt;
+    color: #888;
+  }
+}
+
+html { direction: rtl; }
+
+body.opinion-body {
+  font-family: 'Heebo', 'Arial Unicode MS', 'Arial Hebrew', sans-serif;
+  font-size: 11pt;
+  line-height: 1.6;
+  color: #1a1a1a;
+  unicode-bidi: plaintext;
+  margin: 0;
+  padding: 0;
+}
+
+/* DRAFT watermark — fixed positioning means it repeats on every printed
+   page in Chrome's --print-to-pdf path. Aria-hidden so it's not announced. */
+.draft-watermark {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 110pt;
+  font-weight: 700;
+  color: #c0392b;
+  opacity: 0.08;
+  z-index: 0;
+  pointer-events: none;
+  letter-spacing: 18pt;
+  user-select: none;
+}
+
+/* All real content sits above the watermark. */
+header, section, footer { position: relative; z-index: 1; }
+
+/* ── Header ────────────────────────────────────────────────────────── */
+
+.opinion-header {
+  border-bottom: 3px solid #007840;
+  padding-bottom: 14pt;
+  margin-bottom: 18pt;
+}
+
+.opinion-header h1 {
+  color: #005030;
+  font-size: 24pt;
+  font-weight: 700;
+  margin: 0 0 6pt 0;
+}
+
+.draft-notice {
+  display: inline-block;
+  background: #fff4e6;
+  color: #c0392b;
+  border: 1.5px solid #c0392b;
+  padding: 3pt 10pt;
+  border-radius: 3pt;
+  font-size: 11pt;
+  font-weight: 600;
+  margin-bottom: 14pt;
+}
+
+.project-meta {
+  background: #f3f4f1;
+  border-right: 4px solid #007840;
+  padding: 10pt 14pt;
+  border-radius: 3pt;
+  font-size: 10pt;
+}
+
+.meta-row { margin: 3pt 0; }
+.meta-label { color: #005030; font-weight: 600; margin-left: 6pt; }
+.meta-label-inline { margin-right: 18pt; }
+.meta-value { color: #2a2a2a; }
+.plan-list { font-family: 'SF Mono', 'Menlo', monospace; direction: ltr; unicode-bidi: bidi-override; }
+
+/* ── Section headings ──────────────────────────────────────────────── */
+
+h2 {
+  color: #005030;
+  font-size: 16pt;
+  font-weight: 700;
+  margin-top: 22pt;
+  margin-bottom: 8pt;
+  border-right: 4px solid #007840;
+  padding-right: 10pt;
+  page-break-after: avoid;
+}
+
+/* ── Executive summary ─────────────────────────────────────────────── */
+
+.executive-summary { margin-bottom: 18pt; }
+.summary-prose { font-size: 11pt; margin: 6pt 0 12pt 0; }
+
+.summary-table {
+  width: 60%;
+  margin-right: 0;
+}
+
+/* ── Tables ────────────────────────────────────────────────────────── */
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 8pt 0;
+  font-size: 10pt;
+  page-break-inside: auto;
+}
+
+table, th, td { border: 1px solid #d6d8d2; }
+
+th {
+  background: #005030;
+  color: #fff;
+  font-weight: 600;
+  text-align: right;
+  padding: 6pt 8pt;
+}
+
+td {
+  padding: 5pt 8pt;
+  vertical-align: top;
+  text-align: right;
+}
+
+tbody tr:nth-child(even) { background: #f8f8f6; }
+
+.counter-cell {
+  text-align: center;
+  font-weight: 600;
+  font-family: 'SF Mono', 'Menlo', monospace;
+  direction: ltr;
+}
+
+.totals-row td {
+  background: #f3f4f1;
+  font-weight: 700;
+  border-top: 2px solid #007840;
+}
+
+/* ── Findings table ────────────────────────────────────────────────── */
+
+.parcel-section { margin-top: 18pt; page-break-inside: auto; }
+
+.parcel-meta {
+  font-size: 10pt;
+  color: #444;
+  margin-bottom: 8pt;
+}
+.parcel-meta .plan-id { font-family: 'SF Mono', monospace; direction: ltr; unicode-bidi: bidi-override; }
+.parcel-meta .counter { font-weight: 700; color: #005030; }
+
+.findings-table .col-rule    { width: 14%; }
+.findings-table .col-topic   { width: 12%; }
+.findings-table .col-finding { width: 30%; }
+.findings-table .col-verdict { width: 18%; text-align: center; }
+.findings-table .col-notes   { width: 26%; }
+
+.rule-id { font-family: 'SF Mono', monospace; direction: ltr; unicode-bidi: bidi-override; font-size: 9.5pt; font-weight: 600; }
+.source-id { font-family: 'SF Mono', monospace; direction: ltr; unicode-bidi: bidi-override; font-size: 8.5pt; color: #666; margin-top: 2pt; }
+
+.value-pair { font-size: 9.5pt; line-height: 1.5; }
+.vp-label { color: #666; font-weight: 600; margin-left: 4pt; }
+/* No direction override here — values can be Hebrew, Latin, or mixed.
+   The template wraps the value in <bdi> so the BiDi algorithm treats it
+   as an isolated context (preventing the surrounding "נדרש:" / "בפועל:"
+   labels from flipping numeric or Latin runs). */
+.vp-value { font-family: 'SF Mono', monospace; unicode-bidi: isolate; }
+.no-values, .no-notes { color: #999; }
+
+/* ── Verdict pills ─────────────────────────────────────────────────── */
+
+.verdict-pill {
+  display: inline-block;
+  padding: 2pt 8pt;
+  border-radius: 3pt;
+  font-size: 9.5pt;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.verdict-pill.v-pass            { background: #e6f4eb; color: #005030; border-color: #005030; }
+.verdict-pill.v-pass-note       { background: #f0f7ff; color: #00538a; border-color: #00538a; }
+.verdict-pill.v-fail            { background: #fdecea; color: #b03030; border-color: #b03030; }
+.verdict-pill.v-fail-borderline { background: #fff4e6; color: #aa5b00; border-color: #aa5b00; }
+.verdict-pill.v-unevaluable     { background: #eeeeee; color: #555;    border-color: #888; }
+.verdict-pill.v-not-applicable  { background: #f6f6f6; color: #888;    border-color: #bbb; }
+.verdict-pill.v-requires-review { background: #fffbeb; color: #aa7300; border-color: #f39c12; }
+
+/* Subtle row tint matching the verdict, low opacity so the table still reads. */
+tbody tr.row-v-fail            > td:first-child { border-right: 3px solid #b03030; }
+tbody tr.row-v-fail-borderline > td:first-child { border-right: 3px solid #aa5b00; }
+tbody tr.row-v-requires-review > td:first-child { border-right: 3px solid #f39c12; }
+tbody tr.row-v-unevaluable     > td:first-child { border-right: 3px solid #888; }
+
+/* ── Confidence badge ──────────────────────────────────────────────── */
+
+.confidence-badge {
+  display: inline-block;
+  margin-top: 4pt;
+  padding: 1pt 6pt;
+  border-radius: 3pt;
+  font-size: 8pt;
+  font-weight: 500;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  letter-spacing: 0.2pt;
+}
+.confidence-badge.conf-medium { background: #f0f7ff; color: #00538a; border-color: #00538a; }
+.confidence-badge.conf-low    { background: #fff4e6; color: #aa5b00; border-color: #aa5b00; }
+/* conf-high never renders — the view-model strips its label */
+
+/* ── Worklist flag (low-confidence override) ───────────────────────── */
+
+.worklist-flag {
+  display: inline-block;
+  margin-top: 4pt;
+  background: #fdecea;
+  color: #b03030;
+  border: 1.5px solid #b03030;
+  padding: 2pt 7pt;
+  border-radius: 3pt;
+  font-size: 8.5pt;
+  font-weight: 700;
+}
+
+/* ── Low-confidence summary line in system-health area ─────────────── */
+
+.shw-low-conf {
+  margin-top: 6pt;
+  padding-top: 6pt;
+  border-top: 1px dashed #b03030;
+  color: #aa5b00;
+}
+
+/* ── Failure-mode inline pill ──────────────────────────────────────── */
+
+.failure-mode-pill {
+  display: inline-block;
+  margin-top: 4pt;
+  padding: 1pt 6pt;
+  border-radius: 3pt;
+  font-size: 8.5pt;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.failure-mode-engine_error       { background: #fdecea; color: #b03030; border-color: #b03030; }
+.failure-mode-missing_data       { background: #f0f7ff; color: #00538a; border-color: #00538a; }
+.failure-mode-ambiguous_rule     { background: #fffbeb; color: #aa7300; border-color: #f39c12; }
+.failure-mode-extraction_failure { background: #ede4ff; color: #5e2ca5; border-color: #5e2ca5; }
+
+/* ── System-health warning (executive summary) ─────────────────────── */
+
+.system-health-warning {
+  margin-top: 14pt;
+  background: #fdecea;
+  border: 2px solid #b03030;
+  border-right: 6px solid #b03030;
+  border-radius: 3pt;
+  padding: 10pt 14pt;
+}
+.shw-title {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #b03030;
+  margin-bottom: 4pt;
+}
+.shw-body {
+  font-size: 10.5pt;
+  color: #2a2a2a;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Cluster row (folded incident) ─────────────────────────────────── */
+
+.cluster-row .cluster-cell {
+  background: #fff7e6;
+  border-right: 4px solid #f39c12;
+  padding: 8pt 10pt;
+}
+.cluster-header {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #aa5b00;
+  margin-bottom: 4pt;
+}
+.cluster-count {
+  display: inline-block;
+  background: #aa5b00;
+  color: #fff;
+  border-radius: 50%;
+  min-width: 18pt;
+  height: 18pt;
+  line-height: 18pt;
+  text-align: center;
+  font-size: 10pt;
+  margin-left: 4pt;
+}
+.cluster-mode { color: #b03030; }
+.cluster-fingerprint {
+  font-family: 'SF Mono', monospace;
+  font-size: 9pt;
+  color: #555;
+}
+.cluster-rules, .cluster-sample-notes {
+  font-size: 9.5pt;
+  color: #444;
+  margin-top: 3pt;
+  line-height: 1.5;
+}
+.cluster-rules-label { color: #666; font-weight: 600; margin-left: 4pt; }
+
+/* ── Override badge ────────────────────────────────────────────────── */
+
+.override-badge {
+  display: inline-block;
+  margin-top: 4pt;
+  background: #ede4ff;
+  color: #5e2ca5;
+  border: 1px solid #5e2ca5;
+  padding: 1pt 6pt;
+  border-radius: 3pt;
+  font-size: 8.5pt;
+  font-weight: 600;
+}
+
+/* ── Review section ────────────────────────────────────────────────── */
+
+.review-section { margin-top: 22pt; page-break-before: auto; }
+.section-prose { font-size: 10.5pt; margin: 6pt 0 10pt 0; }
+
+/* ── Footer ────────────────────────────────────────────────────────── */
+
+.opinion-footer {
+  margin-top: 30pt;
+  padding-top: 10pt;
+  border-top: 1px solid #ccc;
+}
+.disclaimer {
+  font-size: 9pt;
+  color: #555;
+  text-align: center;
+  font-style: italic;
+}
+.generated-date {
+  font-family: 'SF Mono', monospace;
+  direction: ltr;
+  unicode-bidi: bidi-override;
+}

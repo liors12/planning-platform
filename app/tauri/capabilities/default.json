@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Phase 1 capabilities: core window controls + HTTP to the local sidecar.",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "core:window:default"
+  ]
+}

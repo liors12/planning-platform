@@ -1,0 +1,273 @@
+{
+  "_schema_version": "1.1.0",
+  "_published_date": "2026-05-16",
+  "_source": "MVP content compliance rules — split-mode regulatory framework",
+  "_scope": "Compares submission-extracted values against per-project schema thresholds. Used in addition to submission_format_rules.json.",
+  "_determinism_contract": "Each rule operates on cached extraction data + project schema only. Given identical inputs, the rule produces the same verdict every run. LLM extraction is upstream (cached); rule evaluation is pure Python.",
+  "rules": [
+    {
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "rule_name_he": "כמות יחידות דיור",
+      "guidelines_section": "3.1",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "per_ta_shetach",
+      "check_method": "schema_comparison",
+      "check_spec": {
+        "submission_value": "unit_count",
+        "schema_value": "units.max_units",
+        "comparison": "submission_le_schema",
+        "also_check_plan_wide": {
+          "submission_value_aggregate": "sum_unit_count",
+          "schema_value": "plan_wide.unit_count_max_total"
+        }
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "critical",
+      "description_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "required_artifact_he": "טבלת ספירת יח\"ד בקומה טיפוסית עם פילוח לכל תא שטח"
+    },
+    {
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "rule_name_he": "שטח עיקרי",
+      "guidelines_section": "3.2",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "per_ta_shetach",
+      "applies_when": {
+        "regulatory_mode": "split"
+      },
+      "check_method": "schema_comparison",
+      "check_spec": {
+        "submission_value": "area_main_m2",
+        "schema_value": "building_rights.primary_sqm",
+        "comparison": "submission_le_schema",
+        "unit": "m2"
+      },
+      "tolerance": {
+        "fail_borderline_pct": 2.0,
+        "fail_above_pct": 2.0
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "verdict_on_borderline": "fail_borderline",
+      "severity": "critical",
+      "description_he": "השטח העיקרי המוצע לא יעלה על השטח העיקרי המותר בתב\"ע (הפרדה לעיקרי ושירות). חריגה של עד 2% — נדרש תיקון גבולי; מעל 2% — נדרש תיקון.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "required_artifact_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות)"
+    },
+    {
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "rule_name_he": "שטחי שירות מעל הקרקע",
+      "guidelines_section": "3.3",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "per_ta_shetach",
+      "applies_when": {
+        "regulatory_mode": "split"
+      },
+      "check_method": "schema_comparison",
+      "check_spec": {
+        "submission_value": "area_service_above_m2",
+        "schema_value": "building_rights.service_above_sqm",
+        "comparison": "submission_le_schema",
+        "unit": "m2"
+      },
+      "tolerance": {
+        "fail_borderline_pct": 2.0,
+        "fail_above_pct": 2.0
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "verdict_on_borderline": "fail_borderline",
+      "severity": "major",
+      "description_he": "שטחי השירות מעל מפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "required_artifact_he": "טבלת שטחי שירות עיליים פר תא שטח"
+    },
+    {
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "rule_name_he": "שטחי שירות מתחת לקרקע",
+      "guidelines_section": "3.4",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "per_ta_shetach",
+      "applies_when": {
+        "regulatory_mode": "split"
+      },
+      "check_method": "schema_comparison",
+      "check_spec": {
+        "submission_value": "area_service_below_m2",
+        "schema_value": "building_rights.service_below_sqm",
+        "comparison": "submission_le_schema",
+        "unit": "m2"
+      },
+      "tolerance": {
+        "fail_borderline_pct": 2.0,
+        "fail_above_pct": 2.0
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "verdict_on_borderline": "fail_borderline",
+      "severity": "major",
+      "description_he": "שטחי השירות מתחת למפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "required_artifact_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח"
+    },
+    {
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "rule_name_he": "גובה הבניין",
+      "guidelines_section": "3.5",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "per_ta_shetach",
+      "check_method": "schema_comparison",
+      "check_spec": {
+        "submission_value": "max_height_m",
+        "schema_value": "height.max_height_m",
+        "comparison": "submission_le_schema",
+        "unit": "m",
+        "floors_to_meters_factor": 3.0,
+        "schema_fallback_value": "height.max_floors_above_entry"
+      },
+      "tolerance": {
+        "fail_borderline_above_m": 0.5,
+        "fail_above_m": 0.5
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "verdict_on_borderline": "fail_borderline",
+      "severity": "major",
+      "description_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע. חריגה של עד 0.5 מ' — נדרש תיקון גבולי.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "required_artifact_he": "חזיתות וחתכים עם מידות גובה מסומנות בכל תא שטח"
+    },
+    {
+      "rule_code": "CONTENT_SETBACKS",
+      "rule_name_he": "קווי בניין (front/side/rear)",
+      "guidelines_section": "3.6",
+      "category": "content_compliance",
+      "rule_type": "geometric",
+      "deterministic": true,
+      "scope": "per_ta_shetach",
+      "check_method": "deferred_to_dwg",
+      "check_spec": {
+        "submission_values": [
+          "setback_front_m",
+          "setback_side_m",
+          "setback_rear_m"
+        ],
+        "schema_values": [
+          "setbacks.front_min_m",
+          "setbacks.side_min_m",
+          "setbacks.rear_min_m"
+        ]
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "always_verdict": "requires_review",
+      "always_note_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "severity": "major",
+      "description_he": "קווי הבניין (חזיתי, צידי, אחורי) נמדדים מול קווי הבניין שבתשריט. דרוש פירוק DWG — עד לאז, נדרש בירור ידני.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "required_artifact_he": "תכניות פיתוח עם קווי בניין מסומנים פר תא שטח"
+    },
+    {
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "rule_name_he": "תקן חניה",
+      "guidelines_section": "3.7",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "per_ta_shetach",
+      "check_method": "deferred_to_national_standard",
+      "check_spec": {
+        "schema_path": "parking_standard",
+        "submission_values": [
+          "parking_private",
+          "parking_motorcycle",
+          "parking_accessible",
+          "parking_bike"
+        ]
+      },
+      "always_verdict_when_schema_status": {
+        "deferred_to_national_standard": "requires_review"
+      },
+      "always_note_he": "התב\"ע אינה קובעת ערכי תקן חניה מספריים. תקן החניה נקבע ברגע הוצאת היתר הבנייה לפי התקן הלאומי התקף באותה עת. עד לקביעת התקן על ידי מהנדס/ת המינהלת — בדיקה זו דורשת אימות ידני.",
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "verdict_on_borderline": "fail_borderline",
+      "severity": "major",
+      "description_he": "השוואת מקומות החניה המוצעים (פרטיות, אופנועים, נגישות, אופניים) לתקן החניה הלאומי בעת ההיתר. נדרש בירור ידני עד שהמהנדס יקבע את התקן.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "required_artifact_he": "טבלת חניות במרתף פר תא שטח ושימוש"
+    },
+    {
+      "rule_code": "CONTENT_APARTMENT_MIX_SMALL",
+      "rule_name_he": "אחוז דירות קטנות (≤ סף)",
+      "guidelines_section": "3.8",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "plan_wide",
+      "check_method": "schema_comparison",
+      "check_spec": {
+        "submission_value": "small_apartment_pct_computed",
+        "schema_value": "global_rules.small_apartments.min_pct",
+        "size_threshold_key": "global_rules.small_apartments.max_sqm",
+        "comparison": "submission_ge_schema",
+        "unit": "pct"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "אחוז הדירות הקטנות (≤ סף שטח התקרה הקבוע בתב\"ע) חייב להיות לפחות לפי האחוז המינימלי בתב\"ע ברמת התכנית.",
+      "remediation_he": "יש להגיש טבלת תמהיל יח\"ד עם פילוח לפי גודל דירה ולציין אחוז הדירות עד 80 מ\"ר ברמת התכנית.",
+      "required_artifact_he": "טבלת תמהיל יח\"ד בקומה טיפוסית עם פילוח שטח (מ\"ר)"
+    },
+    {
+      "rule_code": "CONTENT_PERMEABLE_SURFACES",
+      "rule_name_he": "אחוז שטחים מחלחלים",
+      "guidelines_section": "3.9",
+      "category": "content_compliance",
+      "rule_type": "numeric",
+      "deterministic": true,
+      "scope": "plan_wide",
+      "check_method": "schema_comparison",
+      "check_spec": {
+        "submission_value": "permeable_surface_pct_total",
+        "schema_value": "permeable_surface_min_pct",
+        "schema_value_fallback_path": "compliance_rules[rule_code=PERMEABLE_SURFACES_MIN].threshold",
+        "comparison": "submission_ge_schema",
+        "unit": "pct"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "אחוז השטחים המחלחלים (גינון, ריצוף מחלחל, ללא מרתף תחתון) ביחס לכלל שטח התכנית חייב לעלות על הסף המוגדר.",
+      "remediation_he": "יש להגיש תכנית פיתוח עם שטחים מחלחלים מסומנים ולציין את אחוז השטחים המחלחלים מסך שטח התכנית בכל תא שטח.",
+      "required_artifact_he": "תכנית פיתוח עם הגדרת שטחים מחלחלים פר תא שטח"
+    }
+  ],
+  "_summary_stats": {
+    "total_rules": 9,
+    "deterministic_rules": 9,
+    "always_requires_review_rules": 2,
+    "fully_automated_rules": 7
+  },
+  "_notes": {
+    "split_mode_only": [
+      "CONTENT_BUILDING_AREA_MAIN",
+      "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "CONTENT_BUILDING_AREA_SERVICE_BELOW"
+    ],
+    "extraction_dependency": "All rules except CONTENT_SETBACKS and CONTENT_PARKING_RATIO depend on values pulled by submission_data_extractor.py. If ANTHROPIC_API_KEY is missing and the value cannot be extracted by regex/pdfplumber alone, the rule returns verdict='unevaluable' with failure_mode='MISSING_DATA'."
+  }
+}

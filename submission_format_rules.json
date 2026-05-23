@@ -1,0 +1,767 @@
+{
+  "_schema_version": "1.1.0",
+  "_published_date": "2026-05-15",
+  "_source": "Section 6 of audit report; derived from approved Northeast Nes-Ziona booklet (plan 407-0730606), Dec 2025",
+  "_scope": "Global — applies to all Ness Ziona urban renewal תוכנית עיצוב submissions",
+  "_determinism_contract": "Every rule in this file MUST produce identical verdict for identical input PDF. Rules marked check_method='manual_review' return verdict='requires_review' deterministically — the engine never tries to interpret them. Rules with check_method other than manual_review MUST be implemented in pure Python with no LLM calls. Same PDF → same verdict, always.",
+  "rules": [
+    {
+      "rule_code": "FORMAT_PAGE_SIZE_A3_LANDSCAPE",
+      "rule_name_he": "גודל עמוד — A3 לרוחב",
+      "guidelines_section": "6.1",
+      "category": "submission_format",
+      "rule_type": "procedural",
+      "deterministic": true,
+      "check_method": "pdf_metadata",
+      "check_spec": {
+        "scope": "all_pages",
+        "target_width_pt": 1190,
+        "target_height_pt": 841,
+        "tolerance_pt": 5,
+        "logic": "for each page, abs(width - target_width) <= tolerance AND abs(height - target_height) <= tolerance"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "כל עמודי החוברת חייבים להיות בגודל A3 לרוחב (1190×841 נקודות, בסבילות של 5 נקודות).",
+      "remediation_he": "ייצוא מחדש של החוברת בפורמט A3 לרוחב."
+    },
+    {
+      "rule_code": "FORMAT_TEXT_DIRECTION_RTL",
+      "rule_name_he": "כיוון טקסט — עברית RTL",
+      "guidelines_section": "6.1",
+      "category": "submission_format",
+      "rule_type": "procedural",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages_with_text",
+        "block_filter": {
+          "min_length_chars": 3,
+          "must_contain_hebrew_letter": true
+        },
+        "test": "filtered_blocks_starting_with_hebrew >= 0.70",
+        "threshold": 0.70,
+        "hebrew_unicode_range": "U+0590-U+05FF"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "טקסט החוברת חייב להיות בעברית בכיוון מימין לשמאל. שילוב של מינוח טכני באנגלית (שמות גופנים, מספרי גרסה) מותר כל עוד אינו מהווה חלק משמעותי מהטקסט.",
+      "remediation_he": "ייצוא מחדש של החוברת בעברית בכיוון RTL."
+    },
+    {
+      "rule_code": "FORMAT_BACKGROUND_WHITE",
+      "rule_name_he": "רקע לבן",
+      "guidelines_section": "6.1",
+      "category": "submission_format",
+      "rule_type": "qualitative",
+      "deterministic": false,
+      "check_method": "manual_review",
+      "check_spec": {
+        "review_instructions_he": "לאמת ויזואלית: רקע כל העמודים לבן. אסור רקעים בצבע, גרדיאנט, או דוגמא חוזרת."
+      },
+      "verdict_when_indeterminate": "requires_review",
+      "severity": "minor",
+      "description_he": "רקע העמודים חייב להיות לבן בכל החוברת.",
+      "remediation_he": "הסרת רקעים צבעוניים מכל העמודים."
+    },
+    {
+      "rule_code": "FORMAT_FONT_HEBREW_SANS_SERIF",
+      "rule_name_he": "גופן עברי הומאני סנס-סריף",
+      "guidelines_section": "6.2",
+      "category": "submission_format",
+      "rule_type": "procedural",
+      "deterministic": true,
+      "check_method": "pdf_metadata",
+      "check_spec": {
+        "scope": "all_text_in_document",
+        "allowed_fonts": [
+          "Noto Sans Hebrew",
+          "Open Sans Hebrew",
+          "Assistant",
+          "Heebo",
+          "Rubik",
+          "Almoni",
+          "Frank Ruhl"
+        ],
+        "logic": "every embedded font name in PDF matches one of allowed_fonts OR a manual_review fallback for unrecognized Hebrew sans-serif fonts"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "verdict_when_indeterminate": "requires_review",
+      "severity": "minor",
+      "description_he": "הגופן הראשי בחוברת חייב להיות גופן עברי הומאני סנס-סריף. אין שילוב של יותר משני גופנים בכל החוברת.",
+      "remediation_he": "החלפת הגופנים בגופן עברי סנס-סריף מאושר."
+    },
+    {
+      "rule_code": "FORMAT_HEADER_COLOR_CYAN",
+      "rule_name_he": "כותרות ראשיות בצבע טורקיז",
+      "guidelines_section": "6.2",
+      "category": "submission_format",
+      "rule_type": "qualitative",
+      "deterministic": false,
+      "check_method": "manual_review",
+      "check_spec": {
+        "review_instructions_he": "לאמת ויזואלית: כותרות הפרקים הראשיים, כותרת תוכן העניינים, ושמות הפרקים בעמודי המעבר — חייבים להופיע בצבע טורקיז/ציאן. לא שחור, לא כחול כהה, לא ירוק."
+      },
+      "verdict_when_indeterminate": "requires_review",
+      "severity": "minor",
+      "description_he": "כל הכותרות הראשיות בחוברת חייבות להופיע בצבע טורקיז (אותו צבע בכל החוברת).",
+      "remediation_he": "שינוי צבע הכותרות לטורקיז."
+    },
+    {
+      "rule_code": "FORMAT_COVER_TITLE_TEXT",
+      "rule_name_he": "שער — כותרת ראשית",
+      "guidelines_section": "6.3",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "page_1_only",
+        "required_text_patterns": [
+          "חוברת הנחיות בינוי ופיתוח",
+          "תוכנית עיצוב",
+          "תכנית עיצוב"
+        ],
+        "logic": "at_least_one_match"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "עמוד השער חייב לכלול את הכותרת הראשית 'חוברת הנחיות בינוי ופיתוח' או 'תוכנית עיצוב' / 'תכנית עיצוב'.",
+      "remediation_he": "הוספת הכותרת הראשית לעמוד השער."
+    },
+    {
+      "rule_code": "FORMAT_COVER_PLAN_NUMBER",
+      "rule_name_he": "שער — מספר תכנית מצוין",
+      "guidelines_section": "6.3",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "regex_pattern",
+      "check_spec": {
+        "scope": "page_1_only",
+        "regex_pattern": "\\b\\d{3}-\\d{7}\\b",
+        "description": "Israeli plan number format: NNN-NNNNNNN"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "עמוד השער חייב לכלול את מספר התב\"ע בפורמט תקני (NNN-NNNNNNN).",
+      "remediation_he": "הוספת מספר התכנית בפורמט תקני לעמוד השער."
+    },
+    {
+      "rule_code": "FORMAT_COVER_DATE",
+      "rule_name_he": "שער — תאריך הגשה",
+      "guidelines_section": "6.3",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "regex_pattern",
+      "check_spec": {
+        "scope": "page_1_only",
+        "regex_patterns": [
+          "(ינואר|פברואר|מרץ|אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|דצמבר)\\s+20\\d{2}",
+          "\\d{1,2}[./-]\\d{1,2}[./-]20\\d{2}"
+        ],
+        "logic": "at_least_one_pattern_matches"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "עמוד השער חייב לכלול את תאריך ההגשה.",
+      "remediation_he": "הוספת תאריך לעמוד השער."
+    },
+    {
+      "rule_code": "FORMAT_COVER_SIGNATURE_TABLE",
+      "rule_name_he": "שער — טבלת חתימות 6 דיסציפלינות",
+      "guidelines_section": "6.3",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "page_1_only",
+        "required_terms": [
+          "שפ\"ע",
+          "תנועה",
+          "גנים ונוף",
+          "אדריכלות",
+          "תאגיד",
+          "יו\"ר"
+        ],
+        "additional_required_terms": [
+          "חתימה",
+          "תאריך"
+        ],
+        "logic": "all_terms_must_appear_in_page_1_text"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "critical",
+      "description_he": "עמוד השער חייב לכלול טבלת חתימות עם 6 דיסציפלינות: שפ\"ע כבישים ופיתוח, תנועה, גנים ונוף, אדריכלות, תאגיד, יו\"ר הוועדה. בכל תא: שם, תאריך, חתימה.",
+      "remediation_he": "הוספת טבלת חתימות בפורמט הנדרש לעמוד השער."
+    },
+    {
+      "rule_code": "FORMAT_COVER_AERIAL_IMAGE",
+      "rule_name_he": "שער — תרשים אווירי/הדמיה מרכזית",
+      "guidelines_section": "6.3",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "pdf_image_detection",
+      "check_spec": {
+        "scope": "page_1_only",
+        "minimum_image_count": 1,
+        "minimum_image_area_percent_of_page": 25,
+        "logic": "page 1 contains at least one embedded image covering ≥25% of page area"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "minor",
+      "description_he": "עמוד השער חייב לכלול תרשים אווירי או הדמיה תלת-ממדית של המתחם.",
+      "remediation_he": "הוספת הדמיה/תרשים אווירי לעמוד השער."
+    },
+    {
+      "rule_code": "FORMAT_TEAM_PAGE_EXISTS",
+      "rule_name_he": "עמוד צוות הפרויקט",
+      "guidelines_section": "6.4",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "pages_1_to_5",
+        "required_text_patterns": [
+          "צוות הפרויקט"
+        ],
+        "logic": "at_least_one_page_contains_pattern"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול עמוד צוות פרויקט בתחילתה (בדרך כלל עמוד 2).",
+      "remediation_he": "הוספת עמוד צוות פרויקט עם רשימת היועצים לפי דיסציפלינה."
+    },
+    {
+      "rule_code": "FORMAT_TEAM_REQUIRED_DISCIPLINES",
+      "rule_name_he": "צוות — דיסציפלינות נדרשות",
+      "guidelines_section": "6.4",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "team_page",
+        "required_disciplines": [
+          "אדריכל",
+          "נגישות",
+          "מים",
+          "ביוב",
+          "תנועה",
+          "ניקוז",
+          "מדידות",
+          "סביבה",
+          "קונסטרוקטור",
+          "חשמל",
+          "תאורה",
+          "הידרולוג",
+          "נוף",
+          "אגרונום"
+        ],
+        "minimum_matches": 10,
+        "logic": "at_least_minimum_matches_of_required_disciplines_present_on_team_page"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "major",
+      "description_he": "עמוד צוות הפרויקט חייב לכלול את הדיסציפלינות העיקריות: אדריכלים, נגישות, מים-ביוב, תנועה, ניקוז, מדידות, סביבה, קונסטרוקציה, חשמל-תאורה, הידרולוגיה, פיתוח נופי, אגרונום.",
+      "remediation_he": "השלמת רשימת הצוות לפי כל הדיסציפלינות הנדרשות."
+    },
+    {
+      "rule_code": "FORMAT_TOC_EXISTS",
+      "rule_name_he": "תוכן עניינים",
+      "guidelines_section": "6.5",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "pages_1_to_5",
+        "required_text_patterns": [
+          "תוכן עניינים"
+        ],
+        "logic": "at_least_one_page_contains_pattern"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול עמוד תוכן עניינים בתחילתה.",
+      "remediation_he": "הוספת עמוד תוכן עניינים."
+    },
+    {
+      "rule_code": "FORMAT_TOC_THREE_COLUMNS",
+      "rule_name_he": "תוכן עניינים — מבנה שלוש עמודות",
+      "guidelines_section": "6.5",
+      "category": "submission_format",
+      "rule_type": "qualitative",
+      "deterministic": false,
+      "check_method": "manual_review",
+      "check_spec": {
+        "review_instructions_he": "לאמת ויזואלית: עמוד תוכן העניינים מאורגן בשלוש עמודות. כל פרק ראשי מתחיל בעמודה — לא ממשיך משורה קודמת בעמודה אחרת."
+      },
+      "verdict_when_indeterminate": "requires_review",
+      "severity": "minor",
+      "description_he": "עמוד תוכן העניינים חייב להיות מאורגן בשלוש עמודות.",
+      "remediation_he": "סידור מחדש של תוכן העניינים בשלוש עמודות."
+    },
+    {
+      "rule_code": "FORMAT_CHAPTER_DIVIDER_PAGES",
+      "rule_name_he": "עמודי מעבר לפרקים ראשיים",
+      "guidelines_section": "6.6",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "page_structure_analysis",
+      "check_spec": {
+        "scope": "all_pages",
+        "definition_of_divider": "page with <50 words of text AND contains a chapter name from required_chapters_list",
+        "expected_chapter_names": [
+          "טיפולוגיות בינוי",
+          "טיפולוגיה A",
+          "טיפולוגיה B",
+          "טיפולוגיה C",
+          "מעטפת מבני",
+          "אלמנטים נוספים",
+          "פיתוח",
+          "הנחיות סביבתיות",
+          "הנחיות תשתיות"
+        ],
+        "logic": "for each required chapter, at least one divider page exists OR the chapter title appears as a major heading"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "minor",
+      "description_he": "כל פרק ראשי בחוברת חייב להתחיל בעמוד מעבר נפרד עם שם הפרק בלבד בטורקיז, ללא תוכן נוסף.",
+      "remediation_he": "הוספת עמודי מעבר לפני כל פרק ראשי."
+    },
+    {
+      "rule_code": "FORMAT_FOOTER_PRESENT_ALL_PAGES",
+      "rule_name_he": "כותרת תחתונה אחידה בכל עמוד",
+      "guidelines_section": "6.7",
+      "category": "submission_format",
+      "rule_type": "procedural",
+      "deterministic": true,
+      "check_method": "page_structure_analysis",
+      "check_spec": {
+        "scope": "all_pages_except_cover",
+        "footer_region": "bottom 10% of each page",
+        "test": "footer region contains text content"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "בכל עמוד פרט לעמוד השער חייבת להופיע כותרת תחתונה אחידה.",
+      "remediation_he": "הוספת כותרת תחתונה אחידה לכל העמודים."
+    },
+    {
+      "rule_code": "FORMAT_FOOTER_PAGE_NUMBERS",
+      "rule_name_he": "מספרי עמודים בכותרת התחתונה",
+      "guidelines_section": "6.7",
+      "category": "submission_format",
+      "rule_type": "procedural",
+      "deterministic": true,
+      "check_method": "regex_pattern",
+      "check_spec": {
+        "scope": "all_pages_except_cover",
+        "footer_region": "bottom 10% of each page",
+        "regex_pattern": "\\|\\s*\\d+\\s*\\|",
+        "description": "Page number in '| N |' format"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "minor",
+      "description_he": "מספר עמוד חייב להופיע בכותרת התחתונה של כל עמוד (פרט לשער), בפורמט '| N |'.",
+      "remediation_he": "הוספת מספרי עמודים לכותרת התחתונה."
+    },
+    {
+      "rule_code": "FORMAT_FOOTER_PROJECT_NAME",
+      "rule_name_he": "שם הפרויקט בכותרת התחתונה",
+      "guidelines_section": "6.7",
+      "category": "submission_format",
+      "rule_type": "procedural",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages_except_cover",
+        "footer_region": "bottom 10% of each page",
+        "required_text": "project_name_from_cover_page (extracted dynamically)",
+        "logic": "footer of every page contains project name"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "minor",
+      "description_he": "שם הפרויקט חייב להופיע בכותרת התחתונה של כל עמוד.",
+      "remediation_he": "הוספת שם הפרויקט לכותרת התחתונה."
+    },
+    {
+      "rule_code": "FORMAT_CHAPTER_NUMBERING",
+      "rule_name_he": "מספור פרקים — תת-סעיפים X.Y",
+      "guidelines_section": "6.8",
+      "category": "submission_format",
+      "rule_type": "procedural",
+      "deterministic": true,
+      "check_method": "regex_pattern",
+      "check_spec": {
+        "scope": "all_pages",
+        "regex_pattern": "\\b\\d{1,2}\\.\\d{1,2}\\b",
+        "minimum_matches": 5,
+        "logic": "document contains at least 5 instances of X.Y numbering pattern"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "minor",
+      "description_he": "תת-סעיפים בחוברת חייבים להיות ממוספרים בפורמט X.Y (לדוגמה 1.1, 1.2, 2.1).",
+      "remediation_he": "הוספת מספור היררכי לתת-סעיפים."
+    },
+    {
+      "rule_code": "FORMAT_REQUIRED_CHAPTERS_TYPOLOGIES",
+      "rule_name_he": "פרקי טיפולוגיות בינוי",
+      "guidelines_section": "6.8",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_text_patterns": [
+          "טיפולוגי"
+        ],
+        "minimum_matches_in_distinct_pages": 3
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול פרק טיפולוגיות בינוי המגדיר את הטיפולוגיות במתחם (לפחות 3 דפים).",
+      "remediation_he": "הוספת פרק טיפולוגיות בינוי לחוברת."
+    },
+    {
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_ENVELOPE",
+      "rule_name_he": "פרק מעטפת בניינים",
+      "guidelines_section": "6.8",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_text_patterns": [
+          "מעטפת",
+          "חזיתות",
+          "פתחים",
+          "חומריות"
+        ],
+        "minimum_matches": 3
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול פרק מעטפת בניינים: עיצוב חזיתות, פתחים, חומריות וגוונים, מרפסות.",
+      "remediation_he": "הוספת פרק מעטפת בניינים לחוברת."
+    },
+    {
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_DEVELOPMENT",
+      "rule_name_he": "פרק פיתוח",
+      "guidelines_section": "6.8",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_text_patterns": [
+          "פרוגרמות",
+          "ממשקים",
+          "עיצוב סביבה",
+          "גינון"
+        ],
+        "minimum_matches": 2
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול פרק פיתוח: פרוגרמות מגרשים, ממשקים, עיצוב סביבה, גגות חניונים וניקוז, גינון.",
+      "remediation_he": "הוספת פרק פיתוח לחוברת."
+    },
+    {
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_ENVIRONMENTAL",
+      "rule_name_he": "פרק הנחיות סביבתיות",
+      "guidelines_section": "6.8",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_text_patterns": [
+          "הנחיות סביבתיות",
+          "תכנון אנרגטי",
+          "סביבתי"
+        ],
+        "minimum_matches": 1
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול פרק הנחיות סביבתיות הכולל דרישות אנרגטיות.",
+      "remediation_he": "הוספת פרק הנחיות סביבתיות לחוברת."
+    },
+    {
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_INFRASTRUCTURE",
+      "rule_name_he": "פרק הנחיות תשתיות ותנועה",
+      "guidelines_section": "6.8",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_text_patterns": [
+          "הנחיות תשתיות",
+          "תנועה וחניה",
+          "תאורה",
+          "תקשורת"
+        ],
+        "minimum_matches": 2
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול פרק הנחיות תשתיות ותנועה: חשמל, תאורה, תקשורת, תנועה וחניה.",
+      "remediation_he": "הוספת פרק הנחיות תשתיות ותנועה לחוברת."
+    },
+    {
+      "rule_code": "FORMAT_SCALE_ANNOTATIONS",
+      "rule_name_he": "קני מידה 1:250 על כל תוכנית",
+      "guidelines_section": "6.10",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "regex_pattern",
+      "check_spec": {
+        "scope": "all_pages",
+        "regex_pattern": "1\\s*:\\s*250",
+        "minimum_matches_in_distinct_pages": 5,
+        "logic": "scale '1:250' appears in at least 5 distinct pages of the document"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "critical",
+      "description_he": "כל תוכנית מקצועית בחוברת חייבת להיות בקנה מידה 1:250, ולציין זאת בכותרת. דרישה זו מעוגנת גם בסעיף 6.1 לתקנון התב\"ע החלה על המגרש.",
+      "remediation_he": "הצגת כל התוכניות בקנה מידה 1:250 וציון קנה המידה בכותרת."
+    },
+    {
+      "rule_code": "FORMAT_TYPICAL_FLOOR_MIX_TABLE",
+      "rule_name_he": "טבלת תמהיל יח\"ד בקומה טיפוסית",
+      "guidelines_section": "6.9",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_terms": [
+          "חדרים",
+          "תמורה",
+          "יזם",
+          "תמהיל"
+        ],
+        "minimum_distinct_terms_on_same_page": 2,
+        "logic": "at_least_one_page_contains_minimum_distinct_terms"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "requires_review",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול טבלת תמהיל יח\"ד עם פילוח לפי גודל דירה, חלוקה תמורה/יזם, ואחוז מסך היח\"ד.",
+      "remediation_he": "הוספת טבלת תמהיל יח\"ד מפורטת."
+    },
+    {
+      "rule_code": "FORMAT_PARKING_TABLE",
+      "rule_name_he": "טבלת חניות במרתף",
+      "guidelines_section": "6.9",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_terms": [
+          "חניה",
+          "אופנועים",
+          "נגישות",
+          "אופניים"
+        ],
+        "minimum_distinct_terms_on_same_page": 2,
+        "logic": "at_least_one_page_contains_minimum_distinct_terms"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "requires_review",
+      "severity": "major",
+      "description_he": "החוברת חייבת לכלול טבלת חניות (פרטיות, אופנועים, נגישות, אופניים) לפי יח\"ד ושימוש.",
+      "remediation_he": "הוספת טבלת חניות מפורטת לעמוד המרתף."
+    },
+    {
+      "rule_code": "FORMAT_RENDERINGS_PRESENT",
+      "rule_name_he": "הדמיות תלת-ממדיות",
+      "guidelines_section": "6.9",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "pdf_image_detection",
+      "check_spec": {
+        "scope": "all_pages",
+        "minimum_large_images_total": 3,
+        "minimum_image_area_percent_of_page": 30,
+        "logic": "document contains at least 3 large embedded images (≥30% of page area each) that are NOT on page 1 (cover)"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "minor",
+      "description_he": "החוברת חייבת לכלול לפחות 3 הדמיות תלת-ממדיות (מזוויות שונות: תרשים אווירי, גובה עיני אדם, חזית הרחוב, חצר פנימית).",
+      "remediation_he": "הוספת הדמיות תלת-ממדיות לחוברת."
+    },
+    {
+      "rule_code": "FORMAT_NORTH_ARROW",
+      "rule_name_he": "חץ צפון על תוכניות",
+      "guidelines_section": "6.10",
+      "category": "submission_format",
+      "rule_type": "qualitative",
+      "deterministic": false,
+      "check_method": "manual_review",
+      "check_spec": {
+        "review_instructions_he": "לאמת ויזואלית: כל תוכנית מקצועית (פיתוח, מפלס קרקע, מרתף, קומה טיפוסית) כוללת חץ צפון בולט."
+      },
+      "verdict_when_indeterminate": "requires_review",
+      "severity": "major",
+      "description_he": "חץ צפון חייב להיות מסומן בבירור בכל תוכנית מקצועית.",
+      "remediation_he": "הוספת חצי צפון לכל התוכניות."
+    },
+    {
+      "rule_code": "FORMAT_REFERENT_SIGNATURE_PLACEHOLDERS",
+      "rule_name_he": "מקום לחתימת רפרנט עירוני בכל פרק מקצועי",
+      "guidelines_section": "6.10",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_text_patterns": [
+          "חתימת רפרנט",
+          "אישור רפרנט",
+          "אישור עירוני"
+        ],
+        "minimum_matches": 1
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
+      "severity": "major",
+      "description_he": "בעמוד הראשון של כל פרק מקצועי חייב להיות מקום ייעודי לחתימת רפרנט עירוני מהדיסציפלינה הרלוונטית.",
+      "remediation_he": "הוספת מקום לחתימת רפרנט עירוני בכל פרק מקצועי."
+    },
+    {
+      "rule_code": "FORMAT_VERSION_NOTATION",
+      "rule_name_he": "ציון גרסה ותאריך עדכון",
+      "guidelines_section": "6.10",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "regex_pattern",
+      "check_spec": {
+        "scope": "page_1_only",
+        "regex_pattern": "גרסה\\s+\\d+(\\.\\d+)?",
+        "logic": "page 1 contains text matching 'גרסה N' or 'גרסה N.N'"
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "minor",
+      "description_he": "החוברת חייבת לציין במפורש את מספר הגרסה (לדוגמה 'גרסה 23.3').",
+      "remediation_he": "הוספת ציון גרסה לעמוד השער."
+    },
+    {
+      "rule_code": "FORMAT_LOGOS_FOOTER",
+      "rule_name_he": "לוגואים בכותרת התחתונה",
+      "guidelines_section": "6.7",
+      "category": "submission_format",
+      "rule_type": "qualitative",
+      "deterministic": false,
+      "check_method": "manual_review",
+      "check_spec": {
+        "review_instructions_he": "לאמת ויזואלית: בצד שמאל של הכותרת התחתונה מופיעים 3-4 לוגואים — לפחות לוגו משרד האדריכלים, לוגו עיריית נס ציונה, ולוגו של חברת ניהול/יזם."
+      },
+      "verdict_when_indeterminate": "requires_review",
+      "severity": "minor",
+      "description_he": "הכותרת התחתונה של כל עמוד חייבת לכלול לפחות 3 לוגואים בצד שמאל.",
+      "remediation_he": "הוספת לוגואים לכותרת התחתונה."
+    },
+    {
+      "rule_code": "FORMAT_DIMENSIONS_ON_PLANS",
+      "rule_name_he": "מידות מסומנות על תוכניות",
+      "guidelines_section": "6.10",
+      "category": "submission_format",
+      "rule_type": "qualitative",
+      "deterministic": false,
+      "check_method": "manual_review",
+      "check_spec": {
+        "review_instructions_he": "לאמת ויזואלית: כל תוכנית מקצועית כוללת מידות מסומנות — גובהי בניין, מרחקי קווי בניין, מידות חזית, וכו'."
+      },
+      "verdict_when_indeterminate": "requires_review",
+      "severity": "major",
+      "description_he": "מידות חייבות להיות מסומנות בכל תוכנית מקצועית.",
+      "remediation_he": "הוספת מידות מפורטות לכל התוכניות."
+    },
+    {
+      "rule_code": "FORMAT_LEGEND_ON_DEVELOPMENT_PAGES",
+      "rule_name_he": "מקרא לעמודי פיתוח",
+      "guidelines_section": "6.9",
+      "category": "submission_format",
+      "rule_type": "document_presence",
+      "deterministic": true,
+      "check_method": "text_extraction",
+      "check_spec": {
+        "scope": "all_pages",
+        "required_text_patterns": [
+          "מקרא",
+          "legend"
+        ],
+        "minimum_matches": 1
+      },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "pass_with_note",
+      "severity": "minor",
+      "description_he": "עמודי הפיתוח חייבים לכלול מקרא לחומרי ריצוף, צמחייה, ריהוט רחוב, וסימנים אחרים.",
+      "remediation_he": "הוספת מקרא לעמודי הפיתוח."
+    }
+  ],
+  "_summary_stats": {
+    "total_rules": 34,
+    "deterministic_rules": 28,
+    "manual_review_rules": 6,
+    "by_severity": {
+      "major": 19,
+      "minor": 13,
+      "critical": 2
+    }
+  },
+  "_implementation_notes": {
+    "pdf_metadata_check": "Use pypdf or PyMuPDF; page size from page.mediabox; font names from page.fonts.",
+    "text_extraction": "Use pdfplumber or PyMuPDF for text + bounding box. For Hebrew, ensure UTF-8 throughout.",
+    "regex_pattern": "Pure Python re module with proper Hebrew handling. Search across full extracted text per scope.",
+    "table_detection": "Use pdfplumber.extract_tables(). Match headers case-insensitively, allow whitespace variations.",
+    "pdf_image_detection": "Use PyMuPDF page.get_images() to enumerate; compute area from image bbox.",
+    "page_structure_analysis": "Custom logic combining text density, position, and content type. Define 'footer region' as bottom 10% of page mediabox.",
+    "manual_review": "MUST NOT attempt LLM interpretation. Verdict is deterministically 'requires_review' with the review_instructions_he passed to the engineer UI."
+  }
+}

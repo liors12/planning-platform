@@ -1,0 +1,1296 @@
+{
+  "_schema_version": "3.0.0",
+  "_description": "Project data for תכנית 407-0977595. Rules use v2 taxonomy: numeric|geometric|document_presence|procedural|qualitative.",
+  "_updated": "March 2026 — rule taxonomy updated, missing rules added | May 2026 — added design_plan + linked_statutory_plans for many-to-many design-plan ↔ statutory-plan model; per-parcel governing_takanon_id.",
+  "design_plan": {
+    "id": "hetzeisim-23.3",
+    "name": "תכנית עיצוב הטייסים",
+    "name_en": "Hetzeisim Design Plan",
+    "architect": "Kika Braz Architects & Urban Planners",
+    "revision": "23.3",
+    "page_count": 63,
+    "scope_dunams_total": 23.2,
+    "scope_units_total": 700,
+    "notes": "Single design plan that spans the boundary of TWO approved statutory plans. Both תב\"עות are listed in linked_statutory_plans below; each תא שטח declares which one governs it via parcels[].governing_takanon_id. This is the canonical example for the many-to-many design-plan ↔ statutory-plan model — see CONTEXT.md → Architectural Decisions."
+  },
+  "linked_statutory_plans": [
+    {
+      "plan_number": "407-0977595",
+      "version_label": "approved_2024-01-23",
+      "coverage_type": "primary",
+      "coverage_dunams": 16.5,
+      "coverage_units": 387,
+      "coverage_notes": "Primary governing plan for the southern part of the design plan (16.5 dunams, 387 units). תקנון approved 2024-01-23. All parcels currently declared in project.parcels[] (plot_1/2/4/5/6/10) are governed by this plan."
+    },
+    {
+      "plan_number": "407-1048248",
+      "version_label": "pending_takanon",
+      "coverage_type": "partial",
+      "coverage_dunams": 6.0,
+      "coverage_units": 220,
+      "coverage_notes": "Northern site (6.0 dunams, 220 units). Currently staged at data/staging/407-1048248/ — תקנון not yet acquired from mavat.gov.il. Once available, the parcels it governs will be added to project.parcels[] with governing_takanon_id = \"407-1048248\". See data/staging/407-1048248/STATUS.md."
+    }
+  ],
+  "project": {
+    "meta": {
+      "plan_number": "407-0977595",
+      "plan_name": "התחדשות עירונית במתחם הטייסים, נס ציונה",
+      "plan_name_en": "Urban Renewal in the Pilots Complex, Ness Ziona",
+      "municipality": "ness_ziona",
+      "status": "approved",
+      "approval_date": "2024-01-23",
+      "regulatory_mode": "split",
+      "format_rule_overrides": [],
+      "_format_rule_overrides_doc": "All city-wide submission format rules apply to Hetzeisim. The project is residential-only — there is no commercial-specific chapter rule in the current rule set to skip (FORMAT_REQUIRED_CHAPTER_ENVELOPE is general envelope/facades, not commercial). Override list is empty.",
+      "total_site_area_dunam": 16.58,
+      "total_site_area_sqm": 16580.2,
+      "total_units": 387,
+      "total_building_area_sqm": 102039,
+      "takkanon_source": "apps.land.gov.il/IturTabotData/takanonim/merkaz/4053239.pdf",
+      "takkanon_pages": 19,
+      "reference_design_plan": "תכנית עיצוב הטייסים 23.3 — Kika Braz Architects, 63 pages",
+      "scope_in": [
+        "plot_1",
+        "plot_2",
+        "plot_4",
+        "plot_6"
+      ],
+      "scope_out": [
+        "plot_3",
+        "plot_5"
+      ],
+      "scope_out_reason": "תאי שטח 3 ו-5 נמצאים בתחום תכנית 407-1109909 (אתר צפוני) שטרם אושרה. אינה ניתנת לבדיקת תאימות.",
+      "total_site_area_sqm_note": "Computed from תשריט (kavim kchulim.shp polygon area, EPSG:2039). Matches meta.total_site_area_dunam × 1000 = 16,580 m². Replaced earlier value 19516, which was inconsistent with the dunam figure — see reports/407-0977595/tashrit-analysis-2026-04-30.md.",
+      "scope_in_note": "All 6 parcels in this plan's תשריט (migrashim.shp) are inside the compliance scope. plot_5 (402.77 m², YEUD=882=שצ\"פ variant) and plot_10 (207.38 m², YEUD=423=שביל) are residual parcels — present in the תשריט but not in the תקנון rights table on page 16. They have no building rights and no specific compliance rules; they are tracked for completeness.",
+      "scope_out_plan": "407-1109909"
+    },
+    "parcels": [
+      {
+        "parcel_id": "plot_1",
+        "display_label": "מגרש 1",
+        "land_use": "מגורים ד'",
+        "land_use_en": "Residential D",
+        "uses": [
+          "residential"
+        ],
+        "plot_area_sqm": 6762,
+        "building_rights": {
+          "primary_sqm": 22105,
+          "primary_notes": "includes 50 sqm/building for resident amenities (other use = significant variance)",
+          "service_above_sqm": 9365,
+          "service_below_sqm": 23255,
+          "total_sqm": 54725,
+          "balconies_sqm": 3525
+        },
+        "units": {
+          "max_units": 235,
+          "small_apartment_min_pct": 20,
+          "small_apartment_max_sqm": 80
+        },
+        "height": {
+          "max_height_m": 50,
+          "max_floors_above_entry": 14,
+          "max_basement_floors": 4,
+          "height_notes": "floor count + roof level with mechanical enclosures and stairwell per §6.9",
+          "fourth_basement_note": "4th basement level permitted only to meet parking standards"
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "setback_notes": "All setback lines per תשריט (DWG). No balcony protrusion beyond western building line toward plot 32.",
+          "alternative_source_note": "Could potentially be populated from the vector shapefiles in digital_files.tashrit (ITM polygons, EPSG:2039) instead of DWG layer extraction. Not yet populated — pending identification of the building-line layer (קו בניין). See digital_files.tashrit.todo_building_line_layer."
+        },
+        "stormwater": {
+          "daily_retention_m3": 510
+        },
+        "geometry": {
+          "centroid_lon": 34.795459,
+          "centroid_lat": 31.933807,
+          "kml_boundary": [
+            [
+              34.7958831091,
+              31.9338835902
+            ],
+            [
+              34.7958308716,
+              31.9336916958
+            ],
+            [
+              34.7957926822,
+              31.9335511569
+            ],
+            [
+              34.7957578381,
+              31.9334229573
+            ],
+            [
+              34.7946336472,
+              31.9336452037
+            ],
+            [
+              34.7947164241,
+              31.9339457261
+            ],
+            [
+              34.7951628,
+              31.9338579716
+            ],
+            [
+              34.7952008111,
+              31.9338781475
+            ],
+            [
+              34.7952681296,
+              31.9341225237
+            ],
+            [
+              34.7959140963,
+              31.9339975504
+            ],
+            [
+              34.7958831091,
+              31.9338835902
+            ]
+          ]
+        },
+        "governing_takanon_id": "407-0977595",
+        "parking_standard": {
+          "status": "deferred_to_national_standard",
+          "source_quote": "החניה בתחום התכנית תהיה בהתאם לתקן החניה התקף בעת הוצאת היתר הבניה",
+          "source_section": "6.2.1",
+          "source_page": 17,
+          "source_document": "תקנון תב\"ע 407-0977595",
+          "fallback_standard": "תקנות התכנון והבנייה (התקנת מקומות חניה) — המהדורה התקפה בעת הוצאת היתר",
+          "private_per_unit": null,
+          "accessible_pct_of_private": null,
+          "motorcycle_pct_of_private": null,
+          "bike_pct_of_private": null,
+          "notes": "Per תקנון §6.2.1 the parking ratio is fixed at permit time by the then-current national standard, not by the תב\"ע itself. The numeric values are intentionally null here — content engine returns requires_review for CONTENT_PARKING_RATIO until the engineer pins the standard. National standard ratios vary by zone and apartment size and were not loaded from a verified source."
+        }
+      },
+      {
+        "parcel_id": "plot_2",
+        "display_label": "מגרש 2",
+        "land_use": "מגורים ד'",
+        "land_use_en": "Residential D",
+        "uses": [
+          "residential",
+          "public_buildings"
+        ],
+        "plot_area_sqm": 4260,
+        "building_rights": {
+          "primary_sqm": 14336,
+          "primary_notes": "includes 50 sqm/building for resident amenities",
+          "service_above_sqm": 6058,
+          "service_below_sqm": 14470,
+          "total_sqm": 34864,
+          "balconies_sqm": 2280
+        },
+        "public_component": {
+          "primary_sqm": 300,
+          "service_sqm": 450,
+          "service_notes": "400 sqm of service area = covered courtyards for public building",
+          "total_sqm": 750,
+          "max_public_use_sqm": 750,
+          "public_use_note": "Ground floor + floor 1 only. Includes daycare (מעונות יום). Max 750 sqm total."
+        },
+        "units": {
+          "max_units": 152,
+          "small_apartment_min_pct": 20,
+          "small_apartment_max_sqm": 80
+        },
+        "height": {
+          "max_height_m": 43,
+          "max_floors_above_entry": 12,
+          "max_basement_floors": 4,
+          "height_notes": "floor count + roof level per §6.9",
+          "fourth_basement_note": "4th basement level permitted only to meet parking standards"
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "alternative_source_note": "Could potentially be populated from the vector shapefiles in digital_files.tashrit (ITM polygons, EPSG:2039) instead of DWG layer extraction. Not yet populated — pending identification of the building-line layer (קו בניין). See digital_files.tashrit.todo_building_line_layer."
+        },
+        "stormwater": {
+          "daily_retention_m3": 340
+        },
+        "geometry": {
+          "centroid_lon": 34.795997,
+          "centroid_lat": 31.934505,
+          "kml_boundary": [
+            [
+              34.7959841773,
+              31.9342552322
+            ],
+            [
+              34.7959284302,
+              31.9340502603
+            ],
+            [
+              34.79528264,
+              31.9341751991
+            ],
+            [
+              34.7954187259,
+              31.9346692197
+            ],
+            [
+              34.795470439,
+              31.9346591561
+            ],
+            [
+              34.7956783118,
+              31.9346187045
+            ],
+            [
+              34.7960090926,
+              31.9345543341
+            ],
+            [
+              34.7960375536,
+              31.9345484754
+            ],
+            [
+              34.7959841773,
+              31.9342552322
+            ]
+          ]
+        },
+        "governing_takanon_id": "407-0977595",
+        "parking_standard": {
+          "status": "deferred_to_national_standard",
+          "source_quote": "החניה בתחום התכנית תהיה בהתאם לתקן החניה התקף בעת הוצאת היתר הבניה",
+          "source_section": "6.2.1",
+          "source_page": 17,
+          "source_document": "תקנון תב\"ע 407-0977595",
+          "fallback_standard": "תקנות התכנון והבנייה (התקנת מקומות חניה) — המהדורה התקפה בעת הוצאת היתר",
+          "private_per_unit": null,
+          "accessible_pct_of_private": null,
+          "motorcycle_pct_of_private": null,
+          "bike_pct_of_private": null,
+          "notes": "Per תקנון §6.2.1 the parking ratio is fixed at permit time by the then-current national standard, not by the תב\"ע itself. The numeric values are intentionally null here — content engine returns requires_review for CONTENT_PARKING_RATIO until the engineer pins the standard. National standard ratios vary by zone and apartment size and were not loaded from a verified source."
+        }
+      },
+      {
+        "parcel_id": "plot_4",
+        "display_label": "שצ\"פ",
+        "land_use": "שצ\"פ",
+        "land_use_en": "Public Open Space",
+        "uses": [
+          "public_open_space"
+        ],
+        "notes": "Landscape and stormwater only. No buildings.",
+        "stormwater": {
+          "daily_retention_m3": 280
+        },
+        "plot_area_sqm": 2830.97,
+        "plot_area_source": "Computed from migrashim.shp polygon area (EPSG:2039, ITM). Not listed in תקנון rights table on page 16 (שצ\"פ has no building rights).",
+        "governing_takanon_id": "407-0977595"
+      },
+      {
+        "parcel_id": "plot_5",
+        "display_label": "מגרש 5",
+        "land_use": "שצ\"פ",
+        "land_use_en": "Public Open Space (residual)",
+        "uses": [
+          "public_open_space"
+        ],
+        "plot_area_sqm": 402.77,
+        "plot_area_source": "Computed from migrashim.shp polygon area (EPSG:2039).",
+        "yeud_code": 882,
+        "yeud_code_confidence": "tentative",
+        "notes": "Small residual parcel inside the plan boundary. NOT mentioned by number in the תקנון. YEUD=882 places it in the שצ\"פ family per MAVAT 800s range convention (see CONTEXT.md Open Tasks). No building rights and no compliance rules attached. Earlier scope_out framing as \"northern site / plan 407-1109909\" was wrong — that plan is the §77–78 notice for the adjacent plan 407-1048248, and plot_5 is well inside 407-0977595.",
+        "compliance_rules_apply": false,
+        "governing_takanon_id": "407-0977595"
+      },
+      {
+        "parcel_id": "plot_6",
+        "display_label": "מגרש 6 — מבנה ציבור",
+        "land_use": "מבנים ומוסדות ציבור",
+        "land_use_en": "Public Buildings and Institutions",
+        "uses": [
+          "public_buildings",
+          "commercial"
+        ],
+        "plot_area_sqm": 2117,
+        "building_rights": {
+          "primary_sqm": 5300,
+          "service_above_sqm": 2500,
+          "service_below_sqm": 3600,
+          "total_sqm": 11400
+        },
+        "commercial_component": {
+          "primary_sqm": 200,
+          "service_sqm": 100,
+          "total_sqm": 300
+        },
+        "height": {
+          "max_height_m": 23,
+          "max_floors_above_entry": 5,
+          "max_basement_floors": 2
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "alternative_source_note": "Could potentially be populated from the vector shapefiles in digital_files.tashrit (ITM polygons, EPSG:2039) instead of DWG layer extraction. Not yet populated — pending identification of the building-line layer (קו בניין). See digital_files.tashrit.todo_building_line_layer."
+        },
+        "stormwater": {
+          "daily_retention_m3": 220
+        },
+        "geometry": {
+          "centroid_lon": 34.79596,
+          "centroid_lat": 31.934673,
+          "kml_boundary": [
+            [
+              34.7961357955,
+              31.9348152982
+            ],
+            [
+              34.7960743129,
+              31.9345940727
+            ],
+            [
+              34.7956924287,
+              31.934671457
+            ],
+            [
+              34.7954845558,
+              31.9347119086
+            ],
+            [
+              34.7954332375,
+              31.934721896
+            ],
+            [
+              34.7954938806,
+              31.9349420387
+            ],
+            [
+              34.7955453464,
+              31.9349317245
+            ],
+            [
+              34.7957549567,
+              31.9348897146
+            ],
+            [
+              34.7960851437,
+              31.9348254503
+            ],
+            [
+              34.7961357955,
+              31.9348152982
+            ]
+          ]
+        },
+        "governing_takanon_id": "407-0977595",
+        "parking_standard": {
+          "status": "deferred_to_national_standard",
+          "source_quote": "החניה בתחום התכנית תהיה בהתאם לתקן החניה התקף בעת הוצאת היתר הבניה",
+          "source_section": "6.2.1",
+          "source_page": 17,
+          "source_document": "תקנון תב\"ע 407-0977595",
+          "fallback_standard": "תקנות התכנון והבנייה (התקנת מקומות חניה) — המהדורה התקפה בעת הוצאת היתר",
+          "private_per_unit": null,
+          "accessible_pct_of_private": null,
+          "motorcycle_pct_of_private": null,
+          "bike_pct_of_private": null,
+          "notes": "Per תקנון §6.2.1 the parking ratio is fixed at permit time by the then-current national standard, not by the תב\"ע itself. The numeric values are intentionally null here — content engine returns requires_review for CONTENT_PARKING_RATIO until the engineer pins the standard. National standard ratios vary by zone and apartment size and were not loaded from a verified source."
+        }
+      },
+      {
+        "parcel_id": "plot_10",
+        "display_label": "מגרש 10",
+        "land_use": "שביל",
+        "land_use_en": "Path",
+        "uses": [
+          "pedestrian_path"
+        ],
+        "plot_area_sqm": 207.38,
+        "plot_area_source": "Computed from migrashim.shp polygon area (EPSG:2039).",
+        "yeud_code": 423,
+        "yeud_code_confidence": "confirmed",
+        "notes": "Pedestrian path created by §2.2 of the תקנון: \"שינוי יעוד קרקע מדרך לשביל ולמבנים ומוסדות ציבור\". Not in the rights table on page 16 — שביל has no building rights. No compliance rules attached.",
+        "compliance_rules_apply": false,
+        "governing_takanon_id": "407-0977595"
+      }
+    ],
+    "compliance_rules": [
+      {
+        "_section": "NUMERIC RULES",
+        "rule_code": "UNITS_MAX_PLOT_1",
+        "rule_type": "numeric",
+        "parcel_id": "plot_1",
+        "parameter": "total_units",
+        "operator": "<=",
+        "threshold": 235,
+        "unit": "יח\"ד",
+        "description": "Maximum 235 housing units in plot 1",
+        "source_quote": "מספר יחידות הדיור המרבי במגרש 1 הינו 235 יח\"ד",
+        "source_section": "סעיף 5, טבלת זכויות",
+        "source_page": 8,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "UNITS_MAX_PLOT_2",
+        "rule_type": "numeric",
+        "parcel_id": "plot_2",
+        "parameter": "total_units",
+        "operator": "<=",
+        "threshold": 152,
+        "unit": "יח\"ד",
+        "description": "Maximum 152 housing units in plot 2",
+        "source_quote": "מספר יחידות הדיור המרבי במגרש 2 הינו 152 יח\"ד",
+        "source_section": "סעיף 5, טבלת זכויות",
+        "source_page": 8,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "HEIGHT_MAX_PLOT_1",
+        "rule_type": "numeric",
+        "parcel_id": "plot_1",
+        "parameter": "max_height_m",
+        "operator": "<=",
+        "threshold": 50,
+        "unit": "מ'",
+        "description": "Maximum building height 50m above entry level in plot 1",
+        "source_section": "סעיף 5, טבלת זכויות",
+        "source_page": 8,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "HEIGHT_MAX_PLOT_2",
+        "rule_type": "numeric",
+        "parcel_id": "plot_2",
+        "parameter": "max_height_m",
+        "operator": "<=",
+        "threshold": 43,
+        "unit": "מ'",
+        "description": "Maximum building height 43m above entry level in plot 2",
+        "source_section": "סעיף 5, טבלת זכויות",
+        "source_page": 8,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "FLOORS_MAX_STREET_ROW",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "floors_street_facing",
+        "operator": "<=",
+        "threshold": 9,
+        "unit": "קומות",
+        "description": "Maximum 9 floors for buildings facing רח' הטייסים",
+        "source_section": "סעיף 4.1.2",
+        "source_page": 6,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "HEIGHT_ABSOLUTE_MAX_ASL",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "height_above_sea_level_m",
+        "operator": "<=",
+        "threshold": 91,
+        "unit": "מ' מעל פני הים",
+        "description": "Absolute ceiling — no structure may exceed 91m above sea level. No variances permitted.",
+        "source_section": "סעיף 6.7",
+        "source_page": 14,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "PUBLIC_USE_MAX_PLOT_2",
+        "rule_type": "numeric",
+        "parcel_id": "plot_2",
+        "parameter": "public_use_sqm",
+        "operator": "<=",
+        "threshold": 750,
+        "unit": "מ\"ר",
+        "description": "Public uses (ground floor + floor 1) max 750 sqm including daycare. מעונות יום counts toward this limit.",
+        "source_section": "סעיף 5, הערה (1)",
+        "source_page": 8,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "AMENITY_MIN_PER_BUILDING",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "amenity_sqm_per_building_avg",
+        "operator": ">=",
+        "threshold": 50,
+        "unit": "מ\"ר",
+        "description": "Minimum 50 sqm resident amenities per building on average",
+        "source_section": "טבלת זכויות הערה (1)",
+        "source_page": 8,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "BASEMENT_COVERAGE_MAX",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "basement_footprint_pct",
+        "operator": "<=",
+        "threshold": 85,
+        "unit": "%",
+        "description": "מרתף footprint ≤85% of plot area. Can exceed only with full stormwater compliance per §6.4.",
+        "source_section": "סעיף 4.1.2ב",
+        "source_page": 7,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "BASEMENT_ENTRANCES_MIN",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "basement_entrance_count",
+        "operator": ">=",
+        "threshold": 2,
+        "unit": "כניסות",
+        "description": "2 separate basement entrances required. One may be shared with plot 6.",
+        "source_section": "סעיף 4.1.2ב סעיף 8",
+        "source_page": 7,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "PERMEABLE_SURFACES_MIN",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "permeable_surface_pct_total_plan",
+        "operator": ">=",
+        "threshold": 15,
+        "unit": "%",
+        "description": "≥15% of total plan area must be permeable surfaces (no basement beneath)",
+        "source_section": "סעיף 6.4",
+        "source_page": 13,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "SHATZAP_PAVING_MAX",
+        "rule_type": "numeric",
+        "parcel_id": "plot_4",
+        "parameter": "hard_paved_pct",
+        "operator": "<=",
+        "threshold": 50,
+        "unit": "%",
+        "description": "≤50% of שצ\"פ area may be hard-paved",
+        "source_section": "סעיף 6.6",
+        "source_page": 14,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "STORMWATER_RETENTION_PLOT_1",
+        "rule_type": "numeric",
+        "parcel_id": "plot_1",
+        "parameter": "stormwater_daily_retention_m3",
+        "operator": ">=",
+        "threshold": 510,
+        "unit": "מ\"ק",
+        "description": "Daily stormwater retention ≥510 m³ for plot 1",
+        "source_section": "סעיף 6.4",
+        "source_page": 13,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "STORMWATER_RETENTION_PLOT_2",
+        "rule_type": "numeric",
+        "parcel_id": "plot_2",
+        "parameter": "stormwater_daily_retention_m3",
+        "operator": ">=",
+        "threshold": 340,
+        "unit": "מ\"ק",
+        "description": "Daily stormwater retention ≥340 m³ for plot 2",
+        "source_section": "סעיף 6.4",
+        "source_page": 13,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "STORMWATER_RETENTION_PLOT_4",
+        "rule_type": "numeric",
+        "parcel_id": "plot_4",
+        "parameter": "stormwater_daily_retention_m3",
+        "operator": ">=",
+        "threshold": 280,
+        "unit": "מ\"ק",
+        "description": "Daily stormwater retention ≥280 m³ for שצ\"פ (plot 4)",
+        "source_section": "סעיף 6.4",
+        "source_page": 13,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "STORMWATER_RETENTION_PLOT_6",
+        "rule_type": "numeric",
+        "parcel_id": "plot_6",
+        "parameter": "stormwater_daily_retention_m3",
+        "operator": ">=",
+        "threshold": 220,
+        "unit": "מ\"ק",
+        "description": "Daily stormwater retention ≥220 m³ for public building plot 6",
+        "source_section": "סעיף 6.4",
+        "source_page": 13,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "TRANSFER_BETWEEN_PLOTS_MAX",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "transfer_pct",
+        "operator": "<=",
+        "threshold": 10,
+        "unit": "%",
+        "description": "Up to 10% of building area or units may be transferred between residential plots. No additional floors from transfer.",
+        "source_section": "טבלת זכויות",
+        "source_page": 8,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "_section": "GEOMETRIC RULES",
+        "rule_code": "SETBACK_MIN_BETWEEN_BUILDINGS",
+        "rule_type": "geometric",
+        "parcel_id": "all",
+        "parameter": "min_gap_between_buildings_m",
+        "operator": ">=",
+        "threshold": 9.0,
+        "unit": "מ'",
+        "description": "Minimum 9m gap between any two buildings including balconies. Measure envelope-to-envelope.",
+        "source_section": "סעיף 4.1.2א סעיף 4",
+        "source_page": 6,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed",
+        "geometry_note": "Use Shapely unary_union(footprint + balconies) then .distance(). Store nearest_points() as evidence."
+      },
+      {
+        "rule_code": "TOPFLOOR_SETBACK_STREET",
+        "rule_type": "geometric",
+        "parcel_id": "all",
+        "parameter": "top_floor_setback_from_street_m",
+        "operator": ">=",
+        "threshold": 3.0,
+        "unit": "מ'",
+        "description": "Top floor must be set back ≥3m from רח' הטייסים facade",
+        "source_section": "סעיף 4.1.2א סעיף 2",
+        "source_page": 6,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "TOPFLOOR_SETBACK_SHATZAP",
+        "rule_type": "geometric",
+        "parcel_id": "all",
+        "parameter": "top_floor_setback_from_shatzap_m",
+        "operator": ">=",
+        "threshold": 3.0,
+        "unit": "מ'",
+        "description": "Top floor must be set back ≥3m from שצ\"פ boundary (plot 4)",
+        "source_section": "סעיף 4.1.2א סעיף 2",
+        "source_page": 6,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "BALCONY_SETBACK_FROM_BOUNDARY",
+        "rule_type": "geometric",
+        "parcel_id": "all",
+        "parameter": "balcony_setback_from_plot_boundary_m",
+        "operator": ">=",
+        "threshold": 1.0,
+        "unit": "מ'",
+        "description": "Balconies must maintain ≥1m from plot boundary",
+        "source_section": "סעיף 4.1.2א סעיף 11",
+        "source_page": 6,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "WESTERN_LINE_PLOT_1",
+        "rule_type": "geometric",
+        "parcel_id": "plot_1",
+        "parameter": "western_building_line_marked",
+        "operator": "=",
+        "threshold": 1,
+        "unit": "boolean",
+        "description": "Western building line of plot 1 toward plot 32 must be marked on plan. No balcony protrusion beyond this line.",
+        "source_section": "סעיף 4.1.2א סעיף 12",
+        "source_page": 6,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "_section": "DOCUMENT PRESENCE RULES",
+        "rule_code": "RTA_APPROVAL_OVER40M",
+        "rule_type": "document_presence",
+        "parcel_id": "all",
+        "parameter": "rta_approval_letter",
+        "operator": "EXISTS",
+        "threshold": null,
+        "description": "רשות התעופה האזרחית (רת\"א) approval required for any structure exceeding 40m above ground. Buildings 1B and 1C exceed this.",
+        "source_section": "סעיף 6.1 סעיף 2",
+        "source_page": 11,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed",
+        "applies_when": "any_building_height_above_ground_m > 40"
+      },
+      {
+        "rule_code": "STORMWATER_ENGINEER_REPORT",
+        "rule_type": "document_presence",
+        "parcel_id": "all",
+        "parameter": "stormwater_engineer_report",
+        "operator": "EXISTS",
+        "threshold": null,
+        "description": "Hydraulic engineer's stormwater report required as pre-permit condition. Must be signed by licensed engineer.",
+        "source_section": "סעיף 6.1 סעיף 3",
+        "source_page": 11,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "TREE_SURVEY_APPROVAL",
+        "rule_type": "document_presence",
+        "parcel_id": "all",
+        "parameter": "tree_survey_forester_approval",
+        "operator": "EXISTS",
+        "threshold": null,
+        "description": "Forest officer (פקיד יערות) approval of tree survey required before any demolition",
+        "source_section": "סעיף 6.1 סעיף 4",
+        "source_page": 11,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "ASBESTOS_SURVEY",
+        "rule_type": "document_presence",
+        "parcel_id": "all",
+        "parameter": "asbestos_survey_environmental_approval",
+        "operator": "EXISTS",
+        "threshold": null,
+        "description": "Asbestos survey + Ministry of Environment approval for removal required before demolition",
+        "source_section": "סעיף 6.1 סעיף 5",
+        "source_page": 11,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "DEMOLITION_SEQUENCE_MARKED",
+        "rule_type": "document_presence",
+        "parcel_id": "all",
+        "parameter": "demolition_buildings_marked_on_plan",
+        "operator": "EXISTS",
+        "threshold": null,
+        "description": "All buildings to be demolished must be marked on the site plan תשריט",
+        "source_section": "סעיף 6.1 סעיף 6",
+        "source_page": 11,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "_section": "PROCEDURAL RULES",
+        "rule_code": "SCALE_REQUIRED_1250",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "plan_scale",
+        "operator": "=",
+        "threshold": "1:250",
+        "unit": "קנה מידה",
+        "description": "תכנית בינוי ופיתוח must be submitted at 1:250 scale minimum. 1:500 or 1:750 is NOT acceptable.",
+        "source_section": "סעיף 6.1 סעיף 1",
+        "source_page": 11,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed",
+        "check_note": "Extract scale from title block on site plan pages. Accepted values: '1:250' only."
+      },
+      {
+        "rule_code": "PARKING_UNDERGROUND_ONLY",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "parking_location",
+        "operator": "=",
+        "threshold": "underground",
+        "description": "All parking must be underground. No surface parking permitted. Visitor spaces must not be assigned to specific units.",
+        "source_section": "סעיף 6.2",
+        "source_page": 12,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "SMALL_APARTMENTS_MIN_PCT",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "small_apartment_pct_of_total",
+        "operator": ">=",
+        "threshold": 20,
+        "unit": "%",
+        "description": "At least 20% of ALL units across the entire plan must be small apartments (≤80 sqm total area including balcony). Minimum 78 units.",
+        "source_section": "הוראות טבלה 5",
+        "source_page": 8,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "GARDEN_APARTMENTS_ORIENTATION",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "garden_apartment_street_facing",
+        "operator": "!=",
+        "threshold": "רח' הטייסים",
+        "description": "Garden apartments are permitted at ground level but their gardens must NOT face רח' הטייסים",
+        "source_section": "סעיף 4.1.2א סעיף 3",
+        "source_page": 6,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      }
+    ],
+    "global_rules": {
+      "small_apartments": {
+        "min_pct": 20,
+        "max_sqm": 80,
+        "scope": "entire_plan",
+        "description": "At least 20% of all units across the entire plan must be ≤80 sqm total area",
+        "min_units": 78
+      },
+      "transfer_between_plots": {
+        "max_pct": 10,
+        "scope": "residential_plots_only",
+        "additional_floors_allowed": false,
+        "description": "Up to 10% of building area or units may be transferred between residential plots. Cannot add floors."
+      },
+      "pre_permit_condition": {
+        "required_document": "תכנית בינוי ופיתוח",
+        "scale": "1:250",
+        "description": "Full design and development plan at 1:250 scale required before any building permit. This is a pre-permit gate."
+      },
+      "stormwater_total": {
+        "total_required_m3": 1350,
+        "redistribution_allowed": true,
+        "description": "Total 1,350 m³ daily retention across all plots. Redistribution between plots is permitted."
+      }
+    },
+    "geometry": {
+      "coordinate_system": "WGS84",
+      "boundary": {
+        "type": "blue_line",
+        "coordinates": [
+          [
+            34.7961739591,
+            31.934835303
+          ],
+          [
+            34.7960862633,
+            31.9345197597
+          ],
+          [
+            34.7960439821,
+            31.9343552205
+          ],
+          [
+            34.7960152611,
+            31.9342497969
+          ],
+          [
+            34.7959522019,
+            31.9340179195
+          ],
+          [
+            34.7959140129,
+            31.9338774752
+          ],
+          [
+            34.7958617753,
+            31.9336855827
+          ],
+          [
+            34.7958235869,
+            31.9335450482
+          ],
+          [
+            34.7957815796,
+            31.9333904928
+          ],
+          [
+            34.795773224,
+            31.9333597449
+          ],
+          [
+            34.7951997742,
+            31.93347315
+          ],
+          [
+            34.7949047933,
+            31.9335314483
+          ],
+          [
+            34.7945870242,
+            31.9335942499
+          ],
+          [
+            34.7945954874,
+            31.9336249766
+          ],
+          [
+            34.7946927648,
+            31.933978141
+          ],
+          [
+            34.7947000209,
+            31.9340044774
+          ],
+          [
+            34.7949502225,
+            31.9339552915
+          ],
+          [
+            34.7952559127,
+            31.935042137
+          ],
+          [
+            34.7954770249,
+            31.9349991582
+          ],
+          [
+            34.795829461,
+            31.9349306511
+          ],
+          [
+            34.7960994101,
+            31.9348781771
+          ],
+          [
+            34.7961925401,
+            31.9349021669
+          ],
+          [
+            34.7961739591,
+            31.934835303
+          ]
+        ]
+      },
+      "surrounding_buildings_count": 178
+    },
+    "digital_files": {
+      "kml_plan_boundary": "407-0977595_תשריט מאושר גבול כחול (KML).kml",
+      "kml_google_earth": "407-0977595_גבול תכנית(KML)_ לצפיה ב google earth.kml",
+      "xls_building_rights": "407-0977595_טבלאות זכויות בנייה XLS.xls",
+      "xls_format_note": "HTML-formatted table, not true XLS binary",
+      "dwg_files": [
+        {
+          "filename": "407-0977595_מצב מוצע.dwg",
+          "description": "Proposed state תשריט",
+          "format": "AC1018 (AutoCAD 2004)"
+        },
+        {
+          "filename": "407-0977595_הוראות והנחיות, מגבלות ותנאים.dwg",
+          "description": "Instructions, guidelines, constraints",
+          "format": "AC1018 (AutoCAD 2004)"
+        },
+        {
+          "filename": "407-0977595_גרם מפלסים.dwg",
+          "description": "Level diagram",
+          "format": "AC1018 (AutoCAD 2004)"
+        }
+      ],
+      "dwg_conversion_note": "AC1018 requires libredwg or ODA converter. ezdxf reads DXF only.",
+      "shp_file": "407-0977595_תשריט מאושר (SHP).zip",
+      "takanon_pdf": {
+        "path": "data/projects/407-0977595/source-documents/takanon.pdf",
+        "filename": "תוכנית הטייסים 407-0977595.pdf",
+        "page_count": 19,
+        "pdf_production_date": "2024-01-07",
+        "pdf_production_date_note": "מועד הפקה — PDF generation timestamp from מבא\"ת. NOT the statutory approval date. Statutory approval date lives in meta.approval_date (2024-01-23).",
+        "sha256": "803d3d6109b257cf674785546c22486794ef2c7c9abf3459fd64b5637a4e0c43",
+        "role": "source_of_truth",
+        "description": "Statutory תקנון for plan 407-0977595 (מתחם הטייסים). Anchor for all rule citations and evidence bundles. Used as (1) reference, (2) test fixture for the rule-extraction pipeline, (3) target for evidence_bundle.source_page references.",
+        "todo_verify_approval_date": "Verify the real statutory approval date against mavat.gov.il and ילקוט פרסומים before it is used for any compliance-critical logic. Current meta.approval_date (2024-01-23) is unverified."
+      },
+      "tashrit": {
+        "role": "statutory_map",
+        "source_zip": "4053239.zip",
+        "fileset_sha256": "0cdfcd356af482fdfee1bf9b965abe9a90dd064a09c381ee2ee8ca861b448a84",
+        "parcel_count_check": {
+          "migrashim_dbf_rows": 6,
+          "schema_declared_parcels": 6,
+          "match": true,
+          "note": "Schema currently models 4 parcels in compliance scope (1, 2, 4, 6). The תשריט carries 6 (also 3 and 5, northern site, scope_out). Match is on full plan inventory."
+        },
+        "shapefile_layers": {
+          "migrashim": {
+            "description": "Parcel polygons (מגרשים)",
+            "rows": 6,
+            "shp": "migrashim.shp"
+          },
+          "kavim_kchulim": {
+            "description": "Blue-line / plan boundary (קווים כחולים)",
+            "shp": "kavim kchulim.shp"
+          },
+          "ymishnep": {
+            "description": "Sub-land-use polygons (ייעוד משנה - פוליגונים)",
+            "shp": "ymishnep.shp"
+          },
+          "rozeta": {
+            "description": "North arrow / legend (רוזטה)",
+            "shp": "rozeta.shp"
+          }
+        },
+        "rendered_pdf": {
+          "filename": "4053239_M.pdf",
+          "description": "Human-readable rendered תשריט PDF (paired with the M.jpg/.jgw scan)."
+        },
+        "georeferenced_rasters": {
+          "4053239_58_1": {
+            "jgw": "4053239_58_1.jgw",
+            "jpg": "4053239_58_1.jpg",
+            "jpg_pixels": {
+              "width": 10629,
+              "height": 10038
+            },
+            "georef_itm": {
+              "pixel_size_x_m": 0.021182677167004768,
+              "pixel_size_y_m": -0.02122677296279615,
+              "rotation_y": 2.986516358677768e-05,
+              "rotation_x": -1.610301478029953e-05,
+              "upper_left_itm_easting": 180683.1455308532,
+              "upper_left_itm_northing": 649207.2549502784
+            },
+            "crs": "EPSG:2039 (ITM, Israeli Transverse Mercator)"
+          },
+          "4053239_58_2": {
+            "jgw": "4053239_58_2.jgw",
+            "jpg": "4053239_58_2.jpg",
+            "jpg_pixels": {
+              "width": 10629,
+              "height": 10038
+            },
+            "georef_itm": {
+              "pixel_size_x_m": 0.02119301169280066,
+              "pixel_size_y_m": -0.021231611847035075,
+              "rotation_y": 1.4723078715275733e-05,
+              "rotation_x": -1.814974134862436e-05,
+              "upper_left_itm_easting": 180683.15587882855,
+              "upper_left_itm_northing": 649207.335848265
+            },
+            "crs": "EPSG:2039 (ITM, Israeli Transverse Mercator)"
+          },
+          "4053239_M": {
+            "jgw": "4053239_M.jgw",
+            "jpg": "4053239_M.jpg",
+            "jpg_pixels": {
+              "width": 7004,
+              "height": 4951
+            },
+            "georef_itm": {
+              "pixel_size_x_m": 0.04241532616140906,
+              "pixel_size_y_m": -0.0424063279134002,
+              "rotation_y": -1.478302727267727e-06,
+              "rotation_x": 2.9535235922737337e-06,
+              "upper_left_itm_easting": 180679.8468823536,
+              "upper_left_itm_northing": 649203.344982351
+            },
+            "crs": "EPSG:2039 (ITM, Israeli Transverse Mercator)"
+          }
+        },
+        "files": [
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239.lyr",
+            "sha256": "450ec5262ea5ec5dfa6420ae3bfaaf2b1e3dd28832e98f6332ceab4834d79e81",
+            "bytes": 34816
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239_58_1.jgw",
+            "sha256": "440f223e2d0d15de06bd2616359b445340bb017980fb6856c97dd5468ba6d0c2",
+            "bytes": 135
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239_58_1.jpg",
+            "sha256": "a825db6a1d6300e4ff00b18cef88c9bb27f47cc8dc9c8439c78c90ae84b23abe",
+            "bytes": 10114891
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239_58_2.jgw",
+            "sha256": "0150db45d95f7bcfc648def8c0b321f8254498a8717d9905ed239492f13d77d0",
+            "bytes": 135
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239_58_2.jpg",
+            "sha256": "b9c01634c8a4508fd0826cb5d99b0ac998cab93aafa0eef92cd4708401ab5ee6",
+            "bytes": 11255318
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239_M.jgw",
+            "sha256": "eaadbc97ad8997a28432013a5a4fcf01b970f9d70ddf330a7a93007cc2271711",
+            "bytes": 136
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239_M.jpg",
+            "sha256": "5384afe241a94b3a18cd9d8c9302b361a49d423732c6eb49a7c60b730c18520b",
+            "bytes": 4063958
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/4053239_M.pdf",
+            "sha256": "ada3818896435e610e0d066f86d08089389d983d862dbc92efd082c351b68c1f",
+            "bytes": 1209920
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/kavim kchulim.cpg",
+            "sha256": "17b1d8bab933652522c4ee03ab56642f324492c6715491ce9f67d59602436f60",
+            "bytes": 9
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/kavim kchulim.dbf",
+            "sha256": "25ab013912f5fb529980ab50b11c2770798e6f303afb4f6c6ba3086d754e2e8c",
+            "bytes": 450
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/kavim kchulim.sbn",
+            "sha256": "7e838a7a7599a8305410e783ccaceeb03872244c1f15274d5875cd85d6a868c8",
+            "bytes": 132
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/kavim kchulim.sbx",
+            "sha256": "3c571b40a04f955a9811d0d17c1913a0c783807a38f920ecc000b7f1c8421df5",
+            "bytes": 116
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/kavim kchulim.shp",
+            "sha256": "7a22facff9a5425feeb5c421b470d38da2ce137316ec67cffcbf0cc34cb4adf2",
+            "bytes": 1212
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/kavim kchulim.shx",
+            "sha256": "6f76f1895db390490f303f828be194eed844b40536c29fff8b8eafcef3bdc1c2",
+            "bytes": 108
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/migrashim.cpg",
+            "sha256": "17b1d8bab933652522c4ee03ab56642f324492c6715491ce9f67d59602436f60",
+            "bytes": 9
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/migrashim.dbf",
+            "sha256": "94cec45ba7033b8416d61721e0f05a97da5dbceea120b38f64b4e489f254859d",
+            "bytes": 4192
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/migrashim.sbn",
+            "sha256": "3a2f42196358dfba6579522cc21b360865debf0e52cf2e6cdf0c3daba4484462",
+            "bytes": 188
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/migrashim.sbx",
+            "sha256": "e27e18be0f0d820510d71af2e0d9bf4a7e63e55745ac30a94313dd51739651df",
+            "bytes": 124
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/migrashim.shp",
+            "sha256": "d098b976e856402cc5ab66f93f51a03daa9f14da193e66299a14b5718ed6d412",
+            "bytes": 1844
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/migrashim.shx",
+            "sha256": "4aaa8bf0e791659efc08a0fc44e0314d7b3b2557dcaf985bf01461bc62954267",
+            "bytes": 148
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/rozeta.cpg",
+            "sha256": "17b1d8bab933652522c4ee03ab56642f324492c6715491ce9f67d59602436f60",
+            "bytes": 9
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/rozeta.dbf",
+            "sha256": "7fa1c3c27bff9251a74d2463147ce40274e25a77889cf434b4487ba62fdb34d1",
+            "bytes": 2037
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/rozeta.sbn",
+            "sha256": "bc3f129432c6c913676812aabe4887ca541c9702c14bd97c73cf42a4a60fb69f",
+            "bytes": 148
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/rozeta.sbx",
+            "sha256": "3c45c9235ccdc73abbb46a8f22b4549abb49593afb3f17e6a458df4f7249624b",
+            "bytes": 116
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/rozeta.shp",
+            "sha256": "7d91fd02fa8e81623201f5258af5bb6d34284b75ddaf0894d839ab0a72941bad",
+            "bytes": 128
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/rozeta.shx",
+            "sha256": "3b4dc2ea109351764fe1b39cdbf0bfdcca0781b83fe8c0dbc096783f0000e6c5",
+            "bytes": 108
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/ymishnep.cpg",
+            "sha256": "17b1d8bab933652522c4ee03ab56642f324492c6715491ce9f67d59602436f60",
+            "bytes": 9
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/ymishnep.dbf",
+            "sha256": "f2a5d2bf9f5a802107e99e7d666f1e5ca852e638f00634dfc286d585b1d380b3",
+            "bytes": 5124
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/ymishnep.sbn",
+            "sha256": "677cdaef7baada5d2d23bf2739f783006c390a0f845a1e6d5698b8d88754f7cc",
+            "bytes": 788
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/ymishnep.sbx",
+            "sha256": "0aebdc4f75034fd00068a4f91054ebbd3f04044d2d2c752d666da0458c732c38",
+            "bytes": 172
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/ymishnep.shp",
+            "sha256": "6f3786cdd8c04dcf8abc21fff3183bd0475769963835afeecdb50355e5631988",
+            "bytes": 1836
+          },
+          {
+            "path": "data/projects/407-0977595/source-documents/tashrit/ymishnep.shx",
+            "sha256": "5b3955414a31e6a42d60b7946b30000719b9c0da3f7fe6ee2b91e472d1ab0404",
+            "bytes": 596
+          }
+        ],
+        "shapefile_geometry_note": "ESRI shapefiles encode parcel polygon geometry in vector form (ITM, EPSG:2039). This is a potential alternative source for populating parcels[].setbacks_per_tashrit fields without DWG layer extraction. NOT YET POPULATED — pending verification of which shapefile (if any) carries the building-line layer (קו בניין). migrashim.shp gives parcel boundaries; the building line may live in kavim kchulim.shp (currently the plan's blue line) or may be absent and must come from a DWG layer.",
+        "todo_building_line_layer": "Identify which shapefile carries קו בניין (building setback line). If none, this remains a DWG-only extraction (407-0977595_מצב מוצע.dwg). Setback values must be sourced from the building-line layer specifically, not the parcel boundary."
+      }
+    },
+    "submissions": [],
+    "notes": {
+      "northern_plan": "This תב\"ע covers only the southern part (387 units, plots 1,2,4,6). The full תכנית עיצוב submitted by Kika Braz (700 units, 23.2 dunams) spans a second plan — 407-1109909. That plan is NOT YET APPROVED. Do not include plots 3 and 5 in any compliance opinion.",
+      "northern_plan_registry_note": "UNRESOLVED: Perplexity flagged that the northern plan may have a different number and may have reached הפקדה stage in January 2025. Verify in mavat.gov.il before implementing any northern-site logic.",
+      "known_violations_in_reference_submission": [
+        "SCALE_REQUIRED_1250 — submitted at 1:500, required 1:250",
+        "RTA_APPROVAL_OVER40M — approval letter not attached",
+        "STORMWATER_ENGINEER_REPORT — not attached",
+        "PUBLIC_USE_MAX_PLOT_2 — 780 sqm submitted, max 750 sqm",
+        "TOPFLOOR_SETBACK_SHATZAP — building 1C: 2.85m, required ≥3.0m",
+        "WESTERN_LINE_PLOT_1 — western building line not marked on plan"
+      ],
+      "takkanon_footnotes": [
+        "(1) Primary area includes 50 sqm/building for resident amenities. Any other use = significant variance.",
+        "(2) Floor count in table + roof level with mechanical enclosures and stairwell exit per §6.9.",
+        "(3) 4th basement level permitted only to meet parking standards.",
+        "(4) Building setback lines per תשריט (DWG drawings).",
+        "(5) 400 sqm of service area serves the public building as covered courtyards."
+      ]
+    },
+    "plan_wide_limits": {
+      "parking_standard_source": {
+        "status": "deferred_to_national_standard",
+        "source_quote": "החניה בתחום התכנית תהיה בהתאם לתקן החניה התקף בעת הוצאת היתר הבניה",
+        "source_section": "6.2.1",
+        "source_page": 17,
+        "source_document": "תקנון תב\"ע 407-0977595"
+      }
+    }
+  }
+}

@@ -1,0 +1,69 @@
+/* Adapted from keyword-feasibility-report skill.
+   Used for: NZC planning compliance platform Hebrew PDFs.
+   Tested with: wkhtmltopdf + NotoSansHebrew base64-embedded.
+   DO NOT use with ReportLab/WeasyPrint.
+
+   Color palette adapted to NZC (Ness Ziona Urban Renewal Authority):
+     #1a1a2e (Veedda dark)  -> #005030 (NZC primary green)
+     #0f3460 (Veedda blue)  -> #007840 (NZC brand green)
+   Status / accent colors (red/amber/green/blue) preserved as-is. */
+
+@font-face{font-family:'Heb';src:url(data:font/truetype;base64,{REGULAR_BASE64}) format('truetype');font-weight:400}
+@font-face{font-family:'Heb';src:url(data:font/truetype;base64,{BOLD_BASE64}) format('truetype');font-weight:700}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Heb',Arial,sans-serif;color:#333;font-size:10.5pt;line-height:1.7;direction:rtl}
+.pb{page-break-before:always}
+.cover{text-align:center;padding-top:35px}
+.bb{background:#005030;color:#aaa;padding:11px 0;font-size:10pt;letter-spacing:2px}
+.bb img{height:40px;margin-bottom:5px;display:block;margin:0 auto 5px auto}
+.tb{background:#005030;padding:28px 35px}
+.tb h1{color:white;font-size:24pt;font-weight:700;margin-bottom:8px}
+.tb .s{color:#ccc;font-size:12pt;margin-top:5px}
+.tb .url{color:#888;font-size:9pt;margin-top:3px}
+.sb{display:inline-block;border:3px solid #e94560;border-radius:12px;padding:18px 45px;margin:25px auto;background:#f5f6f8}
+.sb .n{font-size:40pt;font-weight:700;color:#e94560;line-height:1.1}
+.sb .l{font-size:14pt;font-weight:700;color:#005030;margin-top:4px}
+.sb .sl{font-size:10pt;color:#666;margin-top:4px}
+.ib{background:#f0f7ff;border:1.5px solid #007840;border-radius:6px;padding:14px 18px;margin:12px auto;max-width:90%;text-align:right;line-height:1.8;font-size:10pt}
+.ib.g{background:#f0fff4;border-color:#27ae60}
+.ib.h{background:#dbeafe;border-color:#007840}
+.ib.y{background:#fffbeb;border-color:#f39c12}
+.ct{padding:18px 28px}
+h2{font-size:16pt;color:#005030;margin-bottom:7px;padding-bottom:4px;border-bottom:2px solid #007840}
+h3{font-size:12pt;color:#007840;margin-top:16px;margin-bottom:5px}
+p{margin-bottom:7px;text-align:right;font-size:10pt}
+.sm{font-size:8pt;color:#666}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:9pt}
+th{background:#005030;color:white;font-weight:700;padding:7px 6px;text-align:center;font-size:8.5pt}
+td{padding:6px;text-align:center;border:1px solid #ddd;font-size:8.5pt}
+tr:nth-child(even){background:#f5f6f8}
+.cc{background:#dbeafe !important;font-weight:700}
+.pc{text-align:right;font-weight:600;background:white !important}
+.go{color:#27ae60;font-weight:700}
+.ba{color:#e74c3c;font-weight:700}
+.wa{color:#f39c12;font-weight:700}
+.gi{display:table;width:100%;background:#f5f6f8;border:1px solid #e0e0e0;border-radius:5px;margin:6px 0}
+.gi>div{display:table-cell;vertical-align:top;padding:9px 11px}
+.gi .gt{width:150px;font-weight:700;color:#005030;border-left:1px solid #e0e0e0;font-size:10pt}
+.gi .gs{width:60px;text-align:center;font-weight:700;border-left:1px solid #e0e0e0;font-size:9.5pt}
+.gi .gn{font-size:9pt;color:#555}
+.ac{display:table;width:100%;background:#f5f6f8;border:1px solid #e0e0e0;border-radius:5px;margin:6px 0}
+.ac>div{display:table-cell;vertical-align:middle;padding:9px}
+.ac .an{width:38px;text-align:center;font-size:17pt;font-weight:700;color:#007840}
+.ac .ab{border-right:1px solid #e0e0e0;border-left:1px solid #e0e0e0}
+.ac .ab .at{font-weight:700;font-size:10.5pt;color:#005030;margin-bottom:2px}
+.ac .ab .ad{font-size:8.5pt;color:#666}
+.ac .au{width:55px;text-align:center;font-weight:700;font-size:9pt;border-left:1px solid #e0e0e0}
+.ac .ae{width:65px;text-align:center;font-size:8pt;color:#666}
+.ac.u{border-right:4px solid #e74c3c}
+.ac.hi{border-right:4px solid #f39c12}
+.ac.m{border-right:4px solid #3498db}
+.tl{display:table;width:100%;margin:10px 0}
+.tl .ph{display:table-cell;text-align:center;border:1px solid #ddd}
+.tl .ph .pt{background:#007840;color:white;padding:7px;font-weight:700;font-size:10pt}
+.tl .ph .pp{padding:9px;background:#f5f6f8;font-size:9pt}
+.fq{background:#fafafa;border:1px solid #ddd;border-radius:6px;padding:13px 18px;margin:8px 0}
+.fq h4{color:#005030;font-size:10.5pt;margin-bottom:4px;margin-top:10px}
+.fq h4:first-child{margin-top:0}
+.fq p{font-size:9.5pt;color:#444;margin-bottom:6px;line-height:1.7}
+.ft{text-align:center;color:#999;font-size:7.5pt;margin-top:25px;padding-top:7px;border-top:1px solid #ddd}

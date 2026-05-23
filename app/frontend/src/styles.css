@@ -1,0 +1,1025 @@
+/* Phase 2a styles. RTL throughout. Logical properties only — no margin-left etc.
+ * The full design system arrives in Phase 4 polish; this is functional + clean.
+ */
+
+:root {
+  --green:        #005030;
+  --green-dark:   #003d24;
+  --green-soft:   #f3f8f5;
+  --green-line:   #d5e7dc;
+  --amber:        #b58900;
+  --amber-bg:     #fff8e1;
+  --red:          #b00020;
+  --red-bg:       #fde8e8;
+  --bg:           #fafafa;
+  --card-bg:      #ffffff;
+  --fg:           #1a1a1a;
+  --muted:        #777777;
+  --rule:         #e0e0e0;
+  --ok:           #1f7a3e;
+  --warn:         #b58900;
+  --hover:        #f0f4f1;
+  --shadow-sm:    0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Heebo", "Segoe UI", "Arial Hebrew", sans-serif;
+  line-height: 1.6;
+  direction: rtl;
+}
+
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+code, .path {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  background: var(--green-soft);
+  padding: 1px 5px;
+  border-radius: 3px;
+  display: inline-block;
+}
+.path { direction: ltr; }
+
+.muted { color: var(--muted); font-size: 14px; }
+.ok    { color: var(--ok); font-weight: 600; }
+.warn  { color: var(--warn); font-weight: 600; }
+.required { color: var(--red); font-weight: 700; }
+
+/* ─── App shell ─────────────────────────────────────────────────────── */
+
+.app-shell {
+  display: flex;
+  flex-direction: row-reverse;       /* RTL: sidebar on the right visually */
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+.sidebar {
+  flex: 0 0 280px;
+  background: var(--card-bg);
+  border-inline-start: 1px solid var(--rule);  /* line on the visual left edge */
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.content {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 28px 36px 80px;
+  max-width: 100%;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────────────── */
+
+.sidebar-header {
+  padding: 22px 22px 14px;
+  border-block-end: 1px solid var(--rule);
+}
+.brand-link {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  margin-block-end: 14px;
+}
+.brand-link:hover { text-decoration: none; }
+.brand-eyebrow {
+  font-size: 11.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+}
+.brand-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--green);
+  margin-block-start: 2px;
+}
+.new-project-btn {
+  display: block;
+  text-align: center;
+  width: 100%;
+  font-size: 14px;
+}
+.sidebar-empty {
+  padding: 14px 22px;
+}
+.sidebar-group {
+  padding: 12px 14px 4px;
+}
+.sidebar-group-title {
+  font-size: 11.5px;
+  color: var(--muted);
+  text-transform: none;
+  font-weight: 600;
+  margin: 6px 8px;
+  letter-spacing: 0.04em;
+}
+.sidebar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sidebar-item a {
+  display: block;
+  padding: 8px 10px;
+  border-radius: 5px;
+  color: var(--fg);
+  text-decoration: none;
+}
+.sidebar-item a:hover {
+  background: var(--hover);
+  text-decoration: none;
+}
+.sidebar-item.active a {
+  background: var(--green-soft);
+  border-inline-end: 3px solid var(--green);   /* indicator on RTL right edge */
+}
+.sidebar-item-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+.sidebar-item-meta {
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 2px;
+}
+.sidebar-item-count {
+  background: var(--green-soft);
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+.sidebar-footer {
+  margin-block-start: auto;
+  padding: 14px 22px;
+  border-block-start: 1px solid var(--rule);
+}
+.archived-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+/* ─── Page headers / cards ──────────────────────────────────────────── */
+
+.page-header {
+  margin-block-end: 20px;
+}
+.page-header h1 {
+  font-size: 26px;
+  color: var(--green);
+  margin: 6px 0;
+}
+.back-link {
+  display: inline-block;
+  font-size: 13px;
+  margin-block-end: 4px;
+}
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+/* The left child holds the title + meta. Without min-width:0 a long Hebrew
+ * project name (no whitespace breakpoints near the start) refuses to shrink
+ * inside the flex parent and overflows the viewport. */
+.project-header > div:first-child {
+  min-width: 0;
+  flex: 1 1 0;
+}
+.project-header h1 {
+  margin: 6px 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;        /* break inside Hebrew dash-joined runs */
+  word-break: break-word;
+}
+.project-actions { flex-shrink: 0; }
+.project-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-block-start: 4px;
+}
+.project-meta strong { color: var(--fg); font-weight: 600; }
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 18px 22px;
+  margin-block-end: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.card h3 {
+  font-size: 16px;
+  color: var(--green);
+  margin: 0 0 10px;
+}
+
+/* ─── Key-value display ─────────────────────────────────────────────── */
+
+.kv {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 18px;
+  margin: 0;
+  font-size: 14px;
+}
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+
+/* ─── Buttons ───────────────────────────────────────────────────────── */
+
+.primary-btn,
+.ghost-btn {
+  display: inline-block;
+  padding: 8px 18px;
+  border-radius: 5px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+.primary-btn {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.primary-btn:hover:not(:disabled) { background: var(--green-dark); border-color: var(--green-dark); text-decoration: none; }
+.primary-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.ghost-btn {
+  background: transparent;
+  color: var(--green);
+  border-color: var(--green-line);
+}
+.ghost-btn:hover { background: var(--green-soft); text-decoration: none; }
+.ghost-btn.danger { color: var(--red); border-color: #f5cdcd; }
+.ghost-btn.danger:hover { background: var(--red-bg); }
+
+.inline-link { font-weight: 600; }
+
+/* ─── Forms ─────────────────────────────────────────────────────────── */
+
+.form-card {
+  background: var(--card-bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 24px;
+  max-width: 640px;
+  box-shadow: var(--shadow-sm);
+}
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-block-end: 16px;
+}
+.form-label {
+  font-size: 13px;
+  color: var(--muted);
+}
+.form-field input[type="text"],
+.form-field input[type="file"] {
+  padding: 8px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  background: #fff;
+}
+.form-field input[type="text"]:focus {
+  outline: 2px solid var(--green);
+  outline-offset: -1px;
+}
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-block-start: 12px;
+}
+
+/* ─── Tabs ──────────────────────────────────────────────────────────── */
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-block-end: 2px solid var(--rule);
+  margin-block-end: 18px;
+}
+.tab {
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--muted);
+  border-block-end: 2px solid transparent;
+  margin-block-end: -2px;
+}
+.tab:hover { color: var(--fg); }
+.tab.active {
+  color: var(--green);
+  border-block-end-color: var(--green);
+  font-weight: 600;
+}
+
+/* ─── Submissions ───────────────────────────────────────────────────── */
+
+.upload-card { background: var(--green-soft); border-color: var(--green-line); }
+.upload-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 2fr;
+  gap: 14px;
+}
+.upload-progress { margin-block-start: 8px; }
+
+.submissions-list { margin-block-start: 18px; }
+.submission-card {
+  background: var(--card-bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-block-end: 14px;
+  box-shadow: var(--shadow-sm);
+}
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.submission-header h4 {
+  margin: 0;
+  font-size: 16px;
+}
+.submission-meta { font-size: 12.5px; margin-block-start: 3px; }
+.submission-actions {
+  margin-block-start: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+/* ─── Status badges ─────────────────────────────────────────────────── */
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.s-queued     { background: #e8eaed; color: #5f6368; }
+.s-running    { background: var(--amber-bg); color: var(--amber); }
+.s-completed  { background: #e6f4ea; color: var(--ok); }
+.s-failed     { background: var(--red-bg); color: var(--red); }
+
+/* ─── Engine status ─────────────────────────────────────────────────── */
+
+.engine-status {
+  margin-block-start: 16px;
+  padding: 14px 18px;
+  background: var(--green-soft);
+  border: 1px solid var(--green-line);
+  border-radius: 6px;
+}
+.engine-status-header { margin-block-end: 8px; }
+.status-line {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-block-end: 4px;
+}
+.error-block {
+  padding: 12px 16px;
+  border-radius: 6px;
+  background: var(--red-bg);
+  color: var(--red);
+}
+.error-message { margin-block-start: 4px; }
+.warning-block {
+  padding: 10px 14px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  border-radius: 5px;
+  margin-block-end: 14px;
+  font-size: 13.5px;
+}
+.dupe-block { padding: 14px 16px; }
+.dupe-block strong { display: block; margin-block-end: 10px; }
+.dupe-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.dupe-actions .muted { font-size: 13px; }
+
+/* ─── Findings tab (Phase 2b — side-by-side PDF + findings) ─────────── */
+
+.findings-tab-root {
+  display: flex;
+  flex-direction: column;
+  /* Reserve the available vertical space inside .tab-content; the splitter
+   * fills the rest with the PDF + findings. */
+  min-block-size: 70vh;
+}
+.findings-meta {
+  margin-block: 0 8px;
+}
+
+/* SplitPane: horizontal flex with row direction; under RTL the first child
+ * (start) appears on the visual right, which is what we want for findings. */
+.split-pane {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  inline-size: 100%;
+  block-size: calc(100vh - 240px);  /* viewport minus header + tabs + footer */
+  min-block-size: 500px;
+  background: var(--card-bg);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.split-pane-start,
+.split-pane-end {
+  flex-grow: 0;
+  flex-shrink: 0;
+  min-inline-size: 0;
+  overflow: auto;
+  padding: 14px 18px;
+}
+.split-pane-end {
+  background: #f7f9f8;   /* slightly cooler — the PDF panel reads as "evidence" */
+  padding: 0;            /* PdfViewer manages its own padding */
+}
+.split-pane-divider {
+  flex: 0 0 6px;
+  background: var(--rule);
+  cursor: col-resize;
+  position: relative;
+  user-select: none;
+  touch-action: none;
+}
+.split-pane-divider:hover,
+.split-pane-divider:active {
+  background: var(--green);
+}
+.split-pane-divider::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  inline-size: 2px;
+  block-size: 36px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 1px;
+  pointer-events: none;
+}
+
+/* ─── PdfViewer ─────────────────────────────────────────────────────── */
+
+.pdf-viewer {
+  display: flex;
+  flex-direction: column;
+  block-size: 100%;
+  inline-size: 100%;
+}
+.pdf-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border-block-end: 1px solid var(--rule);
+  flex-wrap: wrap;
+}
+.pdf-toolbar button {
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1px solid var(--green-line);
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 15px;
+  cursor: pointer;
+  line-height: 1;
+}
+.pdf-toolbar button:hover:not(:disabled) { background: var(--green); color: #fff; }
+.pdf-toolbar button:disabled { opacity: 0.4; cursor: not-allowed; }
+.pdf-page-indicator {
+  font-size: 13px;
+  color: var(--muted);
+  margin-inline-start: 8px;
+  margin-inline-end: auto;
+}
+.pdf-jump-form {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+.pdf-jump-form input {
+  inline-size: 60px;
+  padding: 3px 6px;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  font-size: 13px;
+}
+.pdf-jump-form button {
+  padding: 3px 10px;
+  font-size: 13px;
+}
+.pdf-canvas-area {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 12px;
+  background: #2a2a2a;       /* dark backdrop makes PDF pages pop */
+  display: flex;
+  justify-content: center;
+}
+.pdf-canvas-area canvas {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+  background: #fff;
+}
+.pdf-loading {
+  align-self: center;
+  margin-block-start: 40px;
+  color: #ccc;
+}
+.error { padding: 8px 12px; background: var(--red-bg); color: var(--red); border-radius: 4px; margin-block: 8px; font-size: 14px; }
+
+/* ─── Findings list (structured rows + drawer) ──────────────────────── */
+
+.findings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  block-size: 100%;
+}
+.findings-section {
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.findings-section-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--green-soft);
+  border-block-end: 1px solid var(--green-line);
+  cursor: pointer;
+  user-select: none;
+  flex-wrap: wrap;
+}
+.findings-section-header:hover { background: #ebf3ed; }
+.section-chevron {
+  font-size: 18px;
+  color: var(--green);
+  font-weight: 700;
+  width: 16px;
+  text-align: center;
+}
+.findings-section-title {
+  font-size: 14.5px;
+  color: var(--green);
+  font-weight: 700;
+  margin: 0;
+}
+.findings-section-total {
+  font-size: 12px;
+  color: var(--muted);
+  margin-inline-start: 4px;
+}
+.findings-section-counts {
+  margin-inline-start: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Verdict pills (section-counts + drawer page links share base) */
+.verdict-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: 14px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.verdict-count {
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.55);
+  padding: 0 6px;
+  border-radius: 8px;
+  font-size: 11px;
+}
+.v-ok       { background: #e6f4ea; color: var(--ok); }
+.v-fail     { background: var(--red-bg); color: var(--red); }
+.v-review   { background: var(--amber-bg); color: var(--amber); }
+.v-unknown  { background: #e8eaed; color: #5f6368; }
+.v-na       { background: #f0f0f0; color: var(--muted); }
+
+/* Step 8 — verdict pills as toggle buttons.
+ * Inherit the .verdict-pill base; .verdict-pill-toggle adds button reset
+ * + interaction affordance. ON state keeps the verdict-coloured swatch.
+ * OFF state desaturates and slightly shrinks so the section's "active
+ * filters" are visually distinct from "hidden categories", but counts
+ * stay legible so the user can see what's been filtered out.
+ */
+.verdict-pill-toggle {
+  border: none;
+  font: inherit;
+  cursor: pointer;
+  /* Keep the height stable when scaling on hover so the section header
+   * doesn't reflow. */
+  transform-origin: center;
+  transition: transform 80ms ease, opacity 100ms ease, filter 100ms ease;
+}
+.verdict-pill-toggle.is-off {
+  opacity: 0.55;
+  filter: saturate(0.25);
+  transform: scale(0.92);
+}
+.verdict-pill-toggle.is-off .verdict-count {
+  background: rgba(0, 0, 0, 0.06);
+}
+.verdict-pill-toggle:hover {
+  filter: brightness(1.05);
+  transform: scale(1.04);
+}
+.verdict-pill-toggle.is-off:hover {
+  /* Hover hint: peek at the activated colour the user is about to enable. */
+  opacity: 0.85;
+  filter: saturate(0.85) brightness(1.05);
+  transform: scale(0.98);
+}
+.verdict-pill-toggle:focus-visible {
+  outline: 2px solid var(--accent, #1a73e8);
+  outline-offset: 1px;
+}
+
+/* Empty state when ALL rules in a section were filtered out. */
+.findings-empty-filtered {
+  text-align: center;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Per-rule rows */
+.findings-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.findings-empty {
+  padding: 14px 18px;
+  font-size: 13px;
+}
+.finding-row {
+  border-block-end: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.finding-row:last-child { border-block-end: none; }
+.finding-row:hover { background: #fafafa; }
+.finding-row.expanded { background: #f7fbf8; }
+
+.finding-row-main {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.verdict-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 11px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-block-start: 2px;
+}
+.finding-row-body {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.finding-row-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  align-items: baseline;
+  /* Keep Hebrew word-breaking at word boundaries only — never break-all. */
+  word-break: normal;
+  overflow-wrap: normal;
+}
+/* The bare name is wrapped in its own span so it's a real flex item (not an
+ * anonymous text item). flex: 1 1 auto + min-width:0 lets it shrink to fit
+ * the available column without forcing single-word-per-line behavior. */
+.finding-row-name {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fg);
+  line-height: 1.45;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+.finding-tag {
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--green-soft);
+  color: var(--green);
+  padding: 1px 8px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.finding-tag-discipline { background: #eef3fb; color: #2a5c8a; }
+.finding-row-brief {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-block-start: 4px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+/* Page-pills live INSIDE the body now (on their own row, below the brief)
+ * so the title gets full column width. Previously these were on the right
+ * side of the row, which squeezed the title to a narrow column and forced
+ * Hebrew to wrap one-word-per-line. */
+.page-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-block-start: 6px;
+}
+.page-pill {
+  background: #fff;
+  border: 1px solid var(--green-line);
+  color: var(--green);
+  padding: 2px 9px;
+  border-radius: 11px;
+  font-size: 11.5px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.page-pill:hover { background: var(--green); color: #fff; }
+.page-pill-more {
+  font-size: 11.5px;
+  color: var(--muted);
+  align-self: center;
+}
+.row-expand-btn {
+  background: transparent;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0 8px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--muted);
+  line-height: 1.4;
+  flex-shrink: 0;
+  margin-block-start: 2px;
+  align-self: flex-start;
+}
+.row-expand-btn:hover { background: var(--green-soft); color: var(--green); }
+
+/* Drawer (expanded) */
+.finding-row-drawer {
+  padding: 4px 14px 14px;
+  background: #f7fbf8;
+  border-block-start: 1px dashed var(--green-line);
+}
+.drawer-block { margin-block-start: 10px; }
+.drawer-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  margin-block-end: 3px;
+}
+.drawer-body { font-size: 13.5px; color: var(--fg); line-height: 1.6; }
+.drawer-pages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ─── Placeholder cards (future-feature tabs) ───────────────────────── */
+
+.placeholder-card {
+  text-align: center;
+  background: linear-gradient(180deg, #fbfdfb 0%, #f3f8f5 100%);
+}
+.placeholder-phase {
+  display: inline-block;
+  background: var(--green);
+  color: #fff;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-block-end: 8px;
+}
+
+/* ─── PDF zoom controls (toolbar) ───────────────────────────────────── */
+
+.pdf-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: 8px;
+  padding-inline-start: 8px;
+  border-inline-start: 1px solid var(--rule);
+}
+.pdf-zoom-controls button {
+  padding: 3px 10px;
+  font-size: 13px;
+}
+.pdf-zoom-controls button.active {
+  background: var(--green);
+  color: #fff;
+  border-color: var(--green);
+}
+.pdf-zoom-pct {
+  font-size: 12px;
+  color: var(--muted);
+  min-inline-size: 42px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Home / welcome page ───────────────────────────────────────────── */
+
+.page-home {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.home-header {
+  padding: 20px 0 28px;
+}
+.home-eyebrow {
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  margin-block-end: 6px;
+}
+.home-title {
+  font-size: 32px;
+  color: var(--green);
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+.home-tagline {
+  font-size: 15px;
+  color: #444;
+  max-width: 560px;
+  line-height: 1.6;
+}
+.home-cta-hint {
+  font-size: 13.5px;
+  margin-block-end: 24px;
+  max-width: 560px;
+}
+.home-recent {
+  padding: 18px 22px;
+}
+.card-title {
+  font-size: 14px;
+  color: var(--green);
+  font-weight: 700;
+  margin: 0 0 12px;
+}
+.home-recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.home-recent-list li { border-block-end: 1px solid var(--rule); }
+.home-recent-list li:last-child { border-block-end: none; }
+.home-recent-link {
+  display: block;
+  padding: 10px 4px;
+  color: inherit;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.12s;
+}
+.home-recent-link:hover {
+  background: var(--green-soft);
+  text-decoration: none;
+}
+.home-recent-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--green);
+}
+.home-recent-meta {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-block-start: 2px;
+}
+
+/* ─── Debug overlay (Cmd+Shift+D) ───────────────────────────────────── */
+
+.debug-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+}
+.debug-overlay-card {
+  background: #1a1a1a;
+  color: #e0e0e0;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 960px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.debug-header {
+  display: flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-block-end: 1px solid #333;
+}
+.debug-eyebrow {
+  flex: 1;
+  font-size: 11.5px;
+  color: #888;
+  letter-spacing: 0.05em;
+}
+.debug-close {
+  background: transparent;
+  border: 1px solid #444;
+  color: #ccc;
+  padding: 2px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+}
+.debug-close:hover { background: #333; color: #fff; }
+.debug-body {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 14px 16px;
+}
+.debug-body h3 {
+  font-size: 13px;
+  color: #aaa;
+  margin: 0 0 10px;
+  font-family: -apple-system, "Heebo", sans-serif;
+}
+.debug-json {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #d9d9d9;
+  background: #0a0a0a;
+  padding: 12px;
+  border-radius: 4px;
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+}

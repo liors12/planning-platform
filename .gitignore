@@ -1,0 +1,98 @@
+# ── Build artifacts ───────────────────────────────────────────────────
+# app/tauri/target/  — cargo build tree, ~3.2 GB
+app/tauri/target/
+# app/frontend/dist/ — Vite production build
+app/frontend/dist/
+# node_modules — any, anywhere (~119 MB frontend, ~17 MB e2e)
+node_modules/
+app/frontend/node_modules/
+tests/e2e/node_modules/
+# Playwright per-run artifacts
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+test-results/
+playwright-report/
+
+# ── Python ────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── PyInstaller build output ──────────────────────────────────────────
+# The .spec files (e.g. backend_full.spec) are hand-maintained SOURCE and
+# are NOT ignored. Only the generated build/dist trees below are ignored.
+# app/sidecar/build/ ~80 MB ; app/sidecar/dist/ ~230 MB
+app/sidecar/build/
+app/sidecar/dist/
+
+# ── PyInstaller --onedir output, relocated by Tauri resources config ──
+# `tauri.conf.json` declares `resources: ["binaries/sidecar/**/*"]` — so
+# the PyInstaller bundle gets copied here for the Tauri build to pick up.
+# 44 MB of Python.framework + dylibs + .so + base_library.zip. Tracked
+# spec at app/sidecar/*.spec regenerates it.
+app/tauri/binaries/
+
+# ── TypeScript incremental compile cache ──────────────────────────────
+*.tsbuildinfo
+
+# ── Generated / runtime data (not source-of-truth; regeneratable) ─────
+# submissions/  ~96 MB  uploaded submission PDFs
+# projects/     ~287 MB per-project working dirs
+# data/         ~53 MB  staging + source-doc rasters (see known_issues #22)
+# output/       ~21 MB  old engine outputs
+# audit_outputs/*/      per-project audit re-runs (subdirs only)
+# The canonical regression baseline tests/regression/v8j_baseline_v24.3.json
+# IS committed — it lives outside these dirs.
+submissions/
+projects/
+data/
+output/
+audit_outputs/*/
+
+# ── Databases ─────────────────────────────────────────────────────────
+# The SQLCipher DB lives in ~/.platform, outside the repo. These patterns
+# are belt-and-braces against a stray DB landing in the tree.
+*.db
+*.sqlite
+*.sqlite3
+
+# ── CAD binaries ──────────────────────────────────────────────────────
+*.dwg
+*.dxf
+
+# ── Fonts ─────────────────────────────────────────────────────────────
+# Heebo + NotoSansHebrew are SIL OFL 1.1 — redistribution is permitted, so
+# the TTFs ARE committed (a fresh clone renders PDFs without a separate
+# font download). The OFL license text must travel with them.
+
+# ── Logs ──────────────────────────────────────────────────────────────
+*.log
+prep_cowork_*.log
+
+# ── Secrets ───────────────────────────────────────────────────────────
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials.json
+.aws/
+.gcp/
+
+# ── OS / editor ───────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/
+.idea/
+
+# ── Agent harness state ───────────────────────────────────────────────
+.claude/

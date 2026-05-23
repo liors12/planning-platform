@@ -1,0 +1,14 @@
+{
+  "name": "planning-platform-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "description": "End-to-end Playwright tests for the planning platform frontend. Run via `npx playwright test` from this directory while the dev wrapper / Vite + sidecar are running locally.",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "install:chromium": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.55.0"
+  }
+}

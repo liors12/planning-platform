@@ -1,0 +1,313 @@
+// Typed client for the FastAPI sidecar. Hardcoded base URL for Phase 2a;
+// Phase 4 will read the port from a Tauri-provided env var so production
+// builds can randomize the sidecar port.
+const SIDECAR_BASE = "http://127.0.0.1:17321";
+
+// ── Common types ──────────────────────────────────────────────────────────
+
+export interface HealthResponse {
+  status: "ok";
+  sidecar_version: string;
+  bind: string;
+  db: {
+    journal_mode: string;
+    cipher_version: string;
+    sqlite_version: string;
+    schema_version: string | null;
+    last_started_at: string | null;
+  };
+  data_dir: string;
+  max_concurrent_jobs: number;
+}
+
+export type ProjectStatus = "active" | "awaiting_review" | "signed" | "archived";
+
+export interface ProjectOut {
+  id: number;
+  name_he: string;
+  name_en: string | null;
+  tava_number: string;
+  address: string | null;
+  status: ProjectStatus;
+  created_at: string;
+  archived_at: string | null;
+  has_schema: boolean;
+  latest_submission: SubmissionSummary | null;
+  submission_count: number | null;
+}
+
+export interface SubmissionSummary {
+  id: number;
+  version_string: string;
+  status: string;
+  uploaded_at: string;
+}
+
+export type SubmissionStatus =
+  | "uploaded"
+  | "extracting"
+  | "analyzing"
+  | "complete"
+  | "failed";
+
+export interface SubmissionOut {
+  id: number;
+  project_id: number;
+  version_string: string;
+  status: SubmissionStatus;
+  pdf_path: string;
+  dwg_path: string | null;
+  findings_json_path: string | null;
+  uploaded_at: string;
+}
+
+export type JobStatus = "queued" | "running" | "completed" | "failed";
+
+export interface JobOut {
+  id: string;
+  job_type: string;
+  submission_id: number | null;
+  status: JobStatus;
+  queued_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+  error: string | null;       // JSON-encoded blob when status === "failed"
+}
+
+// ── Fetch helpers ─────────────────────────────────────────────────────────
+
+// Wraps fetch() with retry+backoff for transport failures (ATS block,
+// CORS preflight refused, connection refused, DNS, CSP, etc.). Native
+// fetch() rejects with the opaque "TypeError: Load failed" for all of
+// those — same string for every cause. This wrapper:
+//
+//   1. Retries up to 3 times on transport failure with backoff
+//      200ms → 500ms → 1500ms (~2.2s total wait before giving up).
+//      Solves the startup race where the React app mounts and fires
+//      listProjects() in milliseconds, but the Python sidecar takes
+//      1-3s to import FastAPI + bind 17321.
+//
+//   2. On final failure, throws an Error whose message includes the
+//      URL, the retry count, and the first stack frame — so we can
+//      debug from the UI without opening DevTools.
+//
+// HTTP 4xx/5xx are NOT retried here — fetch() resolves for those (it only
+// rejects on transport failure). They flow through jsonOrThrow below.
+// AbortError (user cancellation) is also not retried.
+//
+// The production fix for the race lives in Tauri Rust (Phase 5): the
+// wrapper will gate window.show() on /health 200 OK so the WebView can't
+// even start to load before the sidecar is ready. Once that lands, this
+// retry becomes belt-and-braces (still useful for transient sidecar
+// crashes / restarts during dev).
+const FETCH_RETRY_DELAYS_MS = [200, 500, 1500] as const;
+
+async function fetchOrThrow(url: string, init?: RequestInit): Promise<Response> {
+  let lastErr: Error | null = null;
+  for (let attempt = 0; attempt <= FETCH_RETRY_DELAYS_MS.length; attempt++) {
+    if (attempt > 0) {
+      await new Promise((r) => setTimeout(r, FETCH_RETRY_DELAYS_MS[attempt - 1]));
+    }
+    try {
+      return await fetch(url, init);
+    } catch (e) {
+      lastErr = e as Error;
+      // User cancellation — don't keep retrying.
+      if (lastErr.name === "AbortError") break;
+    }
+  }
+  const err = lastErr ?? new Error("unknown fetch failure");
+  const firstFrame =
+    err.stack?.split("\n").find((l) => l.trim().length > 0)?.trim() ?? "n/a";
+  throw new Error(
+    `${err.name}: ${err.message} | URL: ${url} | retries: ${FETCH_RETRY_DELAYS_MS.length} | at ${firstFrame}`,
+  );
+}
+
+async function jsonOrThrow<T>(res: Response, what: string): Promise<T> {
+  if (!res.ok) {
+    let detail = "";
+    try {
+      detail = JSON.stringify(await res.json());
+    } catch {
+      try { detail = await res.text(); } catch { detail = "<no body>"; }
+    }
+    throw new Error(`${what} → HTTP ${res.status}: ${detail}`);
+  }
+  return res.json();
+}
+
+// ── Health ────────────────────────────────────────────────────────────────
+
+export async function getHealth(): Promise<HealthResponse> {
+  return jsonOrThrow<HealthResponse>(
+    await fetchOrThrow(`${SIDECAR_BASE}/health`),
+    "/health",
+  );
+}
+
+// ── Projects ──────────────────────────────────────────────────────────────
+
+export async function listProjects(includeArchived = false): Promise<ProjectOut[]> {
+  const qs = includeArchived ? "?include_archived=true" : "";
+  return jsonOrThrow<ProjectOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects${qs}`),
+    "GET /projects",
+  );
+}
+
+export async function getProject(id: number): Promise<ProjectOut> {
+  return jsonOrThrow<ProjectOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${id}`),
+    `GET /projects/${id}`,
+  );
+}
+
+export interface ProjectCreatePayload {
+  name_he: string;
+  tava_number: string;
+  name_en?: string | null;
+  address?: string | null;
+}
+
+export async function createProject(payload: ProjectCreatePayload): Promise<ProjectOut> {
+  return jsonOrThrow<ProjectOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+    "POST /projects",
+  );
+}
+
+export async function patchProject(
+  id: number,
+  patch: Partial<ProjectCreatePayload>,
+): Promise<ProjectOut> {
+  return jsonOrThrow<ProjectOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(patch),
+    }),
+    `PATCH /projects/${id}`,
+  );
+}
+
+export async function archiveProject(id: number): Promise<ProjectOut> {
+  return jsonOrThrow<ProjectOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${id}/archive`, { method: "POST" }),
+    `POST /projects/${id}/archive`,
+  );
+}
+
+// ── Submissions ───────────────────────────────────────────────────────────
+
+export async function listSubmissions(projectId: number): Promise<SubmissionOut[]> {
+  return jsonOrThrow<SubmissionOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/submissions`),
+    `GET /projects/${projectId}/submissions`,
+  );
+}
+
+export async function getSubmission(id: number): Promise<SubmissionOut> {
+  return jsonOrThrow<SubmissionOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${id}`),
+    `GET /submissions/${id}`,
+  );
+}
+
+export async function uploadSubmission(
+  projectId: number,
+  versionString: string,
+  pdf: File,
+  dwg?: File | null,
+): Promise<SubmissionOut> {
+  const form = new FormData();
+  form.append("version_string", versionString);
+  form.append("pdf", pdf, pdf.name);
+  if (dwg) form.append("dwg", dwg, dwg.name);
+  return jsonOrThrow<SubmissionOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/submissions`, {
+      method: "POST",
+      body: form,
+    }),
+    `POST /projects/${projectId}/submissions`,
+  );
+}
+
+export async function runEngine(submissionId: number): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/run-engine`, {
+      method: "POST",
+    }),
+    `POST /submissions/${submissionId}/run-engine`,
+  );
+}
+
+export async function getFindings(submissionId: number): Promise<unknown> {
+  return jsonOrThrow<unknown>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/findings`),
+    `GET /submissions/${submissionId}/findings`,
+  );
+}
+
+// ── Jobs ──────────────────────────────────────────────────────────────────
+
+export async function getJob(id: string): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/jobs/${id}`),
+    `GET /jobs/${id}`,
+  );
+}
+
+/**
+ * Poll a job until it reaches a terminal state. Calls `onUpdate` whenever
+ * the status changes (queued → running → completed/failed).
+ */
+export async function pollJobUntilDone(
+  id: string,
+  onUpdate: (j: JobOut) => void,
+  intervalMs = 1500,
+  timeoutMs = 360_000,
+): Promise<JobOut> {
+  const deadline = Date.now() + timeoutMs;
+  let last: JobStatus | null = null;
+  while (Date.now() < deadline) {
+    const j = await getJob(id);
+    if (j.status !== last) {
+      onUpdate(j);
+      last = j.status;
+    }
+    if (j.status === "completed" || j.status === "failed") return j;
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  throw new Error(`job ${id} did not reach terminal status within ${timeoutMs}ms`);
+}
+
+// ── Phase 1 demo: subprocess-isolation echo ──────────────────────────────
+
+export interface EchoResponse {
+  job_id: string;
+  duration_s: number;
+  output: {
+    echo: { message: string; extra: unknown };
+    worker_info: {
+      pid: number; ppid: number;
+      python: string; python_version: string; platform: string;
+      executed_at: string;
+    };
+  };
+}
+
+export async function postEcho(message: string): Promise<EchoResponse> {
+  return jsonOrThrow<EchoResponse>(
+    await fetchOrThrow(`${SIDECAR_BASE}/jobs/echo`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message }),
+    }),
+    "/jobs/echo",
+  );
+}

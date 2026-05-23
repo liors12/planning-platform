@@ -1,0 +1,145 @@
+{
+  "_schema_version": "2.0.0",
+  "_description": "Blank project template. Copy and populate for each new plan loaded into the system.",
+  "_instructions": "1. Fill meta from תב\"ע cover page. 2. Parse KML for parcel boundaries. 3. Parse XLS/HTML for building rights table. 4. Extract compliance rules from תקנון PDF using Claude API. 5. Convert DWG→DXF for setback geometry. 6. Each rule must have rule_type from: numeric|geometric|document_presence|procedural|qualitative. 7. Rule_code must be stable (e.g. HEIGHT_MAX_PLOT_1). 8. Every rule must have source_quote and source_page from the תקנון. 9. meta.regulatory_mode is REQUIRED — set to \"split\" for plans approved under תקנות חישוב שטחים תשנ\"ב-1992 with separate עיקרי/שירות areas (the legacy regime), or \"total_area\" for plans that opt into the post-3.12.2023 \"תוכנית בשטח כולל\" framework under תיקון תשפ\"ה-2025. No default — must be explicit per project. 11) format_rule_overrides — rule_codes from the global submission_format_rules.json that should be skipped for this project. Empty list means all city-wide format rules apply.",
+
+  "project": {
+    "meta": {
+      "plan_number": "",
+      "plan_name": "",
+      "plan_name_en": "",
+      "municipality": "ness_ziona",
+      "status": "",
+      "approval_date": "",
+      "regulatory_mode": "",
+      "_regulatory_mode_allowed": ["split", "total_area"],
+      "format_rule_overrides": [],
+      "_format_rule_overrides_doc": "List of rule_codes from submission_format_rules.json that do NOT apply to this project (e.g., commercial chapter rules for a residential-only plan). Default: empty list = all rules apply.",
+      "total_site_area_dunam": null,
+      "total_site_area_sqm": null,
+      "total_units": null,
+      "total_building_area_sqm": null,
+      "takkanon_source": "",
+      "takkanon_pages": null,
+      "reference_design_plan": "",
+      "scope_in": [],
+      "scope_out": [],
+      "scope_out_reason": ""
+    },
+
+    "parcels": [
+      {
+        "parcel_id": "",
+        "display_label": "",
+        "land_use": "",
+        "land_use_en": "",
+        "uses": [],
+        "plot_area_sqm": null,
+        "building_rights": {
+          "primary_sqm": null,
+          "primary_notes": "",
+          "service_above_sqm": null,
+          "service_below_sqm": null,
+          "total_sqm": null,
+          "balconies_sqm": null
+        },
+        "units": {
+          "max_units": null,
+          "small_apartment_min_pct": null,
+          "small_apartment_max_sqm": null
+        },
+        "height": {
+          "max_height_m": null,
+          "max_floors_above_entry": null,
+          "max_basement_floors": null,
+          "height_notes": ""
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "setback_notes": "",
+          "front_m": null,
+          "back_m": null,
+          "left_m": null,
+          "right_m": null
+        },
+        "stormwater": {
+          "daily_retention_m3": null
+        },
+        "geometry": {
+          "centroid_lon": null,
+          "centroid_lat": null,
+          "kml_boundary": []
+        }
+      }
+    ],
+
+    "compliance_rules": [
+      {
+        "rule_code": "",
+        "rule_type": "numeric | geometric | document_presence | procedural | qualitative",
+        "parcel_id": "all | <parcel_id>",
+        "parameter": "",
+        "operator": "<= | >= | = | != | EXISTS | REGEX",
+        "threshold": null,
+        "unit": "",
+        "description": "",
+        "source_quote": "",
+        "source_section": "",
+        "source_page": null,
+        "severity_if_violated": "critical | major | minor | info",
+        "review_status": "pending | confirmed | disputed"
+      }
+    ],
+
+    "global_rules": {
+      "small_apartments": {
+        "min_pct": null,
+        "max_sqm": null,
+        "scope": "entire_plan",
+        "description": "",
+        "min_units": null
+      },
+      "transfer_between_plots": {
+        "max_pct": null,
+        "scope": "residential_plots_only",
+        "additional_floors_allowed": false,
+        "description": ""
+      },
+      "pre_permit_condition": {
+        "required_document": "תכנית בינוי ופיתוח",
+        "scale": "",
+        "description": ""
+      },
+      "stormwater_total": {
+        "total_required_m3": null,
+        "redistribution_allowed": true,
+        "description": ""
+      }
+    },
+
+    "geometry": {
+      "coordinate_system": "WGS84",
+      "boundary": {
+        "type": "blue_line",
+        "coordinates": []
+      },
+      "surrounding_buildings_count": null
+    },
+
+    "digital_files": {
+      "kml_plan_boundary": "",
+      "kml_google_earth": "",
+      "xls_building_rights": "",
+      "dwg_files": [],
+      "shp_file": ""
+    },
+
+    "submissions": [],
+
+    "notes": {
+      "context_notes": "",
+      "known_issues": [],
+      "takkanon_footnotes": []
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{# Header block — title, draft notice, project + run metadata. #}
+<header class="opinion-header">
+  <h1>חוות דעת מהנדס הוועדה המקומית</h1>
+  <div class="draft-notice">טיוטה לעיון המהנדס</div>
+
+  <div class="project-meta">
+    <div class="meta-row">
+      <span class="meta-label">תכנית עיצוב:</span>
+      <span class="meta-value">{{ project.design_plan_name }}{% if project.revision %} — גרסה {{ project.revision }}{% endif %}</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">תב"עות חלות:</span>
+      <span class="meta-value plan-list">{{ project.linked_statutory_plans | join(", ") }}</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">תאריך הריצה:</span>
+      <span class="meta-value">{{ run.started_at }}</span>
+    </div>
+    <div class="meta-row">
+      <span class="meta-label">גרסת מנוע:</span>
+      <span class="meta-value">{{ run.engine_version }}</span>
+      <span class="meta-label meta-label-inline">גרסת הגשה:</span>
+      <span class="meta-value">{{ run.submission_version }}</span>
+    </div>
+  </div>
+</header>

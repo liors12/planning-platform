@@ -1,0 +1,85 @@
+{# One section per parcel. #}
+<section class="parcel-section">
+  <h2>תא שטח {{ parcel.parcel_id }}</h2>
+  <div class="parcel-meta">
+    תב"ע מנחה: <span class="plan-id">{{ parcel.governing_takanon_id or "—" }}</span>
+    · סך אי-התאמות: <span class="counter">{{ parcel.failure_count }}</span>
+    · סוגיות לבחינת מהנדס: <span class="counter">{{ parcel.review_count }}</span>
+  </div>
+
+  <table class="findings-table">
+    <thead>
+      <tr>
+        <th class="col-rule">סעיף בתב"ע</th>
+        <th class="col-topic">נושא</th>
+        <th class="col-finding">ממצא</th>
+        <th class="col-verdict">תוצאה</th>
+        <th class="col-notes">הערות</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in parcel.violations %}
+        {% if v.is_cluster %}
+        <tr class="cluster-row row-{{ v.css_class }}">
+          <td colspan="5" class="cluster-cell">
+            <div class="cluster-header">
+              <span class="cluster-count">{{ v.cluster_count }}</span>
+              כללים נכשלו עם אותה שגיאה
+              {% if v.failure_mode_label %}
+              · <span class="cluster-mode">{{ v.failure_mode_label }}</span>
+              {% endif %}
+              · <bdi class="cluster-fingerprint">{{ v.error_fingerprint }}</bdi>
+            </div>
+            <div class="cluster-rules">
+              <span class="cluster-rules-label">כללים שנכללו:</span>
+              <bdi>{{ v.rule_ids | join(", ") }}</bdi>
+            </div>
+            {% if v.sample_notes %}
+            <div class="cluster-sample-notes">
+              <span class="cluster-rules-label">דוגמת שגיאה:</span>
+              <bdi>{{ v.sample_notes }}</bdi>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr class="row-{{ v.css_class }}">
+          <td class="col-rule">
+            <div class="rule-id">{{ v.rule_id }}</div>
+            <div class="source-id">{{ v.source_takanon_id or "" }}</div>
+          </td>
+          <td class="col-topic">{{ v.rule_type_he }}</td>
+          <td class="col-finding">
+            {% if v.expected_value is not none or v.actual_value is not none %}
+            <div class="value-pair">
+              <div><span class="vp-label">נדרש:</span> <bdi class="vp-value">{{ v.expected_display }}</bdi></div>
+              <div><span class="vp-label">בפועל:</span> <bdi class="vp-value">{{ v.actual_display }}</bdi></div>
+            </div>
+            {% else %}
+            <span class="no-values">—</span>
+            {% endif %}
+          </td>
+          <td class="col-verdict">
+            <span class="verdict-pill {{ v.css_class }}">{{ v.verdict_he }}</span>
+            {% if v.confidence_label %}
+            <div class="confidence-badge {{ v.confidence_css_class }}">{{ v.confidence_label }}</div>
+            {% endif %}
+            {% if v.failure_mode_label %}
+            <div class="failure-mode-pill failure-mode-{{ v.failure_mode }}">{{ v.failure_mode_label }}</div>
+            {% endif %}
+            {% if v.is_override_applied %}
+            <div class="override-badge">{{ override_badge_text }}</div>
+            {% endif %}
+            {% if v.is_low_confidence_override %}
+            <div class="worklist-flag">לבחינת מהנדס: עקיפה בוודאות נמוכה</div>
+            {% endif %}
+          </td>
+          <td class="col-notes">
+            {% if v.notes %}<bdi>{{ v.notes }}</bdi>{% else %}<span class="no-notes">—</span>{% endif %}
+          </td>
+        </tr>
+        {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+</section>

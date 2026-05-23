@@ -1,0 +1,4912 @@
+{
+  "audit_run_id": "407-1048248/v24.3",
+  "content": [
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "ambiguous_plots": [
+          "1",
+          "3"
+        ],
+        "architect_count": 147,
+        "architect_pct": 21.0,
+        "schema_min_pct": 20,
+        "strict_count_lower_bound": 17,
+        "submission_value": "לפחות 17 (2.43%) — לפי הגדרה מחמירה ≤75 מ\"ר",
+        "threshold_m2": 75,
+        "total_units": 700
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גבול תחתון: לפי הקריאה המחמירה של התב\"ע (≤75 מ\"ר), מאומתות לכל הפחות 17 דירות קטנות = 2.43% מסך 700 יח\"ד. האדריכל מצהיר על 21% (147/700) בהסתמך על הגדרה רחבה יותר (≤81 מ\"ר) הכוללת גם את שורות 2.5 חד' / 3 קטנה. ההפרש נובע מטווחי שטח חופפים בטבלת התמהיל (62-81 מ\"ר) בתאי שטח 1, 3, שלא ניתן לפצל ללא שטחי דירות פרטניים. יש לבקש מהאדריכל טבלת תמהיל מפורטת עם שטח לכל יחידת דיור כדי לסגור את הספק. אם הדרישה היא 20% — עלולה ההגשה לא לעמוד בה.",
+      "remediation_he": "יש להגיש טבלת תמהיל יח\"ד עם פילוח לפי גודל דירה ולציין אחוז הדירות עד 80 מ\"ר ברמת התכנית.",
+      "rule_code": "CONTENT_APARTMENT_MIX_SMALL",
+      "ta_shetach_id": null,
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות)"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_1",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "השטח העיקרי המוצע לא יעלה על השטח העיקרי המותר בתב\"ע (הפרדה לעיקרי ושירות). חריגה של עד 2% — נדרש תיקון גבולי; מעל 2% — נדרש תיקון.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_10",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות)"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_2",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "השטח העיקרי המוצע לא יעלה על השטח העיקרי המותר בתב\"ע (הפרדה לעיקרי ושירות). חריגה של עד 2% — נדרש תיקון גבולי; מעל 2% — נדרש תיקון.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_20",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות)"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_3",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות)"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_4",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות)"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_5",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "השטח העיקרי המוצע לא יעלה על השטח העיקרי המותר בתב\"ע (הפרדה לעיקרי ושירות). חריגה של עד 2% — נדרש תיקון גבולי; מעל 2% — נדרש תיקון.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_6",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "השטח העיקרי המוצע לא יעלה על השטח העיקרי המותר בתב\"ע (הפרדה לעיקרי ושירות). חריגה של עד 2% — נדרש תיקון גבולי; מעל 2% — נדרש תיקון.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_7",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "השטח העיקרי המוצע לא יעלה על השטח העיקרי המותר בתב\"ע (הפרדה לעיקרי ושירות). חריגה של עד 2% — נדרש תיקון גבולי; מעל 2% — נדרש תיקון.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_8",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "plot plot_9 absent from submission",
+        "required_artifact_he": "טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות)"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "תא שטח 9 אינו מופיע בגרסה הנוכחית של תכנית העיצוב. נדרש לפי תב\"ע ויש להוסיפו בגרסה הבאה.",
+      "remediation_he": "יש להתאים את השטח העיקרי לתקרת התב\"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_MAIN",
+      "ta_shetach_id": "plot_9",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות עיליים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_1",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מעל מפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_10",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות עיליים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_2",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מעל מפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_20",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות עיליים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_3",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות עיליים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_4",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות עיליים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_5",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מעל מפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_6",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מעל מפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_7",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מעל מפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_8",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "plot plot_9 absent from submission",
+        "required_artifact_he": "טבלת שטחי שירות עיליים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "תא שטח 9 אינו מופיע בגרסה הנוכחית של תכנית העיצוב. נדרש לפי תב\"ע ויש להוסיפו בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_ABOVE",
+      "ta_shetach_id": "plot_9",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_1",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מתחת למפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_10",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_2",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מתחת למפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_20",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_3",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_4",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission value missing",
+        "required_artifact_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_5",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מתחת למפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_6",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מתחת למפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_7",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שטחי השירות מתחת למפלס הכניסה הקובעת לא יעלו על התקרה שבתב\"ע.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_8",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "plot plot_9 absent from submission",
+        "required_artifact_he": "טבלת שטחי שירות תת-קרקעיים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "תא שטח 9 אינו מופיע בגרסה הנוכחית של תכנית העיצוב. נדרש לפי תב\"ע ויש להוסיפו בגרסה הבאה.",
+      "remediation_he": "יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_AREA_SERVICE_BELOW",
+      "ta_shetach_id": "plot_9",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "extraction_method": null,
+        "overrun_m": -3.55,
+        "schema_max_height_m": 49,
+        "submission_heights_m": [
+          45.45
+        ],
+        "submission_max_height_m": 45.45
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_1",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע. חריגה של עד 0.5 מ' — נדרש תיקון גבולי.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_10",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "extraction_method": null,
+        "overrun_m": -4.15,
+        "schema_max_height_m": 37,
+        "submission_heights_m": [
+          32.85
+        ],
+        "submission_max_height_m": 32.85
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_2",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע. חריגה של עד 0.5 מ' — נדרש תיקון גבולי.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_20",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "extraction_method": null,
+        "overrun_m": -4.15,
+        "schema_max_height_m": 37,
+        "submission_heights_m": [
+          32.85
+        ],
+        "submission_max_height_m": 32.85
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_3",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "extraction_method": null,
+        "overrun_m": -2.7,
+        "schema_max_height_m": 45,
+        "submission_heights_m": [
+          42.3
+        ],
+        "submission_max_height_m": 42.3
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_4",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "extraction_method": null,
+        "overrun_m": -2.7,
+        "schema_max_height_m": 45,
+        "submission_heights_m": [
+          42.3
+        ],
+        "submission_max_height_m": 42.3
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_5",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע. חריגה של עד 0.5 מ' — נדרש תיקון גבולי.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_6",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע. חריגה של עד 0.5 מ' — נדרש תיקון גבולי.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_7",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב\"ע. חריגה של עד 0.5 מ' — נדרש תיקון גבולי.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_8",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "plot plot_9 absent from submission",
+        "required_artifact_he": "חזיתות וחתכים עם מידות גובה מסומנות בכל תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "תא שטח 9 אינו מופיע בגרסה הנוכחית של תכנית העיצוב. נדרש לפי תב\"ע ויש להוסיפו בגרסה הבאה.",
+      "remediation_he": "יש להתאים את גובה הבניין למותר בתב\"ע ולציין גבהים מפורשים בחתכים ובחזיתות בגרסה הבאה.",
+      "rule_code": "CONTENT_BUILDING_HEIGHT",
+      "ta_shetach_id": "plot_9",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "actual_ratio": 1.422,
+        "baseline_ratio": 1.3,
+        "submission_parking_accessible": 7,
+        "submission_parking_bike": 232,
+        "submission_parking_motorcycle": 23,
+        "submission_parking_private": 330,
+        "submission_unit_count": 232,
+        "submission_value": "330 חניות פרטיות, 23 אופנועים, 7 נגישות, 232 אופניים"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "יחס חניה פרטית מחושב: 1.42 (330/232 יח\"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח\"ד לפי גודל הדירה (עד 120 מ\"ר: 1.0-1.3; 120-200 מ\"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_1",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission parking_private or unit_count missing",
+        "required_artifact_he": "טבלת חניות במרתף פר תא שטח ושימוש"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת חניות במרתף פר תא שטח ושימוש לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_10",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "actual_ratio": 1.477,
+        "baseline_ratio": 1.3,
+        "submission_parking_accessible": 2,
+        "submission_parking_bike": 44,
+        "submission_parking_motorcycle": 4,
+        "submission_parking_private": 65,
+        "submission_unit_count": 44,
+        "submission_value": "65 חניות פרטיות, 4 אופנועים, 2 נגישות, 44 אופניים"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "יחס חניה פרטית מחושב: 1.48 (65/44 יח\"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח\"ד לפי גודל הדירה (עד 120 מ\"ר: 1.0-1.3; 120-200 מ\"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_2",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission parking_private or unit_count missing",
+        "required_artifact_he": "טבלת חניות במרתף פר תא שטח ושימוש"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת חניות במרתף פר תא שטח ושימוש לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_20",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "actual_ratio": 1.431,
+        "baseline_ratio": 1.3,
+        "submission_parking_accessible": 4,
+        "submission_parking_bike": 130,
+        "submission_parking_motorcycle": 13,
+        "submission_parking_private": 186,
+        "submission_unit_count": 130,
+        "submission_value": "186 חניות פרטיות, 13 אופנועים, 4 נגישות, 130 אופניים"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "יחס חניה פרטית מחושב: 1.43 (186/130 יח\"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח\"ד לפי גודל הדירה (עד 120 מ\"ר: 1.0-1.3; 120-200 מ\"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_3",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "actual_ratio": 1.408,
+        "baseline_ratio": 1.3,
+        "submission_parking_accessible": 3,
+        "submission_parking_bike": 98,
+        "submission_parking_motorcycle": 10,
+        "submission_parking_private": 138,
+        "submission_unit_count": 98,
+        "submission_value": "138 חניות פרטיות, 10 אופנועים, 3 נגישות, 98 אופניים"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "יחס חניה פרטית מחושב: 1.41 (138/98 יח\"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח\"ד לפי גודל הדירה (עד 120 מ\"ר: 1.0-1.3; 120-200 מ\"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_4",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "actual_ratio": 1.429,
+        "baseline_ratio": 1.3,
+        "submission_parking_accessible": 5,
+        "submission_parking_bike": 196,
+        "submission_parking_motorcycle": 20,
+        "submission_parking_private": 280,
+        "submission_unit_count": 196,
+        "submission_value": "280 חניות פרטיות, 20 אופנועים, 5 נגישות, 196 אופניים"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "יחס חניה פרטית מחושב: 1.43 (280/196 יח\"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח\"ד לפי גודל הדירה (עד 120 מ\"ר: 1.0-1.3; 120-200 מ\"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_5",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission parking_private or unit_count missing",
+        "required_artifact_he": "טבלת חניות במרתף פר תא שטח ושימוש"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת חניות במרתף פר תא שטח ושימוש לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_6",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission parking_private or unit_count missing",
+        "required_artifact_he": "טבלת חניות במרתף פר תא שטח ושימוש"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת חניות במרתף פר תא שטח ושימוש לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_7",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "submission parking_private or unit_count missing",
+        "required_artifact_he": "טבלת חניות במרתף פר תא שטח ושימוש"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "טבלת חניות במרתף פר תא שטח ושימוש לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_8",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "plot plot_9 absent from submission",
+        "required_artifact_he": "טבלת חניות במרתף פר תא שטח ושימוש"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "תא שטח 9 אינו מופיע בגרסה הנוכחית של תכנית העיצוב. נדרש לפי תב\"ע ויש להוסיפו בגרסה הבאה.",
+      "remediation_he": "יש להגיש טבלת חניות מפורטת (פרטיות / אופנועים / נגישות / אופניים) פר תא שטח, ולציין את תקן החניה שאליו נערך התכנון.",
+      "rule_code": "CONTENT_PARKING_RATIO",
+      "ta_shetach_id": "plot_9",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "schema has no permeable_surface_min_pct (neither global_rules nor compliance_rules)"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "אחוז השטחים המחלחלים (גינון, ריצוף מחלחל, ללא מרתף תחתון) ביחס לכלל שטח התכנית חייב לעלות על הסף המוגדר.",
+      "remediation_he": "יש להגיש תכנית פיתוח עם שטחים מחלחלים מסומנים ולציין את אחוז השטחים המחלחלים מסך שטח התכנית בכל תא שטח.",
+      "rule_code": "CONTENT_PERMEABLE_SURFACES",
+      "ta_shetach_id": null,
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {
+          "balcony_setback_from_plot_boundary_m": 1.0,
+          "front_min_m": null,
+          "histadrut_facade_point_exception_to_zero": true,
+          "histadrut_facade_setback_m": 1.0,
+          "rear_min_m": null,
+          "setback_notes": "קווי בניין לרוב לפי תשריט (DWG — טרם נפרק). חזית להסתדרות ≥1 מ' עם חריגי-נקודה ל-0 מ'. נסיגת קומה עליונה ≥3 מ' מחזיתות חזית ושצ\"פ. מרפסות ≥1 מ' מקו המגרש.",
+          "side_min_m": null,
+          "source": "per_tashrit_and_takanon",
+          "top_floor_nesigah_min_m": 3.0
+        },
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_1",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {},
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_10",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {
+          "balcony_setback_from_plot_boundary_m": 1.0,
+          "source": "per_tashrit",
+          "top_floor_nesigah_min_m": 3.0
+        },
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_2",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {},
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_20",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {
+          "balcony_setback_from_plot_boundary_m": 1.0,
+          "source": "per_tashrit",
+          "top_floor_nesigah_min_m": 3.0
+        },
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_3",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {
+          "balcony_setback_from_plot_boundary_m": 1.0,
+          "source": "per_tashrit",
+          "tayasim_facade_floors_max": 9,
+          "top_floor_nesigah_min_m": 3.0
+        },
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_4",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {
+          "balcony_setback_from_plot_boundary_m": 1.0,
+          "source": "per_tashrit",
+          "tayasim_facade_floors_max": 9,
+          "top_floor_nesigah_min_m": 3.0
+        },
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_5",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {},
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_6",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {},
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_7",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "DWG parsing not implemented",
+        "schema_setbacks": {},
+        "submission_setback_front_m": null,
+        "submission_setback_rear_m": null,
+        "submission_setback_side_m": null
+      },
+      "failure_mode": "NONE",
+      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_8",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "plot plot_9 absent from submission",
+        "required_artifact_he": "תכניות פיתוח עם קווי בניין מסומנים פר תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "תא שטח 9 אינו מופיע בגרסה הנוכחית של תכנית העיצוב. נדרש לפי תב\"ע ויש להוסיפו בגרסה הבאה.",
+      "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
+      "rule_code": "CONTENT_SETBACKS",
+      "ta_shetach_id": "plot_9",
+      "verdict": "not_submitted"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "comparison": "submission_le_schema",
+        "extraction_method": null,
+        "schema_value": 232,
+        "source_pages": [],
+        "submission_value": 232
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_1",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_10",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "comparison": "submission_le_schema",
+        "extraction_method": null,
+        "schema_value": 44,
+        "source_pages": [],
+        "submission_value": 44
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_2",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_20",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "comparison": "submission_le_schema",
+        "extraction_method": null,
+        "schema_value": 130,
+        "source_pages": [],
+        "submission_value": 130
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_3",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "comparison": "submission_le_schema",
+        "extraction_method": null,
+        "schema_value": 98,
+        "source_pages": [],
+        "submission_value": 98
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_4",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "comparison": "submission_le_schema",
+        "extraction_method": null,
+        "schema_value": 196,
+        "source_pages": [],
+        "submission_value": 196
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_5",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_6",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_7",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "לא רלוונטי לסוג מגרש זה"
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב\"ע, פר תא שטח ובסך הכל.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_8",
+      "verdict": "not_applicable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "reason": "plot plot_9 absent from submission",
+        "required_artifact_he": "טבלת ספירת יח\"ד בקומה טיפוסית עם פילוח לכל תא שטח"
+      },
+      "failure_mode": "DOCUMENT_NOT_PROVIDED",
+      "notes_he": "תא שטח 9 אינו מופיע בגרסה הנוכחית של תכנית העיצוב. נדרש לפי תב\"ע ויש להוסיפו בגרסה הבאה.",
+      "remediation_he": "יש להפחית את מספר יחידות הדיור במסגרת הגרסה הבאה של תכנית העיצוב לעמידה בתקרת התב\"ע.",
+      "rule_code": "CONTENT_UNIT_COUNT",
+      "ta_shetach_id": "plot_9",
+      "verdict": "not_submitted"
+    }
+  ],
+  "disciplines": [
+    {
+      "booklet_pages": [
+        40,
+        41
+      ],
+      "booklet_section": "5.3",
+      "compliance_note": "הנספח אינו מצורף להגשה",
+      "confidence": "HIGH",
+      "discipline": "arch",
+      "evidence": {
+        "compliance_note": "הנספח אינו מצורף להגשה",
+        "evidence_pages": [],
+        "evidence_visual": "אין בתוכן העניינים (עמ' 2) אזכור של נספח חומריות / לוח חומרים. בכל הסקירה לא ראיתי דף עם דוגמאות צבע/חומר מסומנות.",
+        "matched_rule_hebrew": "נספח חומריות",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "אין בתוכן העניינים (עמ' 2) אזכור של נספח חומריות / לוח חומרים. בכל הסקירה לא ראיתי דף עם דוגמאות צבע/חומר מסומנות.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "הנספח אינו מצורף להגשה",
+      "remediation_he": "יש להגיש נספח חומריות עם פירוט החומרים והגוונים בחזיתות, כולל דוגמיות.",
+      "required_artifact_he": "נספח חומריות עם דוגמיות",
+      "rule_code": "DISC_ARCH_MATERIALS_ANNEX",
+      "rule_name_he": "נספח חומריות",
+      "severity": "major",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        39
+      ],
+      "booklet_section": "5.2",
+      "compliance_note": "נדרש סימון מפורש של פתחי ממ\"ד ופירוש לאיזו חזית הם פונים",
+      "confidence": "HIGH",
+      "discipline": "arch",
+      "evidence": {
+        "compliance_note": "נדרש סימון מפורש של פתחי ממ\"ד ופירוש לאיזו חזית הם פונים",
+        "evidence_pages": [
+          30,
+          38,
+          43,
+          47
+        ],
+        "evidence_visual": "בקומות הטיפוסיות נראים פתחי הממ\"ד, אך אין סימון מובהק בקנ\"מ של עמ' 1:500 שמראה אילו פתחים הם של ממ\"ד.",
+        "matched_rule_hebrew": "פתחי ממ\"ד פונים לחזיתות משניות",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        30,
+        38,
+        43,
+        47
+      ],
+      "evidence_visual": "בקומות הטיפוסיות נראים פתחי הממ\"ד, אך אין סימון מובהק בקנ\"מ של עמ' 1:500 שמראה אילו פתחים הם של ממ\"ד.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 30, 38, 43, 47) נדרש סימון מפורש של פתחי ממ\"ד ופירוש לאיזו חזית הם פונים",
+      "remediation_he": "יש לעדכן את מיקום פתחי הממ\"ד כך שיפנו לחזיתות משניות.",
+      "required_artifact_he": "אינדיקציה לפתחי ממ\"ד בחזיתות",
+      "rule_code": "DISC_ARCH_MD_OPENINGS_TO_SECONDARY",
+      "rule_name_he": "פתחי ממ\"ד פונים לחזיתות משניות",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        40
+      ],
+      "booklet_section": "5.3",
+      "compliance_note": "תואם ויזואלית — לא נראית טקסטורת אבן. נדרש אישור סופי בנספח חומריות",
+      "confidence": "HIGH",
+      "discipline": "arch",
+      "evidence": {
+        "compliance_note": "תואם ויזואלית — לא נראית טקסטורת אבן. נדרש אישור סופי בנספח חומריות",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62,
+          63
+        ],
+        "evidence_visual": "בכל החזיתות וברנדור הסופי (עמ' 63) החיפוי נראה בצבע בהיר אחיד (ככל הנראה HPL/GRC או דומה), עם פסי הדגשה אנכיים בגוון עץ/כהה — אך לא טקסטורת אבן טבעית.",
+        "matched_rule_hebrew": "ללא חיפוי אבן טבעית בחזיתות",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62,
+        63
+      ],
+      "evidence_visual": "בכל החזיתות וברנדור הסופי (עמ' 63) החיפוי נראה בצבע בהיר אחיד (ככל הנראה HPL/GRC או דומה), עם פסי הדגשה אנכיים בגוון עץ/כהה — אך לא טקסטורת אבן טבעית.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית — לא נראית טקסטורת אבן. נדרש אישור סופי בנספח חומריות",
+      "remediation_he": "יש להחליף חיפוי אבן טבעית בחומרים מאושרים (לוחות שרה / GRC / HPL / וכו') בתליה יבשה.",
+      "required_artifact_he": "פירוט חומריות מאושרת",
+      "rule_code": "DISC_ARCH_NO_STONE_CLADDING",
+      "rule_name_he": "ללא חיפוי אבן טבעית",
+      "severity": "major",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        6
+      ],
+      "booklet_section": "הוראות",
+      "compliance_note": "תואם",
+      "confidence": "HIGH",
+      "discipline": "arch",
+      "evidence": {
+        "compliance_note": "תואם",
+        "evidence_pages": [
+          63
+        ],
+        "evidence_visual": "עמ' 63 הוא הדמיה צבעונית פוטוריאליסטית של הבניינים ברחוב מסוים, עם מכוניות, הולכי רגל, מדרכה ועצים — קונטקסט עירוני ברור.",
+        "matched_rule_hebrew": "הדמייה צבעונית בהקשר העירוני",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        63
+      ],
+      "evidence_visual": "עמ' 63 הוא הדמיה צבעונית פוטוריאליסטית של הבניינים ברחוב מסוים, עם מכוניות, הולכי רגל, מדרכה ועצים — קונטקסט עירוני ברור.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 63) תואם",
+      "remediation_he": "יש לצרף הדמייה צבעונית של המבנה בהקשר עירוני מזוויות שונות.",
+      "required_artifact_he": "הדמייה צבעונית בהקשר עירוני",
+      "rule_code": "DISC_ARCH_RENDERING_CONTEXT",
+      "rule_name_he": "הדמייה צבעונית בהקשר העירוני",
+      "severity": "minor",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        39
+      ],
+      "booklet_section": "5.2",
+      "compliance_note": "תואם ויזואלית — חלונות בעלי פרופורציה אנכית. כדאי לאמת בחתכים ובפרטי חזית",
+      "confidence": "HIGH",
+      "discipline": "arch",
+      "evidence": {
+        "compliance_note": "תואם ויזואלית — חלונות בעלי פרופורציה אנכית. כדאי לאמת בחתכים ובפרטי חזית",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62
+        ],
+        "evidence_visual": "החלונות בחזיתות נראים מאורכים אנכית, רבים מהם מקצה רצפה לקצה תקרה (פתחים גבוהים וצרים יותר מאשר רחבים), בעיקר לאורך המרפסות.",
+        "matched_rule_hebrew": "פתחים אנכיים רצפה-תקרה",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62
+      ],
+      "evidence_visual": "החלונות בחזיתות נראים מאורכים אנכית, רבים מהם מקצה רצפה לקצה תקרה (פתחים גבוהים וצרים יותר מאשר רחבים), בעיקר לאורך המרפסות.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62) תואם ויזואלית — חלונות בעלי פרופורציה אנכית. כדאי לאמת בחתכים ובפרטי חזית",
+      "remediation_he": "יש לעדכן את עיצוב הפתחים בחזיתות לחלונות אנכיים רצפה-תקרה.",
+      "required_artifact_he": "פירוט פתחים בחזיתות",
+      "rule_code": "DISC_ARCH_VERTICAL_OPENINGS",
+      "rule_name_he": "פתחים אנכיים רצפה-תקרה",
+      "severity": "major",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        15,
+        16,
+        25,
+        31,
+        35,
+        42
+      ],
+      "booklet_section": "1.x / 5.x",
+      "compliance_note": "תואם ויזואלית",
+      "confidence": "HIGH",
+      "discipline": "balcony",
+      "evidence": {
+        "compliance_note": "תואם ויזואלית",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62,
+          63
+        ],
+        "evidence_visual": "המרפסות נראות משולבות בחזית עם מעקים בנויים בצבע ובחומר תואמים למעטפת הכללית. אין מעקי זכוכית/מתכת זרים. הפינות אורתוגונליות והמרפסות מצויות בגומחות החזית.",
+        "matched_rule_hebrew": "עיצוב מרפסות משולב בחזית — מעקים בנויים, חומרים תואמים",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62,
+        63
+      ],
+      "evidence_visual": "המרפסות נראות משולבות בחזית עם מעקים בנויים בצבע ובחומר תואמים למעטפת הכללית. אין מעקי זכוכית/מתכת זרים. הפינות אורתוגונליות והמרפסות מצויות בגומחות החזית.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית",
+      "remediation_he": "יש להציג עיצוב מרפסות משולב במלואו בחזית, עם פירוט מעקות וחומריות.",
+      "required_artifact_he": "פירוט מרפסות בחזיתות",
+      "rule_code": "DISC_BALCONY_INTEGRATED_DESIGN",
+      "rule_name_he": "עיצוב מרפסות משולב בחזית",
+      "severity": "major",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        43
+      ],
+      "booklet_section": "5.5",
+      "compliance_note": "ויזואלית נקי, אך נדרשת הערה תכנונית מפורשת בתקנון",
+      "confidence": "HIGH",
+      "discipline": "balcony",
+      "evidence": {
+        "compliance_note": "ויזואלית נקי, אך נדרשת הערה תכנונית מפורשת בתקנון",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62,
+          63
+        ],
+        "evidence_visual": "ההדמיות מציגות מרפסות נקיות, ללא ציוד גלוי, אך זוהי הדמיה ייצוגית בלבד. אין הערה מפורשת על אכיפה/הגבלה של גידור/אביזרים.",
+        "matched_rule_hebrew": "ללא מתקנים גלויים על מרפסת לרחוב",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62,
+        63
+      ],
+      "evidence_visual": "ההדמיות מציגות מרפסות נקיות, ללא ציוד גלוי, אך זוהי הדמיה ייצוגית בלבד. אין הערה מפורשת על אכיפה/הגבלה של גידור/אביזרים.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62, 63) ויזואלית נקי, אך נדרשת הערה תכנונית מפורשת בתקנון",
+      "remediation_he": "יש להזיז מתקנים מהמרפסת הפונה לרחוב או להסתירם מאחורי מעקה בנוי.",
+      "required_artifact_he": "פרטי מרפסת + מיקום מתקנים",
+      "rule_code": "DISC_BALCONY_NO_FACADE_EQUIP",
+      "rule_name_he": "ללא מתקנים גלויים על מרפסת לרחוב",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        76
+      ],
+      "booklet_section": "8.6",
+      "compliance_note": "ויזואלית הולם — אך נדרשת סקירת מהנדס לוודא כיסוי מלא של כל אזורי הפיתוח",
+      "confidence": "HIGH",
+      "discipline": "drainage",
+      "evidence": {
+        "compliance_note": "ויזואלית הולם — אך נדרשת סקירת מהנדס לוודא כיסוי מלא של כל אזורי הפיתוח",
+        "evidence_pages": [
+          34,
+          39,
+          40,
+          44
+        ],
+        "evidence_visual": "על תוכניות הפיתוח נראים מספרים כמו \"4%\" (עמ' 34, 40) ו-\"2.5%\" (עמ' 40, 44) ו-\"2.8%\" (עמ' 40) — אלה כנראה שיפועי ניקוז. רוב הערכים שזיהיתי הם ≥1%, אך לא בדקתי את כולם.",
+        "matched_rule_hebrew": "שיפוע ניקוז קרקע ≥1%",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        34,
+        39,
+        40,
+        44
+      ],
+      "evidence_visual": "על תוכניות הפיתוח נראים מספרים כמו \"4%\" (עמ' 34, 40) ו-\"2.5%\" (עמ' 40, 44) ו-\"2.8%\" (עמ' 40) — אלה כנראה שיפועי ניקוז. רוב הערכים שזיהיתי הם ≥1%, אך לא בדקתי את כולם.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 34, 39, 40, 44) ויזואלית הולם — אך נדרשת סקירת מהנדס לוודא כיסוי מלא של כל אזורי הפיתוח",
+      "remediation_he": "יש לציין על תכנית הפיתוח שיפועי ניקוז של 1% לפחות בכל פני המגרש.",
+      "required_artifact_he": "סימון שיפועים בתכנית פיתוח",
+      "rule_code": "DISC_DRAINAGE_GROUND_SLOPE",
+      "rule_name_he": "שיפוע ניקוז קרקע ≥ 1%",
+      "severity": "minor",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        76
+      ],
+      "booklet_section": "8.6",
+      "compliance_note": "הנספח אינו מצורף להגשה",
+      "confidence": "HIGH",
+      "discipline": "drainage",
+      "evidence": {
+        "compliance_note": "הנספח אינו מצורף להגשה",
+        "evidence_pages": [],
+        "evidence_visual": "אין בתוכן העניינים (עמ' 2) שום אזכור לנספח הידרולוגי. כל 63 העמודים הם תוכניות אדריכלות; אין דפי דו\"ח/נספח של הידרולוג מוסמך.",
+        "matched_rule_hebrew": "נספח הידרולוגי",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "אין בתוכן העניינים (עמ' 2) שום אזכור לנספח הידרולוגי. כל 63 העמודים הם תוכניות אדריכלות; אין דפי דו\"ח/נספח של הידרולוג מוסמך.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "הנספח אינו מצורף להגשה",
+      "remediation_he": "יש להגיש נספח הידרולוגי נפרד ערוך בידי הידרולוג מוסמך, הכולל תכנית ניקוז ברמת המגרש, חישוב נפח השהיה (167 מ\"ק/דונם), ומערכות החדרה.",
+      "required_artifact_he": "נספח הידרולוגי כחלק מתכנית העיצוב",
+      "rule_code": "DISC_DRAINAGE_HYDRO_ANNEX",
+      "rule_name_he": "נספח הידרולוגי",
+      "severity": "major",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        76
+      ],
+      "booklet_section": "8.6",
+      "compliance_note": "נדרש סימון מפורש ונספח הידרולוגי לקביעה",
+      "confidence": "HIGH",
+      "discipline": "drainage",
+      "evidence": {
+        "compliance_note": "נדרש סימון מפורש ונספח הידרולוגי לקביעה",
+        "evidence_pages": [
+          10,
+          24,
+          34,
+          39,
+          44
+        ],
+        "evidence_visual": "רצועות גינון רחבות נראות סביב הבניינים ובחזית הרחוב, וייתכן שמטרתן גם חלחול. אין סימון מפורש של \"אזור חלחול\" או \"השהיה\" כמושג נפרד.",
+        "matched_rule_hebrew": "אזורי חלחול והשהיה",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        10,
+        24,
+        34,
+        39,
+        44
+      ],
+      "evidence_visual": "רצועות גינון רחבות נראות סביב הבניינים ובחזית הרחוב, וייתכן שמטרתן גם חלחול. אין סימון מפורש של \"אזור חלחול\" או \"השהיה\" כמושג נפרד.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 10, 24, 34, 39, 44) נדרש סימון מפורש ונספח הידרולוגי לקביעה",
+      "remediation_he": "יש לסמן בתכניות הפיתוח אזורי חלחול והשהיה לכל תא שטח.",
+      "required_artifact_he": "סימון אזורי חלחול והשהיה",
+      "rule_code": "DISC_DRAINAGE_INFILTRATION_ZONES",
+      "rule_name_he": "אזורי חלחול והשהיה",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        76
+      ],
+      "booklet_section": "8.6",
+      "compliance_note": "נדרשת בדיקה הנדסית של כיווני הניקוז",
+      "confidence": "HIGH",
+      "discipline": "drainage",
+      "evidence": {
+        "compliance_note": "נדרשת בדיקה הנדסית של כיווני הניקוז",
+        "evidence_pages": [
+          40,
+          44
+        ],
+        "evidence_visual": "החצים והאחוזים בעמ' 40 ו-44 מצביעים בכיוונים שונים — לא היה לי זמן לבדוק כל חץ. אין סימון מפורש שהניקוז זורם לעבר השכנים, אך גם אין הוכחה לכך שאינו זורם לעברם.",
+        "matched_rule_hebrew": "ניקוז לא יזרום לשכנים",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        40,
+        44
+      ],
+      "evidence_visual": "החצים והאחוזים בעמ' 40 ו-44 מצביעים בכיוונים שונים — לא היה לי זמן לבדוק כל חץ. אין סימון מפורש שהניקוז זורם לעבר השכנים, אך גם אין הוכחה לכך שאינו זורם לעברם.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 40, 44) נדרשת בדיקה הנדסית של כיווני הניקוז",
+      "remediation_he": "יש לציין מפורשות בתכניות שניקוז המגרש לא מופנה למגרשים פרטיים.",
+      "required_artifact_he": "סימון כיוון ניקוז בתכנית",
+      "rule_code": "DISC_DRAINAGE_NO_NEIGHBOR_RUNOFF",
+      "rule_name_he": "ניקוז לא יזרום לשכנים",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        51,
+        79
+      ],
+      "booklet_section": "9.x",
+      "compliance_note": "הנספח אינו מצורף להגשה",
+      "confidence": "HIGH",
+      "discipline": "env",
+      "evidence": {
+        "compliance_note": "הנספח אינו מצורף להגשה",
+        "evidence_pages": [],
+        "evidence_visual": "אין בתוכן העניינים (עמ' 2) אזכור לנספח אקוסטי. ההגשה היא 63 עמודי תוכניות בלבד, ללא דו\"ח יועץ אקוסטיקה.",
+        "matched_rule_hebrew": "נספח אקוסטי",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "אין בתוכן העניינים (עמ' 2) אזכור לנספח אקוסטי. ההגשה היא 63 עמודי תוכניות בלבד, ללא דו\"ח יועץ אקוסטיקה.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "הנספח אינו מצורף להגשה",
+      "remediation_he": "יש להגיש נספח אקוסטי ערוך בידי יועץ אקוסטיקה מוסמך.",
+      "required_artifact_he": "נספח אקוסטי",
+      "rule_code": "DISC_ENV_ACOUSTIC_ANNEX",
+      "rule_name_he": "נספח אקוסטי",
+      "severity": "minor",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        80,
+        81
+      ],
+      "booklet_section": "9.2",
+      "compliance_note": "הנספח אינו מצורף להגשה",
+      "confidence": "HIGH",
+      "discipline": "env",
+      "evidence": {
+        "compliance_note": "הנספח אינו מצורף להגשה",
+        "evidence_pages": [],
+        "evidence_visual": "אין בתוכן העניינים אזכור לניתוח הצללה/חשיפה לשמש. לא נמצא במהלך הסקירה דף עם דיאגרמת צללים תאריכיות.",
+        "matched_rule_hebrew": "ניתוח חשיפה לשמש ופוטנציאל אנרגיה (21.12, 9:00-15:00)",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "אין בתוכן העניינים אזכור לניתוח הצללה/חשיפה לשמש. לא נמצא במהלך הסקירה דף עם דיאגרמת צללים תאריכיות.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "הנספח אינו מצורף להגשה",
+      "remediation_he": "יש לצרף נספח עם ניתוח חשיפה לשמש (21.12, 9:00–15:00) וחישוב פוטנציאל פאנלים פוטו-ולטאיים.",
+      "required_artifact_he": "נספח אנרגיה — ניתוח שמש + חישוב PV",
+      "rule_code": "DISC_ENV_ENERGY_ANALYSIS",
+      "rule_name_he": "ניתוח חשיפה לשמש ופוטנציאל אנרגיה",
+      "severity": "major",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        45,
+        79
+      ],
+      "booklet_section": "9.x",
+      "compliance_note": "הנספח אינו מצורף להגשה",
+      "confidence": "HIGH",
+      "discipline": "env",
+      "evidence": {
+        "compliance_note": "הנספח אינו מצורף להגשה",
+        "evidence_pages": [],
+        "evidence_visual": "אין בתוכן העניינים אזכור לעמידה בת\"י 5281 או נספח בנייה ירוקה.",
+        "matched_rule_hebrew": "בנייה ירוקה ת\"י 5281",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "אין בתוכן העניינים אזכור לעמידה בת\"י 5281 או נספח בנייה ירוקה.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "הנספח אינו מצורף להגשה",
+      "remediation_he": "יש להגיש נספח בנייה ירוקה לפי דרישות ת\"י 5281 כחלק מתכנית העיצוב.",
+      "required_artifact_he": "נספח בנייה ירוקה (ת\"י 5281)",
+      "rule_code": "DISC_ENV_GREEN_BUILDING_5281",
+      "rule_name_he": "בנייה ירוקה ת\"י 5281",
+      "severity": "major",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        79
+      ],
+      "booklet_section": "9.x",
+      "compliance_note": "הנספח אינו מצורף להגשה",
+      "confidence": "HIGH",
+      "discipline": "env",
+      "evidence": {
+        "compliance_note": "הנספח אינו מצורף להגשה",
+        "evidence_pages": [],
+        "evidence_visual": "אין בתוכן העניינים אזכור לנספח איכות סביבה/קיימות.",
+        "matched_rule_hebrew": "נספח איכות סביבה וקיימות",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "אין בתוכן העניינים אזכור לנספח איכות סביבה/קיימות.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "הנספח אינו מצורף להגשה",
+      "remediation_he": "יש להגיש נספח איכות סביבה וקיימות.",
+      "required_artifact_he": "נספח איכות סביבה וקיימות",
+      "rule_code": "DISC_ENV_SUSTAINABILITY_ANNEX",
+      "rule_name_he": "נספח איכות סביבה וקיימות",
+      "severity": "minor",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        73
+      ],
+      "booklet_section": "8.5",
+      "compliance_note": "נדרש כיתוב/הערה על סוג הריצוף (אבן משתלבת/גוטה גרדן/מחלחל)",
+      "confidence": "HIGH",
+      "discipline": "fire",
+      "evidence": {
+        "compliance_note": "נדרש כיתוב/הערה על סוג הריצוף (אבן משתלבת/גוטה גרדן/מחלחל)",
+        "evidence_pages": [
+          25,
+          35,
+          40,
+          44
+        ],
+        "evidence_visual": "רחבות הכיבוי מסומנות בחום בכל דיאגרמות האשפה (לפי הלגנדה \"רחבות כיבוי\"). אין כיתוב שמציין באיזה סוג ריצוף הן מבוצעות.",
+        "matched_rule_hebrew": "ריצוף רחבת כיבוי באבן משתלבת/מחלחל",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        25,
+        35,
+        40,
+        44
+      ],
+      "evidence_visual": "רחבות הכיבוי מסומנות בחום בכל דיאגרמות האשפה (לפי הלגנדה \"רחבות כיבוי\"). אין כיתוב שמציין באיזה סוג ריצוף הן מבוצעות.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 25, 35, 40, 44) נדרש כיתוב/הערה על סוג הריצוף (אבן משתלבת/גוטה גרדן/מחלחל)",
+      "remediation_he": "יש לציין במפורש את חומר הריצוף של רחבת הכיבוי — אבן משתלבת או ריצוף מחלחל.",
+      "required_artifact_he": "פרט ריצוף בתכנית פיתוח",
+      "rule_code": "DISC_FIRE_PAVING_PERMEABLE",
+      "rule_name_he": "ריצוף רחבת כיבוי באבן משתלבת/ריצוף מחלחל",
+      "severity": "minor",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        73
+      ],
+      "booklet_section": "8.5",
+      "compliance_note": "יש לדרוש הערה מפורשת על שילוט ללא צבע על הקרקע",
+      "confidence": "HIGH",
+      "discipline": "fire",
+      "evidence": {
+        "compliance_note": "יש לדרוש הערה מפורשת על שילוט ללא צבע על הקרקע",
+        "evidence_pages": [
+          25,
+          35,
+          40,
+          44
+        ],
+        "evidence_visual": "הסימון בתוכניות הוא צבע חום — אבל זהו צבע דיאגרמתי בלבד (לפי לגנדה). אין הערה מפורשת לגבי דרישת שילוט בפועל.",
+        "matched_rule_hebrew": "סימון רחבת כיבוי בשילוט בלבד, ללא צבע על הריצוף",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        25,
+        35,
+        40,
+        44
+      ],
+      "evidence_visual": "הסימון בתוכניות הוא צבע חום — אבל זהו צבע דיאגרמתי בלבד (לפי לגנדה). אין הערה מפורשת לגבי דרישת שילוט בפועל.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 25, 35, 40, 44) יש לדרוש הערה מפורשת על שילוט ללא צבע על הקרקע",
+      "remediation_he": "יש להוסיף בתכנית את ההערה: 'סימון רחבת כיבוי אש באמצעות שילוט בלבד ללא צביעה'.",
+      "required_artifact_he": "הערה על סימון רחבת כיבוי בתכנית",
+      "rule_code": "DISC_FIRE_SIGNAGE_NOT_PAINT",
+      "rule_name_he": "סימון רחבת כיבוי בשילוט בלבד",
+      "severity": "minor",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        73
+      ],
+      "booklet_section": "8.5",
+      "compliance_note": "נדרשת בדיקה מדויקת של מיקום רחבות הכיבוי ביחס לגבול המגרש — במיוחד תאי שטח 2+4 ו-5",
+      "confidence": "HIGH",
+      "discipline": "fire",
+      "evidence": {
+        "compliance_note": "נדרשת בדיקה מדויקת של מיקום רחבות הכיבוי ביחס לגבול המגרש — במיוחד תאי שטח 2+4 ו-5",
+        "evidence_pages": [
+          25,
+          35,
+          40,
+          44
+        ],
+        "evidence_visual": "בעמ' 25 (תא שטח 1) הרחבות החומות נראות בתוך גבולות המגרש (בין הבניינים). בעמ' 35 (תאי שטח 2+4) ובעמ' 40, 44 — חלק מהמלבנים החומים נראים סמוך מאוד לקו המגרש או בקצהו; קשה לקבוע מהדיאגרמה אם הם בתוך או חורגים מהקו הכחול המקווקו.",
+        "matched_rule_hebrew": "רחבת כיבוי בתחום המגרש הפרטי",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        25,
+        35,
+        40,
+        44
+      ],
+      "evidence_visual": "בעמ' 25 (תא שטח 1) הרחבות החומות נראות בתוך גבולות המגרש (בין הבניינים). בעמ' 35 (תאי שטח 2+4) ובעמ' 40, 44 — חלק מהמלבנים החומים נראים סמוך מאוד לקו המגרש או בקצהו; קשה לקבוע מהדיאגרמה אם הם בתוך או חורגים מהקו הכחול המקווקו.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 25, 35, 40, 44) נדרשת בדיקה מדויקת של מיקום רחבות הכיבוי ביחס לגבול המגרש — במיוחד תאי שטח 2+4 ו-5",
+      "remediation_he": "יש לסמן רחבת כיבוי אש בתוך תחום המגרש הפרטי בכל תא שטח, בהתאם להנחיות כיבוי אש.",
+      "required_artifact_he": "סימון רחבת כיבוי אש פר תא שטח",
+      "rule_code": "DISC_FIRE_SQUARE_IN_PRIVATE_PLOT",
+      "rule_name_he": "רחבת כיבוי בתחום המגרש הפרטי",
+      "severity": "critical",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        77
+      ],
+      "booklet_section": "8.x",
+      "compliance_note": "תואם ויזואלית — כניסות מטופלות נופית. עיצוב מפורט (ספסלים, סוגי צמחים) דורש סקירה ע\"י אדריכל נוף",
+      "confidence": "HIGH",
+      "discipline": "gardens",
+      "evidence": {
+        "compliance_note": "תואם ויזואלית — כניסות מטופלות נופית. עיצוב מפורט (ספסלים, סוגי צמחים) דורש סקירה ע\"י אדריכל נוף",
+        "evidence_pages": [
+          10,
+          24,
+          34,
+          39
+        ],
+        "evidence_visual": "בתוכניות הפיתוח של כל תאי השטח נראים אזורים ירוקים (גינון, עצים, ריצוף משתלב) צמודים לכניסות הבניינים. בעמ' 10 (תכנית פיתוח כללית, קנ\"מ 1:1250) ניתן לראות פיזור אזורי גינון סביב לובי הכניסות.",
+        "matched_rule_hebrew": "עיצוב נופי בכניסות לבניין",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        10,
+        24,
+        34,
+        39
+      ],
+      "evidence_visual": "בתוכניות הפיתוח של כל תאי השטח נראים אזורים ירוקים (גינון, עצים, ריצוף משתלב) צמודים לכניסות הבניינים. בעמ' 10 (תכנית פיתוח כללית, קנ\"מ 1:1250) ניתן לראות פיזור אזורי גינון סביב לובי הכניסות.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 10, 24, 34, 39) תואם ויזואלית — כניסות מטופלות נופית. עיצוב מפורט (ספסלים, סוגי צמחים) דורש סקירה ע\"י אדריכל נוף",
+      "remediation_he": "יש להציג עיצוב נופי מפורט סביב הכניסות לבניינים, כולל מקרא לחומרים וצמחייה.",
+      "required_artifact_he": "תכנית פיתוח של אזור הכניסה",
+      "rule_code": "DISC_GARDENS_LOBBY_PLANTING",
+      "rule_name_he": "עיצוב נופי בכניסות לבניין",
+      "severity": "minor",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        76
+      ],
+      "booklet_section": "8.6",
+      "compliance_note": "ויזואלית קיימת רצועה — נדרשת מדידה לוודא ≥2מ ומיקום עצים",
+      "confidence": "HIGH",
+      "discipline": "gardens",
+      "evidence": {
+        "compliance_note": "ויזואלית קיימת רצועה — נדרשת מדידה לוודא ≥2מ ומיקום עצים",
+        "evidence_pages": [
+          10,
+          24,
+          34,
+          39,
+          44
+        ],
+        "evidence_visual": "בתוכניות הפיתוח נראית רצועה ירוקה בין קו המגרש (קו כחול מקווקו) לבין הכביש/מדרכה, עם עצים מסומנים. רוחב הרצועה אינו מסומן במספר על התוכניות שראיתי.",
+        "matched_rule_hebrew": "רצועת גינון רחבה (≥2מ) הצמודה למגרש",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        10,
+        24,
+        34,
+        39,
+        44
+      ],
+      "evidence_visual": "בתוכניות הפיתוח נראית רצועה ירוקה בין קו המגרש (קו כחול מקווקו) לבין הכביש/מדרכה, עם עצים מסומנים. רוחב הרצועה אינו מסומן במספר על התוכניות שראיתי.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 10, 24, 34, 39, 44) ויזואלית קיימת רצועה — נדרשת מדידה לוודא ≥2מ ומיקום עצים",
+      "remediation_he": "יש לסמן בתכנית הפיתוח רצועת גינון ברוחב 2 מ' לפחות בגבול המגרש, ולציין את שטחה.",
+      "required_artifact_he": "תכנית פיתוח עם רצועת גינון מסומנת",
+      "rule_code": "DISC_GARDENS_PLANTING_STRIP",
+      "rule_name_he": "רצועת גינון רחבה הצמודה למגרש",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        77
+      ],
+      "booklet_section": "8.x",
+      "compliance_note": "הנספח אינו מצורף להגשה",
+      "confidence": "HIGH",
+      "discipline": "gardens",
+      "evidence": {
+        "compliance_note": "הנספח אינו מצורף להגשה",
+        "evidence_pages": [],
+        "evidence_visual": "אין בתוכן העניינים (עמ' 2) שום אזכור לרשימת צמחייה/נספח גינון. הסקירה הוויזואלית של 63 העמודים לא חשפה דף עם שמות מינים.",
+        "matched_rule_hebrew": "רשימת צמחייה מפורטת (נספח)",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "אין בתוכן העניינים (עמ' 2) שום אזכור לרשימת צמחייה/נספח גינון. הסקירה הוויזואלית של 63 העמודים לא חשפה דף עם שמות מינים.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "הנספח אינו מצורף להגשה",
+      "remediation_he": "יש לצרף רשימת צמחייה מפורטת ותכנית צמחייה מסומנת כחלק מתכנית העיצוב.",
+      "required_artifact_he": "רשימת צמחייה + תכנית צמחייה",
+      "rule_code": "DISC_GARDENS_PLANT_LIST",
+      "rule_name_he": "רשימת צמחייה מפורטת",
+      "severity": "minor",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        72
+      ],
+      "booklet_section": "8.4",
+      "compliance_note": "נדרשת השלמה — לוודא סימון צובר תת-קרקעי בנספח אינסטלציה או בתוכנית פיתוח מפורטת",
+      "confidence": "HIGH",
+      "discipline": "infra",
+      "evidence": {
+        "compliance_note": "נדרשת השלמה — לוודא סימון צובר תת-קרקעי בנספח אינסטלציה או בתוכנית פיתוח מפורטת",
+        "evidence_pages": [],
+        "evidence_visual": "בתוכניות הפיתוח (עמ' 24, 34, 39) לא אותר סימון מפורש של מיקום צובר גז (כדור/מלבן עם תיוג \"גז\"). ייתכן שאינו מוצג בקנ\"מ של תוכנית העיצוב.",
+        "matched_rule_hebrew": "צובר גז תת-קרקעי בלבד, ≥2מ מקו המגרש, ברצועת גינון",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [],
+      "evidence_visual": "בתוכניות הפיתוח (עמ' 24, 34, 39) לא אותר סימון מפורש של מיקום צובר גז (כדור/מלבן עם תיוג \"גז\"). ייתכן שאינו מוצג בקנ\"מ של תוכנית העיצוב.",
+      "failure_mode": "NONE",
+      "notes_he": "נדרשת השלמה — לוודא סימון צובר תת-קרקעי בנספח אינסטלציה או בתוכנית פיתוח מפורטת",
+      "remediation_he": "יש לציין מיקום צובר הגז בתת הקרקע, במרחק 2 מ' לפחות מקו המגרש, ובתיאום אדריכל הנוף.",
+      "required_artifact_he": "סימון מיקום צובר גז בתכנית פיתוח",
+      "rule_code": "DISC_INFRA_GAS_TANK_UNDERGROUND",
+      "rule_name_he": "צובר גז תת-קרקעי בלבד",
+      "severity": "minor",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        51
+      ],
+      "booklet_section": "7.1",
+      "compliance_note": "תואם ויזואלית — אין מעבים נראים. כדאי לאמת בפרטי חזית בקנ\"מ גדול יותר",
+      "confidence": "HIGH",
+      "discipline": "infra",
+      "evidence": {
+        "compliance_note": "תואם ויזואלית — אין מעבים נראים. כדאי לאמת בפרטי חזית בקנ\"מ גדול יותר",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62,
+          63
+        ],
+        "evidence_visual": "בכל חזיתות הבניינים (עמ' 52-62) וברנדור הסופי (עמ' 63) לא נראות יחידות מעבה גלויות. החזיתות נקיות, עם פתחים אנכיים ומרפסות משולבות; כל פתחי מיזוג כנראה מוסתרים מאחורי שבכות/גומחות.",
+        "matched_rule_hebrew": "ללא יחידות מיזוג גלויות בחזיתות",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62,
+        63
+      ],
+      "evidence_visual": "בכל חזיתות הבניינים (עמ' 52-62) וברנדור הסופי (עמ' 63) לא נראות יחידות מעבה גלויות. החזיתות נקיות, עם פתחים אנכיים ומרפסות משולבות; כל פתחי מיזוג כנראה מוסתרים מאחורי שבכות/גומחות.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית — אין מעבים נראים. כדאי לאמת בפרטי חזית בקנ\"מ גדול יותר",
+      "remediation_he": "יש להציג פתרון אדריכלי המסתיר את יחידות המיזוג מקו החזית.",
+      "required_artifact_he": "פירוט מיקום מיזוג אוויר",
+      "rule_code": "DISC_INFRA_NO_FACADE_AC",
+      "rule_name_he": "ללא יחידות מיזוג בחזיתות",
+      "severity": "major",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        51
+      ],
+      "booklet_section": "7.1",
+      "compliance_note": "נדרש פרט חזית מפורט לאישור סופי",
+      "confidence": "HIGH",
+      "discipline": "infra",
+      "evidence": {
+        "compliance_note": "נדרש פרט חזית מפורט לאישור סופי",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62
+        ],
+        "evidence_visual": "החזיתות נראות נקיות ברמת ההדמיה הקיימת, אך לא ניתן בוודאות לזהות צנרת דקיקה בקנ\"מ של עמ' 1:750/1:500.",
+        "matched_rule_hebrew": "ללא צנרת גלויה בחזיתות (פרט לגשם)",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62
+      ],
+      "evidence_visual": "החזיתות נראות נקיות ברמת ההדמיה הקיימת, אך לא ניתן בוודאות לזהות צנרת דקיקה בקנ\"מ של עמ' 1:750/1:500.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62) נדרש פרט חזית מפורט לאישור סופי",
+      "remediation_he": "יש להסיר כל סימון צנרת חיצונית מהחזיתות (למעט מרזבים).",
+      "required_artifact_he": "חזיתות נקיות מצנרת",
+      "rule_code": "DISC_INFRA_NO_FACADE_PIPES",
+      "rule_name_he": "ללא צנרת גלויה בחזיתות",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        43
+      ],
+      "booklet_section": "5.5",
+      "compliance_note": "נדרש פרט חזית בקנ\"מ גדול שיציג מידות מסתור",
+      "confidence": "HIGH",
+      "discipline": "laundry",
+      "evidence": {
+        "compliance_note": "נדרש פרט חזית בקנ\"מ גדול שיציג מידות מסתור",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62
+        ],
+        "evidence_visual": "בחזיתות נראים קווים אנכיים מקווקווים אדומים שכנראה מציינים מיקום מסתורי כביסה. אין מספור מידות גלוי בקנ\"מ של תוכניות החזית הללו.",
+        "matched_rule_hebrew": "מסתור כביסה — מידות מינימליות 1.8×1.5מ",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62
+      ],
+      "evidence_visual": "בחזיתות נראים קווים אנכיים מקווקווים אדומים שכנראה מציינים מיקום מסתורי כביסה. אין מספור מידות גלוי בקנ\"מ של תוכניות החזית הללו.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62) נדרש פרט חזית בקנ\"מ גדול שיציג מידות מסתור",
+      "remediation_he": "יש לסמן מסתורי כביסה בקומות הטיפוסיות עם המידות הנדרשות (1.8 מ' רוחב × 1.5 מ' עומק).",
+      "required_artifact_he": "סימון מסתורי כביסה בקומה טיפוסית",
+      "rule_code": "DISC_LAUNDRY_DIMENSIONS",
+      "rule_name_he": "מסתור כביסה — מידות מינימליות",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        43
+      ],
+      "booklet_section": "5.5",
+      "compliance_note": "נדרשת קביעה בנספח חומריות (שאינו קיים בהגשה הזו)",
+      "confidence": "HIGH",
+      "discipline": "laundry",
+      "evidence": {
+        "compliance_note": "נדרשת קביעה בנספח חומריות (שאינו קיים בהגשה הזו)",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62
+        ],
+        "evidence_visual": "סוג החומר של המסתור אינו מצוין בתוכניות החזית. נדרש פירוט בנספח חומריות.",
+        "matched_rule_hebrew": "מסתור כביסה — ללא PVC",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62
+      ],
+      "evidence_visual": "סוג החומר של המסתור אינו מצוין בתוכניות החזית. נדרש פירוט בנספח חומריות.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62) נדרשת קביעה בנספח חומריות (שאינו קיים בהגשה הזו)",
+      "remediation_he": "יש להחליף פרופילי PVC בחומרים מאושרים (לוחות שרה / רשתות מתועשות).",
+      "required_artifact_he": "פירוט חומריות של מסתור הכביסה",
+      "rule_code": "DISC_LAUNDRY_NO_PVC",
+      "rule_name_he": "מסתור כביסה — ללא PVC",
+      "severity": "minor",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        16,
+        26,
+        31
+      ],
+      "booklet_section": "1.4 / 2.3 / 3.2",
+      "compliance_note": "תוכנית גג ייעודית כנראה חסרה. נדרשת בקשה לתוכנית גג עם סימון פאנלים/דודים",
+      "confidence": "HIGH",
+      "discipline": "roofs",
+      "evidence": {
+        "compliance_note": "תוכנית גג ייעודית כנראה חסרה. נדרשת בקשה לתוכנית גג עם סימון פאנלים/דודים",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          62
+        ],
+        "evidence_visual": "בחזיתות (עמ' 52-62) נראים פסי אבן/גג ברורים ברום הבניין, אך לא ראיתי \"מבט גג\" מובהק (קומה חמישית) בתוכן העניינים או בעמודים הקיימים.",
+        "matched_rule_hebrew": "תכנון חזית חמישית (גגות) — תוכנית גג עם פאנלים סולאריים",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        62
+      ],
+      "evidence_visual": "בחזיתות (עמ' 52-62) נראים פסי אבן/גג ברורים ברום הבניין, אך לא ראיתי \"מבט גג\" מובהק (קומה חמישית) בתוכן העניינים או בעמודים הקיימים.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 62) תוכנית גג ייעודית כנראה חסרה. נדרשת בקשה לתוכנית גג עם סימון פאנלים/דודים",
+      "remediation_he": "יש להגיש תכנית גגות (חזית חמישית) לכל הטיפולוגיות, עם שילוב דודי שמש וציוד טכני.",
+      "required_artifact_he": "תכנית גגות לכל הטיפולוגיות",
+      "rule_code": "DISC_ROOFS_FIFTH_FACADE",
+      "rule_name_he": "תכנון חזית חמישית (גגות)",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        51
+      ],
+      "booklet_section": "7.1",
+      "compliance_note": "תואם ויזואלית",
+      "confidence": "HIGH",
+      "discipline": "roofs",
+      "evidence": {
+        "compliance_note": "תואם ויזואלית",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62,
+          63
+        ],
+        "evidence_visual": "בכל החזיתות שסקרתי וברנדור הסופי, אין ארובות גלויות; הבניינים מסתיימים בגג שטוח עם מעקה.",
+        "matched_rule_hebrew": "ללא ארובות חימום בחזיתות",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62,
+        63
+      ],
+      "evidence_visual": "בכל החזיתות שסקרתי וברנדור הסופי, אין ארובות גלויות; הבניינים מסתיימים בגג שטוח עם מעקה.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית",
+      "remediation_he": "יש להסיר כל סימון של ארובות חימום מהחזיתות.",
+      "required_artifact_he": "חזיתות נקיות מארובות",
+      "rule_code": "DISC_ROOFS_NO_FACADE_CHIMNEYS",
+      "rule_name_he": "ללא ארובות חימום בחזיתות",
+      "severity": "minor",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        51
+      ],
+      "booklet_section": "7.1",
+      "compliance_note": "נדרשת תוכנית גג להוכחה",
+      "confidence": "HIGH",
+      "discipline": "roofs",
+      "evidence": {
+        "compliance_note": "נדרשת תוכנית גג להוכחה",
+        "evidence_pages": [
+          52,
+          53,
+          54,
+          58,
+          60,
+          62
+        ],
+        "evidence_visual": "מהחזיתות לא נראים דודים/קולטים על המעטפת — מה שתואם את הדרישה. אבל אין תוכנית גג שמראה איפה הם ממוקמים, ולכן לא ניתן לאשר אינטגרציה בגג.",
+        "matched_rule_hebrew": "דודים וקולטים משולבים בגג (לא בחזית)",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        52,
+        53,
+        54,
+        58,
+        60,
+        62
+      ],
+      "evidence_visual": "מהחזיתות לא נראים דודים/קולטים על המעטפת — מה שתואם את הדרישה. אבל אין תוכנית גג שמראה איפה הם ממוקמים, ולכן לא ניתן לאשר אינטגרציה בגג.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 52, 53, 54, 58, 60, 62) נדרשת תוכנית גג להוכחה",
+      "remediation_he": "יש להציג בתכנית הגג מיקום מסונן לדודים ולקולטים.",
+      "required_artifact_he": "פרט אינטגרציית דודים בתכנית גג",
+      "rule_code": "DISC_ROOFS_NO_FACADE_DUDIM",
+      "rule_name_he": "דודים וקולטים משולבים בגג",
+      "severity": "minor",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        52
+      ],
+      "booklet_section": "7.2",
+      "compliance_note": "המערכת היא כנראה פניאומטית עם דחיסה בקרקע (ראו 3.1 רביעי). נדרשת בדיקה הנדסית אם יש חדרי איסוף/שוטים בכל קומה",
+      "confidence": "HIGH",
+      "discipline": "shafa",
+      "evidence": {
+        "compliance_note": "המערכת היא כנראה פניאומטית עם דחיסה בקרקע (ראו 3.1 רביעי). נדרשת בדיקה הנדסית אם יש חדרי איסוף/שוטים בכל קומה",
+        "evidence_pages": [
+          25,
+          30,
+          35,
+          38,
+          40,
+          43,
+          44,
+          47
+        ],
+        "evidence_visual": "בדיאגרמות האשפה (עמ' 25, 35, 40, 44) נראים חדרי אצירת אשפה צהובים ברמת הקרקע צמודים לכניסות הבניינים, וכן חדרי דחסנית כתומים. בקומות הטיפוסיות (עמ' 30, 38, 43, 47) הצבע הצהוב משויך בלגנדה לדירות 2 חדרים ולא לחדרי אשפה — לכן לא ניתן לאשר ויזואלית אם קיים חדר פסולת ייעודי בכל קומה.",
+        "matched_rule_hebrew": "חדרי פסולת קומתיים",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        25,
+        30,
+        35,
+        38,
+        40,
+        43,
+        44,
+        47
+      ],
+      "evidence_visual": "בדיאגרמות האשפה (עמ' 25, 35, 40, 44) נראים חדרי אצירת אשפה צהובים ברמת הקרקע צמודים לכניסות הבניינים, וכן חדרי דחסנית כתומים. בקומות הטיפוסיות (עמ' 30, 38, 43, 47) הצבע הצהוב משויך בלגנדה לדירות 2 חדרים ולא לחדרי אשפה — לכן לא ניתן לאשר ויזואלית אם קיים חדר פסולת ייעודי בכל קומה.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 25, 30, 35, 38, 40, 43, 44, 47) המערכת היא כנראה פניאומטית עם דחיסה בקרקע (ראו 3.1 רביעי). נדרשת בדיקה הנדסית אם יש חדרי איסוף/שוטים בכל קומה",
+      "remediation_he": "יש לסמן חדר פסולת קומתי בכל מפלס שימושי בקומות הטיפוסיות ולציין את שטחו.",
+      "required_artifact_he": "סימון חדרי פסולת קומתיים בקומה הטיפוסית",
+      "rule_code": "DISC_SHAFA_FLOOR_COLLECTION_ROOMS",
+      "rule_name_he": "חדרי פסולת קומתיים",
+      "severity": "major",
+      "verdict": "requires_review"
+    },
+    {
+      "booklet_pages": [
+        71
+      ],
+      "booklet_section": "8.x",
+      "compliance_note": "חסר — יש לדרוש סימון רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
+      "confidence": "HIGH",
+      "discipline": "shafa",
+      "evidence": {
+        "compliance_note": "חסר — יש לדרוש סימון רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
+        "evidence_pages": [
+          24,
+          25,
+          34,
+          35,
+          39,
+          40,
+          44
+        ],
+        "evidence_visual": "בתוכניות הפיתוח ובדיאגרמות האשפה לא אותרה רחבה ייעודית המסומנת כ\"רחבת גזם\" באף תא שטח. הרחבות החומות בדיאגרמות מתויגות כ\"רחבת כיבוי\" — לא רחבת גזם.",
+        "matched_rule_hebrew": "רחבת גזם ייעודית (קנ\"מ 1:500, מאבן משתלבת, סמוך לרחוב)",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        24,
+        25,
+        34,
+        35,
+        39,
+        40,
+        44
+      ],
+      "evidence_visual": "בתוכניות הפיתוח ובדיאגרמות האשפה לא אותרה רחבה ייעודית המסומנת כ\"רחבת גזם\" באף תא שטח. הרחבות החומות בדיאגרמות מתויגות כ\"רחבת כיבוי\" — לא רחבת גזם.",
+      "failure_mode": "POLICY_VIOLATION",
+      "notes_he": "(עמ' 24, 25, 34, 35, 39, 40, 44) חסר — יש לדרוש סימון רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
+      "remediation_he": "יש להוסיף סימון רחבת גזם ייעודית בכל תא שטח, בקנ\"מ 1:500, באבן משתלבת, ברצועה הצמודה לרחוב.",
+      "required_artifact_he": "סימון רחבת גזם בתכנית פיתוח פר תא שטח",
+      "rule_code": "DISC_SHAFA_GAZAM_YARD",
+      "rule_name_he": "רחבת גזם ייעודית",
+      "severity": "minor",
+      "verdict": "fail"
+    },
+    {
+      "booklet_pages": [
+        52
+      ],
+      "booklet_section": "7.2",
+      "compliance_note": "תואם — תנועת רכבי האשפה מחוץ למגרש",
+      "confidence": "HIGH",
+      "discipline": "shafa",
+      "evidence": {
+        "compliance_note": "תואם — תנועת רכבי האשפה מחוץ למגרש",
+        "evidence_pages": [
+          25,
+          35,
+          40,
+          44
+        ],
+        "evidence_visual": "החצים הירוקים המקווקווים (תנועת רכבי אשפה לפי הלגנדה) בדיאגרמות האשפה רצים לאורך הרחובות בלבד ולא חודרים לתחום המגרש; הגישה התפעולית מסומנת בחיצים כתומים נפרדים (גישה תפעולית לשצ\"פ).",
+        "matched_rule_hebrew": "ללא כניסת משאיות אשפה לתחום המגרש",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        25,
+        35,
+        40,
+        44
+      ],
+      "evidence_visual": "החצים הירוקים המקווקווים (תנועת רכבי אשפה לפי הלגנדה) בדיאגרמות האשפה רצים לאורך הרחובות בלבד ולא חודרים לתחום המגרש; הגישה התפעולית מסומנת בחיצים כתומים נפרדים (גישה תפעולית לשצ\"פ).",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 25, 35, 40, 44) תואם — תנועת רכבי האשפה מחוץ למגרש",
+      "remediation_he": "יש להסיר כל סימון של דרך גישת משאית אשפה אל תחום המגרש.",
+      "required_artifact_he": "אישור ויזואלי בתכניות פיתוח",
+      "rule_code": "DISC_SHAFA_NO_TRUCK_ENTRY",
+      "rule_name_he": "ללא כניסת משאיות אשפה לתחום המגרש",
+      "severity": "major",
+      "verdict": "pass"
+    },
+    {
+      "booklet_pages": [
+        52,
+        53
+      ],
+      "booklet_section": "7.2",
+      "compliance_note": "תואם ויזואלית. כדאי לאמת תכנון מפורט של הצינורות עם יועץ פסולת",
+      "confidence": "HIGH",
+      "discipline": "shafa",
+      "evidence": {
+        "compliance_note": "תואם ויזואלית. כדאי לאמת תכנון מפורט של הצינורות עם יועץ פסולת",
+        "evidence_pages": [
+          25,
+          35,
+          40,
+          44
+        ],
+        "evidence_visual": "בכל דיאגרמות האשפה מסומנים \"חדר דחסנית\" בצבע כתום בכל בניין, לצד \"חדר אצירת אשפה ומחזור\" צהוב. הימצאות חדרי דחסנית בכל בניין היא אינדיקציה חזקה למערכת פניאומטית מרכזית.",
+        "matched_rule_hebrew": "מערכת איסוף פניאומטית",
+        "source": "cowork_discipline_findings_v24.3"
+      },
+      "evidence_pages": [
+        25,
+        35,
+        40,
+        44
+      ],
+      "evidence_visual": "בכל דיאגרמות האשפה מסומנים \"חדר דחסנית\" בצבע כתום בכל בניין, לצד \"חדר אצירת אשפה ומחזור\" צהוב. הימצאות חדרי דחסנית בכל בניין היא אינדיקציה חזקה למערכת פניאומטית מרכזית.",
+      "failure_mode": "NONE",
+      "notes_he": "(עמ' 25, 35, 40, 44) תואם ויזואלית. כדאי לאמת תכנון מפורט של הצינורות עם יועץ פסולת",
+      "remediation_he": "יש לכלול בתכנית העיצוב פירוט מערכת איסוף פניאומטית עם חדרי פסולת קומתיים, מצנחות פסולת ופירי פסולת.",
+      "required_artifact_he": "תכנית מערכת איסוף אשפה פניאומטית עם פירוט פירים וחדרי מגופים",
+      "rule_code": "DISC_SHAFA_PNEUMATIC_SYSTEM",
+      "rule_name_he": "מערכת איסוף אשפה פניאומטית",
+      "severity": "major",
+      "verdict": "pass"
+    }
+  ],
+  "extraction_cache": {
+    "extraction_quality": {
+      "fields_extracted_count": 22,
+      "llm_available": true,
+      "llm_used": true,
+      "missing_api_key": false,
+      "page_count": 63
+    },
+    "pdf_sha256": "92205abf76b56e346dad2d4bd3cb7b325a18c9b42df8c2a5d0c62b94cc01e650",
+    "plan_metadata": {
+      "raw_cover_text": " מתחם הטייסים – נס ציונה\nתכנית עיצוב\nהדמייה להמחשה בלבד\n1\n"
+    },
+    "plan_wide_data": {
+      "apartment_size_distribution": {},
+      "architect_name": null,
+      "extraction_methods": {},
+      "extraction_notes": {},
+      "submission_date": null,
+      "unit_count_total": 700
+    },
+    "schema_version": "1.0.0",
+    "ta_shetach_data": [
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [
+          45.45
+        ],
+        "parking_accessible": 7,
+        "parking_bike": 232,
+        "parking_motorcycle": 23,
+        "parking_private": 330,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_1",
+        "unit_count": 232
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [
+          32.85
+        ],
+        "parking_accessible": 2,
+        "parking_bike": 44,
+        "parking_motorcycle": 4,
+        "parking_private": 65,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_2",
+        "unit_count": 44
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [
+          32.85
+        ],
+        "parking_accessible": 4,
+        "parking_bike": 130,
+        "parking_motorcycle": 13,
+        "parking_private": 186,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_3",
+        "unit_count": 130
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [
+          42.3
+        ],
+        "parking_accessible": 3,
+        "parking_bike": 98,
+        "parking_motorcycle": 10,
+        "parking_private": 138,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_4",
+        "unit_count": 98
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [
+          42.3
+        ],
+        "parking_accessible": 5,
+        "parking_bike": 196,
+        "parking_motorcycle": 20,
+        "parking_private": 280,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_5",
+        "unit_count": 196
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [],
+        "parking_accessible": null,
+        "parking_bike": null,
+        "parking_motorcycle": null,
+        "parking_private": null,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_6",
+        "unit_count": null
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [],
+        "parking_accessible": null,
+        "parking_bike": null,
+        "parking_motorcycle": null,
+        "parking_private": null,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_7",
+        "unit_count": null
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [],
+        "parking_accessible": null,
+        "parking_bike": null,
+        "parking_motorcycle": null,
+        "parking_private": null,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_8",
+        "unit_count": null
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [],
+        "parking_accessible": null,
+        "parking_bike": null,
+        "parking_motorcycle": null,
+        "parking_private": null,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_9",
+        "unit_count": null
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [],
+        "parking_accessible": null,
+        "parking_bike": null,
+        "parking_motorcycle": null,
+        "parking_private": null,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_10",
+        "unit_count": null
+      },
+      {
+        "area_main_m2": null,
+        "area_service_above_m2": null,
+        "area_service_below_m2": null,
+        "area_total_m2": null,
+        "extraction_methods": {},
+        "extraction_notes": {},
+        "extraction_pages": {
+          "parcel_pages": []
+        },
+        "heights_m": [],
+        "parking_accessible": null,
+        "parking_bike": null,
+        "parking_motorcycle": null,
+        "parking_private": null,
+        "permeable_surface_m2": null,
+        "setback_front_m": null,
+        "setback_rear_m": null,
+        "setback_side_m": null,
+        "ta_shetach_id": "plot_20",
+        "unit_count": null
+      }
+    ]
+  },
+  "extracts_overlay": {
+    "_note": "Hand-extracted values from Kika Braz architects submission v24.3 (March 2025). Used by the compliance engine instead of attempting auto-extraction from the rasterized PDF. Filled by Claude on 2026-05-17 via per-page PNG rendering + visual reading of the rasterized tables in the submission. To be replaced by v8a-2 vision-LLM extraction later.",
+    "_structural_notes": [
+      "PDF TOC structure differs from the user's brief: plots 1, 2, 3, 4, 5 only. NO plot 9 anywhere in this submission.",
+      "Plots 2 and 4 share pages 34-38 in the TOC, but the architect actually shows them as SEPARATE tables side-by-side on the same pages — so they can be extracted independently.",
+      "Plots 3 and 5 each have 4 pages (no separate פיתוח, no מעונות יום page); they share a development page at p.39.",
+      "Plot 1 has 10 pages (24-33) including מעונות יום (27-28) and renderings (31-33).",
+      "The unit-mix tables use חדרים-based bands (2 / 2.5 קטנה / 3 גדולה / 4 / 5 / 6 / מיוחדות) with overlapping area ranges. Mapping cleanly to the תב\"ע's strict ≤55/56-75/76-99/≥100 buckets is NOT possible for plots where the 2.5-חד' band spans 62-81m² or the 4-חד' band spans 96-109m². Definite values are filled in, ambiguous ones left null with notes."
+    ],
+    "architect": "אדריכלים קיקה ברא\"ז",
+    "documents_submitted": {
+      "_note": "Boolean checklist for required ancillary annexes. The full PDF text was searched for keywords: נספח (0 hits), חומריות (0), הידרולוגי (0), אקוסטי (0), קיימות (0), 5281 (0), פוטו (0), פנלים (0). No annexes are bundled inside this design-plan submission. The architect may have submitted them separately, but they are NOT in this PDF.",
+      "_note_renderings": "Colored urban-context renderings ARE present: page 1 (cover), pages 4-5 (מבט כללי), pages 16-19 (הדמיות לשצ\"פ), pages 31-33 (הדמיות לפיתוח תא שטח 1), page 63 (final הדמיה). Renderings_colored = true.",
+      "acoustic_annex": false,
+      "energy_analysis": false,
+      "environmental_sustainability_annex": false,
+      "green_building_annex": false,
+      "hydrology_annex": false,
+      "materials_annex": false,
+      "renderings_colored": true
+    },
+    "extracted_by": "Lior Levin (Claude-assisted)",
+    "extraction_date": "2026-05-17",
+    "extraction_method": "vision_assisted_hand_extract",
+    "plan_wide": {
+      "_note_infiltration": "NOT FOUND. תב\"ע 407 requires ≥15% infiltrating surfaces plan-wide, but no explicit 'שטחים מחלחלים' summary table appears in this submission's text or visible tables. Permeable surfaces may be indicated graphically on the פיתוח pages but are not quantified.",
+      "_note_small_apts": "147/700 = 21.0%. Uses ARCHITECT'S definition of 'small' = 2 חדרים + 2.5/3 חד' קטנה rows (areas ≤81 m²). Breakdown: plot 1 (17+35=52) + plot 2 (3+6=9) + plot 3 (7+31=38) + plot 4 (4+18=22) + plot 5 (10+16=26) = 147. WARNING: under the תב\"ע 407 strict ≤75 m² definition, only the 2 חדרים rows (57-61 m²) qualify cleanly: 17+3+7+4+10 = 41 apts = 5.86% — well below 21%. Reconciling this requires per-unit areas, which are not present in this submission. The architect's page 8 also claims 'לפחות 20% דירות קטנות', matching the architect's own definition.",
+      "_note_stormwater": "NOT FOUND. No נספח ניקוז / השהיית מי נגר reference in the submission text. תב\"ע requires 450 m³ retention; this submission does not document it.",
+      "_note_total": "Architect's general data page (page 8) explicitly states '700 יח\"ד מוצעות'. Sum of per-plot extractions: 232 + 44 + 130 + 98 + 196 = 700 ✓ (exact match).",
+      "infiltration_area_percent": null,
+      "infiltration_area_total_sqm": null,
+      "small_apartments_count": 147,
+      "small_apartments_percent_calculated": 21.0,
+      "stormwater_retention_cubic_m": null,
+      "total_units_proposed": 700
+    },
+    "plots": {
+      "plot_1": {
+        "_note_areas": "No שטח עיקרי / שטח שירות table is present in this submission. Architect's submission is a design plan (תכנית עיצוב), not a quantitative areas table.",
+        "_note_height": "OVERRIDE: v6 ref / pre-populated value was 39.55m, but v24.3 elevations (pages 49, 52, 61) clearly show B1/C1 tallest buildings reaching +45.45 m above ground (floor 14 label = top of structure / technical roof above 13 residential floors). The 39.55m figure does not appear anywhere in v24.3 drawings. Smaller A1/D1 buildings reach +32.85m only.",
+        "_source_pages": "PDF pages 24-33 (10-page block for תא שטח 1). Parking table: page 29 (מרתף). Unit-mix table: page 30 (קומה טיפוסית). Heights: pages 49, 52, 53, 61 (חזיתות + חתכים).",
+        "_status": "FULL — parking + units + heights all verified from v24.3 drawings. Height value differs from v6 reference (39.55) — see _note_height.",
+        "floors_above_ground": 13,
+        "floors_technical_roof": 1,
+        "height_m": 45.45,
+        "parking": {
+          "_note": "Verified visually from page 29 architect's parking table. Accessible = 4 רגיל + 3 גבוה = 7. סה\"כ row: 330 רכב פרטי, 4+3 גישות, 23 אופנועים, 232 אופניים. Matches v6 reference.",
+          "accessible": 7,
+          "bicycle": 232,
+          "motorcycle": 23,
+          "private": 330
+        },
+        "primary_area_sqm": null,
+        "service_area_above_sqm": null,
+        "service_area_below_sqm": null,
+        "unit_mix": {
+          "_note": "Architect's table (page 30) shows חדרים-based bands with overlapping area ranges, NOT the תב\"ע's clean ≤55/56-75/76-99/≥100 buckets. Definite values filled, ambiguous left null. Raw architect bands (סה\"כ דירות): 2 חדרים 57-61=17 | 2.5 חד'/קטנה 62-81=35 | 3 חדרים 82-94=23 | 4 חדרים 96-109=55 | 5 חדרים 110-135=74 | 6 חדרים 136-153=12 | מיוחדות 155+=16 | total=232. Of these, 72 are דירות תמורה (existing residents) + 160 are דירות יזם (new).",
+          "_note_56_75": "AMBIGUOUS. At minimum 17 (the 2 חדרים 57-61 row, all ≤75). Plus an unknown portion of the 35 apartments in the 2.5 חד' 62-81m² range that are ≤75. Cannot split without per-unit areas.",
+          "_note_76_99": "AMBIGUOUS. At minimum 23 (the 3 חדרים 82-94 row). Plus part of the 2.5-חד' band (75-81m² portion) + part of the 4 חדרים 96-109 band (96-99m² portion).",
+          "_note_avg": "Not shown explicitly. Rough estimate using bin midpoints: ~107 m². Not reliable enough to commit to a single value.",
+          "_note_ge_100": "AMBIGUOUS. At minimum 102 (5 חדרים 74 + 6 חדרים 12 + מיוחדות 16 = 102). Plus part of the 4 חדרים 96-109 band (100-109m² portion).",
+          "average_sqm": null,
+          "count_56_to_75sqm": null,
+          "count_76_to_99sqm": null,
+          "count_ge_100sqm": null,
+          "count_le_55sqm": 0
+        },
+        "units_proposed": 232
+      },
+      "plot_2": {
+        "_note_technical": "Elevation drawings (e.g. page 56) label the level above 'ק 09+' (= 9 residential floors above ground) as floor 10 = technical roof at +32.85 m. So technical=1.",
+        "_source_pages": "Bundled with plot 4 in TOC (pages 34-38) but actually presented as SEPARATE tables on the same pages. Plot 2 parking table: left side of page 37. Plot 2 unit-mix: left side of page 38. Plot 2 has a single building A2.",
+        "_status": "FULL — all visible fields extracted. Parking total private differs from v6 ref (63 vs 65) — see _note in parking.",
+        "floors_above_ground": 9,
+        "floors_technical_roof": 1,
+        "height_m": 32.85,
+        "parking": {
+          "_note": "Read from architect's סה\"כ row on page 37 (left table, תא שטח 02). The 'private=65' overrides v6 reference's 63 (the row data shows 58 דיירים + 5 אורחים = 63, plus +2 from a small additional row not fully visible in my crop — total comes to 65 in the architect's סה\"כ row). Accessible = 1 רגיל + 1 גבוה. Motorcycle total row shows 4 (sub-row shows 5 — small inconsistency in the architect's own table).",
+          "accessible": 2,
+          "bicycle": 44,
+          "motorcycle": 4,
+          "private": 65
+        },
+        "primary_area_sqm": null,
+        "service_area_above_sqm": null,
+        "service_area_below_sqm": null,
+        "unit_mix": {
+          "_note": "Raw architect bands (סה\"כ דירות): 2 חדרים 57-61=3 | 2.5 חד' קטנה 78-81=6 | 3 חד' גדולה 82-94=2 | 4 חדרים 95-109=0 | 5 חדרים 110-135=22 | 6 חדרים 136-153=5 | מיוחדות 155+=5 | total=44 (architect's totals row says 44 — visible breakdown sums to 43, so there may be an off-by-1 in the architect's table).",
+          "_note_56_75": "Clean: only the 2 חדרים 57-61 row falls in this band (3 apts). The 2.5 חד' 78-81 row is entirely above 75.",
+          "_note_76_99": "Clean: 2.5 חד' 78-81 (6 apts) + 3 גדולה 82-94 (2 apts) = 8. The 4 חדרים 95-109 row has 0 apartments in plot 2, so no ambiguity.",
+          "_note_ge_100": "Clean: 5 חדרים 110-135 (22) + 6 חדרים 136-153 (5) + מיוחדות 155+ (5) = 32.",
+          "average_sqm": null,
+          "count_56_to_75sqm": 3,
+          "count_76_to_99sqm": 8,
+          "count_ge_100sqm": 32,
+          "count_le_55sqm": 0
+        },
+        "units_proposed": 44
+      },
+      "plot_3": {
+        "_note_heights": "All three plot 3 buildings (A3, B3, C3) show 'ק 09+' notation with top at +32.85m residential. Floor 10 label = technical roof. Page 60 (חזית צפונית תא שטח 3) confirms 9 residential floors.",
+        "_source_pages": "4-page block pages 40-43 (אשפה, פונקציות, מרתף, קומה טיפוסית). NO separate פיתוח page — plots 3+5 share development page 39. NO מעונות יום page. Parking table: page 42. Unit-mix: page 43. Plot 3 has 3 buildings (A3, B3, C3) per page 9. Heights: pages 48 (חתך), 58 (חזית דרומית 3+5), 60 (חזית צפונית 3).",
+        "_status": "FULL — extracted from v24.3 drawings. Was ALL NULL in pre-populated JSON.",
+        "floors_above_ground": 9,
+        "floors_technical_roof": 1,
+        "height_m": 32.85,
+        "parking": {
+          "_note": "Read from architect's parking table on page 42 (תא שטח 03). Row breakdown: דיירים 169 private + אורחים 13 private = 182, with +4 grand-total = 186 (extra from commerce/daycare rows). Accessible = 2 רגיל + 2 גבוה = 4.",
+          "accessible": 4,
+          "bicycle": 130,
+          "motorcycle": 13,
+          "private": 186
+        },
+        "primary_area_sqm": null,
+        "service_area_above_sqm": null,
+        "service_area_below_sqm": null,
+        "unit_mix": {
+          "_note": "Raw architect bands (סה\"כ דירות) read from page 43, total=130. Some intermediate values were hard to read at PNG resolution — total verified at 130. Best reading: 2 חדרים 57-61=7 | 2 חד' קטנה 61-81=31 | 3 חד' גדולה 82-94=33 | 4 חדרים 96-109=17 | 5 חדרים 110-135=~20 | 6 חדרים 142-153=~11 | מיוחדות 155+=~15. תמורה total=52 ✓, יזם total=78 ✓ (these were clearly readable).",
+          "_note_56_75": "AMBIGUOUS. At minimum 7 (the 2 חדרים 57-61 row). Plus an unknown portion of the 2 קטנה 61-81 range that's ≤75 (out of 31 apts).",
+          "_note_76_99": "AMBIGUOUS. At minimum 33 (3 גדולה 82-94). Plus part of 2 קטנה 61-81 (76-81m² portion) + part of 4 חדרים 96-109 (96-99m² portion).",
+          "_note_ge_100": "AMBIGUOUS. At minimum 46 (5 חדרים + 6 חדרים + מיוחדות, approx). Plus part of 4 חדרים (100-109m² portion).",
+          "average_sqm": null,
+          "count_56_to_75sqm": null,
+          "count_76_to_99sqm": null,
+          "count_ge_100sqm": null,
+          "count_le_55sqm": 0
+        },
+        "units_proposed": 130
+      },
+      "plot_4": {
+        "_note_heights": "A4 (tallest building) labeled 'ק 12+' with top of structure at +42.30m (page 56 elevation). B4 is smaller at 'ק 08+' with top +29.70m. Reported values are the maximum across the plot (A4). Floor 13 label = technical roof above 12 residential floors.",
+        "_source_pages": "Bundled with plot 2 in TOC (pages 34-38) but presented as separate right-side tables on the same pages. Plot 4 parking: right side of page 37. Plot 4 unit-mix: right side of page 38. Plot 4 has 2 buildings (A4, B4). Heights: pages 49 (חתך ב-ב), 54 (חזית מתוך שצ\"פ), 56-57 (חזית 2+4).",
+        "_status": "FULL — all fields extracted from v24.3.",
+        "floors_above_ground": 12,
+        "floors_technical_roof": 1,
+        "height_m": 42.3,
+        "parking": {
+          "_note": "Read from architect's parking table on page 37 (right side, תא שטח 04). Breakdown: דיירים 128 + אורחים 10 = 138 private. Accessible = 1 רגיל + 2 גבוה = 3. Matches v6 reference's 138 for private.",
+          "accessible": 3,
+          "bicycle": 98,
+          "motorcycle": 10,
+          "private": 138
+        },
+        "primary_area_sqm": null,
+        "service_area_above_sqm": null,
+        "service_area_below_sqm": null,
+        "unit_mix": {
+          "_note": "Raw architect bands (סה\"כ דירות) from page 38 right-side table: 2 חדרים 57-61=4 | 2.5 חד' קטנה 78-81=18 | 3 חד' גדולה 82-94=21 | 4 חדרים 95-109=12 | 5 חדרים 110-135=23 | 6 חדרים 136-153=16 | מיוחדות 154+=4 | total=98 ✓. תמורה total=28, יזם total=70.",
+          "_note_56_75": "Clean: only the 2 חדרים 57-61 row (4 apts). The 2.5 חד' 78-81 row is entirely above 75.",
+          "_note_76_99": "AMBIGUOUS. At minimum 39 (2.5 קטנה 78-81 = 18 + 3 גדולה 82-94 = 21). Plus part of 4 חדרים 95-109 (95-99m² portion, out of 12 apts).",
+          "_note_ge_100": "AMBIGUOUS. At minimum 43 (5 חדרים 23 + 6 חדרים 16 + מיוחדות 4). Plus part of 4 חדרים (100-109m² portion).",
+          "average_sqm": null,
+          "count_56_to_75sqm": 4,
+          "count_76_to_99sqm": null,
+          "count_ge_100sqm": null,
+          "count_le_55sqm": 0
+        },
+        "units_proposed": 98
+      },
+      "plot_5": {
+        "_note_heights": "Tallest buildings (A5, D5, possibly B5) labeled 'ק 12+' with top of structure at +42.30m. Smaller C5 labeled 'ק 08+' at +32.85m. B5 in page 59 shown at 'ק 08+' at +29.70m. Reported max is A5/D5 = 12 residential floors + 1 technical = 42.30m top.",
+        "_source_pages": "4-page block pages 44-47 (אשפה, פונקציות, מרתף, קומה טיפוסית). NO separate פיתוח or מעונות יום page. Parking table: page 46. Unit-mix: page 47. Plot 5 has 4 buildings (A5, B5, C5, D5). Heights: pages 49, 50, 54, 55, 58, 59.",
+        "_status": "FULL — extracted from v24.3 drawings. Was ALL NULL in pre-populated JSON.",
+        "floors_above_ground": 12,
+        "floors_technical_roof": 1,
+        "height_m": 42.3,
+        "parking": {
+          "_note": "Read from architect's parking table on page 46 (תא שטח 05). Breakdown: דיירים 255 + אורחים 20 = 275, with grand-total 280 (extra +5 from commerce/daycare rows). Accessible = 3 רגיל + 2 גבוה = 5.",
+          "accessible": 5,
+          "bicycle": 196,
+          "motorcycle": 20,
+          "private": 280
+        },
+        "primary_area_sqm": null,
+        "service_area_above_sqm": null,
+        "service_area_below_sqm": null,
+        "unit_mix": {
+          "_note": "Raw architect bands (סה\"כ דירות) from page 47, fully verified: 2 חדרים 57-61=10 | 3 חד' קטנה 78-81=16 | 3 חד' גדולה 82-94=63 | 4 חדרים 96-109=44 | 5 חדרים 117-135=44 | 6 חדרים 142-153=10 | מיוחדות 155+=9 | total=196 ✓. תמורה total=56 ✓, יזם total=140 ✓. All row sums verified.",
+          "_note_56_75": "Clean: only the 2 חדרים 57-61 row (10 apts). The 3 קטנה 78-81 row is entirely above 75.",
+          "_note_76_99": "AMBIGUOUS. At minimum 79 (3 קטנה 78-81 = 16 + 3 גדולה 82-94 = 63). Plus part of 4 חדרים 96-109 (96-99m² portion, out of 44 apts).",
+          "_note_ge_100": "AMBIGUOUS. At minimum 63 (5 חדרים 44 + 6 חדרים 10 + מיוחדות 9). Plus part of 4 חדרים (100-109m² portion).",
+          "average_sqm": null,
+          "count_56_to_75sqm": 10,
+          "count_76_to_99sqm": null,
+          "count_ge_100sqm": null,
+          "count_le_55sqm": 0
+        },
+        "units_proposed": 196
+      },
+      "plot_9": {
+        "_source_pages": "N/A — plot 9 is NOT present in this submission (v24.3). The PDF TOC and the general data page (page 9) enumerate only plots 1, 2, 3, 4, 5. Zero mentions of 'תא שטח 9' anywhere in the document.",
+        "_status": "NOT_IN_SUBMISSION — kept in JSON per user instruction so the compliance engine emits 'לא הוגש' for each check. If the תב\"ע 407 requires a plot 9 (public buildings + 150 m² commercial per the original pre-populated note), this absence is itself a compliance finding worth flagging upstream.",
+        "floors_above_ground": null,
+        "height_m": null,
+        "primary_area_sqm": null,
+        "service_area_above_sqm": null,
+        "uses": {
+          "_note": "Per תב\"ע: 1,020 m² total + 150 m² commercial. NOT confirmable from this submission — plot 9 absent.",
+          "commercial_sqm": null,
+          "daycare_sqm": null,
+          "synagogue_sqm": null
+        }
+      }
+    },
+    "submission_date": "2025-03-23",
+    "submission_id": "kika-braz-v24.3",
+    "submission_version": "24.3",
+    "tb_plan_number": "407-1048248"
+  },
+  "feedback_entries": [],
+  "format": [
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "manual_review",
+        "extracted_values": {},
+        "pages_checked": []
+      },
+      "failure_mode": "NONE",
+      "notes_he": "רקע העמודים חייב להיות לבן בכל החוברת.",
+      "review_instructions_he": "לאמת ויזואלית: רקע כל העמודים לבן. אסור רקעים בצבע, גרדיאנט, או דוגמא חוזרת.",
+      "rule_code": "FORMAT_BACKGROUND_WHITE",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "page_structure_analysis",
+        "extracted_values": {
+          "chapters_missing": [
+            "טיפולוגיות בינוי",
+            "טיפולוגיה A",
+            "טיפולוגיה B",
+            "טיפולוגיה C",
+            "מעטפת מבני",
+            "אלמנטים נוספים",
+            "הנחיות סביבתיות",
+            "הנחיות תשתיות"
+          ],
+          "chapters_present_anywhere": [
+            "פיתוח"
+          ],
+          "divider_pages_per_chapter": {
+            "אלמנטים נוספים": [],
+            "הנחיות סביבתיות": [],
+            "הנחיות תשתיות": [],
+            "טיפולוגיה A": [],
+            "טיפולוגיה B": [],
+            "טיפולוגיה C": [],
+            "טיפולוגיות בינוי": [],
+            "מעטפת מבני": [],
+            "פיתוח": [
+              10,
+              24,
+              31,
+              32,
+              33,
+              34
+            ]
+          }
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "כל פרק ראשי בחוברת חייב להתחיל בעמוד מעבר נפרד עם שם הפרק בלבד בטורקיז, ללא תוכן נוסף.",
+      "rule_code": "FORMAT_CHAPTER_DIVIDER_PAGES",
+      "verdict": "pass_with_note"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "regex_pattern",
+        "extracted_values": {
+          "distinct_hit_pages": [
+            6,
+            13,
+            30,
+            43,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62
+          ],
+          "footer_scoped": false,
+          "pattern_hit_pages": {
+            "\\b\\d{1,2}\\.\\d{1,2}\\b": [
+              6,
+              13,
+              30,
+              43,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62
+            ]
+          },
+          "sample_matches": {
+            "\\b\\d{1,2}\\.\\d{1,2}\\b": "3.1"
+          },
+          "total_hits": 20
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "תת-סעיפים בחוברת חייבים להיות ממוספרים בפורמט X.Y (לדוגמה 1.1, 1.2, 2.1).",
+      "rule_code": "FORMAT_CHAPTER_NUMBERING",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "pdf_image_detection",
+        "extracted_values": {
+          "large_image_count": 1,
+          "minimum_area_ratio": 0.25,
+          "minimum_required": 1
+        },
+        "pages_checked": [
+          1
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "עמוד השער חייב לכלול תרשים אווירי או הדמיה תלת-ממדית של המתחם.",
+      "rule_code": "FORMAT_COVER_AERIAL_IMAGE",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "regex_pattern",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "footer_scoped": false,
+          "pattern_hit_pages": {
+            "(ינואר|פברואר|מרץ|אפריל|מאי|יוני|יולי|אוגוסט|ספטמבר|אוקטובר|נובמבר|דצמבר)\\s+20\\d{2}": [],
+            "\\d{1,2}[./-]\\d{1,2}[./-]20\\d{2}": []
+          },
+          "sample_matches": {},
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "עמוד השער חייב לכלול את תאריך ההגשה.",
+      "rule_code": "FORMAT_COVER_DATE",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "regex_pattern",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "footer_scoped": false,
+          "pattern_hit_pages": {
+            "\\b\\d{3}-\\d{7}\\b": []
+          },
+          "sample_matches": {},
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "עמוד השער חייב לכלול את מספר התב\"ע בפורמט תקני (NNN-NNNNNNN).",
+      "rule_code": "FORMAT_COVER_PLAN_NUMBER",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "all_required_terms": [
+            "שפ\"ע",
+            "תנועה",
+            "גנים ונוף",
+            "אדריכלות",
+            "תאגיד",
+            "יו\"ר",
+            "חתימה",
+            "תאריך"
+          ],
+          "missing_terms": [
+            "שפ\"ע",
+            "תנועה",
+            "גנים ונוף",
+            "אדריכלות",
+            "תאגיד",
+            "יו\"ר",
+            "חתימה",
+            "תאריך"
+          ]
+        },
+        "pages_checked": [
+          1
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "עמוד השער חייב לכלול טבלת חתימות עם 6 דיסציפלינות: שפ\"ע כבישים ופיתוח, תנועה, גנים ונוף, אדריכלות, תאגיד, יו\"ר הוועדה. בכל תא: שם, תאריך, חתימה.",
+      "rule_code": "FORMAT_COVER_SIGNATURE_TABLE",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [
+            1
+          ],
+          "matches_per_pattern": {
+            "חוברת הנחיות בינוי ופיתוח": [],
+            "תוכנית עיצוב": [],
+            "תכנית עיצוב": [
+              1
+            ]
+          },
+          "total_hits": 1
+        },
+        "pages_checked": [
+          1
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "עמוד השער חייב לכלול את הכותרת הראשית 'חוברת הנחיות בינוי ופיתוח' או 'תוכנית עיצוב' / 'תכנית עיצוב'.",
+      "rule_code": "FORMAT_COVER_TITLE_TEXT",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "manual_review",
+        "extracted_values": {},
+        "pages_checked": []
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מידות חייבות להיות מסומנות בכל תוכנית מקצועית.",
+      "review_instructions_he": "לאמת ויזואלית: כל תוכנית מקצועית כוללת מידות מסומנות — גובהי בניין, מרחקי קווי בניין, מידות חזית, וכו'.",
+      "rule_code": "FORMAT_DIMENSIONS_ON_PLANS",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "pdf_metadata",
+        "extracted_values": {
+          "fonts_observed": [
+            "AEQXGD+LieblingProRegular",
+            "AEQXGD+LieblingProThin",
+            "ARNTZN+LieblingProRegular",
+            "BEFZZB+LieblingProRegular",
+            "BEFZZB+LieblingProThin",
+            "BNLUQB+LieblingProRegular",
+            "BNLUQB+LieblingProThin",
+            "BVZNRG+LieblingProRegular",
+            "DAOLSX+LieblingProRegular",
+            "FIYRMY+LieblingProRegular",
+            "GTJEFR+LieblingProRegular",
+            "HWIEWP+CIDFont+F4",
+            "HWIEWP+LieblingProRegular",
+            "HWIEWP+LieblingProThin",
+            "IAACTN+LieblingProRegular",
+            "IAACTN+LieblingProThin",
+            "MHBHEF+LieblingProRegular",
+            "NXMOCD+Arial-BoldMT",
+            "NXMOCD+ArialMT",
+            "NXMOCD+Calibri",
+            "NXMOCD+LieblingProThin",
+            "OCPZZB+LieblingProThin",
+            "OJCMZB+LieblingProRegular",
+            "PEZTYZ+LieblingProThin",
+            "PNJAEZ+CIDFont+F1",
+            "PNJAEZ+CIDFont+F2",
+            "PNJAEZ+CIDFont+F3",
+            "PNJAEZ+LieblingProBold",
+            "PNJAEZ+LieblingProRegular",
+            "PTBKSZ+LieblingProRegular",
+            "PTBKSZ+LieblingProThin",
+            "QDXQBX+LieblingProRegular",
+            "QDXQBX+LieblingProThin",
+            "RQNMGV+MyriadPro-Regular",
+            "SCDKDT+LieblingProRegular",
+            "SHZSUT+LieblingProBold",
+            "SHZSUT+LieblingProThin",
+            "TBNQRR+LieblingProRegular",
+            "TBNQRR+LieblingProThin",
+            "TLVNXW+LieblingProRegular",
+            "VTSCDX+LieblingProRegular",
+            "WHYCPV+LieblingProRegular",
+            "WIYQYL+LieblingProRegular",
+            "WIYQYL+LieblingProThin",
+            "XRMBMJ+LieblingProBold",
+            "XRMBMJ+LieblingProRegular",
+            "YDCUJH+LieblingProRegular",
+            "YDCUJH+LieblingProThin",
+            "ZGXWIF+LieblingProThin",
+            "ZTISXF+LieblingProRegular",
+            "ZTISXF+LieblingProThin",
+            "ZVTVHF+LieblingProRegular",
+            "ZVZSCF+LieblingProRegular",
+            "ZVZSCF+LieblingProThin"
+          ],
+          "unrecognized_fonts": [
+            "AEQXGD+LieblingProRegular",
+            "AEQXGD+LieblingProThin",
+            "ARNTZN+LieblingProRegular",
+            "BEFZZB+LieblingProRegular",
+            "BEFZZB+LieblingProThin",
+            "BNLUQB+LieblingProRegular",
+            "BNLUQB+LieblingProThin",
+            "BVZNRG+LieblingProRegular",
+            "DAOLSX+LieblingProRegular",
+            "FIYRMY+LieblingProRegular",
+            "GTJEFR+LieblingProRegular",
+            "HWIEWP+CIDFont+F4",
+            "HWIEWP+LieblingProRegular",
+            "HWIEWP+LieblingProThin",
+            "IAACTN+LieblingProRegular",
+            "IAACTN+LieblingProThin",
+            "MHBHEF+LieblingProRegular",
+            "NXMOCD+Arial-BoldMT",
+            "NXMOCD+ArialMT",
+            "NXMOCD+Calibri",
+            "NXMOCD+LieblingProThin",
+            "OCPZZB+LieblingProThin",
+            "OJCMZB+LieblingProRegular",
+            "PEZTYZ+LieblingProThin",
+            "PNJAEZ+CIDFont+F1",
+            "PNJAEZ+CIDFont+F2",
+            "PNJAEZ+CIDFont+F3",
+            "PNJAEZ+LieblingProBold",
+            "PNJAEZ+LieblingProRegular",
+            "PTBKSZ+LieblingProRegular",
+            "PTBKSZ+LieblingProThin",
+            "QDXQBX+LieblingProRegular",
+            "QDXQBX+LieblingProThin",
+            "RQNMGV+MyriadPro-Regular",
+            "SCDKDT+LieblingProRegular",
+            "SHZSUT+LieblingProBold",
+            "SHZSUT+LieblingProThin",
+            "TBNQRR+LieblingProRegular",
+            "TBNQRR+LieblingProThin",
+            "TLVNXW+LieblingProRegular",
+            "VTSCDX+LieblingProRegular",
+            "WHYCPV+LieblingProRegular",
+            "WIYQYL+LieblingProRegular",
+            "WIYQYL+LieblingProThin",
+            "XRMBMJ+LieblingProBold",
+            "XRMBMJ+LieblingProRegular",
+            "YDCUJH+LieblingProRegular",
+            "YDCUJH+LieblingProThin",
+            "ZGXWIF+LieblingProThin",
+            "ZTISXF+LieblingProRegular",
+            "ZTISXF+LieblingProThin",
+            "ZVTVHF+LieblingProRegular",
+            "ZVZSCF+LieblingProRegular",
+            "ZVZSCF+LieblingProThin"
+          ]
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "הגופן הראשי בחוברת חייב להיות גופן עברי הומאני סנס-סריף. אין שילוב של יותר משני גופנים בכל החוברת.",
+      "rule_code": "FORMAT_FONT_HEBREW_SANS_SERIF",
+      "verdict": "pass_with_note"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "regex_pattern",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "footer_scoped": true,
+          "pattern_hit_pages": {
+            "\\|\\s*\\d+\\s*\\|": []
+          },
+          "sample_matches": {},
+          "total_hits": 0
+        },
+        "pages_checked": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "מספר עמוד חייב להופיע בכותרת התחתונה של כל עמוד (פרט לשער), בפורמט '| N |'.",
+      "rule_code": "FORMAT_FOOTER_PAGE_NUMBERS",
+      "verdict": "pass_with_note"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "page_structure_analysis",
+        "extracted_values": {
+          "pages_missing_footer": []
+        },
+        "pages_checked": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "בכל עמוד פרט לעמוד השער חייבת להופיע כותרת תחתונה אחידה.",
+      "rule_code": "FORMAT_FOOTER_PRESENT_ALL_PAGES",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "missing_in_pages": [],
+          "pages_with_token": 62,
+          "project_token": "תכנית עיצוב"
+        },
+        "pages_checked": [
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "שם הפרויקט חייב להופיע בכותרת התחתונה של כל עמוד.",
+      "rule_code": "FORMAT_FOOTER_PROJECT_NAME",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "manual_review",
+        "extracted_values": {},
+        "pages_checked": []
+      },
+      "failure_mode": "NONE",
+      "notes_he": "כל הכותרות הראשיות בחוברת חייבות להופיע בצבע טורקיז (אותו צבע בכל החוברת).",
+      "review_instructions_he": "לאמת ויזואלית: כותרות הפרקים הראשיים, כותרת תוכן העניינים, ושמות הפרקים בעמודי המעבר — חייבים להופיע בצבע טורקיז/ציאן. לא שחור, לא כחול כהה, לא ירוק.",
+      "rule_code": "FORMAT_HEADER_COLOR_CYAN",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "matches_per_pattern": {
+            "legend": [],
+            "מקרא": []
+          },
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "עמודי הפיתוח חייבים לכלול מקרא לחומרי ריצוף, צמחייה, ריהוט רחוב, וסימנים אחרים.",
+      "rule_code": "FORMAT_LEGEND_ON_DEVELOPMENT_PAGES",
+      "verdict": "pass_with_note"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "manual_review",
+        "extracted_values": {},
+        "pages_checked": []
+      },
+      "failure_mode": "NONE",
+      "notes_he": "הכותרת התחתונה של כל עמוד חייבת לכלול לפחות 3 לוגואים בצד שמאל.",
+      "review_instructions_he": "לאמת ויזואלית: בצד שמאל של הכותרת התחתונה מופיעים 3-4 לוגואים — לפחות לוגו משרד האדריכלים, לוגו עיריית נס ציונה, ולוגו של חברת ניהול/יזם.",
+      "rule_code": "FORMAT_LOGOS_FOOTER",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "manual_review",
+        "extracted_values": {},
+        "pages_checked": []
+      },
+      "failure_mode": "NONE",
+      "notes_he": "חץ צפון חייב להיות מסומן בבירור בכל תוכנית מקצועית.",
+      "review_instructions_he": "לאמת ויזואלית: כל תוכנית מקצועית (פיתוח, מפלס קרקע, מרתף, קומה טיפוסית) כוללת חץ צפון בולט.",
+      "rule_code": "FORMAT_NORTH_ARROW",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "pdf_metadata",
+        "extracted_values": {
+          "non_conforming_pages": [],
+          "target_height_pt": 841.0,
+          "target_width_pt": 1190.0,
+          "tolerance_pt": 5.0
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "כל עמודי החוברת חייבים להיות בגודל A3 לרוחב (1190×841 נקודות, בסבילות של 5 נקודות).",
+      "rule_code": "FORMAT_PAGE_SIZE_A3_LANDSCAPE",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "best_page": 13,
+          "best_terms_found": [
+            "אופניים"
+          ],
+          "minimum_required": 2,
+          "per_page_hits": {
+            "13": [
+              "אופניים"
+            ],
+            "15": [
+              "אופניים"
+            ],
+            "26": [
+              "אופניים"
+            ],
+            "27": [
+              "אופניים"
+            ],
+            "28": [
+              "אופניים"
+            ],
+            "30": [
+              "אופניים"
+            ],
+            "36": [
+              "אופניים"
+            ],
+            "38": [
+              "אופניים"
+            ],
+            "41": [
+              "אופניים"
+            ],
+            "43": [
+              "אופניים"
+            ],
+            "45": [
+              "אופניים"
+            ],
+            "47": [
+              "אופניים"
+            ]
+          }
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול טבלת חניות (פרטיות, אופנועים, נגישות, אופניים) לפי יח\"ד ושימוש.",
+      "rule_code": "FORMAT_PARKING_TABLE",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "matches_per_pattern": {
+            "אישור עירוני": [],
+            "אישור רפרנט": [],
+            "חתימת רפרנט": []
+          },
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "בעמוד הראשון של כל פרק מקצועי חייב להיות מקום ייעודי לחתימת רפרנט עירוני מהדיסציפלינה הרלוונטית.",
+      "rule_code": "FORMAT_REFERENT_SIGNATURE_PLACEHOLDERS",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "pdf_image_detection",
+        "extracted_values": {
+          "large_images_excluding_cover": 34,
+          "minimum_area_ratio": 0.3,
+          "minimum_required": 3
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול לפחות 3 הדמיות תלת-ממדיות (מזוויות שונות: תרשים אווירי, גובה עיני אדם, חזית הרחוב, חצר פנימית).",
+      "rule_code": "FORMAT_RENDERINGS_PRESENT",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "matches_per_pattern": {
+            "טיפולוגי": []
+          },
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול פרק טיפולוגיות בינוי המגדיר את הטיפולוגיות במתחם (לפחות 3 דפים).",
+      "rule_code": "FORMAT_REQUIRED_CHAPTERS_TYPOLOGIES",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [
+            13
+          ],
+          "matches_per_pattern": {
+            "גינון": [
+              13
+            ],
+            "ממשקים": [],
+            "עיצוב סביבה": [],
+            "פרוגרמות": []
+          },
+          "total_hits": 1
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול פרק פיתוח: פרוגרמות מגרשים, ממשקים, עיצוב סביבה, גגות חניונים וניקוז, גינון.",
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_DEVELOPMENT",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [
+            2
+          ],
+          "matches_per_pattern": {
+            "חומריות": [],
+            "חזיתות": [
+              2
+            ],
+            "מעטפת": [],
+            "פתחים": []
+          },
+          "total_hits": 1
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול פרק מעטפת בניינים: עיצוב חזיתות, פתחים, חומריות וגוונים, מרפסות.",
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_ENVELOPE",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "matches_per_pattern": {
+            "הנחיות סביבתיות": [],
+            "סביבתי": [],
+            "תכנון אנרגטי": []
+          },
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול פרק הנחיות סביבתיות הכולל דרישות אנרגטיות.",
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_ENVIRONMENTAL",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [
+            13
+          ],
+          "matches_per_pattern": {
+            "הנחיות תשתיות": [],
+            "תאורה": [
+              13
+            ],
+            "תנועה וחניה": [],
+            "תקשורת": []
+          },
+          "total_hits": 1
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול פרק הנחיות תשתיות ותנועה: חשמל, תאורה, תקשורת, תנועה וחניה.",
+      "rule_code": "FORMAT_REQUIRED_CHAPTER_INFRASTRUCTURE",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "regex_pattern",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "footer_scoped": false,
+          "pattern_hit_pages": {
+            "1\\s*:\\s*250": []
+          },
+          "sample_matches": {},
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "כל תוכנית מקצועית בחוברת חייבת להיות בקנה מידה 1:250, ולציין זאת בכותרת. דרישה זו מעוגנת גם בסעיף 6.1 לתקנון התב\"ע החלה על המגרש.",
+      "rule_code": "FORMAT_SCALE_ANNOTATIONS",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "matches_per_pattern": {
+            "צוות הפרויקט": []
+          },
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול עמוד צוות פרויקט בתחילתה (בדרך כלל עמוד 2).",
+      "rule_code": "FORMAT_TEAM_PAGE_EXISTS",
+      "verdict": "fail"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "reason": "no pages in scope"
+        },
+        "pages_checked": []
+      },
+      "failure_mode": "EXTRACTION_FAILURE",
+      "notes_he": "עמוד צוות הפרויקט חייב לכלול את הדיסציפלינות העיקריות: אדריכלים, נגישות, מים-ביוב, תנועה, ניקוז, מדידות, סביבה, קונסטרוקציה, חשמל-תאורה, הידרולוגיה, פיתוח נופי, אגרונום.",
+      "rule_code": "FORMAT_TEAM_REQUIRED_DISCIPLINES",
+      "verdict": "unevaluable"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "block_filter": {
+            "min_length_chars": 3,
+            "must_contain_hebrew_letter": true
+          },
+          "blocks_examined": 1070,
+          "hebrew_block_ratio": 0.975,
+          "threshold": 0.7
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "טקסט החוברת חייב להיות בעברית בכיוון מימין לשמאל. שילוב של מינוח טכני באנגלית (שמות גופנים, מספרי גרסה) מותר כל עוד אינו מהווה חלק משמעותי מהטקסט.",
+      "rule_code": "FORMAT_TEXT_DIRECTION_RTL",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "distinct_hit_pages": [
+            2
+          ],
+          "matches_per_pattern": {
+            "תוכן עניינים": [
+              2
+            ]
+          },
+          "total_hits": 1
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול עמוד תוכן עניינים בתחילתה.",
+      "rule_code": "FORMAT_TOC_EXISTS",
+      "verdict": "pass"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "manual_review",
+        "extracted_values": {},
+        "pages_checked": []
+      },
+      "failure_mode": "NONE",
+      "notes_he": "עמוד תוכן העניינים חייב להיות מאורגן בשלוש עמודות.",
+      "review_instructions_he": "לאמת ויזואלית: עמוד תוכן העניינים מאורגן בשלוש עמודות. כל פרק ראשי מתחיל בעמודה — לא ממשיך משורה קודמת בעמודה אחרת.",
+      "rule_code": "FORMAT_TOC_THREE_COLUMNS",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "text_extraction",
+        "extracted_values": {
+          "best_page": 30,
+          "best_terms_found": [
+            "תמהיל"
+          ],
+          "minimum_required": 2,
+          "per_page_hits": {
+            "30": [
+              "תמהיל"
+            ],
+            "38": [
+              "תמהיל"
+            ],
+            "43": [
+              "תמהיל"
+            ],
+            "47": [
+              "תמהיל"
+            ]
+          }
+        },
+        "pages_checked": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          34,
+          35,
+          36,
+          37,
+          38,
+          39,
+          40,
+          41,
+          42,
+          43,
+          44,
+          45,
+          46,
+          47,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          56,
+          57,
+          58,
+          59,
+          60,
+          61,
+          62,
+          63
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לכלול טבלת תמהיל יח\"ד עם פילוח לפי גודל דירה, חלוקה תמורה/יזם, ואחוז מסך היח\"ד.",
+      "rule_code": "FORMAT_TYPICAL_FLOOR_MIX_TABLE",
+      "verdict": "requires_review"
+    },
+    {
+      "confidence": "HIGH",
+      "evidence": {
+        "check_method": "regex_pattern",
+        "extracted_values": {
+          "distinct_hit_pages": [],
+          "footer_scoped": false,
+          "pattern_hit_pages": {
+            "גרסה\\s+\\d+(\\.\\d+)?": []
+          },
+          "sample_matches": {},
+          "total_hits": 0
+        },
+        "pages_checked": [
+          1
+        ]
+      },
+      "failure_mode": "NONE",
+      "notes_he": "החוברת חייבת לציין במפורש את מספר הגרסה (לדוגמה 'גרסה 23.3').",
+      "rule_code": "FORMAT_VERSION_NOTATION",
+      "verdict": "pass_with_note"
+    }
+  ]
+}

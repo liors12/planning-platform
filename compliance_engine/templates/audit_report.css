@@ -1,0 +1,264 @@
+/* NZC audit report — Hebrew RTL, A4 portrait, brand greens */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Noto Sans Hebrew", "Open Sans Hebrew", "Arial Hebrew", "Heebo", "David", sans-serif;
+  color: #1a1a1a;
+  font-size: 11pt;
+  line-height: 1.45;
+  margin: 0;
+  padding: 0;
+  direction: rtl;
+  text-align: right;
+}
+
+table { direction: rtl; }
+th, td { text-align: right; }
+
+/* ---------- Cover ---------- */
+.cover {
+  page-break-after: always;
+  background: linear-gradient(135deg, #005030 0%, #007840 100%);
+  color: #ffffff;
+  padding: 70pt 50pt;
+  min-height: 760pt;
+}
+.cover .eyebrow {
+  font-size: 11pt;
+  letter-spacing: 0.08em;
+  opacity: 0.85;
+  margin-bottom: 8pt;
+}
+.cover h1 {
+  font-size: 28pt;
+  font-weight: 700;
+  margin: 0 0 12pt 0;
+  line-height: 1.2;
+}
+.cover .subtitle {
+  font-size: 16pt;
+  opacity: 0.95;
+  margin-bottom: 40pt;
+}
+.cover .meta-block {
+  background: rgba(255,255,255,0.12);
+  border: 1pt solid rgba(255,255,255,0.25);
+  border-radius: 6pt;
+  padding: 18pt 22pt;
+  margin-top: 30pt;
+}
+.cover .meta-row {
+  display: block;
+  margin: 6pt 0;
+  font-size: 12pt;
+}
+.cover .meta-row .label {
+  opacity: 0.8;
+  font-weight: 600;
+  margin-left: 8pt;
+}
+.cover .footer-stripe {
+  margin-top: 60pt;
+  padding-top: 14pt;
+  border-top: 1pt solid rgba(255,255,255,0.35);
+  font-size: 9pt;
+  opacity: 0.85;
+}
+
+/* ---------- Section pages ---------- */
+.page {
+  padding: 30pt 40pt 50pt 40pt;
+  page-break-after: always;
+}
+.page:last-of-type {
+  page-break-after: auto;
+}
+h2.section {
+  color: #005030;
+  border-bottom: 2pt solid #007840;
+  padding-bottom: 6pt;
+  font-size: 18pt;
+  margin: 0 0 18pt 0;
+}
+h3.subsection {
+  color: #005030;
+  font-size: 13pt;
+  margin: 18pt 0 8pt 0;
+}
+p.intro {
+  font-size: 11pt;
+  color: #444;
+  margin: 0 0 18pt 0;
+}
+
+/* ---------- Stat cards (executive summary) ---------- */
+.stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10pt;
+  margin: 0 0 20pt 0;
+}
+.stat {
+  flex: 1 1 120pt;
+  border: 1pt solid #d8d8d8;
+  border-radius: 6pt;
+  padding: 12pt 14pt;
+  background: #fafafa;
+}
+.stat .num {
+  font-size: 22pt;
+  font-weight: 700;
+  color: #005030;
+  display: block;
+}
+.stat .label {
+  font-size: 9pt;
+  color: #555;
+  text-transform: none;
+}
+.stat.pass .num { color: #1f7a3a; }
+.stat.fail .num { color: #b3261e; }
+.stat.review .num { color: #1565c0; }
+
+.status-box {
+  margin: 16pt 0 0 0;
+  padding: 14pt 16pt;
+  border-right: 4pt solid #007840;
+  background: #f3f8f5;
+  font-size: 11pt;
+}
+
+/* ---------- Findings tables ---------- */
+table.findings {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8pt 0 14pt 0;
+  font-size: 9.5pt;
+}
+table.findings th, table.findings td {
+  border: 1pt solid #e0e0e0;
+  padding: 6pt 8pt;
+  vertical-align: top;
+  text-align: right;
+}
+table.findings th {
+  background: #eef3ef;
+  color: #005030;
+  font-weight: 700;
+  font-size: 9.5pt;
+}
+table.findings td.rule { width: 32%; }
+table.findings td.verdict { width: 18%; white-space: nowrap; }
+table.findings td.evidence { width: 30%; font-size: 8.5pt; color: #444; }
+table.findings td.notes { width: 20%; font-size: 9pt; color: #333; }
+table.findings code {
+  display: inline-block;
+  font-family: "Menlo", "Courier New", monospace;
+  font-size: 8pt;
+  color: #555;
+  background: #f4f4f4;
+  padding: 1pt 4pt;
+  border-radius: 3pt;
+  direction: ltr;
+}
+
+/* ---------- Verdict badges ---------- */
+.badge {
+  display: inline-block;
+  padding: 3pt 8pt;
+  border-radius: 10pt;
+  font-size: 9pt;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.badge.pass { background: #d9efe0; color: #14532d; }
+.badge.pass_note { background: #e6f1d8; color: #335114; }
+.badge.fail { background: #fadcd9; color: #8a1f17; }
+.badge.fail_border { background: #ffe7c2; color: #8a4b00; }
+.badge.review { background: #d8e6f7; color: #0d3a73; }
+.badge.missing { background: #ececec; color: #555; }
+.badge.na { background: #efefef; color: #777; }
+.severity {
+  display: inline-block;
+  font-size: 8pt;
+  margin-right: 6pt;
+  padding: 1pt 6pt;
+  border-radius: 8pt;
+  border: 1pt solid #ccc;
+  color: #555;
+  background: #fafafa;
+}
+.severity.critical { color: #8a1f17; border-color: #ec9b94; background: #fbeae8; }
+.severity.major    { color: #8a4b00; border-color: #f3c994; background: #fff1de; }
+.severity.minor    { color: #1565c0; border-color: #aac6e6; background: #ecf3fb; }
+
+/* ---------- Manual review cards ---------- */
+.review-card {
+  border: 1pt solid #c8d8ed;
+  background: #f5f9fd;
+  border-right: 4pt solid #1565c0;
+  border-radius: 4pt;
+  padding: 10pt 12pt;
+  margin: 8pt 0;
+}
+.review-card .title {
+  font-weight: 700;
+  color: #0d3a73;
+  margin-bottom: 4pt;
+}
+.review-card .instructions {
+  font-size: 10pt;
+  color: #1a1a1a;
+}
+.review-card .meta {
+  font-size: 8.5pt;
+  color: #666;
+  margin-top: 4pt;
+}
+
+/* ---------- Placeholder boxes ---------- */
+.placeholder {
+  border: 1pt dashed #b8b8b8;
+  background: #fbfbf6;
+  padding: 16pt;
+  border-radius: 4pt;
+  color: #555;
+  font-size: 10pt;
+  margin: 8pt 0;
+}
+
+/* ---------- Final verdict block ---------- */
+.verdict-block {
+  border: 1.5pt solid #005030;
+  background: #f3f8f5;
+  border-radius: 6pt;
+  padding: 18pt 20pt;
+  margin: 14pt 0;
+}
+.verdict-block .headline {
+  font-size: 16pt;
+  font-weight: 700;
+  color: #005030;
+  margin-bottom: 8pt;
+}
+.verdict-block .body {
+  font-size: 11pt;
+  color: #1a1a1a;
+}
+ul.action-list {
+  margin: 8pt 0 0 0;
+  padding-right: 18pt;
+}
+ul.action-list li {
+  margin: 3pt 0;
+  font-size: 10pt;
+}
+
+/* ---------- Footer is drawn programmatically by the renderer ---------- */

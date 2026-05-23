@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>חוות דעת — {{ project.design_plan_name }}</title>
+  <style>{{ css }}</style>
+</head>
+<body class="opinion-body">
+
+  {# DRAFT watermark — fixed position, low opacity, repeats per page via
+     CSS `position: fixed`. WeasyPrint and Chrome both honor this on each
+     printed page. #}
+  <div class="draft-watermark" aria-hidden="true">טיוטה</div>
+
+  {% include "partials/header.html.j2" %}
+
+  <section class="executive-summary">
+    <h2>תקציר מנהלים</h2>
+    <p class="summary-prose">
+      {% if summary.total_violations == 0 %}
+      התכנית נבדקה מול {{ summary.plan_count }} תב"עות, {{ summary.parcels_evaluated }} תאי שטח. לא נמצאו ממצאים.
+      {% else %}
+      התכנית נבדקה מול {{ summary.plan_count }} תב"עות, {{ summary.parcels_evaluated }} תאי שטח.
+      נמצאו {{ summary.failures_total }} אי-התאמות{% if summary.review_total %} ו-{{ summary.review_total }} סוגיות הדורשות בחינה{% endif %}.
+      {% endif %}
+    </p>
+
+    <table class="summary-table">
+      <thead>
+        <tr>
+          <th>תוצאה</th>
+          <th>מספר ממצאים</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in summary.verdict_rows %}
+        <tr class="row-{{ row.css_class }}">
+          <td>
+            <span class="verdict-pill {{ row.css_class }}">{{ row.label }}</span>
+          </td>
+          <td class="counter-cell">{{ row.count }}</td>
+        </tr>
+        {% endfor %}
+        <tr class="totals-row">
+          <td>סה"כ</td>
+          <td class="counter-cell">{{ summary.total_violations }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% if summary.engine_error_count > 0 or summary.low_confidence_count > 0 %}
+    <div class="system-health-warning" role="alert">
+      <div class="shw-title">אזהרת מערכת</div>
+      {% if summary.engine_error_count > 0 %}
+      <p class="shw-body">
+        זוהו <bdi>{{ summary.engine_error_count }}</bdi> אי-התאמות שמקורן בשגיאות עיבוד פנימיות.
+        ייתכן שהממצאים אינם שלמים. נדרשת בדיקת מהנדס תוכנה לפני סגירת חוות הדעת.
+      </p>
+      {% endif %}
+      {% if summary.low_confidence_count > 0 %}
+      <p class="shw-body shw-low-conf">
+        <bdi>{{ summary.low_confidence_count }}</bdi> ממצאים סווגו בוודאות נמוכה — מומלץ לבחון אותם אישית.
+      </p>
+      {% endif %}
+    </div>
+    {% endif %}
+  </section>
+
+  {% for parcel in parcels %}
+    {% include "partials/parcel_section.html.j2" %}
+  {% endfor %}
+
+  {% if review_items %}
+  <section class="review-section">
+    <h2>סוגיות הדורשות בחינת מהנדס</h2>
+    <p class="section-prose">
+      הממצאים הבאים סווגו על ידי המערכת כ"מצריך בחינת מהנדס" או "לא ניתן לבדיקה" — נדרשת התייחסות אישית של המהנדס לפני סגירת חוות הדעת.
+    </p>
+    <table class="review-table">
+      <thead>
+        <tr>
+          <th>תא שטח</th>
+          <th>סעיף</th>
+          <th>תוצאה</th>
+          <th>הערה / שאלה למהנדס</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in review_items %}
+        <tr class="row-{{ item.css_class }}">
+          <td>{{ item.parcel_id }}</td>
+          <td>
+            <div class="rule-id">{{ item.rule_id }}</div>
+            <div class="source-id">{{ item.source_takanon_id or "" }}</div>
+          </td>
+          <td><span class="verdict-pill {{ item.css_class }}">{{ item.verdict_he }}</span></td>
+          <td>{% if item.notes %}<bdi>{{ item.notes }}</bdi>{% else %}—{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  {% include "partials/footer.html.j2" %}
+
+</body>
+</html>

@@ -1,0 +1,323 @@
+"""Engine job queue + worker — Phase 2a.
+
+Implements MAX_CONCURRENT_JOBS=1 by running a single asyncio background task
+that pulls Job UUIDs off a FIFO queue and processes them sequentially. Jobs
+are persisted to the DB so the UI can show "queued / running / completed /
+failed" status that survives sidecar restarts (orphaned jobs from a previous
+process are marked failed at startup).
+
+ADR-001 § Implication 2 (concurrency cap of 1) lands here. The synchronous
+`dispatch.run_job()` helper from Phase 1 (used by /jobs/echo) still exists
+for one-shot demos that don't need queueing; the queue is for real
+long-running engine work that the UI polls.
+"""
+from __future__ import annotations
+
+import asyncio
+import json
+import logging
+import subprocess
+import uuid
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+from sqlalchemy import update
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session
+
+from .config import Config
+from .engine_bridge import resolve_schema
+from .models import Job, Submission
+from .storage import findings_path
+
+log = logging.getLogger(__name__)
+
+
+# Wall-clock budget per docs/architecture/job_types.md `run_audit` row.
+RUN_AUDIT_BUDGET_S = 300.0
+
+# Path to the run_audit script. Resolved at module-load so we don't recompute
+# per job. Lives at <REPO_ROOT>/scripts/run_audit.py.
+_RUN_AUDIT_PATH = Path(__file__).resolve().parent.parent.parent.parent / "scripts" / "run_audit.py"
+
+
+def _normalize_submission_version(version_string: str) -> str:
+    """The engine's submission_version is the bare version without 'v' prefix.
+    The platform's storage uses whatever the user typed (commonly 'v24.3'),
+    so we strip a leading 'v' here when handing off to the engine.
+    Mirror of the deleted engine_bridge._normalize_submission_version."""
+    return version_string[1:] if version_string.startswith("v") else version_string
+
+
+class EngineQueue:
+    """A single-worker FIFO queue. One instance per sidecar process.
+
+    Cross-thread enqueue is supported (FastAPI sync endpoints run in a
+    threadpool while the worker awaits in the event loop): we capture the
+    event-loop reference at start() and route `put` calls via
+    `asyncio.run_coroutine_threadsafe`. Without this, `put_nowait` from a
+    different thread silently corrupts pending getter futures.
+    """
+
+    def __init__(self, *, cfg: Config, engine: Engine) -> None:
+        self._cfg = cfg
+        self._engine = engine
+        self._queue: asyncio.Queue[str] = asyncio.Queue()
+        self._worker_task: Optional[asyncio.Task] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
+
+    async def start(self) -> None:
+        """Launch the background worker. Idempotent; safe to call once at
+        sidecar startup."""
+        if self._worker_task is None or self._worker_task.done():
+            self._loop = asyncio.get_running_loop()
+            self._mark_orphans_failed()
+            self._worker_task = asyncio.create_task(self._run_worker(),
+                                                    name="engine-queue-worker")
+            log.info("engine queue worker started")
+
+    async def stop(self) -> None:
+        if self._worker_task is not None:
+            self._worker_task.cancel()
+            try:
+                await self._worker_task
+            except (asyncio.CancelledError, Exception):
+                pass
+        log.info("engine queue worker stopped")
+
+    def enqueue_run_audit(self, submission_id: int) -> Job:
+        """Insert a Job row and put its id on the queue. Returns the row."""
+        with Session(self._engine) as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise ValueError(f"submission {submission_id} not found")
+            job_id = str(uuid.uuid4())
+            job_dir = self._cfg.jobs_dir / job_id
+            job_dir.mkdir(parents=True, exist_ok=True)
+            job = Job(
+                id=job_id,
+                job_type="run_audit",
+                submission_id=submission_id,
+                status="queued",
+                job_dir=str(job_dir),
+            )
+            # Mark submission as analyzing so the UI can show that state even
+            # before the worker picks the job up (could be moments later).
+            sub.status = "analyzing"
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            # Cross-thread-safe: schedule the put on the worker's event loop.
+            if self._loop is None:
+                raise RuntimeError("EngineQueue.start() was not called")
+            asyncio.run_coroutine_threadsafe(self._queue.put(job_id), self._loop)
+            log.info("enqueued job %s for submission %s", job_id, submission_id)
+            return job
+
+    def get_job(self, job_id: str) -> Optional[Job]:
+        with Session(self._engine) as sess:
+            return sess.get(Job, job_id)
+
+    # ── internal worker loop ───────────────────────────────────────────────
+
+    async def _run_worker(self) -> None:
+        while True:
+            try:
+                job_id = await self._queue.get()
+                await asyncio.to_thread(self._process_one, job_id)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("worker loop crashed; continuing")
+
+    def _process_one(self, job_id: str) -> None:
+        """Synchronous job execution (runs in a thread). Catches every
+        exception and persists the result."""
+        # Capture plain values inside the session — ORM instances become
+        # detached when the `with` block exits, and the heavy subprocess.run
+        # work below has to happen outside the session.
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            if job is None:
+                log.error("job %s pulled from queue but missing from DB", job_id)
+                return
+            sub = sess.get(Submission, job.submission_id) if job.submission_id else None
+            if sub is None:
+                self._fail(sess, job, error_type="MissingSubmission",
+                           error_message=f"submission {job.submission_id} not found at job-pickup time")
+                return
+            project_id = sub.project_id
+            project_tava_number = sub.project.tava_number
+            submission_version_string = sub.version_string
+            submission_pdf_path = sub.pdf_path
+            job_dir_str = job.job_dir
+            job.status = "running"
+            job.started_at = datetime.now(timezone.utc)
+            sess.commit()
+
+        # Heavy work happens outside the session (subprocess.run blocks).
+        # Phase 2b: write job_input.json with platform paths and spawn
+        # `run_audit.py --job-dir DIR`. Engine reads inputs from disk, writes
+        # job_output.json, exits. No legacy-layout copying.
+        error_payload = None
+        try:
+            schema_path = resolve_schema(project_tava_number)
+            job_dir = Path(job_dir_str)
+            job_input = {
+                "pdf_path": submission_pdf_path,
+                "schema_path": str(schema_path),
+                "project_key": project_tava_number,
+                "submission_version": _normalize_submission_version(submission_version_string),
+            }
+            # Phase 2b: the Cowork-extracted overlays (extracts.json +
+            # discipline_findings.json) live at the canonical repo location for
+            # the pilot project. The platform's submission dir under
+            # ~/.platform/ doesn't have them, so we pass explicit paths and let
+            # run_audit stage them next to the PDF via _maybe_stage_overlay.
+            # Phase 4 / v8a-2 will move these into platform storage as part of
+            # per-submission Cowork integration.
+            normalized_version = _normalize_submission_version(submission_version_string)
+            canonical_submission_dir = (
+                _RUN_AUDIT_PATH.parent.parent
+                / "projects" / project_tava_number / "submissions" / f"v{normalized_version}"
+            )
+            for overlay_leaf, job_input_key in (
+                ("extracts.json", "extracts_path"),
+                ("discipline_findings.json", "discipline_findings_path"),
+            ):
+                candidate = canonical_submission_dir / overlay_leaf
+                if candidate.exists():
+                    job_input[job_input_key] = str(candidate)
+            (job_dir / "job_input.json").write_text(
+                json.dumps(job_input, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+            cmd = [
+                self._cfg.sidecar_python,
+                str(_RUN_AUDIT_PATH),
+                "--job-dir", str(job_dir),
+            ]
+            log.info("spawning run_audit: %s", cmd)
+            # cwd=PROJECT_ROOT so the engine's legacy relative-path defaults
+            # (notably compliance_engine/format_rules_checker.py's default
+            # `Path("submission_format_rules.json")`) resolve correctly.
+            # Future cleanup: make those defaults absolute or accept explicit
+            # paths via job_input.json. Tracked informally; not a Phase 2b
+            # blocker since cwd= is a one-line, low-risk shim.
+            result = subprocess.run(
+                cmd,
+                cwd=str(_RUN_AUDIT_PATH.parent.parent),  # = PROJECT_ROOT
+                capture_output=True, text=True,
+                timeout=RUN_AUDIT_BUDGET_S,
+                check=False,
+            )
+
+            if result.returncode != 0:
+                # Prefer structured error.json (worker contract) over stderr tail.
+                error_json_path = job_dir / "error.json"
+                if error_json_path.exists():
+                    try:
+                        worker_err = json.loads(error_json_path.read_text(encoding="utf-8"))
+                    except Exception:
+                        worker_err = {"error_type": "MalformedErrorJson"}
+                    error_payload = {
+                        "error_type": worker_err.get("error_type", "EngineFailure"),
+                        "error_message": worker_err.get("error_message", "run_audit failed"),
+                        "stderr_tail": (result.stderr or "")[-2000:],
+                    }
+                else:
+                    error_payload = {
+                        "error_type": "EngineNonZeroExit",
+                        "error_message": f"run_audit exit code {result.returncode}",
+                        "stderr_tail": (result.stderr or "")[-4000:],
+                        "stdout_tail": (result.stdout or "")[-2000:],
+                    }
+            else:
+                job_output_path = job_dir / "job_output.json"
+                if not job_output_path.exists():
+                    error_payload = {
+                        "error_type": "MissingJobOutput",
+                        "error_message": (
+                            f"run_audit exited 0 but no job_output.json at {job_output_path}"
+                        ),
+                    }
+                else:
+                    # Collect: copy job_output.json → platform findings_path.
+                    dest = findings_path(self._cfg, project_id, submission_version_string)
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    dest.write_bytes(job_output_path.read_bytes())
+        except subprocess.TimeoutExpired:
+            error_payload = {
+                "error_type": "TimeoutExpired",
+                "error_message": f"run_audit exceeded {RUN_AUDIT_BUDGET_S}s wall-clock budget; killed",
+            }
+        except FileNotFoundError as exc:
+            # Most commonly: schema missing. Caught here so we can surface a
+            # clean error_type rather than the generic Exception branch.
+            error_payload = {
+                "error_type": "SchemaNotFound",
+                "error_message": str(exc),
+            }
+        except Exception as exc:
+            log.exception("run_audit job %s crashed", job_id)
+            error_payload = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+
+        # Persist outcome.
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            sub = sess.get(Submission, job.submission_id)
+            now = datetime.now(timezone.utc)
+            if error_payload is not None:
+                job.status = "failed"
+                job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                if sub is not None:
+                    sub.status = "failed"
+            else:
+                job.status = "completed"
+                dest = findings_path(self._cfg, sub.project_id, sub.version_string)
+                job.output_path = str(dest)
+                if sub is not None:
+                    sub.status = "complete"
+                    sub.findings_json_path = str(dest)
+            job.completed_at = now
+            sess.commit()
+            log.info("job %s finished: status=%s", job_id, job.status)
+
+    def _fail(self, sess: Session, job: Job, *, error_type: str, error_message: str) -> None:
+        job.status = "failed"
+        job.error_json = json.dumps({"error_type": error_type, "error_message": error_message})
+        job.completed_at = datetime.now(timezone.utc)
+        sess.commit()
+
+    def _mark_orphans_failed(self) -> None:
+        """At sidecar startup, any Job in queued/running state is from a
+        previous process that didn't complete. We can't resume the
+        subprocess; mark them failed with a clear error so the UI surfaces
+        the situation rather than silently lying about state."""
+        now = datetime.now(timezone.utc)
+        payload = json.dumps({
+            "error_type": "OrphanedAfterSidecarRestart",
+            "error_message": "Sidecar restarted while this job was in flight. "
+                             "Resume is not supported in Phase 2a; re-run the engine if needed.",
+        })
+        with Session(self._engine) as sess:
+            stmt = (
+                update(Job)
+                .where(Job.status.in_(["queued", "running"]))
+                .values(status="failed", error_json=payload, completed_at=now)
+            )
+            res = sess.execute(stmt)
+            if res.rowcount:
+                # Also revert any Submission that's stuck in "analyzing".
+                sess.execute(
+                    update(Submission)
+                    .where(Submission.status == "analyzing")
+                    .values(status="failed")
+                )
+                sess.commit()
+                log.warning("marked %d orphaned jobs as failed at startup", res.rowcount)

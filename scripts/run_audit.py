@@ -1,0 +1,305 @@
+#!/opt/homebrew/bin/python3.13
+"""Run a full audit (format + content + disciplines) for a submission.
+
+This script has two invocation forms:
+
+  1. **Canonical — `--job-dir` contract** (ADR-001 § Implication 1):
+
+         python3.13 scripts/run_audit.py --job-dir DIR
+
+     where `DIR/job_input.json` contains:
+         {
+           "pdf_path":                  "absolute path",
+           "schema_path":               "absolute path",
+           "project_key":               "407-1048248",
+           "submission_version":        "24.3",
+           "extracts_path":             "absolute path (optional)",
+           "discipline_findings_path":  "absolute path (optional)",
+           "audit_outputs_root":        "absolute path (optional)"
+         }
+
+     On success: writes `DIR/job_output.json` (the full audit_results dict).
+     On failure: writes `DIR/error.json` + exits non-zero.
+
+  2. **Backward-compat — positional CLI** (preserved for v8j manual runs):
+
+         python3.13 scripts/run_audit.py PROJECT_KEY SUBMISSION_VERSION [--no-pdf]
+         python3.13 scripts/run_audit.py 407-1048248 24.3
+
+     Reconstructs job_input.json internally from the repo's
+     `projects/{project_key}/submissions/v{version}/metadata.json` layout,
+     calls the canonical form, then ALSO writes
+     `audit_outputs/{project_key}/v{version}/audit_results.json` and the
+     Hebrew PDF report (unless `--no-pdf`).
+
+The Homebrew Python is required because WeasyPrint needs Pango/Cairo from
+/opt/homebrew/lib (system Python on macOS doesn't see them).
+
+See:
+  - docs/architecture/ADR-001-subprocess-isolation.md
+  - docs/architecture/job_types.md (run_audit row)
+  - docs/phase_2b_commitments.md (ticket #1 — this migration)
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+import traceback
+from datetime import datetime, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
+
+from compliance_engine.audit import run_full_audit  # noqa: E402
+from compliance_engine.report_generator import generate_audit_pdf  # noqa: E402
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Canonical: --job-dir contract
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _run_with_job_dir(job_dir: Path) -> int:
+    """Execute the audit per ADR-001 § Implication 1.
+
+    Reads `job_dir/job_input.json`, runs the audit, writes
+    `job_dir/job_output.json` on success or `job_dir/error.json` on failure.
+    """
+    input_path = job_dir / "job_input.json"
+    output_path = job_dir / "job_output.json"
+    error_path = job_dir / "error.json"
+
+    try:
+        if not input_path.exists():
+            raise FileNotFoundError(f"missing input file: {input_path}")
+        payload = json.loads(input_path.read_text(encoding="utf-8"))
+
+        pdf_path = _required_path(payload, "pdf_path")
+        schema_path = _required_path(payload, "schema_path")
+        project_key = payload.get("project_key")
+        submission_version = payload.get("submission_version")
+        if not project_key or not submission_version:
+            raise ValueError("job_input.json must include project_key + submission_version")
+
+        extracts_path = _optional_path(payload, "extracts_path")
+        discipline_findings_path = _optional_path(payload, "discipline_findings_path")
+        audit_outputs_root = _optional_path(payload, "audit_outputs_root")
+        feedback_db_path = _optional_path(payload, "feedback_db_path")
+
+        project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
+
+        # `run_full_audit` resolves extracts.json + discipline_findings.json
+        # from `pdf_path.parent`. Stage them next to the PDF if the caller
+        # supplied explicit paths from somewhere else; otherwise rely on the
+        # default lookup.
+        _maybe_stage_overlay(pdf_path.parent, "extracts.json", extracts_path)
+        _maybe_stage_overlay(pdf_path.parent, "discipline_findings.json",
+                             discipline_findings_path)
+
+        results = run_full_audit(
+            pdf_path,
+            project_schema,
+            audit_outputs_root=audit_outputs_root,
+            project_key=project_key,
+            submission_version=submission_version,
+            feedback_db_path=feedback_db_path,
+        )
+
+        # Serialize with the same conventions as the v8j-era output:
+        # ensure_ascii=False (Hebrew stays as Hebrew, not \uXXXX),
+        # indent=2 (human-readable diffs), sort_keys=True (stable byte order).
+        output_path.write_text(
+            json.dumps(results, ensure_ascii=False, indent=2, sort_keys=True),
+            encoding="utf-8",
+        )
+        return 0
+    except Exception as exc:
+        error_path.write_text(
+            json.dumps({
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+                "traceback": traceback.format_exc(),
+                "executed_at": datetime.now(timezone.utc).isoformat(),
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        print(f"run_audit failed: {type(exc).__name__}: {exc}", file=sys.stderr)
+        return 2
+
+
+def _required_path(payload: dict, key: str) -> Path:
+    raw = payload.get(key)
+    if not raw:
+        raise ValueError(f"job_input.json missing required key {key!r}")
+    p = Path(raw)
+    if not p.exists():
+        raise FileNotFoundError(f"{key} does not exist on disk: {p}")
+    return p
+
+
+def _optional_path(payload: dict, key: str) -> Path | None:
+    raw = payload.get(key)
+    return Path(raw) if raw else None
+
+
+def _maybe_stage_overlay(submission_dir: Path, leaf: str, source: Path | None) -> None:
+    """If the caller supplied an explicit overlay path, stage it next to the
+    PDF where `run_full_audit` expects to find it. No-op if `source` is None
+    or already at the canonical location."""
+    if source is None:
+        return
+    target = submission_dir / leaf
+    try:
+        if source.resolve() == target.resolve():
+            return  # already in place
+    except FileNotFoundError:
+        pass
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(source.read_bytes())
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Backward-compat: positional CLI wrapper
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _run_legacy_positional(project_key: str, submission_version: str,
+                            output_subdir: str, generate_pdf: bool) -> int:
+    """Old v8j CLI form. Reconstructs job_input.json from the repo layout and
+    delegates to the canonical `--job-dir` form, then copies the output back
+    to the legacy `audit_outputs/{key}/v{version}/audit_results.json` location
+    (and optionally renders the Hebrew PDF report).
+    """
+    submission_dir = ROOT / "projects" / project_key / "submissions" / f"v{submission_version}"
+    metadata_path = submission_dir / "metadata.json"
+    if not metadata_path.exists():
+        print(f"ERROR: metadata not found at {metadata_path}", file=sys.stderr)
+        return 1
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    pdf_path = submission_dir / metadata["file_name"]
+    if not pdf_path.exists():
+        print(f"ERROR: PDF not found at {pdf_path}", file=sys.stderr)
+        return 1
+
+    schema_path = ROOT / "projects" / project_key / f"project-schema-{project_key}-v2.json"
+    if not schema_path.exists():
+        # Fallback to repo-root copy used during early bring-up.
+        schema_path = ROOT / f"project-schema-{project_key}-v2.json"
+    if not schema_path.exists():
+        print(f"ERROR: schema not found for {project_key}", file=sys.stderr)
+        return 1
+
+    output_dir = ROOT / output_subdir / project_key / f"v{submission_version}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Stage a temp job-dir as a sibling of the output dir.
+    import tempfile, shutil
+    with tempfile.TemporaryDirectory(prefix=f"run_audit_{project_key}_") as tmp:
+        job_dir = Path(tmp)
+        (job_dir / "job_input.json").write_text(
+            json.dumps({
+                "pdf_path": str(pdf_path),
+                "schema_path": str(schema_path),
+                "project_key": project_key,
+                "submission_version": submission_version,
+                "audit_outputs_root": str(ROOT / output_subdir),
+            }, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+
+        print(f"Running full audit on {pdf_path}")
+        rc = _run_with_job_dir(job_dir)
+        if rc != 0:
+            err_path = job_dir / "error.json"
+            if err_path.exists():
+                print(err_path.read_text(encoding="utf-8"), file=sys.stderr)
+            return rc
+
+        job_output = job_dir / "job_output.json"
+        legacy_json = output_dir / "audit_results.json"
+        shutil.copyfile(job_output, legacy_json)
+        print(f"JSON results: {legacy_json}")
+
+        results = json.loads(job_output.read_text(encoding="utf-8"))
+
+    # ── Per-section verdict summary (v8j console output, byte-stable) ──
+    _print_verdict_summary("Format", results.get("format", []))
+    _print_verdict_summary(f"Content rules summary ({len(results.get('content', []))} total)",
+                           results.get("content", []), include_total=False)
+    _print_verdict_summary(f"Discipline rules summary ({len(results.get('disciplines', []))} total)",
+                           results.get("disciplines", []), include_total=False)
+
+    eq = (results.get("extraction_cache") or {}).get("extraction_quality") or {}
+    print(f"\nExtraction quality: llm_available={eq.get('llm_available')}, "
+          f"llm_used={eq.get('llm_used')}, "
+          f"fields_extracted={eq.get('fields_extracted_count')}")
+    fb = results.get("feedback_entries", [])
+    if fb:
+        print(f"Feedback entries merged: {len(fb)}")
+
+    if generate_pdf:
+        project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        pdf_out = output_dir / f"audit_report_{submission_version}.pdf"
+        generate_audit_pdf(
+            audit_results=results,
+            project_schema=project_schema,
+            submission_metadata=metadata,
+            output_path=pdf_out,
+        )
+        print(f"PDF report: {pdf_out}")
+
+    return 0
+
+
+def _print_verdict_summary(label: str, rules: list[dict], include_total: bool = True) -> None:
+    by_verdict: dict[str, int] = {}
+    for r in rules:
+        by_verdict[r["verdict"]] = by_verdict.get(r["verdict"], 0) + 1
+    if include_total:
+        print(f"\n{label} rules summary:")
+    else:
+        print(f"\n{label}:")
+    for verdict, count in sorted(by_verdict.items()):
+        print(f"  {verdict}: {count}")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# CLI dispatch
+# ─────────────────────────────────────────────────────────────────────────────
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        description="Run a full compliance audit on a submission.",
+        epilog="Either --job-dir DIR or positional PROJECT_KEY + SUBMISSION_VERSION required.",
+    )
+    parser.add_argument("project_key", nargs="?",
+                        help="(legacy) e.g., 407-1048248")
+    parser.add_argument("submission_version", nargs="?",
+                        help="(legacy) e.g., 24.3 (no 'v' prefix)")
+    parser.add_argument("--job-dir", type=Path, default=None,
+                        help="ADR-001 contract: read job_input.json here + "
+                             "write job_output.json (preferred form).")
+    parser.add_argument("--output-dir", default="audit_outputs",
+                        help="(legacy) override the audit_outputs root.")
+    parser.add_argument("--no-pdf", action="store_true",
+                        help="(legacy) skip PDF report generation.")
+    args = parser.parse_args(argv)
+
+    if args.job_dir is not None:
+        return _run_with_job_dir(args.job_dir)
+
+    if not args.project_key or not args.submission_version:
+        parser.error(
+            "either --job-dir DIR or positional PROJECT_KEY SUBMISSION_VERSION required"
+        )
+
+    return _run_legacy_positional(
+        project_key=args.project_key,
+        submission_version=args.submission_version,
+        output_subdir=args.output_dir,
+        generate_pdf=not args.no_pdf,
+    )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
