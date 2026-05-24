@@ -400,6 +400,34 @@ import. Not blocking M0 acceptance.
 
 ---
 
+### Task #32 — Engine verdict logic: false "תקין" when verification is partial
+
+**Discovered:** 2026-05-24 during pre-Ellen audit PDF review by Lior
+
+**Issue:** Compliance engine assigns "תקין" verdict whenever a submitted value falls within a plausible range, even when the reasoning text explicitly admits the exact takanon requirement cannot be verified. Example: parking ratio for plot 1 marked "תקין" but the engine's own text says "אימות התאמה מדויקת לתקן... לא קיימת בהגשה זו".
+
+**Affected verdicts:** יחס חניה (all plots), גובה (preliminary checks)
+
+**Root cause:** verdict heuristic checks presence + plausibility, not value-vs-limit conformance.
+
+**Resolution:** addressed by M2/M3 which introduce confidence-graded compliance_indicator with explicit "requires_review" state. Until M4 adapter lands, current engine should be patched to escalate verdict to "דורש בירור" when reasoning contains markers like "ראשונית" / "לא ניתן לאמת" / "דורש טבלת". Patch is pre-M4 work.
+
+**Severity:** High. Affects trust in PDF output. Engineers reading the report would assume "תקין" means verified.
+
+### Task #33 — Engine has zero "לא תקין" verdicts in section 2 for v24.3
+
+**Discovered:** 2026-05-24
+
+**Issue:** Section 2 (תאימות תוכן לתב"ע) of audit_report_24.3.pdf has zero verdicts marked "לא תקין" (actual non-compliance). All defects in the section's 27-count are "לא הוגש" (missing). Submissions of 700 units with detailed tables and dimensions should have at least some genuine non-compliance findings.
+
+**Root cause hypothesis:** rules currently check existence + plausibility, not value-vs-limit. No rule actually compares submitted_value > takanon_limit to fire a violation.
+
+**Resolution:** M2's compliance_indicator includes "non_compliant" state with explicit reasoning. Rules should be reviewed to ensure threshold checks fire when values exceed limits.
+
+**Severity:** High. Engine cannot detect violations, only absence of data.
+
+---
+
 ## Adding entries
 
 When you defer a fix here, follow this template:
