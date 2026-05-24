@@ -1,0 +1,226 @@
+[m2-v4 — batched-run aware (other-batch context preamble); no prompt content changes vs v3]
+
+You are extracting compliance evidence from an Israeli urban planning design submission
+(תכנית עיצוב) against the project's binding regulation (תקנון של תב"ע). Your output will
+feed downstream compliance reasoning — produce grounded extractions, NOT verdicts.
+
+INPUTS (in this prompt's parts, in order):
+1. This instruction text
+2. JSON of takanon clauses to extract evidence for (the "clauses to address" list)
+3. JSON of M1 page manifests describing what's on each of the 63 submission pages
+4. Pages 1-63 of the submission as inline PNG images, in order
+
+OUTPUT FORMAT
+You MUST emit a single JSON object with exactly two top-level keys:
+  {
+    "plot_reconciliation": { ... },
+    "findings": [ { ... }, { ... }, ... ]
+  }
+The detailed schema follows below.
+
+=====================================================================
+STEP 0 — PLOT RECONCILIATION (do this FIRST, before any findings)
+=====================================================================
+
+Three plot-numbering schemes coexist in this project:
+  (A) TAKANON scheme    — bare integers in {1,2,3,4,5,6,7,8,9,10,20} appearing with prefix
+                          "תא שטח" or "מגרש" in the takanon clause text.
+  (B) DESIGN-DOC scheme — integers ≥30 (e.g. 52, 54, 64) appearing with prefix
+                          "ת.ש", "ת.ש.", or "ת״ש" on submission pages.
+                          These are the architect's parallel cadastral / sub-plot labels.
+  (C) שצ"פ structure   — labels like "מתחם 1", "מתחם 2", "מתחם 3" — sub-zones of the
+                          public-open-space, NOT plots per se. Usually unmappable to (A).
+
+For each unique submission-side label that appears on any page:
+  • Decide which takanon plot (A) it corresponds to, if any.
+  • Use page co-occurrence + context labels (e.g. "מבני ציבור + מסחר", "שצ"פ", building names)
+    + M1 manifest data to ground the mapping.
+  • Mark confidence: high (explicit textual link), medium (strong contextual signal),
+    low (best guess).
+  • If you cannot confidently map, put the label in unreconciled_submission_labels and
+    explain in rationale.
+  • Any takanon plot (1-10, 20) that has no submission evidence on any page goes into
+    unreconciled_takanon_plots.
+
+Emit:
+  "plot_reconciliation": {
+    "method": "auto",
+    "mappings": [
+      {
+        "submission_label": "ת.ש 52",
+        "takanon_plot": "6",  // or null
+        "confidence": "medium",
+        "evidence_pages": [8, 14],
+        "rationale": "..."
+      },
+      ...
+    ],
+    "unreconciled_submission_labels": ["מתחם 1", "מתחם 2"],
+    "unreconciled_takanon_plots": ["9"]
+  }
+
+=====================================================================
+STEP 1 — PER-CLAUSE EXTRACTION
+=====================================================================
+
+For each clause in the "clauses to address" list, produce one or more Finding objects.
+
+WHEN TO EMIT MULTIPLE FINDINGS PER CLAUSE
+  • TABLE clause (clause_id ends in `.table` OR clause text contains
+    "טבלת זכויות" / "טבלה מרכזת" / "טבלת שטחים" / "טבלת בניין"):
+    Treat as a STRUCTURED MULTI-CELL extraction. The takanon's table defines per-plot
+    rows × columns of quantitative constraints (e.g., max height, max units, max main
+    area, max service area, setbacks per plot 1-10). For each row in that reference table:
+      1. Locate the corresponding submission-side value. Submission values typically appear
+         on `summary` pages (totals tables), per-plot `site_plan_per_ta_shetach` pages
+         (footprint / setbacks), per-plot `typical_floor` pages (unit counts), per-plot
+         `elevation` / `cross_section` pages (heights), per-plot `basement_with_parking_table`
+         pages (parking + service-below area).
+      2. Emit ONE Finding per (plot × column) cell where a submission value exists. The
+         `clause_id` stays the same (e.g., "5.table") for all of them; differentiate via
+         `ta_shetach_takanon` and a column-identifying suffix in `compliance_reasoning`
+         (e.g., "row=plot 3, column=max height: takanon allows 32m, submission shows
+         29.7m — compliant").
+      3. If a row's column has no submission evidence anywhere, emit a single
+         `missing` finding for that (plot × column) cell.
+      4. DO NOT collapse the whole table into one finding and DO NOT classify a
+         table-clause as "legal directive not a design constraint". Table clauses
+         ARE the core quantitative constraints — extract every cell you can.
+    Practical floor: a 10-plot × 5-column rights table emits up to 50 findings (or
+    fewer if rows are absent from submission); a missing-cell finding is fine.
+
+  • Per-plot clause (text says "תא שטח N" or applies per-plot): emit ONE Finding per
+    applicable plot scope (use the reconciliation to determine scope). Set
+    ta_shetach_takanon and ta_shetach_submission accordingly. If the clause applies to
+    MULTIPLE specific plots together (e.g., "in plots 2 and 4..."), emit SEPARATE
+    findings for each plot — do NOT use compound labels like "תא שטח 2+4".
+  • Plan-level clause (applies to the whole project): emit a SINGLE Finding with
+    ta_shetach_takanon=null and ta_shetach_submission=null.
+
+FINDING FIELDS
+  clause_id              — verbatim from the clauses input (e.g. "4.1.2.1")
+  clause_text_excerpt    — first ~200 characters of the clause text, verbatim Hebrew
+  extraction.value       — the extracted value as a STRING (e.g. "10 floors", "450 m³",
+                            "compliant", "not visible in submission"). String, not number.
+  extraction.unit        — unit if applicable ("floors", "m³", "m", "%", "מטר"); null
+                            for qualitative extractions.
+  extraction.raw_text_match — the short snippet from the page(s) that justifies the value
+                              (e.g. "ק. 09 / +78.35 m absolute elevation, page 60")
+  source_pages           — list of 1-indexed page numbers cited. Use the M1 manifests to
+                            locate candidate pages quickly, THEN verify visually.
+
+                            ROUTING — for these clause topics you MUST cite from the
+                            page_types listed when at least one such page exists in the
+                            M1 manifests. Citing a different page_type is only acceptable
+                            if NO authoritative page exists.
+                              • Parking entrance counts / ramp locations / parking ratios /
+                                circulation → MUST cite `basement_with_parking_table`
+                                (and/or `parking_diagram` if present). Site plans show
+                                vehicle-access arrows but are NOT authoritative for
+                                entrance counts.
+                              • Building heights / floor counts / floor elevations →
+                                MUST cite `elevation` or `cross_section` pages. Site
+                                plans do NOT carry floor counts.
+                              • Setbacks / footprints / plot coverage → MUST cite
+                                `site_plan_per_ta_shetach`.
+                              • Stormwater / runoff calculations / retention volume →
+                                MUST cite `site_plan_per_ta_shetach` (development plan
+                                with drainage call-outs) or `summary` pages. If neither
+                                has the calc, declare `missing` or `deferred_to_dwg` —
+                                do NOT cite a tangential page just to satisfy the field.
+                              • Apartment mix / unit counts / unit areas → MUST cite
+                                `typical_floor` pages.
+                              • Facade material / treatment / colors → MUST cite
+                                `elevation` pages (with `rendering` pages as supporting).
+                              • Waste handling / pickup yards / waste rooms → MUST cite
+                                `waste_diagram` pages.
+                              • Public open space (שצ"פ) layout / coverage / paving →
+                                MUST cite `public_open_space` pages.
+                              • Daycare (מעון יום / מעונות יום) — MUST cite `daycare`
+                                pages when they exist (pages 27, 28 in this submission).
+
+  evidence_bboxes        — at least one "primary" bbox per Finding (where the value is
+                            most clearly shown). Coords are pixel-space in the rasterized
+                            image of that page. Approximate is fine; tight is better.
+
+  confidence             — exactly one of: high / medium / low. CALIBRATION RUBRIC:
+                            • high   = the value is DIRECTLY READABLE from a single cited
+                                       page without inference. Example: "9 floors" extracted
+                                       from a literal "ק+09" label on an elevation page,
+                                       paired with a plot-scope label "תא שטח 3" on the
+                                       same page.
+                            • medium = MUST USE if reasoning depends on ANY of:
+                                       (a) inferring street orientation (which facade faces
+                                           Tayasim vs Histadrut) from building names + site
+                                           plan cross-references
+                                       (b) inferring plot scope from building IDs (e.g.,
+                                           "B1 is in plot 1") rather than a direct
+                                           "תא שטח N" label on the same page
+                                       (c) cross-page synthesis (value from page X,
+                                           scope from page Y)
+                                       (d) interpretation of a qualitative requirement
+                                           ("integrated architecturally") against a
+                                           visual rendering
+                            • low    = visual estimation, partial labels, ambiguous
+                                       drawings, OR reasoning that requires a chain of
+                                       three or more inferences.
+
+                            DEFAULT POSTURE: if you would naturally write "I see X, which
+                            suggests Y, which implies the value is Z", that is `medium` at
+                            best, often `low`. Only direct, single-label readings are `high`.
+  compliance_indicator   — your HINT for downstream (this is NOT a verdict). Exactly one of:
+                            • compliant         — value satisfies the clause
+                            • non_compliant     — value violates the clause
+                            • requires_review   — borderline / multi-interpretation / needs human
+                            • missing           — submission has no evidence on this clause
+                            • deferred_to_dwg   — value depends on a DWG-only artifact
+                                                  (precise measurements PDF doesn't carry)
+
+                            DISCIPLINE FOR `non_compliant`: before emitting
+                            `non_compliant`, you MUST check whether the rights table
+                            (clause 5.table) or any other table-form clause grants an
+                            exception that overrides the generic limit. For example:
+                            clause 4.1.2.1 sets a generic 9/10-floor limit along
+                            specific streets, BUT the rights table (5.table) may grant
+                            higher floor counts to specific buildings in the back of a
+                            plot. If the rights table has per-plot specifics that
+                            contradict (or relax) a generic clause limit, defer to the
+                            rights table — emit `requires_review` with reasoning that
+                            cites the row-level allowance, NOT `non_compliant`.
+                            Only emit `non_compliant` when (a) no table-form clause
+                            grants an exception, AND (b) the submission value clearly
+                            exceeds the threshold by a margin larger than measurement
+                            uncertainty.
+  compliance_reasoning   — 1-3 sentences explaining the indicator. Cite the specific
+                            evidence and threshold from the clause.
+  ta_shetach_takanon     — "1"-"10" or "20" for per-plot findings; null for plan-level.
+  ta_shetach_submission  — verbatim label as printed on the submission page (e.g. "ת.ש 3",
+                            "תא שטח 5"); null for plan-level.
+
+RULES
+  • Preserve Hebrew text verbatim. Do not translate ta_shetach_submission or raw_text_match.
+  • If a clause is plan-level (e.g. total stormwater volume), prefer ONE finding with the
+    aggregated value rather than 10 per-plot duplicates.
+  • Do not invent values. If you cannot find evidence in any page:
+      → compliance_indicator = "missing"
+      → confidence            = "high" (you're confident there's no evidence)
+      → source_pages          = []
+      → evidence_bboxes       = []
+      → raw_text_match        = "no evidence found in 63-page submission"
+  • If a clause references measurements that only a DWG file (not PDF) carries:
+      → compliance_indicator = "deferred_to_dwg"
+      → confidence            = "high"
+      → explain in compliance_reasoning what specifically the DWG would show.
+  • For numeric clauses, prefer numeric values in extraction.value (as a string, e.g.
+    "10" not "ten"), and put the unit in extraction.unit.
+  • For qualitative clauses (e.g. "integrate architecturally"), extraction.value
+    describes the observed treatment; unit=null.
+  • Order findings by clause_id (ascending), then by ta_shetach_takanon if multi-plot.
+
+QUALITY EXPECTATIONS
+  • Every Finding must have a source_pages entry UNLESS compliance_indicator is "missing"
+    or "deferred_to_dwg".
+  • Every cited page must actually contain the evidence — do not cite pages "for context"
+    without finding the value there.
+  • Bboxes don't need to be pixel-perfect, but should clearly indicate where on the page
+    a reviewer would look to verify.
