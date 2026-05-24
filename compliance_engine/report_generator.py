@@ -130,6 +130,12 @@ body {
   @bottom-right { content: none; }
   @bottom-left { content: none; }
 }
+@page signature {
+  size: A4;
+  margin: 20mm 22mm 22mm 22mm;
+  @bottom-right { content: none; }
+  @bottom-left { content: none; }
+}
 
 /* ============================================
    COLOR TOKENS
@@ -632,6 +638,108 @@ ol.priority-list strong { font-weight: 700; color: #1a1a1a; }
   line-height: 1.8;
 }
 
+/* ============================================
+   SIGNATURE PAGE — cover #2, sits between cover and TOC
+   ============================================ */
+.signature-page {
+  page: signature;
+  page-break-before: always;
+  page-break-after: always;
+  direction: rtl;
+  text-align: right;
+}
+.signature-page .eyebrow {
+  font-size: 10pt;
+  color: var(--gray-mid);
+  margin-bottom: 6mm;
+  letter-spacing: 0.5px;
+}
+.signature-page h1.sig-title {
+  font-size: 22pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 4mm 0;
+}
+.signature-page .sig-subtitle {
+  font-size: 10.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 8mm;
+  line-height: 1.5;
+}
+table.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4mm;
+  table-layout: fixed;
+}
+table.signature-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 3mm 4mm;
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.signature-table td {
+  border: 1px solid var(--gray-light);
+  padding: 2mm 4mm;
+  font-size: 11pt;
+  color: var(--gray-dark);
+  vertical-align: middle;
+  /* Tall enough for a wet signature (~14 mm) */
+  height: 14mm;
+}
+table.signature-table td.discipline-cell {
+  background: #FAFAFA;
+  font-weight: 600;
+  width: 28%;
+}
+table.signature-table td.name-cell    { width: 22%; }
+table.signature-table td.date-cell    { width: 18%; }
+table.signature-table td.signature-cell { width: 32%; }
+
+.signature-page .sig-footnote {
+  margin-top: 6mm;
+  padding-top: 3mm;
+  border-top: 1px solid var(--gray-light);
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* ============================================
+   APPENDIX A passing-rules summary (M6 Phase 6.D)
+   ============================================ */
+.passing-summary {
+  margin-top: 10mm;
+  padding: 5mm 6mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--green-brand);
+  border-radius: 2px;
+  page-break-inside: avoid;
+}
+.passing-summary-head {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 3mm 0;
+}
+ul.passing-summary-list {
+  margin: 0;
+  padding-right: 6mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.6;
+  column-count: 2;
+  column-gap: 10mm;
+}
+ul.passing-summary-list li {
+  margin-bottom: 1mm;
+  break-inside: avoid;
+}
+
 /* Section-group head inside appendix detail */
 .section-group-head {
   font-size: 11pt;
@@ -692,6 +800,7 @@ def generate_audit_pdf(
 
     parts: list[str] = []
     parts.append(_render_cover(meta, submission_metadata, plan_number))
+    parts.append(_render_signature_page())  # Fix 10 — cover page #2
     parts.append(_render_toc(
         plan_number, residential_parcels, discipline_results,
         has_sidecar=bool(sidecar_findings),
@@ -793,6 +902,60 @@ def _approval_label(meta: dict) -> str:
         except ValueError:
             pass
     return "(אושרה)"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Signature page — sits between cover and TOC (Fix 10)
+# ─────────────────────────────────────────────────────────────────────────────
+
+# Ordered list of the 10 disciplines that must sign the חוות דעת.
+# Order is intentional (operational → strategic → executive) and matches what
+# the מינהלת sends for routing.
+_SIGNATURE_DISCIPLINES_HE: list[str] = [
+    'שפ"ע',
+    "כבישים ופיתוח",
+    "תנועה",
+    "ניקוז",
+    "גנים ונוף",
+    "אדריכלות",
+    "תאגיד",
+    "מינהלת ההתחדשות העירונית",
+    "מהנדס העיר",
+    'יו"ר הוועדה',
+]
+
+
+def _render_signature_page() -> str:
+    rows = "".join(
+        f"""
+        <tr>
+          <td class="discipline-cell">{_esc(disc)}</td>
+          <td class="name-cell"></td>
+          <td class="date-cell"></td>
+          <td class="signature-cell"></td>
+        </tr>"""
+        for disc in _SIGNATURE_DISCIPLINES_HE
+    )
+    return f"""
+    <div class="signature-page">
+      <div class="eyebrow">{_esc(EYEBROW)}</div>
+      <h1 class="sig-title">טבלת חתימות — חוות דעת רב-תחומית</h1>
+      <p class="sig-subtitle">לאישור הדוח על-ידי בעלי התפקידים במינהלת ההתחדשות העירונית בעיריית נס ציונה.</p>
+      <table class="signature-table">
+        <thead>
+          <tr>
+            <th>דיסציפלינה</th>
+            <th>שם</th>
+            <th>תאריך</th>
+            <th>חתימה</th>
+          </tr>
+        </thead>
+        <tbody>{rows}
+        </tbody>
+      </table>
+      <p class="sig-footnote">כל חתימה מעידה על סקירת הדוח על-ידי הדיסציפלינה המתאימה והסכמתה לממצאים המוצגים.</p>
+    </div>
+    """
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1197,6 +1360,7 @@ _SIDECAR_CLAUSE_TITLES_HE: dict[str, str] = {
     "7.1.1":  "תוכנית שלביות (שלב א/ב)",
     "4.2.2.4": "מעבר להולכי רגל ברוחב 3 מ' בתא שטח 9",
     "4.3.2.2": "רוחב שצ\"פ בתא שטח 7 ≥ 10 מ'",
+    "5.table": "טבלת הזכויות וההוראות — מקור הנתונים",
 }
 
 
@@ -1204,13 +1368,25 @@ def _sidecar_clause_title(clause_id: str) -> str:
     return _SIDECAR_CLAUSE_TITLES_HE.get(clause_id, clause_id)
 
 
+def _format_clause_ref_he(clause_id: str) -> str:
+    """Format a clause reference for display. Slugs like '5.table' get the
+    human Hebrew name; numeric clause IDs render as 'סעיף X.Y.Z'."""
+    if clause_id == "5.table":
+        return 'טבלת הזכויות וההוראות (סעיף 5)'
+    return f"סעיף {clause_id}"
+
+
 def _sidecar_indicator_label(indicator: str) -> str:
     return {
-        "non_compliant":   "לא תקין",
-        "missing":         "לא נמצא בהגשה",
-        "compliant":       "תקין",
-        "requires_review": "דורש בירור",
-        "deferred_to_dwg": 'דורש בדיקה בקובץ DWG',
+        "non_compliant":           "לא תקין",
+        "missing":                 "לא נמצא בהגשה",
+        "compliant":               "תקין",
+        "requires_review":         "דורש בירור",
+        "deferred_to_dwg":         'דורש בדיקה בקובץ DWG',
+        # Bug A guard spawns — engine deterministic pass holds, but evidence /
+        # provenance signals from M3 critic or M2 deserve מהנדס/ת attention.
+        "table_format_concern":    "הערה על מקור הנתונים",
+        "m2_provenance_concern":   "הערה על מקור הנתונים",
     }.get(indicator, indicator or "—")
 
 
@@ -1227,20 +1403,26 @@ def _render_sidecar_section(sidecar_findings: list[dict]) -> str:
         reasoning = f.get("reasoning") or ""
         pages = f.get("source_pages") or []
         pages_str = ", ".join(str(p) for p in pages) if pages else "—"
-        css_extra = "sidecar-missing" if indicator in ("missing",) else ""
+        # Amber styling (sidecar-missing class) for "softer" indicators —
+        # missing data + provenance concerns. Red (default) stays for
+        # non_compliant findings.
+        css_extra = (
+            "sidecar-missing"
+            if indicator in ("missing", "table_format_concern", "m2_provenance_concern")
+            else ""
+        )
         cards.append(f"""
         <div class="sidecar-card {css_extra}">
           <div class="sidecar-head">{_esc(title)} — {_esc(ind_label)}</div>
-          <div class="sidecar-meta">סעיף {_esc(clause_id)} · {_esc(plot_label)}</div>
+          <div class="sidecar-meta">{_esc(_format_clause_ref_he(clause_id))} בתקנון התב"ע · {_esc(plot_label)}</div>
           <div class="sidecar-reasoning">{_esc(reasoning)}</div>
           <div class="sidecar-pages">עמודי הגשה: {_esc(pages_str)}</div>
         </div>
         """)
     intro = (
-        "פרק זה מאגד ממצאי בדיקה ויזואלית מתוך מודל הראייה (M2) ומבקר עצמאי (M3) "
-        "שלא ניתן היה לשלב כעדכון של שורת בדיקה קיימת במנוע התאימות — בדרך כלל "
-        "משום שאין למנוע כלל ייעודי לסעיף זה. נדרשת תשומת לב מיוחדת של מהנדס/ת "
-        "הוועדה לפני אישור ההגשה."
+        "פרק זה מאגד ממצאי בדיקה ויזואלית של מסמכי ההגשה שלא ניתן היה לשלבם כעדכון "
+        "של שורת בדיקה קיימת בטבלאות שלעיל — בדרך כלל משום שאין סעיף ייעודי לנושא "
+        "במנוע הבדיקה. נדרשת תשומת לב מיוחדת של מהנדס/ת הוועדה לפני אישור ההגשה."
     )
     return f"""
     <div class="chapter sidecar-chapter" id="sec-m4-sidecar">
@@ -1354,7 +1536,7 @@ def _render_section_5_coverage(report: dict) -> str:
       </p>
 
       <h3 class="subsection-num">5.1 קטגוריות שנבדקו במלואן</h3>
-      <p class="cov-help">קטגוריות אלו כוסו על-ידי כללי בדיקה ייעודיים במנוע התאימות וקיבלו הסלמות מ-M2 / M3 לפי הצורך.</p>
+      <p class="cov-help">קטגוריות אלו כוסו על-ידי כללי בדיקה ייעודיים במנוע התאימות, בשילוב בדיקה ויזואלית ומשלימה של מסמכי ההגשה.</p>
       <table class="cov-table">
         <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th><th>פילוח ממצאים</th></tr></thead>
         <tbody>{full_rows or '<tr><td colspan="3">—</td></tr>'}</tbody>
@@ -1429,7 +1611,7 @@ def _discipline_subsection(num: str, anchor_id: str, code: str, rules: list[dict
       <h3 class="subsection-num">{_esc(num)} {_esc(name)}</h3>
       <table class="audit">
         <thead><tr>
-          <th style="width:28%;">מדיניות בחוברת ההנחיות</th>
+          <th style="width:28%;">מדיניות</th>
           <th style="width:24%;">מצב בהגשה 24.3</th>
           <th style="width:13%;">ממצא</th>
           <th style="width:35%;">הערה / פעולה נדרשת</th>
@@ -1752,6 +1934,22 @@ def _render_appendix_detail(format_results: list[dict]) -> str:
         </table>
         """)
 
+    # Passing-rules summary — single-line summary + bulleted list (M6 Phase 6.D)
+    passing = [r for r in format_results if _format_verdict_kind(r) == "pass"]
+    if passing:
+        bullets = "".join(
+            f"<li>{_esc(_format_rule_title(r))}</li>"
+            for r in sorted(passing, key=lambda x: x.get("rule_code", ""))
+        )
+        passing_block = f"""
+        <div class="passing-summary">
+          <p class="passing-summary-head">כללי פורמט נוספים שעברו את הבדיקה: {len(passing)}</p>
+          <ul class="passing-summary-list">{bullets}</ul>
+        </div>
+        """
+    else:
+        passing_block = ""
+
     body = f"""
     <div class="chapter">
       <div class="eyebrow">{_esc(EYEBROW)}</div>
@@ -1759,6 +1957,7 @@ def _render_appendix_detail(format_results: list[dict]) -> str:
       <p class="chapter-intro">{_esc(intro)}</p>
       {badges}
       {''.join(blocks) if blocks else '<p style="color:#7A7A7A;">לא נמצאו ליקויי פורמט.</p>'}
+      {passing_block}
     </div>
     """
     return body

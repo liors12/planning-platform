@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from .clause_mapping import all_enabled_clauses, select_matches, sidecar_only_entries
-from .translator import m2_confidence_to_engine, m2_indicator_to_engine_verdict
+from .translator import m2_confidence_to_engine, m2_indicator_to_engine_verdict  # noqa: F401
 
 
 M4_VERSION = "m4-v1"
@@ -134,10 +134,57 @@ def escalate_hedged_pass_verdicts(
     escalated["m4_override_source"] = "hedged_reasoning_escalation"
     escalated["notes_he"] = _append_note(
         finding.get("notes_he"),
-        "[הסלמה אוטומטית]: ציון 'תקין' הוסלם ל'דורש בירור' "
-        "מאחר שטקסט הנימוק מודה באימות חלקי בלבד.",
+        "הציון 'תקין' שונה ל'דורש בירור' מאחר שאימות מדויק "
+        "לתקן דורש מידע נוסף שאינו קיים בהגשה.",
     )
     return escalated, True
+
+
+def _is_unambiguous_numeric_pass(raw_f: Dict[str, Any]) -> bool:
+    """Bug A guard predicate. True iff the engine ran a deterministic
+    submission ≤ schema comparison and the comparison holds mathematically.
+
+    When this returns True for a finding the critic disagreed with, the
+    critic's concern (about table format / evidence provenance) is a real
+    issue but should NOT override the verdict — it belongs in a sidecar
+    entry for the מהנדס/ת to review.
+    """
+    if raw_f.get("verdict") != "pass":
+        return False
+    ev = raw_f.get("evidence") or {}
+    if ev.get("comparison") != "submission_le_schema":
+        return False
+    sv = ev.get("submission_value")
+    schv = ev.get("schema_value")
+    if sv is None or schv is None:
+        return False
+    try:
+        return float(sv) <= float(schv)
+    except (TypeError, ValueError):
+        return False
+
+
+def _is_dwg_deferred(raw_f: Dict[str, Any]) -> bool:
+    """Bug B guard predicate. True iff the engine explicitly deferred this
+    check because DWG parsing isn't implemented. M2's partial sub-rule
+    evidence (e.g. visually confirming ONE setback) MUST NOT flip the engine
+    verdict to pass — many other setbacks remain unverified.
+    """
+    ev = raw_f.get("evidence") or {}
+    reason = ev.get("reason") or ""
+    return "DWG parsing not implemented" in reason
+
+
+def _parse_plot_int(plot_id: Optional[str]) -> Optional[int]:
+    """'plot_1' → 1, 'plot_20' → 20, None/other → None."""
+    if not plot_id or not isinstance(plot_id, str):
+        return None
+    if plot_id.startswith("plot_"):
+        try:
+            return int(plot_id[5:])
+        except ValueError:
+            return None
+    return None
 
 
 def process_engine_findings(
@@ -146,22 +193,26 @@ def process_engine_findings(
     critic_index: Dict[str, List[Dict[str, Any]]],
     *,
     enabled_clause_ids: Optional[set] = None,
-) -> Tuple[List[Dict[str, Any]], List[str]]:
+) -> Tuple[List[Dict[str, Any]], List[str], List[Dict[str, Any]]]:
     """Override engine findings using M2 + critic data.
 
     Order of operations per finding:
       1. Task #32 hedged-pass escalation (runs first; may flip pass→requires_review)
-      2. M3 critic disagreement (escalate to requires_review if any)
-      3. M2 high-confidence override (may flip back to pass / non_compliant / etc)
+      2. M3 critic disagreement (escalate to requires_review if any),
+         UNLESS Bug A guard fires — then keep pass, spawn sidecar
+      3. M2 high-confidence override (may flip back to pass / non_compliant / etc),
+         UNLESS Bug B guard fires — then annotate only, keep engine verdict
       4. M2 medium/low annotation (no verdict change)
 
-    Returns (m4_findings, list_of_critic_clause_ids_actually_applied).
+    Returns (m4_findings, list_of_critic_clause_ids_actually_applied,
+             extra_sidecars_from_bug_a_guard).
     """
     if enabled_clause_ids is None:
         enabled_clause_ids = all_enabled_clauses()
 
     out: List[Dict[str, Any]] = []
     critic_applied: List[str] = []
+    extra_sidecars: List[Dict[str, Any]] = []
 
     for raw_f in engine_findings:
         # Step 1 — Task #32 hedged-pass escalation, applied to the raw engine finding
@@ -200,6 +251,30 @@ def process_engine_findings(
             (m, c) for (m, c) in critic_pairs if c.get("critic_verdict") == "disagree"
         ]
 
+        # Bug A guard — for deterministic numeric ≤ comparisons that
+        # mathematically pass, a critic disagreement about evidence
+        # provenance / table format is real but should not flip the
+        # verdict. Move the critic's concern to a sidecar entry instead.
+        if disagreeing and _is_unambiguous_numeric_pass(raw_f):
+            for (m, c) in disagreeing:
+                extra_sidecars.append({
+                    "clause_id": m.get("clause_id") or "—",
+                    "ta_shetach_takanon": _parse_plot_int(plot),
+                    "compliance_indicator": "table_format_concern",
+                    "reasoning": (c.get("critic_reasoning") or "").strip(),
+                    "source_pages": sorted({
+                        p for m2 in matches for p in (m2.get("source_pages") or [])
+                    }),
+                    "engine_rule_code": rule_code,
+                    "engine_submission_value": (raw_f.get("evidence") or {}).get("submission_value"),
+                    "engine_schema_value": (raw_f.get("evidence") or {}).get("schema_value"),
+                })
+            critic_applied.extend(
+                sorted({m["clause_id"] for (m, _) in disagreeing if m.get("clause_id")})
+            )
+            # Suppress critic-escalation; fall through to normal M2 override/annotation path
+            disagreeing = []
+
         if disagreeing:
             # Critic disagreement takes precedence — escalate to requires_review
             override = _apply_critic_escalation(f, matches, disagreeing)
@@ -209,8 +284,51 @@ def process_engine_findings(
             out.append(override)
             continue
 
+        # Bug B guard — engine deferred because DWG isn't parsed. M2's
+        # partial sub-rule evidence (one setback visually confirmed) MUST NOT
+        # flip the engine verdict to pass; many other sub-rules remain
+        # unverified. Annotate only.
+        if _is_dwg_deferred(raw_f):
+            override = _apply_m2_annotation(f, matches, critic_pairs)
+            override["m4_override_source"] = "dwg_deferred_annotation"
+            override["m4_override_applied"] = False  # verdict not flipped
+            out.append(override)
+            continue
+
         # No critic disagreement — apply M2 high-confidence override if any
         high_conf = [m for m in matches if (m.get("confidence") or "").lower() == "high"]
+
+        # Bug A guard, A2 extension — engine ran an unambiguous numeric ≤
+        # comparison that mathematically passes. M2 high-confidence findings
+        # flagging "wrong table type / evidence provenance" MUST NOT flip the
+        # verdict away from pass. Surface those concerns as sidecar entries
+        # and keep the engine's pass verdict.
+        if high_conf and _is_unambiguous_numeric_pass(raw_f):
+            flipping = [
+                m for m in high_conf
+                if m2_indicator_to_engine_verdict(m.get("compliance_indicator")) != "pass"
+            ]
+            if flipping:
+                ev = raw_f.get("evidence") or {}
+                for m in flipping:
+                    extra_sidecars.append({
+                        "clause_id": m.get("clause_id") or "—",
+                        "ta_shetach_takanon": _parse_plot_int(plot),
+                        "compliance_indicator": "m2_provenance_concern",
+                        "reasoning": (m.get("compliance_reasoning") or "").strip(),
+                        "source_pages": sorted(set(m.get("source_pages") or [])),
+                        "engine_rule_code": rule_code,
+                        "engine_submission_value": ev.get("submission_value"),
+                        "engine_schema_value": ev.get("schema_value"),
+                        "m2_indicator_original": m.get("compliance_indicator"),
+                        "m2_confidence_original": m.get("confidence"),
+                    })
+                override = _apply_m2_annotation(f, matches, critic_pairs)
+                override["m4_override_source"] = "m2_provenance_suppressed"
+                override["m4_override_applied"] = False  # engine verdict stands
+                out.append(override)
+                continue
+
         if high_conf:
             override = _apply_m2_override(f, matches, high_conf, critic_pairs)
             out.append(override)
@@ -219,7 +337,7 @@ def process_engine_findings(
             override = _apply_m2_annotation(f, matches, critic_pairs)
             out.append(override)
 
-    return out, sorted(set(critic_applied))
+    return out, sorted(set(critic_applied)), extra_sidecars
 
 
 def _apply_m2_override(
@@ -388,7 +506,7 @@ def build_m4_document(
 
     # Only content scope is processed in v1; disciplines + format passthrough.
     content_engine = engine_doc.get("content", []) or []
-    content_m4, critic_applied = process_engine_findings(
+    content_m4, critic_applied, extra_sidecars = process_engine_findings(
         content_engine, m2_findings, critic_index, enabled_clause_ids=enabled_clause_ids
     )
 
@@ -410,6 +528,12 @@ def build_m4_document(
                 "source_pages": s.get("source_pages") or [],
             })
 
+    # Bug A guard spawns: critic table-format concerns on unambiguous numeric
+    # passes don't override the verdict — they surface here as sidecar entries.
+    if extra_sidecars:
+        summary.setdefault("sidecar_only_findings", [])
+        summary["sidecar_only_findings"].extend(extra_sidecars)
+
     document = {
         "audit_run_id": engine_doc.get("audit_run_id"),
         "m4_version": M4_VERSION,
@@ -430,7 +554,71 @@ def build_m4_document(
     if translate_hebrew:
         _apply_hebrew_translation(document)
 
+    # Hebrew voice-normalization pass (catches leftover M2 voice violations the
+    # English→Hebrew translator can't reach because the source is already Hebrew).
+    _normalize_hebrew_voice(document)
+
     return document
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Hebrew voice normalization (Phase 6.A)
+# ─────────────────────────────────────────────────────────────────────────────
+# The report is signed by the מהנדס and sent TO the architect. M2's prompt
+# emitted some Hebrew strings in third-person ("יש לבקש מהאדריכל...") that
+# should address the architect directly ("יש לצרף..."). The English→Hebrew
+# translator can't touch these (they're already Hebrew), so we apply
+# deterministic substitutions here.
+
+_VOICE_NORMALIZATIONS = [
+    # Third-person → architect-facing imperatives
+    ("יש לבקש מהאדריכל לצרף", "יש לצרף"),
+    ("יש לבקש מהאדריכל להוסיף", "יש להוסיף"),
+    ("יש לבקש מהאדריכל לציין", "יש לציין"),
+    ("יש לבקש מהאדריכל", "יש לצרף בהגשה הבאה"),
+    ("נדרשת בקשה לתוכנית", "יש לצרף תוכנית"),
+    ("יש להגיש בקשה מהאדריכל", "יש לצרף"),
+    # Internal slug → human Hebrew (catches anything M2 emitted as 5.table)
+    ("סעיף 5.table בתקנון", "טבלת הזכויות וההוראות בתקנון התב\"ע"),
+    ("5.table בתקנון", "טבלת הזכויות וההוראות בתקנון התב\"ע"),
+    ("בסעיף 5.table", "בטבלת הזכויות וההוראות"),
+    (" 5.table ", " טבלת הזכויות וההוראות "),
+    # Internal milestone labels
+    ("בתקנון M2", "בתקנון התב\"ע"),
+    ("(M2)", ""),
+    ("(M3)", ""),
+    ("(M4)", ""),
+    ("מודל הראייה", "הבדיקה הוויזואלית"),
+    ("מבקר עצמאי", "בדיקה משלימה"),
+    # Drop confidence parentheticals
+    ("(רמת ודאות=גבוהה) ", ""),
+    ("(רמת ודאות=בינונית) ", ""),
+    ("(רמת ודאות=נמוכה) ", ""),
+    # Generic boilerplate cleanup
+    (" הציות מחייב השוואה לטבלת הזכויות בתקנון.", ""),
+]
+
+
+def _normalize_voice_str(s: Optional[str]) -> Optional[str]:
+    if not s:
+        return s
+    out = s
+    for old, new in _VOICE_NORMALIZATIONS:
+        if old in out:
+            out = out.replace(old, new)
+    # Collapse repeated whitespace/empty parens left after substitutions
+    out = re.sub(r" {2,}", " ", out)
+    out = re.sub(r" \. ", ". ", out)
+    return out
+
+
+def _normalize_hebrew_voice(document: Dict[str, Any]) -> None:
+    for scope in ("content", "disciplines", "format"):
+        for f in document.get(scope, []) or []:
+            f["notes_he"] = _normalize_voice_str(f.get("notes_he"))
+            f["remediation_he"] = _normalize_voice_str(f.get("remediation_he"))
+    for s in (document.get("m4_summary") or {}).get("sidecar_only_findings") or []:
+        s["reasoning"] = _normalize_voice_str(s.get("reasoning"))
 
 
 def _apply_hebrew_translation(document: Dict[str, Any]) -> None:

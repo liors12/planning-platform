@@ -887,6 +887,314 @@ def check_manual_review(extraction: dict, rule: dict) -> dict:
     }
 
 
+def _find_page_manifests(pdf_path: Path) -> Path | None:
+    """Auto-discover the M1 page_manifests.json that sits next to the submission.
+
+    Layout convention:
+      projects/{plan}/submissions/v{ver}/v{ver}.pdf            ← the PDF
+      data/projects/{plan}/submissions/v{ver}/page_manifests.json  ← target
+
+    Walk a few levels up from the PDF path looking for `submissions/v*/` and
+    pivot to the corresponding `data/projects/.../page_manifests.json`.
+    Returns None if not found — handlers should fall through to a degraded path.
+    """
+    try:
+        p = pdf_path.resolve()
+        for ancestor in [p.parent, p.parent.parent, p.parent.parent.parent]:
+            parts = ancestor.parts
+            if "submissions" in parts and "projects" in parts:
+                # Strip everything before "projects/.../submissions/v.../"
+                idx = parts.index("projects")
+                proj = parts[idx + 1]
+                # Find the v* segment after submissions
+                sub_idx = parts.index("submissions")
+                ver = parts[sub_idx + 1] if sub_idx + 1 < len(parts) else None
+                if not ver:
+                    continue
+                # Walk up to repo root from this ancestor
+                repo_root = ancestor
+                while repo_root.parent != repo_root and not (repo_root / "data").is_dir():
+                    repo_root = repo_root.parent
+                candidate = repo_root / "data" / "projects" / proj / "submissions" / ver / "page_manifests.json"
+                if candidate.exists():
+                    return candidate
+    except Exception:
+        return None
+    return None
+
+
+def check_background_white(extraction: dict, rule: dict) -> dict:
+    """Phase 6.D Tier 1 — FORMAT_BACKGROUND_WHITE.
+
+    Rasterize each page at low DPI, sample mean RGB over four margin patches
+    (top, bottom, left, right strips — avoids central content). PASS if every
+    page's mean RGB is within `tolerance` of (255, 255, 255) on each channel.
+    """
+    spec = rule.get("check_spec", {}) or {}
+    tol = int(spec.get("white_tolerance_per_channel", 8))
+    dpi = int(spec.get("raster_dpi", 50))
+    pdf_path = extraction.get("pdf_path")
+    if not pdf_path:
+        return _engine_error(rule, "no pdf_path in extraction")
+
+    bad: list[dict] = []
+    pages_checked: list[int] = []
+    try:
+        doc = fitz.open(str(pdf_path))
+    except Exception as exc:
+        return _engine_error(rule, f"could not open pdf: {exc}")
+    try:
+        for i, page in enumerate(doc):
+            page_number = i + 1
+            try:
+                pix = page.get_pixmap(dpi=dpi, colorspace=fitz.csRGB, alpha=False)
+            except Exception:
+                continue
+            w, h, stride = pix.width, pix.height, pix.stride
+            samples = pix.samples  # bytes RGB
+            if w < 20 or h < 20:
+                continue
+            # Sample 4 margin bands: top 10%, bottom 10%, left 5%, right 5%
+            def _mean_rgb(x0, y0, x1, y1):
+                r_sum = g_sum = b_sum = 0
+                n = 0
+                # Subsample every 3 pixels to keep cost low
+                for y in range(y0, y1, 3):
+                    row_off = y * stride
+                    for x in range(x0, x1, 3):
+                        off = row_off + x * 3
+                        r_sum += samples[off]
+                        g_sum += samples[off + 1]
+                        b_sum += samples[off + 2]
+                        n += 1
+                if not n:
+                    return None
+                return (r_sum / n, g_sum / n, b_sum / n)
+            patches = [
+                _mean_rgb(0, 0, w, max(1, h // 10)),                       # top strip
+                _mean_rgb(0, h - max(1, h // 10), w, h),                   # bottom strip
+                _mean_rgb(0, 0, max(1, w // 20), h),                       # left strip
+                _mean_rgb(w - max(1, w // 20), 0, w, h),                   # right strip
+            ]
+            valid = [p for p in patches if p is not None]
+            if not valid:
+                continue
+            page_r = sum(p[0] for p in valid) / len(valid)
+            page_g = sum(p[1] for p in valid) / len(valid)
+            page_b = sum(p[2] for p in valid) / len(valid)
+            pages_checked.append(page_number)
+            if (255 - page_r > tol) or (255 - page_g > tol) or (255 - page_b > tol):
+                bad.append({
+                    "page_number": page_number,
+                    "mean_rgb": [round(page_r, 1), round(page_g, 1), round(page_b, 1)],
+                })
+    finally:
+        doc.close()
+
+    if not pages_checked:
+        return _result(
+            rule, VERDICT_UNEVALUABLE,
+            check_method="pixel_color_sample",
+            failure_mode=FAILURE_EXTRACTION,
+            extracted_values={"reason": "rasterization failed on all pages"},
+        )
+    if bad:
+        return _result(
+            rule, rule.get("verdict_on_fail", VERDICT_FAIL),
+            check_method="pixel_color_sample",
+            extracted_values={
+                "tolerance_per_channel": tol,
+                "raster_dpi": dpi,
+                "non_white_pages": bad[:20],
+                "non_white_page_count": len(bad),
+            },
+            pages_checked=pages_checked,
+        )
+    return _result(
+        rule, rule.get("verdict_on_pass", VERDICT_PASS),
+        check_method="pixel_color_sample",
+        extracted_values={
+            "tolerance_per_channel": tol,
+            "raster_dpi": dpi,
+            "pages_sampled": len(pages_checked),
+        },
+        pages_checked=pages_checked,
+    )
+
+
+_DIMENSION_RE = re.compile(r"\d+(?:\.\d+)?\s*(?:מ['\"]|מ\"ר|m\b|cm\b)")
+_PLAN_PAGE_TYPES = {
+    "site_plan_per_ta_shetach",
+    "floor_plan",
+    "basement_plan",
+    "basement_with_parking_table",
+    "typical_floor",
+    "public_open_space",
+}
+
+
+def check_dimensions_on_plans(extraction: dict, rule: dict) -> dict:
+    """Phase 6.D Tier 1 — FORMAT_DIMENSIONS_ON_PLANS.
+
+    For each page whose M1 page_type indicates a professional plan, count
+    dimension annotations via regex on extracted text. PASS if every plan
+    page has ≥ `min_dimensions_per_plan_page` matches.
+    """
+    spec = rule.get("check_spec", {}) or {}
+    threshold = int(spec.get("min_dimensions_per_plan_page", 10))
+    pdf_path = extraction.get("pdf_path")
+    if not pdf_path:
+        return _engine_error(rule, "no pdf_path in extraction")
+    manifest_path = _find_page_manifests(pdf_path)
+    if manifest_path is None:
+        return _result(
+            rule, rule.get("verdict_when_indeterminate", VERDICT_REQUIRES_REVIEW),
+            check_method="regex_on_plan_pages",
+            failure_mode=FAILURE_EXTRACTION,
+            extracted_values={"reason": "page_manifests.json not found"},
+        )
+    try:
+        manifests = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        return _engine_error(rule, f"could not read manifests: {exc}")
+
+    plan_page_nums: set[int] = set()
+    for m in manifests.get("manifests", []) or []:
+        if (m.get("page_type") or "").lower() in _PLAN_PAGE_TYPES:
+            pn = m.get("page_number")
+            if isinstance(pn, int):
+                plan_page_nums.add(pn)
+    if not plan_page_nums:
+        return _result(
+            rule, rule.get("verdict_when_indeterminate", VERDICT_REQUIRES_REVIEW),
+            check_method="regex_on_plan_pages",
+            extracted_values={"reason": "no plan-type pages in manifest"},
+        )
+
+    sparse: list[dict] = []
+    per_page_counts: dict[int, int] = {}
+    pages = extraction.get("pages") or []
+    for p in pages:
+        pn = p.get("page_number")
+        if pn not in plan_page_nums:
+            continue
+        n = len(_DIMENSION_RE.findall(p.get("text") or ""))
+        per_page_counts[pn] = n
+        if n < threshold:
+            sparse.append({"page_number": pn, "dimension_count": n})
+
+    if not per_page_counts:
+        return _result(
+            rule, rule.get("verdict_when_indeterminate", VERDICT_REQUIRES_REVIEW),
+            check_method="regex_on_plan_pages",
+            extracted_values={"reason": "manifests don't match PDF pages"},
+        )
+    if sparse:
+        return _result(
+            rule, rule.get("verdict_on_fail", VERDICT_FAIL),
+            check_method="regex_on_plan_pages",
+            extracted_values={
+                "min_dimensions_per_plan_page": threshold,
+                "sparse_pages": sparse[:20],
+                "sparse_page_count": len(sparse),
+                "plan_pages_checked": sorted(per_page_counts.keys()),
+            },
+            pages_checked=sorted(per_page_counts.keys()),
+        )
+    return _result(
+        rule, rule.get("verdict_on_pass", VERDICT_PASS),
+        check_method="regex_on_plan_pages",
+        extracted_values={
+            "min_dimensions_per_plan_page": threshold,
+            "plan_pages_checked": sorted(per_page_counts.keys()),
+            "min_observed_count": min(per_page_counts.values()),
+        },
+        pages_checked=sorted(per_page_counts.keys()),
+    )
+
+
+def check_logos_footer(extraction: dict, rule: dict) -> dict:
+    """Phase 6.D Tier 1 — FORMAT_LOGOS_FOOTER (count-only).
+
+    For each page (except cover), count image objects whose bbox sits in the
+    bottom `footer_band_ratio` of the page. PASS if every checked page has
+    ≥ `min_logos_per_footer` images in that band. Reference-PNG template
+    matching is deferred until logo assets are supplied.
+    """
+    spec = rule.get("check_spec", {}) or {}
+    min_logos = int(spec.get("min_logos_per_footer", 2))
+    band = float(spec.get("footer_band_ratio", 0.15))
+    pdf_path = extraction.get("pdf_path")
+    if not pdf_path:
+        return _engine_error(rule, "no pdf_path in extraction")
+    try:
+        doc = fitz.open(str(pdf_path))
+    except Exception as exc:
+        return _engine_error(rule, f"could not open pdf: {exc}")
+    skinny: list[dict] = []
+    pages_checked: list[int] = []
+    try:
+        for i, page in enumerate(doc):
+            page_number = i + 1
+            if page_number == 1:
+                continue  # cover doesn't carry the standard footer
+            h = float(page.rect.height)
+            if h <= 0:
+                continue
+            cutoff = h * (1.0 - band)
+            try:
+                imgs_raw = page.get_images(full=True)
+            except Exception:
+                imgs_raw = []
+            footer_imgs = 0
+            for img in imgs_raw:
+                xref = img[0]
+                try:
+                    bboxes = page.get_image_rects(xref)
+                except Exception:
+                    bboxes = []
+                for bbox in bboxes:
+                    cy = (float(bbox.y0) + float(bbox.y1)) / 2.0
+                    if cy >= cutoff:
+                        footer_imgs += 1
+            pages_checked.append(page_number)
+            if footer_imgs < min_logos:
+                skinny.append({"page_number": page_number, "footer_images": footer_imgs})
+    finally:
+        doc.close()
+
+    if not pages_checked:
+        return _result(
+            rule, VERDICT_UNEVALUABLE,
+            check_method="footer_image_count",
+            failure_mode=FAILURE_EXTRACTION,
+            extracted_values={"reason": "no non-cover pages"},
+        )
+    if skinny:
+        return _result(
+            rule, rule.get("verdict_on_fail", VERDICT_FAIL),
+            check_method="footer_image_count",
+            extracted_values={
+                "min_logos_per_footer": min_logos,
+                "footer_band_ratio": band,
+                "deficient_pages": skinny[:20],
+                "deficient_page_count": len(skinny),
+                "note_he": "ספירת תמונות בלבד — אימות זהות הלוגואים דורש קבצי ייחוס.",
+            },
+            pages_checked=pages_checked,
+        )
+    return _result(
+        rule, rule.get("verdict_on_pass", VERDICT_PASS),
+        check_method="footer_image_count",
+        extracted_values={
+            "min_logos_per_footer": min_logos,
+            "footer_band_ratio": band,
+            "pages_with_sufficient_footer_images": len(pages_checked),
+        },
+        pages_checked=pages_checked,
+    )
+
+
 _HANDLERS: dict[str, Callable[[dict, dict], dict]] = {
     "pdf_metadata": check_pdf_metadata,
     "text_extraction": check_text_extraction,
@@ -895,4 +1203,8 @@ _HANDLERS: dict[str, Callable[[dict, dict], dict]] = {
     "pdf_image_detection": check_pdf_image_detection,
     "page_structure_analysis": check_page_structure_analysis,
     "manual_review": check_manual_review,
+    # Phase 6.D Tier 1 automations:
+    "pixel_color_sample": check_background_white,
+    "regex_on_plan_pages": check_dimensions_on_plans,
+    "footer_image_count": check_logos_footer,
 }

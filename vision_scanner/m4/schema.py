@@ -28,6 +28,9 @@ class OverrideSource(str, Enum):
     m2_finding = "m2_finding"
     m3_critic_disagreement = "m3_critic_disagreement"
     hedged_reasoning_escalation = "hedged_reasoning_escalation"
+    # Annotation-only markers (m4_override_applied stays False):
+    dwg_deferred_annotation = "dwg_deferred_annotation"      # Bug B guard
+    m2_provenance_suppressed = "m2_provenance_suppressed"    # Bug A guard (A2 extension)
 
 
 class CriticVerdict(str, Enum):
