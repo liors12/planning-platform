@@ -386,6 +386,20 @@ import. Not blocking M0 acceptance.
 
 ---
 
+## Task #31 — Daycare compliance rules not implemented (M2 scope)
+
+**Discovered:** 2026-05-24 during submission coverage audit
+
+**Issue:** v24.3 dedicates 2 pages (27, 28) to detailed מעונות יום (daycare) design — building C1 in plot 1, with explicit areas (שטח מעונות יום קרקע 280 m², שטח חצרות קרקע 195 m², שטח מעונות יום קומה 1 500 m²) and accessibility paths. The compliance engine has **zero rules** for daycare-specific compliance and there is no `daycare` discipline. Daycare content is currently never checked.
+
+**Implication for M2:** Implement rule coverage for daycare requirements per Israeli planning code (תקנות התכנון והבניה — מעונות יום): minimum floor area per child, outdoor space ratio, accessibility, ventilation. Either as a new discipline (`daycare`) or as content rules (`CONTENT_DAYCARE_*`).
+
+**Severity:** Moderate. Reviewers expect daycare compliance to be visible in an automated review for a 700-unit residential submission. Flagged for cover-letter callout on the v24.3 review sent to Ellen.
+
+**Out of scope for M1.**
+
+---
+
 ## Adding entries
 
 When you defer a fix here, follow this template:
