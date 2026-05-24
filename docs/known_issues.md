@@ -428,6 +428,20 @@ import. Not blocking M0 acceptance.
 
 ---
 
+### Task #34 — Critic hallucination risk profile (M3 design constraint, M4 implementation constraint)
+
+**Discovered:** 2026-05-24 during M3 slice 1 verification.
+
+**Issue:** M3 critic (Gemini 2.5 Flash) demonstrated capability for critical-severity hallucinations. Specifically: critic misread "+89.80 m" as "+91.80 m" on page 58 (plot 5 building A5 elevation), flipping M2's correct `compliant` verdict to incorrect `non_compliant`.
+
+**Impact:** If M4 auto-applied critic disagreements as verdict overrides, false violations would propagate to the audit PDF. Engineer trust in the system would erode.
+
+**Resolution (codified in m3_critic_spec.md):** disagree verdicts are flags for human review, not overrides. M4 escalates disagreed findings to requires_review state in engine, never auto-flips M2.
+
+**Additional defenses (m3-v2):** raster DPI bumped 200 → 300 so small floor-ladder labels are clearer; prompt requires exact-text citation of the page label when disagreeing; critical-severity disagreements require an explicit "I re-examined the page at [region]" confirmation or get downgraded.
+
+---
+
 ## Adding entries
 
 When you defer a fix here, follow this template:

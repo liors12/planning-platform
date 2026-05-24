@@ -61,6 +61,8 @@ data/**
 !data/projects/*/submissions/*/page_manifests.json
 !data/projects/*/submissions/*/vision_findings.json
 !data/projects/*/submissions/*/vision_findings.run_log.jsonl
+!data/projects/*/submissions/*/critic_findings.json
+!data/projects/*/submissions/*/critic_findings.run_log.jsonl
 !data/projects/*/submissions/*/*.md
 output/
 audit_outputs/*/
