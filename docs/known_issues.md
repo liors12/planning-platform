@@ -328,6 +328,62 @@ import. Not blocking M0 acceptance.
 
 **Out of scope for M1.** M1 captures plot refs as visibly printed; M2 does the reconciliation.
 
+**Status (2026-05-24):** Confirmed as M2 scope during PDF design/coverage audit. M1 captures design-doc plot refs as visibly printed (ת.ש 52, 64, etc.); M2's unified extraction will reconcile against takanon plot designations 1-10/20.
+
+---
+
+## Resolved — PDF report design version
+
+**Date:** 2026-05-24
+
+**Context:** Two CSS templates existed in the repo: `v6_design_reference (1).html` (white cover, "בהגשה" column) and `v6_design_reference (2).html` (dark green cover, "בתוכנית עיצוב" column). `report_generator.py:3` was updated to use v2 sometime between May 17 and May 24. Lior reviewed both side-by-side and approved v2 as the canonical design.
+
+**Decision:** v2 is the canonical PDF design. `v6_design_reference (1).html` can be removed or archived. Future PDF iterations build on v2.
+
+**Specifics of approved v2 design:**
+- Cover: dark green full-bleed background
+- Brand color (NZC green #005030) used as accent + background
+- Section 2 table column header: "ממצא בתוכנית עיצוב"
+- Footer format: "מינהלת התחדשות עירונית נס ציונה — סקירת תוכנית עיצוב N / M"
+- Appendix A with title page + content pages
+
+---
+
+## Task #28 — Easements category has 0 implemented rules (M2 scope)
+
+**Discovered:** 2026-05-24 during PDF design/coverage audit
+
+**Issue:** M0 canonical_clauses.json identifies 8 normative clauses in the `easements` category. The current compliance engine has zero rules checking any of these clauses. Submissions with easement-related issues will never be flagged.
+
+**Implication:** M2 must implement rule_code coverage for the 8 easement clauses, OR explicitly document why each is non-checkable (e.g., requires DWG parse, requires manual review).
+
+**Out of scope for M1.**
+
+---
+
+## Task #29 — Phasing category has 0 implemented rules (M2 scope)
+
+**Discovered:** 2026-05-24 during PDF design/coverage audit
+
+**Issue:** M0 identifies 3 normative clauses in `phasing`. Zero corresponding rules. Same pattern as Task #28.
+
+**Out of scope for M1.**
+
+---
+
+## Task #30 — Phantom findings for unsubmitted plots (policy decision)
+
+**Discovered:** 2026-05-24
+
+**Issue:** v24.3 submitted designs for plots 1-5 only. The takanon defines plots 6-10 as well. The current engine flags "missing" plots 6-10 with findings. This is arguably correct (the architect should know they haven't covered the full takanon scope) but could also be noise (those plots may be intentionally deferred).
+
+**Policy decision needed:** Should findings for unsubmitted plots be:
+- (a) Flagged loudly (current behavior)
+- (b) Suppressed unless explicitly requested
+- (c) Shown in a separate "scope gap" section
+
+**Out of scope for M1.** Need Lior + Ellen's input before M2.
+
 ---
 
 ## Adding entries
