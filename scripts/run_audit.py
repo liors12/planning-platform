@@ -240,8 +240,18 @@ def _run_legacy_positional(project_key: str, submission_version: str,
     if generate_pdf:
         project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
         pdf_out = output_dir / f"audit_report_{submission_version}.pdf"
+        # M4: if an M4-enriched audit_results.m4.json exists alongside the
+        # engine output, prefer it for PDF rendering. The .m4 file extends the
+        # engine schema with override + sidecar info; report_generator falls
+        # back to engine behavior when M4-specific keys are absent.
+        m4_path = output_dir / "audit_results.m4.json"
+        if m4_path.exists():
+            print(f"M4 enriched results detected at {m4_path} — using for PDF render")
+            results_for_pdf = json.loads(m4_path.read_text(encoding="utf-8"))
+        else:
+            results_for_pdf = results
         generate_audit_pdf(
-            audit_results=results,
+            audit_results=results_for_pdf,
             project_schema=project_schema,
             submission_metadata=metadata,
             output_path=pdf_out,

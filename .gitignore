@@ -63,6 +63,9 @@ data/**
 !data/projects/*/submissions/*/vision_findings.run_log.jsonl
 !data/projects/*/submissions/*/critic_findings.json
 !data/projects/*/submissions/*/critic_findings.run_log.jsonl
+!data/projects/*/submissions/*/audit_results.m4.json
+!data/projects/*/submissions/*/audit_results.m4.run_log.jsonl
+!data/projects/*/submissions/*/coverage_report.json
 !data/projects/*/submissions/*/*.md
 output/
 audit_outputs/*/

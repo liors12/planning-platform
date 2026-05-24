@@ -18,6 +18,7 @@ when possible. WeasyPrint computes pagination + footer + TOC page numbers
 from __future__ import annotations
 
 import datetime as dt
+import json
 from pathlib import Path
 from typing import Any
 
@@ -34,7 +35,7 @@ DOC_TYPE_LABEL = "טיוטה לסקירה — לא לחתימה"
 VERDICT_TO_VCLASS_AND_LABEL: dict[str, tuple[str, str]] = {
     "pass":            ("v-ok",   "תקין"),
     "pass_with_note":  ("v-ok",   "תקין בהערה"),
-    "fail":            ("v-fail", "נדרש תיקון"),
+    "fail":            ("v-fail", "לא תקין"),
     "fail_borderline": ("v-fail", "נדרש תיקון"),
     "not_submitted":   ("v-miss", "לא הוגש"),
     "requires_review": ("v-rev",  "דורש בירור"),
@@ -417,6 +418,134 @@ table.audit thead { display: table-header-group; }
 .v-na    { color: var(--gray-mid); }
 .v-miss  { color: var(--gray-dark); }
 
+/* M4 confidence chip — appears next to verdict when M4 override applied
+   with non-HIGH confidence. HIGH confidence shows nothing (default state). */
+.conf-chip {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  font-size: 8.5pt;
+  font-weight: 500;
+  border-radius: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.conf-chip.conf-medium { background: #FFF3E0; color: #B8651A; }
+.conf-chip.conf-low    { background: #FFE0E0; color: #9C2929; }
+
+/* M4 sidecar callout section — between section 2 and section 3 */
+.sidecar-chapter {
+  page-break-before: always;
+}
+.sidecar-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid var(--red);
+  border-radius: 4px;
+  background: #FFFAFA;
+  page-break-inside: avoid;
+}
+.sidecar-card.sidecar-missing {
+  border-right-color: var(--amber);
+  background: #FFF8E1;
+}
+.sidecar-card .sidecar-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 2mm;
+}
+.sidecar-card.sidecar-missing .sidecar-head {
+  color: #B8651A;
+}
+.sidecar-card .sidecar-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.sidecar-card .sidecar-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.5;
+}
+.sidecar-card .sidecar-pages {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  margin-top: 2mm;
+}
+
+/* M5 — Section 5 coverage transparency */
+.cov-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 8mm 0;
+  font-size: 10pt;
+}
+.cov-table th {
+  text-align: right;
+  background: var(--green-dark);
+  color: #fff;
+  padding: 2mm 3mm;
+  font-weight: 600;
+  font-size: 10pt;
+}
+.cov-table td {
+  text-align: right;
+  padding: 2mm 3mm;
+  border-bottom: 1px solid var(--gray-light);
+  vertical-align: top;
+}
+.cov-table tbody tr:nth-child(even) td { background: #FAFAFA; }
+.cov-help {
+  font-size: 10pt;
+  color: var(--gray-mid);
+  margin-bottom: 2mm;
+}
+.cov-help.cov-warn {
+  color: var(--red);
+  font-weight: 600;
+}
+.cov-full     { color: var(--green-accent); font-weight: 600; }
+.cov-partial  { color: var(--amber);         font-weight: 600; }
+.cov-none     { color: var(--red);           font-weight: 600; }
+.cov-pages td { font-size: 9pt; }
+.cov-gap-list { margin: 4mm 0 8mm 0; }
+.cov-gap-card {
+  padding: 4mm 6mm;
+  margin: 3mm 0;
+  background: #FFF3E0;
+  border-right: 3px solid var(--amber);
+  border-radius: 3px;
+  page-break-inside: avoid;
+}
+.cov-gap-title {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #8A4500;
+  margin-bottom: 2mm;
+}
+.cov-gap-detail {
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.5;
+}
+.cov-gap-task {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  margin-top: 2mm;
+  font-style: italic;
+}
+.cov-disclaimer {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  background: #F5F5F5;
+  border-right: 3px solid var(--green-dark);
+  padding: 5mm 7mm;
+  margin: 4mm 0;
+  line-height: 1.6;
+}
+
 /* ============================================
    VERDICT BANNER (section 4)
    ============================================ */
@@ -555,14 +684,28 @@ def generate_audit_pdf(
     discipline_results = audit_results.get("disciplines", []) or []
     format_results = audit_results.get("format", []) or []
 
+    # Determine presence of M4 sidecar + M5 coverage data first, so TOC reflects them.
+    sidecar_findings = (
+        (audit_results.get("m4_summary") or {}).get("sidecar_only_findings") or []
+    )
+    coverage_report = _load_coverage_report(output_path)
+
     parts: list[str] = []
     parts.append(_render_cover(meta, submission_metadata, plan_number))
-    parts.append(_render_toc(plan_number, residential_parcels, discipline_results))
+    parts.append(_render_toc(
+        plan_number, residential_parcels, discipline_results,
+        has_sidecar=bool(sidecar_findings),
+        has_section_5=bool(coverage_report),
+    ))
     parts.append(_render_section_1())
     parts.append(_render_section_2(content_results, residential_parcels, plan_number))
+    if sidecar_findings:
+        parts.append(_render_sidecar_section(sidecar_findings))
     parts.append(_render_section_3(discipline_results))
     parts.append(_render_section_4(content_results, discipline_results, format_results,
                                     residential_parcels=residential_parcels))
+    if coverage_report:
+        parts.append(_render_section_5_coverage(coverage_report))
     parts.append(_render_appendix_divider())
     parts.append(_render_appendix_detail(format_results))
 
@@ -657,7 +800,10 @@ def _approval_label(meta: dict) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _render_toc(plan_number: str, residential_parcels: list[dict],
-                discipline_results: list[dict]) -> str:
+                discipline_results: list[dict],
+                *,
+                has_sidecar: bool = False,
+                has_section_5: bool = False) -> str:
     rows: list[str] = []
     rows.append(_toc_row("1.", "ניתוח תכנון עירוני", "#sec-1", "main"))
     rows.append(_toc_row("2.", f'בדיקת תאימות תוכן לתב"ע {plan_number}', "#sec-2", "main"))
@@ -665,6 +811,10 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
         rows.append(_toc_row(f"2.{i}", _parcel_label_he(p), f"#sec-2-{i}", "sub"))
     pw_idx = len(residential_parcels) + 1
     rows.append(_toc_row(f"2.{pw_idx}", "בדיקות ברמת תכנית", f"#sec-2-{pw_idx}", "sub"))
+
+    # M4: 2א sidecar (only when m4 enrichment present)
+    if has_sidecar:
+        rows.append(_toc_row("2א.", "ממצאי בדיקה ויזואלית נוספים", "#sec-m4-sidecar", "main"))
 
     rows.append(_toc_row("3.", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", "#sec-3", "main"))
     seen = set()
@@ -677,6 +827,9 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
                                   f"#sec-3-{disc_i}", "sub"))
 
     rows.append(_toc_row("4.", "סיכום וממצאים סופיים", "#sec-4", "main"))
+    # M5: section 5 coverage transparency (only when coverage_report.json present)
+    if has_section_5:
+        rows.append(_toc_row("5.", "היקף הבדיקה האוטומטית", "#sec-5", "main"))
     rows.append(_toc_row("נספח א", "ליקויי פורמט בחוברת ההגשה", "#sec-appendix-a", "main"))
 
     return f"""
@@ -846,13 +999,27 @@ def _content_row(r: dict, parcel: dict) -> dict:
     sub_display, schema_display = _content_value_pair(r, parcel)
     note = r.get("notes_he", "") or r.get("remediation_he", "")
     feedback = _feedback_html(r)
+    # M4: confidence chip — surfaces only when the engine output's confidence
+    # has been overridden to MEDIUM or LOW by M4 (means a Pro vision finding
+    # drove the verdict with less than full certainty).
+    conf_chip = _confidence_chip_html(r.get("confidence"))
     return {
         "label": label,
-        "verdict_html": f'<span class="{vclass}">{vlabel}</span>',
+        "verdict_html": f'<span class="{vclass}">{vlabel}</span>{conf_chip}',
         "submission": sub_display,
         "schema": schema_display,
         "note_html": f'{_esc(note)}{feedback}',
     }
+
+
+def _confidence_chip_html(confidence: str | None) -> str:
+    """Render the M4 confidence chip when needed. HIGH (or missing) → empty."""
+    c = (confidence or "").upper()
+    if c not in ("MEDIUM", "LOW"):
+        return ""
+    cls = "conf-medium" if c == "MEDIUM" else "conf-low"
+    label = "רמת ביטחון: בינונית" if c == "MEDIUM" else "רמת ביטחון: נמוכה"
+    return f'<span class="conf-chip {cls}">{label}</span>'
 
 
 def _content_table_html(rows: list[dict]) -> str:
@@ -1015,6 +1182,210 @@ def _content_badge_counts(content_results: list[dict]) -> list[tuple[int, str, s
         (c["unknown"], "לא ניתנים לבדיקה",    "unknown"),
         (c["na"],      "לא רלוונטיים",        "na"),
     ]
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# M4 sidecar section — between §2 and §3 when M4 surfaces findings that
+# don't map to any engine rule (e.g. non_compliant items in categories the
+# engine doesn't cover: easements, tree preservation, phasing).
+# ─────────────────────────────────────────────────────────────────────────────
+
+_SIDECAR_CLAUSE_TITLES_HE: dict[str, str] = {
+    "6.5.1":  "נספח עצים בוגרים",
+    "6.6.4":  "זיקת הנאה תת-קרקעית מתא שטח 2 לחלקה 12",
+    "6.4.2":  'נפח איגום נדרש 450 מ"ק',
+    "7.1.1":  "תוכנית שלביות (שלב א/ב)",
+    "4.2.2.4": "מעבר להולכי רגל ברוחב 3 מ' בתא שטח 9",
+    "4.3.2.2": "רוחב שצ\"פ בתא שטח 7 ≥ 10 מ'",
+}
+
+
+def _sidecar_clause_title(clause_id: str) -> str:
+    return _SIDECAR_CLAUSE_TITLES_HE.get(clause_id, clause_id)
+
+
+def _sidecar_indicator_label(indicator: str) -> str:
+    return {
+        "non_compliant":   "לא תקין",
+        "missing":         "לא נמצא בהגשה",
+        "compliant":       "תקין",
+        "requires_review": "דורש בירור",
+        "deferred_to_dwg": 'דורש בדיקה בקובץ DWG',
+    }.get(indicator, indicator or "—")
+
+
+def _render_sidecar_section(sidecar_findings: list[dict]) -> str:
+    """Render M4 sidecar findings as a chapter between sections 2 and 3."""
+    cards: list[str] = []
+    for f in sidecar_findings:
+        clause_id = f.get("clause_id") or "—"
+        plot = f.get("ta_shetach_takanon")
+        plot_label = f"תא שטח {plot}" if plot else "ברמת תכנית"
+        indicator = (f.get("compliance_indicator") or "").lower()
+        ind_label = _sidecar_indicator_label(indicator)
+        title = _sidecar_clause_title(clause_id)
+        reasoning = f.get("reasoning") or ""
+        pages = f.get("source_pages") or []
+        pages_str = ", ".join(str(p) for p in pages) if pages else "—"
+        css_extra = "sidecar-missing" if indicator in ("missing",) else ""
+        cards.append(f"""
+        <div class="sidecar-card {css_extra}">
+          <div class="sidecar-head">{_esc(title)} — {_esc(ind_label)}</div>
+          <div class="sidecar-meta">סעיף {_esc(clause_id)} · {_esc(plot_label)}</div>
+          <div class="sidecar-reasoning">{_esc(reasoning)}</div>
+          <div class="sidecar-pages">עמודי הגשה: {_esc(pages_str)}</div>
+        </div>
+        """)
+    intro = (
+        "פרק זה מאגד ממצאי בדיקה ויזואלית מתוך מודל הראייה (M2) ומבקר עצמאי (M3) "
+        "שלא ניתן היה לשלב כעדכון של שורת בדיקה קיימת במנוע התאימות — בדרך כלל "
+        "משום שאין למנוע כלל ייעודי לסעיף זה. נדרשת תשומת לב מיוחדת של מהנדס/ת "
+        "הוועדה לפני אישור ההגשה."
+    )
+    return f"""
+    <div class="chapter sidecar-chapter" id="sec-m4-sidecar">
+      <div class="eyebrow">{_esc(EYEBROW)}</div>
+      <h2 class="chapter-num-title">2א. ממצאי בדיקה ויזואלית נוספים</h2>
+      <p class="chapter-intro">{_esc(intro)}</p>
+      {''.join(cards)}
+    </div>
+    """
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# M5 Section 5 — coverage transparency
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _load_coverage_report(pdf_output_path: Path) -> dict | None:
+    """Look for a coverage_report.json alongside the PDF (in the submission's
+    data/ dir, not in audit_outputs/). The PDF is written to
+    audit_outputs/{plan}/v{ver}/, but the coverage data lives in
+    data/projects/{plan}/submissions/v{ver}/."""
+    # Walk up from pdf path; the audit_outputs structure mirrors the data tree.
+    try:
+        # audit_outputs/{plan}/v{ver}/audit_report_{ver}.pdf → extract plan + ver
+        v_dir = pdf_output_path.parent
+        plan = v_dir.parent.name  # e.g. 407-1048248
+        ver = v_dir.name  # e.g. v24.3
+        # Repo root = audit_outputs/.. (the PDF dir is rooted at audit_outputs)
+        repo_root = v_dir.parent.parent.parent
+        candidate = repo_root / "data" / "projects" / plan / "submissions" / ver / "coverage_report.json"
+        if candidate.exists():
+            return json.loads(candidate.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return None
+
+
+def _verdict_count_summary_he(vc: dict) -> str:
+    """Render a tiny inline verdict-count summary like 'תקין 8 · דורש בירור 3'."""
+    pieces: list[str] = []
+    for v, lbl in [
+        ("pass", "תקין"),
+        ("fail", "לא תקין"),
+        ("requires_review", "דורש בירור"),
+        ("not_submitted", "לא הוגש"),
+        ("not_applicable", "לא רלוונטי"),
+    ]:
+        n = vc.get(v) or 0
+        if n:
+            pieces.append(f"{lbl} {n}")
+    return " · ".join(pieces) or "—"
+
+
+def _render_section_5_coverage(report: dict) -> str:
+    summary = report.get("summary") or {}
+    full = report.get("section_5_1_full") or []
+    partial = report.get("section_5_2_partial") or []
+    none = report.get("section_5_3_none") or []
+    gaps = report.get("section_5_3_highlighted_gaps") or []
+    page_rows = report.get("section_5_4_page_rows") or []
+    disclaimer = report.get("section_5_5_disclaimer_he") or ""
+    page_cov = summary.get("page_coverage") or {}
+
+    # 5.1 full
+    full_rows = "".join(
+        f"<tr><td>{_esc(e.get('category_he') or '')}</td>"
+        f"<td>{int(e.get('normative_clauses') or 0)}</td>"
+        f"<td>{_esc(_verdict_count_summary_he(e.get('verdict_counts') or {}))}</td></tr>"
+        for e in full
+    )
+    # 5.2 partial
+    partial_rows = "".join(
+        f"<tr><td>{_esc(e.get('category_he') or '')}</td>"
+        f"<td>{int(e.get('normative_clauses') or 0)}</td>"
+        f"<td>{_esc(_verdict_count_summary_he(e.get('verdict_counts') or {}))}</td></tr>"
+        for e in partial
+    )
+    # 5.3 none — categories + highlighted gap cards
+    none_rows = "".join(
+        f"<tr><td>{_esc(e.get('category_he') or '')}</td>"
+        f"<td>{int(e.get('normative_clauses') or 0)}</td></tr>"
+        for e in none
+    )
+    # Note: g.get('task_ref') is intentionally NOT rendered — task IDs are
+    # internal-only. Ellen sees only the Hebrew title + detail.
+    gap_cards = "".join(
+        f"""<div class="cov-gap-card">
+          <div class="cov-gap-title">{_esc(g.get('title') or '')}</div>
+          <div class="cov-gap-detail">{_esc(g.get('detail') or '')}</div>
+        </div>"""
+        for g in gaps
+    )
+    # 5.4 page rows
+    cov_label = {"FULL": "מלא", "PARTIAL": "חלקי", "UNADDRESSED": "לא נבדק"}
+    cov_class = {"FULL": "cov-full", "PARTIAL": "cov-partial", "UNADDRESSED": "cov-none"}
+    page_table_rows = "".join(
+        f"<tr><td>{int(r.get('page_number') or 0)}</td>"
+        f"<td>{_esc(r.get('page_type_he') or '')}</td>"
+        f"<td>{_esc(', '.join(str(x) for x in (r.get('ta_shetach_refs') or [])) or '—')}</td>"
+        f"<td class=\"{cov_class.get(r.get('coverage'), '')}\">{_esc(cov_label.get(r.get('coverage'), '—'))}</td></tr>"
+        for r in page_rows
+    )
+
+    return f"""
+    <div class="chapter" id="sec-5">
+      <div class="eyebrow">{_esc(EYEBROW)}</div>
+      <h2 class="chapter-num-title">5. היקף הבדיקה האוטומטית</h2>
+      <p class="chapter-intro">
+        סעיף זה מתעד באופן שקוף את היקף הבדיקה האוטומטית שבוצעה על ההגשה — מה נבדק
+        במלואו, מה נבדק חלקית, ומה לא נבדק כלל. מטרתו לוודא שמהנדס/ת הוועדה
+        המקומית מקבל/ת תמונה מלאה לפני אישור ההגשה.
+      </p>
+
+      <h3 class="subsection-num">5.1 קטגוריות שנבדקו במלואן</h3>
+      <p class="cov-help">קטגוריות אלו כוסו על-ידי כללי בדיקה ייעודיים במנוע התאימות וקיבלו הסלמות מ-M2 / M3 לפי הצורך.</p>
+      <table class="cov-table">
+        <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th><th>פילוח ממצאים</th></tr></thead>
+        <tbody>{full_rows or '<tr><td colspan="3">—</td></tr>'}</tbody>
+      </table>
+
+      <h3 class="subsection-num">5.2 קטגוריות שנבדקו חלקית</h3>
+      <p class="cov-help">כיסוי חלקי — חלק מהסעיפים נבדקו, חלק דורשים השלמה ידנית או קובץ DWG.</p>
+      <table class="cov-table">
+        <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th><th>פילוח ממצאים</th></tr></thead>
+        <tbody>{partial_rows or '<tr><td colspan="3">—</td></tr>'}</tbody>
+      </table>
+
+      <h3 class="subsection-num">5.3 קטגוריות שלא נבדקו אוטומטית — דורש בדיקה ידנית של מהנדס/ת</h3>
+      <p class="cov-help cov-warn">⚠ הסעיפים שלהלן אינם נבדקים על-ידי המנוע. נדרשת בדיקה ידנית של מהנדס/ת המינהלת לפני חתימה על חוות דעת.</p>
+      <table class="cov-table">
+        <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th></tr></thead>
+        <tbody>{none_rows or '<tr><td colspan="2">—</td></tr>'}</tbody>
+      </table>
+      <div class="cov-gap-list">{gap_cards}</div>
+
+      <h3 class="subsection-num">5.4 כיסוי לפי עמודי ההגשה</h3>
+      <p class="cov-help">מפת כיסוי לפי עמודים בהגשה: כל אחד מ-63 העמודים מסומן כ"מלא" / "חלקי" / "לא נבדק". העמודים בקטגוריה "לא נבדק" דורשים תשומת לב.</p>
+      <table class="cov-table cov-pages">
+        <thead><tr><th>עמוד</th><th>סוג עמוד</th><th>תאי שטח</th><th>כיסוי</th></tr></thead>
+        <tbody>{page_table_rows}</tbody>
+      </table>
+
+      <h3 class="subsection-num">5.5 הסתייגות</h3>
+      <p class="cov-disclaimer">{_esc(disclaimer)}</p>
+    </div>
+    """
 
 
 # ─────────────────────────────────────────────────────────────────────────────
