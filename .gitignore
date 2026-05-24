@@ -59,6 +59,7 @@ data/**
 !data/projects/*/submissions/
 !data/projects/*/submissions/*/
 !data/projects/*/submissions/*/page_manifests.json
+!data/projects/*/submissions/*/*.md
 output/
 audit_outputs/*/
 

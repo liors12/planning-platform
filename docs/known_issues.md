@@ -316,6 +316,20 @@ import. Not blocking M0 acceptance.
 
 ---
 
+## Task #27 — Design-doc to takanon plot-number reconciliation (M2 scope)
+
+**Discovered:** 2026-05-23 during M1 round 2 verification of page 13.
+
+**Issue:** The design document (v24.3) uses a plot-numbering scheme distinct from the takanon's:
+- Takanon plot designations: 1-10 (residential, public, road), 20 (path)
+- Design document labels: "ת.ש 52", "ת.ש 64", and similar — likely cadastral parcels or architect's internal subdivision codes
+
+**Implication for M2:** Unified extraction must reconcile design-doc plot refs with takanon plot designations before compliance checking can proceed. Likely needs a project-level mapping table (manually curated or derived from page-by-page evidence).
+
+**Out of scope for M1.** M1 captures plot refs as visibly printed; M2 does the reconciliation.
+
+---
+
 ## Adding entries
 
 When you defer a fix here, follow this template:

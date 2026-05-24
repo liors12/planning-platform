@@ -1,0 +1,5317 @@
+{
+  "plan_id": "407-1048248",
+  "submission_id": "v24.3",
+  "source_pdf": "v24.3.pdf",
+  "source_pdf_sha256": "92205abf76b56e346dad2d4bd3cb7b325a18c9b42df8c2a5d0c62b94cc01e650",
+  "extracted_at": "2026-05-24T03:35:20Z",
+  "extractor": "gemini-2.5-flash",
+  "extractor_version": "m1-v1",
+  "page_count": 63,
+  "page_numbers_processed": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63
+  ],
+  "manifests": [
+    {
+      "page_number": 1,
+      "page_type": "rendering",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "הדמיה להמחשה בלבד",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה",
+        "ניהול פרויקטים",
+        "Municipality of Ness Ziona"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "A realistic rendering of a residential complex with multiple buildings, green spaces, roads, and cars."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 2,
+      "page_type": "table_of_contents",
+      "ta_shetach_refs": [
+        2,
+        4,
+        3,
+        5,
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "תוכן עניינים",
+        "שער",
+        "תכנית פיתוח",
+        "שצ\"פ",
+        "דיאגרמת אשפה",
+        "דיאגרמת פונקציות",
+        "מעונות יום",
+        "מרתף",
+        "קומה טיפוסית",
+        "חתכים",
+        "חזיתות",
+        "הדמיה",
+        "תא שטח 2+4",
+        "תא שטח 3"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [
+        {
+          "title": "תוכן עניינים",
+          "estimated_rows": 30
+        }
+      ],
+      "diagrams_present": [],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 3,
+      "page_type": "rendering",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מיקום הפרויקט",
+        "שכונת הטייסים - נס ציונה",
+        "תחום התכנית",
+        "רחוב הפלמ\"ח",
+        "רחוב ההסתדרות",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "הנדסה",
+        "ניהול פרויקטים"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "Aerial rendering showing the project area within the urban context of Ness Ziona, highlighting the 'Plan Area' and surrounding streets."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 4,
+      "page_type": "rendering",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "הדמיה להמחשה בלבד",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה",
+        "ניהול פרויקטים",
+        "Municipality of Ness Ziona"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "Aerial rendering showing proposed multi-story buildings integrated into an existing residential area."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 5,
+      "page_type": "rendering",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הפייטים – נס ציונה",
+        "הדמיה להמחשה בלבד",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "גן גרנד קוויל",
+        "רח' ההסתדרות",
+        "תחום התכנית",
+        "רח' הפייטים",
+        "הנדסה",
+        "ניהול פרויקטים",
+        "KIKA BRAZ",
+        "AURA",
+        "Municipality of Ness Ziona"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "Aerial rendering showing proposed development within an existing urban fabric."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 6,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "תשריט מאושר",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מצב מאושר",
+        "נושא",
+        "יח\"ד",
+        "שצ\"פ",
+        "שב\"צ",
+        "דרכים",
+        "צפיפות נטו",
+        "מגורים",
+        "שטח ציבורי",
+        "KIKA BRAZ",
+        "הנדסה ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 10800.0,
+          "unit": "m²",
+          "context": "שטח בנוי ציבורי"
+        },
+        {
+          "value": 71.12,
+          "unit": "%",
+          "context": "מגורים"
+        },
+        {
+          "value": 9.0,
+          "unit": "%",
+          "context": "שב\"צ"
+        },
+        {
+          "value": 13.4,
+          "unit": "%",
+          "context": "שצ\"פ"
+        },
+        {
+          "value": 6.5,
+          "unit": "%",
+          "context": "דרכים"
+        },
+        {
+          "value": 28.8,
+          "unit": "%",
+          "context": "שטח ציבורי"
+        },
+        {
+          "value": 100.0,
+          "unit": "%",
+          "context": "סה\"כ"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "מצב מאושר",
+          "estimated_rows": 7
+        },
+        {
+          "title": "נושא",
+          "estimated_rows": 9
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "An approved site plan showing multiple plots, buildings, and surrounding infrastructure with various land uses indicated by color."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 7,
+      "page_type": "summary",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הפייטים – נס ציונה",
+        "רקע",
+        "האתר",
+        "שכונת הפייטים - נס ציונה",
+        "הפייטים צפון",
+        "סטטוס: תכנון מוקדם",
+        "יח\"ד מוצעות",
+        "שטח התוכנית",
+        "תחום התכנית",
+        "5 תאי שטח",
+        "14 בנייני מגורים",
+        "הפייטים (תכ' 407-0977595)",
+        "סטטוס: מאושרת",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 6000.0,
+          "unit": "m²",
+          "context": "שטח התוכנית הפייטים צפון"
+        },
+        {
+          "value": 23200.0,
+          "unit": "m²",
+          "context": "שטח התוכנית תחום התכנית"
+        },
+        {
+          "value": 16500.0,
+          "unit": "m²",
+          "context": "שטח התוכנית הפייטים תכ' 407-0977595"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Aerial photograph with outlined planning areas and roads, showing the overall project scope and its sub-areas."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 8,
+      "page_type": "summary",
+      "ta_shetach_refs": [
+        52,
+        64,
+        20
+      ],
+      "visible_text_labels": [
+        "מתחם הפיוטים – נס ציונה",
+        "נתונים כלליים לתוכנית:",
+        "עקרונות התכנון המוצע:",
+        "הפיוטים צפון",
+        "הפיוטים הכשרת הישוב",
+        "ת.ש 52",
+        "ת.ש 64",
+        "מגרש מסחרי 20",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "שצ\"פ",
+        "חזית רחוב",
+        "מרווח ירוק",
+        "בנייה מרקמית",
+        "בנייה גבוהה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 23000.0,
+          "unit": "m²",
+          "context": "total plan area"
+        },
+        {
+          "value": 20.0,
+          "unit": "%",
+          "context": "minimum small apartments"
+        },
+        {
+          "value": 50.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 40.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 44.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.2,
+          "unit": "m",
+          "context": "absolute elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "An aerial site plan showing the layout of buildings, roads, and green spaces within the Piyutim complex, with proposed building envelopes and public areas."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 9,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "תכנון:",
+        "תא שטח 1",
+        "מבנים",
+        "מבנה אחד",
+        "תא שטח 2",
+        "תא שטח 3",
+        "תא שטח 4",
+        "תא שטח 5",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת ההתחדשות העירונית",
+        "ההנדסה",
+        "KIKA BRAZ",
+        "AURA"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Aerial site plan showing five distinct plots (תא שטח) with their boundaries outlined in red and black, indicating proposed building locations."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 10,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "תכנית פיתוח",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מנהלת התחדשות עירונית",
+        "קנ\"מ 1:1250",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA הנדסה",
+        "תא שטח 1",
+        "תא שטח 2",
+        "תא שטח 3",
+        "תא שטח 4",
+        "תא שטח 5",
+        "חניה מוסדרת",
+        "שביל הליכה",
+        "רחוב קיים",
+        "בינוי קיים",
+        "דירת גן",
+        "דירת גג",
+        "שטח ציבורי פתוח"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "ground floor elevation plot 3 building C"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "ground floor elevation plot 5 building A"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "ground floor elevation plot 3 building A"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "ground floor elevation plot 5 building D"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "ground floor elevation plot 3 building B"
+        },
+        {
+          "value": 49.0,
+          "unit": "m",
+          "context": "ground floor elevation plot 5 building C"
+        },
+        {
+          "value": 47.75,
+          "unit": "m",
+          "context": "ground floor elevation plot 5 building B"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "ground floor elevation plot 1 building C"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "ground floor elevation plot 1 building D"
+        },
+        {
+          "value": 42.0,
+          "unit": "m",
+          "context": "ground floor elevation plot 2 building A"
+        },
+        {
+          "value": 46.85,
+          "unit": "m",
+          "context": "ground floor elevation plot 4 building A"
+        },
+        {
+          "value": 41.3,
+          "unit": "m",
+          "context": "ground floor elevation plot 1 building B"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "ground floor elevation plot 1 building A"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope on path"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "slope on path"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "slope on path"
+        },
+        {
+          "value": 10.0,
+          "unit": "%",
+          "context": "slope on path"
+        },
+        {
+          "value": 28.3,
+          "unit": "m",
+          "context": "length dimension"
+        },
+        {
+          "value": 20.0,
+          "unit": "m",
+          "context": "length dimension"
+        },
+        {
+          "value": 9.0,
+          "unit": "m",
+          "context": "length dimension"
+        },
+        {
+          "value": 12.0,
+          "unit": "m",
+          "context": "parking spaces count"
+        },
+        {
+          "value": 161.0,
+          "unit": "m²",
+          "context": "parking area"
+        },
+        {
+          "value": 170.0,
+          "unit": "m²",
+          "context": "parking area"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "חניה מוסדרת",
+          "estimated_rows": 2
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "A detailed site plan showing multiple residential buildings (labeled A, B, C, D) across five plots (תא שטח 1-5), with surrounding roads, parking, and landscaping."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 11,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "השצ\"פ",
+        "תא שטח 3",
+        "תא שטח 5",
+        "דירת גן",
+        "כניסה",
+        "רחבה",
+        "שביל הולכי רגל",
+        "שביל אופניים",
+        "מתקני כושר",
+        "גבעת דשא",
+        "כניסת ויציאת רכבים",
+        "רחבת כיבוי אש",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 46.8,
+          "unit": "m",
+          "context": "elevation point"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "building ground floor elevation"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "path slope"
+        },
+        {
+          "value": 49.13,
+          "unit": "m",
+          "context": "elevation point"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "building ground floor elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Detailed site plan showing buildings, landscaping, pathways, and elevation points for multiple plots."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 12,
+      "page_type": "other",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מבנה השצ\"פ",
+        "שטח השצ\"פ",
+        "מחולק לשלושה מתחמים",
+        "מתחם 1 – שלב א",
+        "מתחם 2 – שלב ב",
+        "מתחם 3 – שלב א",
+        "רחוב הטייסת",
+        "רחוב הפיילוטים",
+        "הטייסים הכשרת הישוב",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "אב אדריכלות נוף",
+        "הנדסה",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 7150.0,
+          "unit": "m²",
+          "context": "שטח השצ\"פ"
+        },
+        {
+          "value": 1100.0,
+          "unit": "m²",
+          "context": "שטח מתחם 1"
+        },
+        {
+          "value": 2000.0,
+          "unit": "m²",
+          "context": "מקטע מרכזי מתחם 2"
+        },
+        {
+          "value": 400.0,
+          "unit": "m²",
+          "context": "מקטע נוסף מתחם 2"
+        },
+        {
+          "value": 800.0,
+          "unit": "m²",
+          "context": "מקטע מדרום למתחם 3"
+        },
+        {
+          "value": 3233.0,
+          "unit": "m²",
+          "context": "שטח מתחם 3"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Aerial photograph showing the planned development area divided into three compounds, with surrounding roads and existing urban fabric."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 13,
+      "page_type": "public_open_space",
+      "ta_shetach_refs": [
+        52,
+        54
+      ],
+      "visible_text_labels": [
+        "מתחם הפיוטים – נס ציונה",
+        "תכנון שלד השצ\"פ",
+        "רחוב הפיוטים",
+        "רחוב הכשרת הישוב",
+        "המוסיפים צפון",
+        "מגרש מסחרי",
+        "חתך שביל עקרוני",
+        "אב אדריכלות נוף",
+        "עיריית נס-ציונה",
+        "תכנית עיצוב",
+        "הנדסה",
+        "ת״ש 52",
+        "ת״ש 54"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 3.0,
+          "unit": "m",
+          "context": "pedestrian path width"
+        },
+        {
+          "value": 2.5,
+          "unit": "m",
+          "context": "bicycle path width"
+        },
+        {
+          "value": 1.0,
+          "unit": "m",
+          "context": "path segment width"
+        },
+        {
+          "value": 2.5,
+          "unit": "m",
+          "context": "path segment width"
+        },
+        {
+          "value": 3.0,
+          "unit": "m",
+          "context": "path segment width"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Site plan showing proposed development, roads, and a central public open space with green areas and paths."
+        },
+        {
+          "type": "cross_section",
+          "description": "Conceptual cross-section of a path within the public open space, showing different widths for pedestrian and bicycle lanes."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 14,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [
+        52,
+        54
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מבנה השצ\"פ",
+        "מתחם 1 - שלב ג",
+        "מתחם מתקני משחק",
+        "מתחם 2 - שלב ב",
+        "כיכר עירונית, סמוך למסחר",
+        "מתחם כושר - צעירים וגיל שלישי",
+        "מתחם 3 - שלב א",
+        "הוספת עגלת קפה על ציר מבני ציבור",
+        "מתקני משחק",
+        "מדשאה, עצים, אזור פרישה וחיבור לגרנד קוויז",
+        "תכנית עיצוב",
+        "רחוב הסתתירה",
+        "רחוב הפיילוטים הכשרת היישוב",
+        "הפיילוטים צפון",
+        "מגרש מסחרי",
+        "ת״ש 52",
+        "ת״ש 54"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 41.45,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 42.2,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 43.3,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 43.6,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 44.0,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 46.85,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 48.5,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 49.0,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 49.5,
+          "unit": "m",
+          "context": "elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "An aerial site plan showing proposed buildings, roads, and green areas within the Ness Ziona complex, with various planning zones and elevation markers."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 15,
+      "page_type": "public_open_space",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזון ערכי לפארק",
+        "מקום לכל המשפחה, כל אחד מוצא מה לעשות",
+        "אטרקציה נוספת",
+        "גיל שלישי",
+        "מתקני כושר",
+        "שילוב מתקני משחק",
+        "רשת בטיחות – שילוב שביל אופניים",
+        "טבע – ריאה ירוקה",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "אב אדריכלות נוף"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "diagram",
+          "description": "An icon representing attraction or community engagement."
+        },
+        {
+          "type": "diagram",
+          "description": "An illustration of two elderly people, representing activities for seniors."
+        },
+        {
+          "type": "diagram",
+          "description": "An illustration of two people using outdoor fitness equipment."
+        },
+        {
+          "type": "diagram",
+          "description": "An illustration of a child on a small vehicle and a playground structure, representing children's play areas."
+        },
+        {
+          "type": "diagram",
+          "description": "An illustration of a person riding a bicycle, representing a bike path."
+        },
+        {
+          "type": "diagram",
+          "description": "An illustration of two trees and grass, representing nature and green spaces."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 16,
+      "page_type": "public_open_space",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "השצ\"פ",
+        "תא שטח 5",
+        "גבול מגרש",
+        "גבול שצ\"פ",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "אב אדריכלות נוף",
+        "KIKA BRAZ",
+        "AURA",
+        "הנדסה ניהול פרויקטים"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "A realistic rendering of a public open space with a residential building in the background, showing people, trees, and outdoor exercise equipment."
+        },
+        {
+          "type": "site_plan",
+          "description": "A small locator map showing the area context with a highlighted section."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 17,
+      "page_type": "public_open_space",
+      "ta_shetach_refs": [
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "השצ\"פ",
+        "תא שטח 3",
+        "גבול מגרש",
+        "גבול שצ\"פ",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "אב אדריכלות נוף",
+        "הנדסה"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "A realistic rendering of a public open space with people, trees, and buildings, showing a path and green areas."
+        },
+        {
+          "type": "site_plan",
+          "description": "A small site plan indicating the location of the rendered area within a larger urban context with a red arrow."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 18,
+      "page_type": "public_open_space",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "השצ\"פ",
+        "תא שטח 5",
+        "גבול מגרש",
+        "גבול שצ\"פ",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "אב אדריכלות נוף",
+        "KIKA BRAZ",
+        "AURA",
+        "הנדסה"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "Aerial perspective rendering of a public open space with residential buildings, playground, and landscaping."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small overview site plan showing the general layout of the area."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 19,
+      "page_type": "public_open_space",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "השצ\"פ",
+        "תא שטח 5",
+        "מגרש השצ\"פ",
+        "גבול מגרש",
+        "גבול שצ\"פ",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "אב אדריכלות נוף",
+        "הנדסה",
+        "גבול"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "Realistic rendering of a public open space with playground equipment, benches, trees, and people."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small overview site plan showing the area layout with a highlighted section."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 20,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "השצ\"פ",
+        "חתך א-א",
+        "חתך ב-ב",
+        "חתך ג-ג",
+        "גבעת דשא",
+        "שביל הולכי רגל",
+        "שביל אופניים",
+        "רחבת כניסה לבניין",
+        "גינה פרטית",
+        "רצועת גינון",
+        "תא שטח 2",
+        "תא שטח 4",
+        "עיריית נס-ציונה",
+        "תכנית עיצוב"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 44.8,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.9,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 47.35,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 1.0,
+          "unit": "m",
+          "context": "vertical dimension"
+        },
+        {
+          "value": 2.8,
+          "unit": "m",
+          "context": "vertical dimension"
+        },
+        {
+          "value": 3.5,
+          "unit": "m",
+          "context": "vertical dimension"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "section",
+          "description": "Cross-section A-A showing ground levels, landscaping, and building elevations."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section B-B showing ground levels, landscaping, and building elevations."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section C-C showing ground levels, landscaping, and building elevations."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small site plan indicating the locations of the cross-sections."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 21,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        1,
+        2
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "השצ\"פ",
+        "חתך ו-ו",
+        "חתך ה-ה",
+        "חתך ד-ד",
+        "בניין C1",
+        "רחבה",
+        "שביל הולכי רגל",
+        "רצועת גינון",
+        "שביל אופניים",
+        "כניסה לבניין",
+        "פרגולה",
+        "תא שטח 1",
+        "תא שטח 2",
+        "תכנית עיצוב"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "elevation building C1"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "elevation plaza"
+        },
+        {
+          "value": 41.45,
+          "unit": "m",
+          "context": "elevation gardening strip"
+        },
+        {
+          "value": 42.5,
+          "unit": "m",
+          "context": "elevation pedestrian path"
+        },
+        {
+          "value": 42.55,
+          "unit": "m",
+          "context": "elevation gardening strip"
+        },
+        {
+          "value": 43.3,
+          "unit": "m",
+          "context": "elevation building entrance"
+        },
+        {
+          "value": 43.2,
+          "unit": "m",
+          "context": "elevation pedestrian path"
+        },
+        {
+          "value": 47.85,
+          "unit": "m",
+          "context": "elevation gardening strip"
+        },
+        {
+          "value": 44.8,
+          "unit": "m",
+          "context": "elevation building A4"
+        },
+        {
+          "value": 43.6,
+          "unit": "m",
+          "context": "elevation pergola"
+        },
+        {
+          "value": 2.4,
+          "unit": "m",
+          "context": "pergola height"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "section",
+          "description": "Cross-section V-V showing ground levels, landscaping, and building profiles."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section H-H showing ground levels, landscaping, and building profiles."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section D-D showing ground levels, landscaping, and building profiles."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small site plan showing building layouts and plot references."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 22,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        5,
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "תא שטח 3-5",
+        "חתך א-א תא שטח 5",
+        "חתך א-א תא שטח 3",
+        "בניין B5",
+        "גינה פרטית",
+        "שביל אופניים",
+        "רצועת חליבה",
+        "רצועת גינון",
+        "מדרכה",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "אב אדריכלות נוף",
+        "KIKA BRAZ",
+        "AURA הנדסה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 49.5,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 49.0,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 48.21,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 1.0,
+          "unit": "m",
+          "context": "path width"
+        },
+        {
+          "value": 1.4,
+          "unit": "m",
+          "context": "path width"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 2.5,
+          "unit": "m",
+          "context": "path width"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 46.73,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "elevation"
+        },
+        {
+          "value": 47.35,
+          "unit": "m",
+          "context": "elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "section",
+          "description": "Cross-section A-A for plot 5, showing elevations, ground features, and adjacent buildings."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section A-A for plot 3, showing elevations, ground features, and adjacent buildings."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section A-A for plot 5, showing elevations, ground features, and adjacent buildings."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section A-A for plot 3, showing elevations, ground features, and adjacent buildings."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small site plan showing the layout of plots 3 and 5 with surrounding structures."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 23,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "תא שטח 1",
+        "חתך א-א",
+        "חתך ב-ב",
+        "חתך ג-ג",
+        "מפלס קרקע קיים",
+        "רצועת גינון",
+        "רצועת חציצה",
+        "מעון יום",
+        "בניין א1",
+        "בניין ב1",
+        "בניין ג1",
+        "בניין ד1",
+        "גינה פרטית",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "existing ground level"
+        },
+        {
+          "value": 40.15,
+          "unit": "m",
+          "context": "existing ground level"
+        },
+        {
+          "value": 40.6,
+          "unit": "m",
+          "context": "existing ground level"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "existing ground level"
+        },
+        {
+          "value": 39.7,
+          "unit": "m",
+          "context": "existing ground level"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "section",
+          "description": "Cross-section A-A showing buildings, ground levels, and landscaping elements."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section B-B showing buildings, ground levels, and landscaping elements including a daycare."
+        },
+        {
+          "type": "section",
+          "description": "Cross-section G-G showing buildings, ground levels, and landscaping elements."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small overview site plan showing the layout of plots and buildings."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 24,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "פיתוח",
+        "תא שטח 1",
+        "4 מבנים - A1,B1,C1,D1",
+        "דירת גן",
+        "ללא ניקוז",
+        "מעונות יום",
+        "גישה מהפארק",
+        "מתקני משחק",
+        "חדר אשפה",
+        "רחבת כיבוי אש",
+        "כניסה",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 40.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 41.3,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 41.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.35,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.15,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.28,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.75,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 11.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 170.0,
+          "unit": "m²",
+          "context": "playground area"
+        },
+        {
+          "value": 900.0,
+          "unit": "m²",
+          "context": "building footprint area"
+        },
+        {
+          "value": 19.0,
+          "unit": "m²",
+          "context": "garden apartment area"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "A detailed site plan showing four residential buildings (A, B, C, D) with surrounding landscaping, access roads, parking, and public spaces. It includes elevation markers and areas for playgrounds and waste management."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 25,
+      "page_type": "waste_diagram",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים - נס ציונה",
+        "דיאגרמת אשפה",
+        "תא שטח 1",
+        "4 מבנים - A1,B1,C1,D1",
+        "גישה מהפארק",
+        "מתקני משחק",
+        "דירת גן",
+        "כניסה",
+        "אצירת אשפה ומחזור",
+        "חדר דחסנית",
+        "מעונות יום",
+        "רחבת כיבוי",
+        "גישה נגישה מהפארק",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 170.0,
+          "unit": "m²",
+          "context": "שטח מתקני משחק"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "שיפוע דרך"
+        },
+        {
+          "value": 1.4,
+          "unit": "%",
+          "context": "שיפוע דרך"
+        },
+        {
+          "value": 1400.0,
+          "unit": "cm",
+          "context": "אורך דירת גן"
+        },
+        {
+          "value": 1000.0,
+          "unit": "cm",
+          "context": "רוחב רחבת כיבוי"
+        },
+        {
+          "value": 900.0,
+          "unit": "cm",
+          "context": "רוחב רחבת כיבוי"
+        },
+        {
+          "value": 1200.0,
+          "unit": "cm",
+          "context": "אורך דירת גן"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "מפלס כניסה דירה A"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "מפלס כניסה דירה B"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "מפלס כניסה דירה C"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "מפלס כניסה דירה D"
+        },
+        {
+          "value": 41.3,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 41.0,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 41.4,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 42.35,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 41.32,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 42.15,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 42.28,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 41.58,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Site plan showing waste collection points, access routes for waste vehicles, and fire department access for plot 1."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 26,
+      "page_type": "functions_diagram",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "דיאגרמת פונקציות",
+        "תא שטח 1",
+        "מבנים A,B,C,D",
+        "לובי",
+        "מועדון דיירים",
+        "חדרי אופניים ועגלות",
+        "מעונות יום",
+        "דירת גן",
+        "חדר כושר",
+        "כניסה",
+        "גישה מהפארק",
+        "רחבת גיוס",
+        "רחבת כיבוי אש",
+        "תכנית עיצוב"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 170.0,
+          "unit": "m²",
+          "context": "מגרש משחקים שטח"
+        },
+        {
+          "value": 85.0,
+          "unit": "m²",
+          "context": "חדר כושר"
+        },
+        {
+          "value": 95.0,
+          "unit": "m²",
+          "context": "לובי"
+        },
+        {
+          "value": 45.0,
+          "unit": "m²",
+          "context": "מועדון דיירים"
+        },
+        {
+          "value": 155.0,
+          "unit": "m²",
+          "context": "לובי"
+        },
+        {
+          "value": 60.0,
+          "unit": "m²",
+          "context": "מועדון דיירים"
+        },
+        {
+          "value": 90.0,
+          "unit": "m²",
+          "context": "לובי"
+        },
+        {
+          "value": 19.0,
+          "unit": "m²",
+          "context": "דירת גן"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "מפלס כניסה"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "מפלס כניסה"
+        },
+        {
+          "value": 41.3,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 42.35,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 41.0,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 41.4,
+          "unit": "m",
+          "context": "מפלס קרקע"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "שיפוע"
+        },
+        {
+          "value": 1.4,
+          "unit": "%",
+          "context": "שיפוע"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "A site plan showing the functional distribution within buildings A, B, C, D and surrounding areas, including lobbies, resident clubs, bicycle rooms, and daycare facilities."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 27,
+      "page_type": "daycare",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מעונות יום",
+        "תא שטח 1",
+        "מבנה C1",
+        "שטח מעונות יום קרקע",
+        "שטח חצרות קרקע",
+        "לובי",
+        "מועדון דיירים",
+        "חדרי אופניים ועגלות",
+        "חצר מעונות יום",
+        "דירת גן",
+        "כניסה",
+        "גישה מהפארק",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 280.0,
+          "unit": "m²",
+          "context": "שטח מעונות יום קרקע"
+        },
+        {
+          "value": 195.0,
+          "unit": "m²",
+          "context": "שטח חצרות קרקע"
+        },
+        {
+          "value": 95.0,
+          "unit": "m²",
+          "context": "לובי יחידה A"
+        },
+        {
+          "value": 85.0,
+          "unit": "m²",
+          "context": "חדר כושר יחידה A"
+        },
+        {
+          "value": 155.0,
+          "unit": "m²",
+          "context": "לובי יחידה B"
+        },
+        {
+          "value": 45.0,
+          "unit": "m²",
+          "context": "מועדון דיירים יחידה B"
+        },
+        {
+          "value": 90.0,
+          "unit": "m²",
+          "context": "לובי יחידה C"
+        },
+        {
+          "value": 60.0,
+          "unit": "m²",
+          "context": "מועדון דיירים יחידה C"
+        },
+        {
+          "value": 19.0,
+          "unit": "m²",
+          "context": "דירת גן יחידה B"
+        },
+        {
+          "value": 12.0,
+          "unit": "m²",
+          "context": "דירת גן יחידה A"
+        },
+        {
+          "value": 12.0,
+          "unit": "m²",
+          "context": "דירת גן יחידה C"
+        },
+        {
+          "value": 170.0,
+          "unit": "m²",
+          "context": "מתחם משולב"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "מפלס כניסה"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 41.3,
+          "unit": "m",
+          "context": "מפלס כניסה"
+        },
+        {
+          "value": 41.0,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 42.35,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 42.15,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 42.75,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 41.82,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 42.28,
+          "unit": "m",
+          "context": "מפלס"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "שיפוע"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Floor plan detailing the layout of daycare units A, B, and C within plot 1, including various functional areas and outdoor spaces."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 28,
+      "page_type": "daycare",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מעונות יום",
+        "תא שטח 1",
+        "מבנה C1",
+        "שטח מעונות יום קרקע",
+        "שטח חצרות קרקע",
+        "שטח מעונות יום קומה 1",
+        "לובי",
+        "מועדון דיירים",
+        "חדרי אופניים ועגלות",
+        "חצר מעונות יום - מקורה",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "קנ\"מ 1:500",
+        "קומה 1"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 280.0,
+          "unit": "m²",
+          "context": "daycare ground floor area"
+        },
+        {
+          "value": 195.0,
+          "unit": "m²",
+          "context": "ground floor courtyards area"
+        },
+        {
+          "value": 500.0,
+          "unit": "m²",
+          "context": "daycare first floor area"
+        },
+        {
+          "value": 90.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 107.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 115.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 103.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 125.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 81.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 106.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 124.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 90.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 104.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 82.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        },
+        {
+          "value": 100.0,
+          "unit": "m²",
+          "context": "daycare unit area"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Floor plan showing multiple daycare units and their layouts on the ground and first floors."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 29,
+      "page_type": "basement_with_parking_table",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מרתף תא שטח 1",
+        "מרתף טיפוסי",
+        "מרתף עליון",
+        "תקן חניה (אזור ג')",
+        "דרישת חניה",
+        "שימושי קרקע",
+        "חדר גנרטור",
+        "חדר מוני מים",
+        "רמפת כניסה",
+        "מחסן מעונות יום",
+        "עיריית נס-ציונה",
+        "תכנית עיצוב",
+        "אופניים",
+        "רכב פרטי"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 38.4,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 33.8,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 32.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 35.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 5.0,
+          "unit": "m",
+          "context": "internal dimension"
+        },
+        {
+          "value": 6.2,
+          "unit": "m",
+          "context": "internal dimension"
+        },
+        {
+          "value": 5.4,
+          "unit": "m",
+          "context": "internal dimension"
+        },
+        {
+          "value": 5.8,
+          "unit": "m",
+          "context": "internal dimension"
+        },
+        {
+          "value": 6.4,
+          "unit": "m",
+          "context": "internal dimension"
+        },
+        {
+          "value": 10.0,
+          "unit": "%",
+          "context": "ramp slope"
+        },
+        {
+          "value": 15.0,
+          "unit": "%",
+          "context": "ramp slope"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "תקן חניה (אזור ג')",
+          "estimated_rows": 5
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "A floor plan showing a typical basement level with parking spaces and various rooms."
+        },
+        {
+          "type": "floor_plan",
+          "description": "A floor plan showing an upper basement level with parking spaces, rooms, and a daycare storage area."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 30,
+      "page_type": "typical_floor",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "קומות טיפוסיות",
+        "תא שטח 1",
+        "ריכוז תמהיל דירות",
+        "דירת גן",
+        "מעונות יום",
+        "כניסה נגישה למעונות יום",
+        "חדר אשפה",
+        "גישה מהפארק",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 41.3,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.35,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 41.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 14.0,
+          "unit": "m",
+          "context": "distance between buildings"
+        },
+        {
+          "value": 10.0,
+          "unit": "m",
+          "context": "distance between buildings"
+        },
+        {
+          "value": 12.0,
+          "unit": "m",
+          "context": "distance between buildings"
+        },
+        {
+          "value": 7.0,
+          "unit": "%",
+          "context": "apartment mix percentage"
+        },
+        {
+          "value": 15.0,
+          "unit": "%",
+          "context": "apartment mix percentage"
+        },
+        {
+          "value": 123.0,
+          "unit": "m²",
+          "context": "daycare area"
+        },
+        {
+          "value": 19.0,
+          "unit": "m²",
+          "context": "garden apartment area"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "ריכוז תמהיל דירות",
+          "estimated_rows": 7
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Detailed floor plans for multiple residential units within a building block, showing internal layouts and surrounding areas."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small-scale site plan showing the location of the building blocks within the larger development."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 31,
+      "page_type": "rendering",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "פיתוח",
+        "תא שטח 1",
+        "4 מבנים - A1,B1,C1,D1",
+        "שצ\"פ",
+        "אב אדריכלות נוף",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת ההתחדשות העירונית",
+        "הנדסה",
+        "ניהול פרויקטים",
+        "KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "Municipality of Ness Ziona"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "Photorealistic rendering of an urban public space with people and buildings, showing a developed area."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small overview site plan highlighting the area of interest within the larger context."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 32,
+      "page_type": "rendering",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "פיתוח",
+        "תא שטח 1",
+        "4 מבנים - A1,B1,C1,D1",
+        "גבול מגרש",
+        "שצ\"פ",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "אב אדריכלות נוף",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה ניהול פרויקטים",
+        "Municipality of Ness Ziona"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "A realistic rendering of an outdoor public space with people, trees, and buildings."
+        },
+        {
+          "type": "site_plan",
+          "description": "A small site plan showing the overall layout and highlighting a specific area."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 33,
+      "page_type": "rendering",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "פיתוח",
+        "תא שטח 1",
+        "4 מבנים - A1,B1,C1,D1",
+        "גבול מגרש",
+        "שצ\"פ",
+        "גבול שצ\"פ מתוכנן",
+        "השרת היישוב",
+        "אב אדריכלות נוף",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "33 KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA הנדסה",
+        "Municipality of Ness Ziona"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "A realistic rendering depicting a public open space with people, trees, and buildings."
+        },
+        {
+          "type": "site_plan",
+          "description": "A small overview site plan indicating the location of the rendered area."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 34,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "פיתוח",
+        "תא שטח 2",
+        "תא שטח 4",
+        "מבנים",
+        "דירת גן",
+        "כניסה",
+        "יציאת רכבים",
+        "שביל הולכי רגל",
+        "שביל אופניים",
+        "רמפה",
+        "תוכנית התחדשות עירונית",
+        "עיריית נס-ציונה",
+        "אב אדריכלות נוף",
+        "הנדסה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 42.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation for plot 2"
+        },
+        {
+          "value": 46.85,
+          "unit": "m",
+          "context": "ground floor absolute elevation for building A"
+        },
+        {
+          "value": 47.75,
+          "unit": "m",
+          "context": "ground floor absolute elevation for building B"
+        },
+        {
+          "value": 46.3,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.26,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.6,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.75,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 44.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "slope of pedestrian path"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope near entrance"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "A detailed site plan showing two plots (תא שטח 2 and 4) with proposed buildings, landscaping, pedestrian and vehicle access, and absolute elevation points."
+        },
+        {
+          "type": "diagram",
+          "description": "A small locator map highlighting plots A2, A4, B4 within a larger complex."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 35,
+      "page_type": "waste_diagram",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "דיאגרמת אשפה",
+        "תא שטח 2",
+        "תא שטח 4",
+        "חדר אצירת אשפה ומחזור",
+        "חדר דחסנית",
+        "רחבות כיבוי",
+        "תנועת רכבי אשפה",
+        "כניסה/יציאת רכבים",
+        "שביל הולכי רגל",
+        "שביל אופניים",
+        "דמפה",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 42.0,
+          "unit": "m",
+          "context": "ground floor elevation for תא שטח 2"
+        },
+        {
+          "value": 46.85,
+          "unit": "m",
+          "context": "ground floor elevation for building A"
+        },
+        {
+          "value": 47.75,
+          "unit": "m",
+          "context": "ground floor elevation for building B"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 46.3,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 46.6,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 48.25,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 43.75,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 44.0,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "slope of pedestrian path"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope near vehicle entry/exit"
+        },
+        {
+          "value": 900.0,
+          "unit": "cm",
+          "context": "ramp width"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "A site plan showing the layout of two plots (תא שטח 2 and תא שטח 4) with designated waste collection areas and routes for waste vehicles."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 36,
+      "page_type": "functions_diagram",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "דיאגרמת פונקציות",
+        "תא שטח 2",
+        "תא שטח 4",
+        "מבנים A4,B4",
+        "לובי",
+        "מועדון דיירים",
+        "חדרי אופניים ועגלות",
+        "כניסה",
+        "יציאת רכבים",
+        "שביל הולכי רגל",
+        "שביל אופניים",
+        "רחבת גיזום",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 42.0,
+          "unit": "m",
+          "context": "absolute elevation for plot 2"
+        },
+        {
+          "value": 100.0,
+          "unit": "m²",
+          "context": "club for residents in plot 2"
+        },
+        {
+          "value": 90.0,
+          "unit": "m²",
+          "context": "lobby in plot 2"
+        },
+        {
+          "value": 46.85,
+          "unit": "m",
+          "context": "absolute elevation for building A in plot 4"
+        },
+        {
+          "value": 112.0,
+          "unit": "m²",
+          "context": "club for residents in building A, plot 4"
+        },
+        {
+          "value": 70.0,
+          "unit": "m²",
+          "context": "lobby in building A, plot 4"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "absolute elevation for building B in plot 4"
+        },
+        {
+          "value": 70.0,
+          "unit": "m²",
+          "context": "club for residents in building B, plot 4"
+        },
+        {
+          "value": 46.3,
+          "unit": "m",
+          "context": "elevation point"
+        },
+        {
+          "value": 48.26,
+          "unit": "m",
+          "context": "elevation point"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "slope on pedestrian path"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope on access path"
+        },
+        {
+          "value": 43.75,
+          "unit": "m",
+          "context": "elevation point"
+        },
+        {
+          "value": 44.0,
+          "unit": "m",
+          "context": "elevation point"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "A site plan showing two plots (תא שטח 2 and תא שטח 4) with proposed buildings and their functions, including residential lobbies, tenant clubs, and bicycle/stroller rooms."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 37,
+      "page_type": "basement_with_parking_table",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מרתף עליון",
+        "מרתף טיפוסי",
+        "מרתף",
+        "תא שטח 2",
+        "תא שטח 4",
+        "דרישת חניה",
+        "שימושי קרקע",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת ההתחדשות עירונית",
+        "חדר טרפו",
+        "חדר מונים",
+        "חדר גרנטור",
+        "מחסנים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 36.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 37.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 41.7,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 33.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 34.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 38.7,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 39.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.9,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 40.9,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 5.0,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 6.2,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 5.8,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 6.4,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 4.6,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 5.3,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 3.15,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 4.0,
+          "unit": "m",
+          "context": "length/width"
+        },
+        {
+          "value": 15.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 5.0,
+          "unit": "%",
+          "context": "slope"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "דרישת חניה תא שטח 2",
+          "estimated_rows": 4
+        },
+        {
+          "title": "דרישת חניה תא שטח 4",
+          "estimated_rows": 4
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Floor plan of the upper basement for plot 2, showing parking spaces and facilities."
+        },
+        {
+          "type": "floor_plan",
+          "description": "Floor plan of the typical basement for plot 2, showing parking spaces and facilities."
+        },
+        {
+          "type": "floor_plan",
+          "description": "Floor plan of the upper basement for plot 4, showing parking spaces and facilities."
+        },
+        {
+          "type": "floor_plan",
+          "description": "Floor plan of the typical basement for plot 4, showing parking spaces and facilities."
+        },
+        {
+          "type": "diagram",
+          "description": "A block diagram illustrating the layout of different building blocks (A1, A2, B1, etc.) within the complex."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 38,
+      "page_type": "typical_floor",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "קומות טיפוסיות",
+        "תא שטח 2",
+        "תא שטח 4",
+        "ריכוז תמהיל דירות",
+        "כניסת\\יציאת רכבים",
+        "שביל רוכבי רגל",
+        "שביל אופניים",
+        "רחבת גיזום",
+        "כניסה",
+        "דירת גן",
+        "רחבת כיבוי אש",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "קנ\"מ 1:500"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 48.26,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.3,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.6,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 44.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.75,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 1.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 1.5,
+          "unit": "%",
+          "context": "slope"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "ריכוז תמהיל דירות תא שטח 2",
+          "estimated_rows": 8
+        },
+        {
+          "title": "ריכוז תמהיל דירות תא שטח 4",
+          "estimated_rows": 8
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Detailed floor plan for תא שטח 2, showing apartment layouts and common areas."
+        },
+        {
+          "type": "floor_plan",
+          "description": "Detailed floor plan for תא שטח 4, showing apartment layouts and common areas."
+        },
+        {
+          "type": "diagram",
+          "description": "Small key diagram showing building blocks A1-D5, indicating their relative positions."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 39,
+      "page_type": "site_plan_per_ta_shetach",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "פיתוח",
+        "תא שטח 3",
+        "תא שטח 5",
+        "דירת גן",
+        "כניסה",
+        "שביל הולכי רגל",
+        "שביל אופניים",
+        "מכשירי כושר",
+        "רחבה",
+        "גבעת דשא",
+        "רמפה",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "קנ\"מ 1:500"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 46.8,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "building C ground floor elevation"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "building B ground floor elevation"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "building A ground floor elevation"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "building D ground floor elevation"
+        },
+        {
+          "value": 49.0,
+          "unit": "m",
+          "context": "building C ground floor elevation"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 5.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 5.7,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 4.7,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 56.39,
+          "unit": "m²",
+          "context": "apartment area"
+        },
+        {
+          "value": 68.34,
+          "unit": "m²",
+          "context": "apartment area"
+        },
+        {
+          "value": 103.5,
+          "unit": "m²",
+          "context": "apartment area"
+        },
+        {
+          "value": 84.89,
+          "unit": "m²",
+          "context": "apartment area"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Detailed site plan showing multiple residential buildings, landscaping, pathways, and elevation contours for plots 3 and 5."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 40,
+      "page_type": "waste_diagram",
+      "ta_shetach_refs": [
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "דיאגרמת אשפה",
+        "תא שטח 3",
+        "מבנים A3,B3,C3",
+        "חדר אצירת אשפה ומחזור",
+        "חדר דחסנית",
+        "רחבות כיבוי",
+        "תנועת רכבי אשפה",
+        "רחבת גיזום",
+        "כניסה",
+        "שביל הולכי רגל",
+        "תכנית עיצוב",
+        "עיריית נס ציונה",
+        "קנ\"מ 1:500",
+        "דירת גן"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "building A ground floor absolute elevation"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "building B ground floor absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "building C ground floor absolute elevation"
+        },
+        {
+          "value": 42.5,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 43.25,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 44.15,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 44.3,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 45.15,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "spot elevation"
+        },
+        {
+          "value": 46.9,
+          "unit": "m",
+          "context": "spot elevation at entrance"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 5.7,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Site plan illustrating waste collection points for buildings A, B, C, and designated waste vehicle access routes."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 41,
+      "page_type": "functions_diagram",
+      "ta_shetach_refs": [
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הפייוטים – נס ציונה",
+        "דיאגרמת פונקציות",
+        "תא שטח 3",
+        "מבנים A3,B3,C3",
+        "לובי",
+        "מועדון דיירים",
+        "חדרי אופניים ועגלות",
+        "דירת גן",
+        "רחבת גישה",
+        "שביל הולכי רגל",
+        "שביל אופניים",
+        "מתקני כושר",
+        "גבעת דשא",
+        "כניסת/יציאת רכב",
+        "תכנית עיצוב"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 85.0,
+          "unit": "m",
+          "context": "residents club area, building C"
+        },
+        {
+          "value": 70.0,
+          "unit": "m",
+          "context": "residents club area, building B"
+        },
+        {
+          "value": 90.0,
+          "unit": "m",
+          "context": "residents club area, building A"
+        },
+        {
+          "value": 95.0,
+          "unit": "m",
+          "context": "lobby area, building B"
+        },
+        {
+          "value": 75.0,
+          "unit": "m",
+          "context": "lobby area, building A"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation, building C"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation, building B"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation, building A"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 5.7,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 45.15,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 44.3,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.25,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.9,
+          "unit": "m",
+          "context": "entrance elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Site plan showing the functional layout of buildings A, B, and C, including lobbies, resident clubs, and bicycle/stroller rooms, within plot 3."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 42,
+      "page_type": "basement_with_parking_table",
+      "ta_shetach_refs": [
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מרתף",
+        "תא שטח 3",
+        "מרתף טיפוסי",
+        "מרתף עליון",
+        "חדר טרפו",
+        "חדר מונים",
+        "חדר גרנטור",
+        "מחסנים",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA הנדסה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 35.7,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 36.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 38.7,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 39.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 40.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 5.0,
+          "unit": "m",
+          "context": "parking space length"
+        },
+        {
+          "value": 6.2,
+          "unit": "m",
+          "context": "parking aisle width"
+        },
+        {
+          "value": 5.8,
+          "unit": "m",
+          "context": "parking aisle width"
+        },
+        {
+          "value": 10.0,
+          "unit": "m",
+          "context": "ramp length"
+        },
+        {
+          "value": 6.4,
+          "unit": "m",
+          "context": "ramp length"
+        },
+        {
+          "value": 6.1,
+          "unit": "m",
+          "context": "parking space length"
+        },
+        {
+          "value": 5.0,
+          "unit": "%",
+          "context": "ramp slope"
+        },
+        {
+          "value": 10.0,
+          "unit": "%",
+          "context": "ramp slope"
+        },
+        {
+          "value": 15.0,
+          "unit": "%",
+          "context": "ramp slope"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "מרתף טיפוסי",
+          "estimated_rows": 3
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Floor plan of a typical basement level, showing parking spaces and facilities."
+        },
+        {
+          "type": "floor_plan",
+          "description": "Floor plan of an upper basement level, showing parking spaces and facilities."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small key plan showing the outlines of multiple buildings."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 43,
+      "page_type": "typical_floor",
+      "ta_shetach_refs": [
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "קומות טיפוסיות תא שטח 3",
+        "A3,B3,C3 - מבנים",
+        "ריכוז תמהיל דירות",
+        "עיריית נס-ציונה",
+        "תכנית עיצוב",
+        "קנ\"מ 1:500",
+        "דירת גן",
+        "רחבת גינון",
+        "שביל הולכי רגל",
+        "מתקני כושר",
+        "כניסה",
+        "גבעת דשא",
+        "ת.ש 3"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 45.15,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.25,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 5.7,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 57.0,
+          "unit": "m²",
+          "context": "minimum apartment area"
+        },
+        {
+          "value": 153.0,
+          "unit": "m²",
+          "context": "maximum apartment area"
+        },
+        {
+          "value": 155.0,
+          "unit": "m²",
+          "context": "minimum special apartment area"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "ריכוז תמהיל דירות",
+          "estimated_rows": 8
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Typical floor plan for buildings A3, B3, C3 within plot 3, showing multiple apartment layouts and surrounding landscaping."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 44,
+      "page_type": "waste_diagram",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "דיאגרמת אשפה",
+        "תא שטח 5",
+        "מבנים A5,B5,C5,D5",
+        "אצירת אשפה ומחזור",
+        "חדר דחסנית",
+        "כניסה",
+        "רחבת כיבוי",
+        "שביל הולכי רגל",
+        "דירת גן",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "building A entrance elevation"
+        },
+        {
+          "value": 49.5,
+          "unit": "m",
+          "context": "building B entrance elevation"
+        },
+        {
+          "value": 49.0,
+          "unit": "m",
+          "context": "building C entrance elevation"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "building D entrance elevation"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "path slope"
+        },
+        {
+          "value": 3.5,
+          "unit": "%",
+          "context": "path slope"
+        },
+        {
+          "value": 5.0,
+          "unit": "%",
+          "context": "path slope"
+        },
+        {
+          "value": 4.7,
+          "unit": "%",
+          "context": "path slope"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "path slope"
+        },
+        {
+          "value": 900.0,
+          "unit": "cm",
+          "context": "path width"
+        },
+        {
+          "value": 850.0,
+          "unit": "cm",
+          "context": "path width"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "Site plan showing waste collection points, access routes for waste vehicles, and general site layout with elevations."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 45,
+      "page_type": "functions_diagram",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "דיאגרמת פונקציות",
+        "תא שטח 5",
+        "מבנים A5,B5,C5,D5",
+        "לובי",
+        "מועדון דיירים",
+        "חדרי אופניים ועגלות",
+        "כניסה",
+        "חניה",
+        "דירת גן",
+        "מחסן",
+        "חדר אשפה",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "קנ\"מ 1:500"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation building A"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation building D"
+        },
+        {
+          "value": 49.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation building B"
+        },
+        {
+          "value": 49.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation building C"
+        },
+        {
+          "value": 130.0,
+          "unit": "m²",
+          "context": "lobby area building A"
+        },
+        {
+          "value": 80.0,
+          "unit": "m²",
+          "context": "lobby area building B"
+        },
+        {
+          "value": 100.0,
+          "unit": "m²",
+          "context": "lobby area building C"
+        },
+        {
+          "value": 85.0,
+          "unit": "m²",
+          "context": "residents' club area building A"
+        },
+        {
+          "value": 60.0,
+          "unit": "m²",
+          "context": "residents' club area building D"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 5.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 4.7,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 46.9,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.25,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.9,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.3,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.26,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 49.13,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 47.4,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.21,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.65,
+          "unit": "m",
+          "context": "absolute elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "site_plan",
+          "description": "A site plan illustrating the functional distribution of spaces within plot 5, including lobbies, residents' clubs, and bicycle/stroller rooms for buildings A5, B5, C5, D5."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 46,
+      "page_type": "basement_with_parking_table",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "מרתף תא שטח 5",
+        "מרתף עליון",
+        "מרתף טיפוסי",
+        "חדר טרפו",
+        "חדר מוני מים",
+        "חדר גנרטור",
+        "מחסן משותף עם מעונות יום",
+        "מחסנים",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "דרישת חניה",
+        "תקן חניה (אזור ג')",
+        "שימושי קרקע"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 37.8,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 38.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 39.8,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 40.8,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 41.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 42.8,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 5.0,
+          "unit": "m",
+          "context": "parking/circulation length"
+        },
+        {
+          "value": 6.2,
+          "unit": "m",
+          "context": "parking/circulation length"
+        },
+        {
+          "value": 6.0,
+          "unit": "m",
+          "context": "parking/circulation length"
+        },
+        {
+          "value": 6.4,
+          "unit": "m",
+          "context": "parking/circulation length"
+        },
+        {
+          "value": 5.8,
+          "unit": "m",
+          "context": "parking/circulation length"
+        },
+        {
+          "value": 5.0,
+          "unit": "%",
+          "context": "ramp slope"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "דרישת חניה",
+          "estimated_rows": 3
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "Upper basement floor plan showing parking spaces and various rooms."
+        },
+        {
+          "type": "floor_plan",
+          "description": "Typical basement floor plan showing parking spaces and various rooms."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 47,
+      "page_type": "typical_floor",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "קומות טיפוסיות",
+        "תא שטח 5",
+        "4 מבנים",
+        "ריכוז תמהיל דירות",
+        "דירת גן",
+        "ללא ניקוז",
+        "רחבה",
+        "כניסה",
+        "חניון",
+        "כניסה לרחוב",
+        "יציאה לרחוב",
+        "נחיתה",
+        "רמפה",
+        "גבעת דשא",
+        "שביל",
+        "מדרגות",
+        "כניסה/יציאת רכבים",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "קנ\"מ 1:500",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA הנדסה ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 5.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 2.5,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 4.0,
+          "unit": "%",
+          "context": "slope"
+        },
+        {
+          "value": 47.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.3,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.26,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 49.13,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.21,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 48.0,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 45.25,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 47.4,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 46.73,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 43.65,
+          "unit": "m",
+          "context": "absolute elevation"
+        },
+        {
+          "value": 12.88,
+          "unit": "m²",
+          "context": "מרפסת area"
+        },
+        {
+          "value": 12.04,
+          "unit": "m²",
+          "context": "מרפסת area"
+        },
+        {
+          "value": 17.81,
+          "unit": "m²",
+          "context": "מרפסת area"
+        },
+        {
+          "value": 25.63,
+          "unit": "m²",
+          "context": "מרפסת area"
+        },
+        {
+          "value": 12.29,
+          "unit": "m²",
+          "context": "מרפסת area"
+        },
+        {
+          "value": 15.12,
+          "unit": "m²",
+          "context": "מרפסת area"
+        }
+      ],
+      "tables_present": [
+        {
+          "title": "ריכוז תמהיל דירות",
+          "estimated_rows": 8
+        }
+      ],
+      "diagrams_present": [
+        {
+          "type": "floor_plan",
+          "description": "A detailed floor plan showing the layout of multiple apartment units on a typical floor, including internal divisions and external balconies."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 48,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חתך א-א",
+        "תא שטח 1",
+        "תא שטח 2",
+        "תא שטח 3",
+        "מרתפים",
+        "דירות גן",
+        "לובי כניסה",
+        "מגורים",
+        "מעונות יום",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "קנ\"מ 1:750",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "top floor relative elevation, building D1/A1"
+        },
+        {
+          "value": 72.4,
+          "unit": "m",
+          "context": "top floor absolute elevation, building D1/A1"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "ground floor relative elevation, building D1/A1"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation, building D1/A1"
+        },
+        {
+          "value": -13.95,
+          "unit": "m",
+          "context": "lowest basement relative elevation, building D1/A1"
+        },
+        {
+          "value": 44.95,
+          "unit": "m",
+          "context": "lowest basement absolute elevation, building D1/A1"
+        },
+        {
+          "value": 78.35,
+          "unit": "m",
+          "context": "top floor absolute elevation, building C3"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation, building C3"
+        },
+        {
+          "value": 28.85,
+          "unit": "m",
+          "context": "lowest basement absolute elevation, building C3"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "cross_section",
+          "description": "A cross-section showing three building blocks (תא שטח 1, 2, 3) with multiple floors, basements, and elevation markers."
+        },
+        {
+          "type": "site_plan",
+          "description": "A small site plan showing the layout of several building plots (A1, B1, C1, D1, A2, A3, B3, C3, A4, B4, A5, B5, D5, C5)."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 49,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        1,
+        4,
+        5,
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חתך ב-ב",
+        "תא שטח 1",
+        "תא שטח 4",
+        "תא שטח 5",
+        "תא שטח 3",
+        "מרתפים",
+        "דירות גן",
+        "לובי כניסה",
+        "מגורים",
+        "מעונות יום",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "קנ\"מ 1:750"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 85.0,
+          "unit": "m",
+          "context": "absolute top level elevation for building C1"
+        },
+        {
+          "value": 77.45,
+          "unit": "m",
+          "context": "absolute top level elevation for building B4"
+        },
+        {
+          "value": 89.15,
+          "unit": "m",
+          "context": "absolute top level elevation for building D5"
+        },
+        {
+          "value": 78.7,
+          "unit": "m",
+          "context": "absolute top level elevation for building C5"
+        },
+        {
+          "value": 90.15,
+          "unit": "m",
+          "context": "absolute top level elevation for building A5"
+        },
+        {
+          "value": 79.2,
+          "unit": "m",
+          "context": "absolute top level elevation for building B5"
+        },
+        {
+          "value": 78.35,
+          "unit": "m",
+          "context": "absolute top level elevation for building C3"
+        },
+        {
+          "value": 47.75,
+          "unit": "m",
+          "context": "absolute ground level elevation for building B4"
+        },
+        {
+          "value": 35.5,
+          "unit": "m",
+          "context": "absolute basement level MBS-01 for building B4"
+        },
+        {
+          "value": 32.95,
+          "unit": "m",
+          "context": "absolute basement level BS-03 for building C3"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "section",
+          "description": "Cross-section B-B showing multiple residential buildings across different plots, detailing various floor levels, basement levels, and ground elevations."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small site plan indicating the location and alignment of the cross-section B-B across the different plots."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 50,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חתך ג-ג",
+        "תא שטח 3",
+        "תא שטח 5",
+        "ההסתדרות",
+        "קנ\"מ 1:750",
+        "מרתפים",
+        "דירות גן",
+        "לובי כניסה",
+        "מגורים",
+        "מעונות יום",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מנהלת התחדשות עירונית"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 75.85,
+          "unit": "m",
+          "context": "absolute elevation, top of building 3"
+        },
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "absolute elevation, ground floor"
+        },
+        {
+          "value": 35.5,
+          "unit": "m",
+          "context": "absolute elevation, basement level MBS-01"
+        },
+        {
+          "value": 91.3,
+          "unit": "m",
+          "context": "absolute elevation, top of building 5"
+        },
+        {
+          "value": 36.8,
+          "unit": "m",
+          "context": "absolute elevation, basement level BS-02"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "cross_section",
+          "description": "Cross-section showing two buildings (plots 3 and 5) with multiple floors, basements, and absolute elevation levels."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small-scale site plan showing the layout of several building blocks and the section line."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 51,
+      "page_type": "cross_section",
+      "ta_shetach_refs": [
+        1,
+        3,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חתך ד-ד",
+        "תא שטח 1",
+        "תא שטח 3",
+        "תא שטח 4",
+        "רמ' הסתדרות",
+        "קנ\"מ 1:750",
+        "מרתפים",
+        "מגורים",
+        "מעונות יום",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "51 KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 85.0,
+          "unit": "m",
+          "context": "building C1 absolute roof elevation"
+        },
+        {
+          "value": 72.4,
+          "unit": "m",
+          "context": "building D1 absolute roof elevation"
+        },
+        {
+          "value": 89.15,
+          "unit": "m",
+          "context": "building A4 absolute roof elevation"
+        },
+        {
+          "value": 80.6,
+          "unit": "m",
+          "context": "building B4 absolute roof elevation"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 35.5,
+          "unit": "m",
+          "context": "MBS-01 absolute elevation"
+        },
+        {
+          "value": 38.65,
+          "unit": "m",
+          "context": "BS-01 absolute elevation"
+        },
+        {
+          "value": 41.8,
+          "unit": "m",
+          "context": "BS-02 absolute elevation"
+        },
+        {
+          "value": 44.95,
+          "unit": "m",
+          "context": "BS-03 absolute elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "section",
+          "description": "Cross-section view of multiple buildings showing floor levels and absolute elevations."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small site plan indicating the location of the cross-section line T-T."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 52,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        3,
+        2,
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית רח' ההסתדרות",
+        "תא שטח 3",
+        "תא שטח 2",
+        "תא שטח 1",
+        "קומת קרקע",
+        "קומת גג",
+        "קומת ביניים",
+        "קומת מגורים",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "top floor absolute elevation"
+        },
+        {
+          "value": 78.35,
+          "unit": "m",
+          "context": "top floor absolute elevation"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 72.85,
+          "unit": "m",
+          "context": "top floor absolute elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Elevation drawings of multiple residential buildings along Histadrut Street, showing different building types and their floor levels."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 53,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית מתוך השצ\"פ",
+        "תא שטח 1",
+        "תא שטח 2",
+        "תא שטח 3",
+        "בניין 13",
+        "בניין 12",
+        "השצ\"פ",
+        "קנ\"מ 1:750",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 45.45,
+          "unit": "m",
+          "context": "absolute elevation building C1"
+        },
+        {
+          "value": 85.45,
+          "unit": "m",
+          "context": "absolute elevation building C1"
+        },
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "absolute elevation building A2"
+        },
+        {
+          "value": 77.35,
+          "unit": "m",
+          "context": "absolute elevation building A2"
+        },
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "absolute elevation building C3"
+        },
+        {
+          "value": 78.35,
+          "unit": "m",
+          "context": "absolute elevation building C3"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Multiple building elevations are shown, detailing floor levels and absolute height references for different plots."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 54,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        5,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית מתוך השצ\"פ",
+        "תא שטח 5",
+        "תא שטח 4",
+        "השצ\"פ",
+        "קנ\"מ 1:500",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 49.5,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 91.8,
+          "unit": "m",
+          "context": "top floor absolute elevation"
+        },
+        {
+          "value": 49.7,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 91.9,
+          "unit": "m",
+          "context": "top floor absolute elevation"
+        },
+        {
+          "value": 47.75,
+          "unit": "m",
+          "context": "ground floor absolute elevation"
+        },
+        {
+          "value": 90.05,
+          "unit": "m",
+          "context": "top floor absolute elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Elevation of a multi-story residential building, showing floor levels and absolute elevations."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of a multi-story residential building, showing floor levels and absolute elevations."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of a multi-story residential building, showing floor levels and absolute elevations"
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 55,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        4,
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית רח' הטייסים",
+        "תא שטח 4",
+        "תא שטח 5",
+        "רח' הטייסים",
+        "קנ\"מ 1:500",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מנהלת התחדשות עירונית",
+        "55 KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה",
+        "ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 29.7,
+          "unit": "m",
+          "context": "floor 09 elevation"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "ground floor elevation"
+        },
+        {
+          "value": 42.3,
+          "unit": "m",
+          "context": "building A4 roof elevation"
+        },
+        {
+          "value": 89.15,
+          "unit": "m",
+          "context": "building D5 roof absolute elevation"
+        },
+        {
+          "value": 90.15,
+          "unit": "m",
+          "context": "building A5 roof absolute elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Elevation of building A4 showing 9 floors and roof level."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of building D5 showing 9 floors and roof level."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of building A5 showing 9 floors and roof level."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small site plan showing the layout of multiple building blocks."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 56,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית דרומית תא שטח 2+4",
+        "תא שטח 2",
+        "תא שטח 4",
+        "בניין קיים",
+        "קנ\"מ 1:500",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מנהלת התחדשות עירונית",
+        "A2",
+        "A4",
+        "B4",
+        "ק 09 +",
+        "ק 12 +",
+        "ק 08 +"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "absolute elevation, building A2, floor 09"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "absolute elevation, building A2, ground level"
+        },
+        {
+          "value": 42.3,
+          "unit": "m",
+          "context": "absolute elevation, building A4, floor 13"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "absolute elevation, building A4, ground level"
+        },
+        {
+          "value": 29.7,
+          "unit": "m",
+          "context": "absolute elevation, building B4, floor 08"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "absolute elevation, building B4, ground level"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Southern elevation of multiple buildings (A2, A4, B4) showing various floor levels and absolute elevation values. An existing building is also shown."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 57,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        4,
+        2
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית צפונית תא שטח 2+4",
+        "תא שטח 4",
+        "תא שטח 2",
+        "בניין קיים",
+        "קומות",
+        "קנ\"מ 1:500",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "57 KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 42.3,
+          "unit": "m",
+          "context": "absolute elevation, building B4 top"
+        },
+        {
+          "value": 90.05,
+          "unit": "m",
+          "context": "absolute elevation, building B4 top"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "absolute elevation, building B4 ground"
+        },
+        {
+          "value": 49.1,
+          "unit": "m",
+          "context": "absolute elevation, building B4 ground"
+        },
+        {
+          "value": 42.3,
+          "unit": "m",
+          "context": "absolute elevation, building A4 top"
+        },
+        {
+          "value": 89.15,
+          "unit": "m",
+          "context": "absolute elevation, building A4 top"
+        },
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "absolute elevation, building A2 top"
+        },
+        {
+          "value": 74.85,
+          "unit": "m",
+          "context": "absolute elevation, building A2 top"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "absolute elevation, building A2 ground"
+        },
+        {
+          "value": 42.0,
+          "unit": "m",
+          "context": "absolute elevation, building A2 ground"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Elevation of building B4 showing 13 floors and absolute height levels."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of building A4 showing 12 floors and absolute height levels."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of building A2 showing 10 floors and absolute height levels."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small contextual site plan showing various plot designations (A1-D5)."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 58,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית דרומית תא שטח 3+5",
+        "תא שטח 3",
+        "תא שטח 5",
+        "קומת קרקע",
+        "קומת ביניים",
+        "קומות טיפוסיות",
+        "קומת גג",
+        "קנ\"מ 1:500",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 43.0,
+          "unit": "m",
+          "context": "absolute elevation, ground floor, plot 3"
+        },
+        {
+          "value": 60.1,
+          "unit": "m",
+          "context": "absolute elevation, floor 5, plot 3"
+        },
+        {
+          "value": 75.85,
+          "unit": "m",
+          "context": "absolute elevation, floor 10, plot 3"
+        },
+        {
+          "value": 49.5,
+          "unit": "m",
+          "context": "absolute elevation, ground floor, plot 5"
+        },
+        {
+          "value": 66.6,
+          "unit": "m",
+          "context": "absolute elevation, floor 5, plot 5"
+        },
+        {
+          "value": 91.8,
+          "unit": "m",
+          "context": "absolute elevation, floor 13, plot 5"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Southern elevation of a building in plot 3, showing 10 floors above ground."
+        },
+        {
+          "type": "elevation",
+          "description": "Southern elevation of a building in plot 5, showing 13 floors above ground."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small site plan showing building outlines and plot divisions."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 59,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        5
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית צפונית תא שטח 5",
+        "תא שטח 5",
+        "קומת קרקע",
+        "קומת גג",
+        "קומת ביניים",
+        "קומת כניסה",
+        "קומת מרתף",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "B5",
+        "A5",
+        "ARCHITECTS & URBAN PLANNERS",
+        "59 KIKA BRAZ"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 29.7,
+          "unit": "m",
+          "context": "elevation level B5"
+        },
+        {
+          "value": 79.2,
+          "unit": "m",
+          "context": "elevation level B5"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "ground level B5"
+        },
+        {
+          "value": 49.5,
+          "unit": "m",
+          "context": "basement level B5"
+        },
+        {
+          "value": 42.3,
+          "unit": "m",
+          "context": "elevation level A5"
+        },
+        {
+          "value": 89.8,
+          "unit": "m",
+          "context": "elevation level A5"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "ground level A5"
+        },
+        {
+          "value": 47.5,
+          "unit": "m",
+          "context": "basement level A5"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Elevation of building B5 showing floor levels and absolute elevations."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of building A5 showing floor levels and absolute elevations."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small context map showing plot divisions (A1, A2, A3, A4, A5, B1, B3, B4, B5, C1, C3, C5, D1, D5)."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 60,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        3
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית צפונית תא שטח 3",
+        "תא שטח 3",
+        "ק. 09 +",
+        "A3",
+        "מפלס 17",
+        "מפלס 17-",
+        "קנ\"מ 1:500",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "הנדסה",
+        "ניהול פרויקטים",
+        "KIKA BRAZ ARCHITECTS & URBAN PLANNERS",
+        "AURA"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "level 10 elevation"
+        },
+        {
+          "value": 78.35,
+          "unit": "m",
+          "context": "level 10 absolute elevation"
+        },
+        {
+          "value": 29.7,
+          "unit": "m",
+          "context": "level 09 elevation"
+        },
+        {
+          "value": 75.2,
+          "unit": "m",
+          "context": "level 09 absolute elevation"
+        },
+        {
+          "value": 26.55,
+          "unit": "m",
+          "context": "level 08 elevation"
+        },
+        {
+          "value": 72.05,
+          "unit": "m",
+          "context": "level 08 absolute elevation"
+        },
+        {
+          "value": 23.4,
+          "unit": "m",
+          "context": "level 07 elevation"
+        },
+        {
+          "value": 68.9,
+          "unit": "m",
+          "context": "level 07 absolute elevation"
+        },
+        {
+          "value": 20.25,
+          "unit": "m",
+          "context": "level 06 elevation"
+        },
+        {
+          "value": 65.75,
+          "unit": "m",
+          "context": "level 06 absolute elevation"
+        },
+        {
+          "value": 17.1,
+          "unit": "m",
+          "context": "level 05 elevation"
+        },
+        {
+          "value": 62.6,
+          "unit": "m",
+          "context": "level 05 absolute elevation"
+        },
+        {
+          "value": 13.95,
+          "unit": "m",
+          "context": "level 04 elevation"
+        },
+        {
+          "value": 59.45,
+          "unit": "m",
+          "context": "level 04 absolute elevation"
+        },
+        {
+          "value": 10.8,
+          "unit": "m",
+          "context": "level 03 elevation"
+        },
+        {
+          "value": 56.3,
+          "unit": "m",
+          "context": "level 03 absolute elevation"
+        },
+        {
+          "value": 7.65,
+          "unit": "m",
+          "context": "level 02 elevation"
+        },
+        {
+          "value": 53.15,
+          "unit": "m",
+          "context": "level 02 absolute elevation"
+        },
+        {
+          "value": 4.5,
+          "unit": "m",
+          "context": "level 01 elevation"
+        },
+        {
+          "value": 50.0,
+          "unit": "m",
+          "context": "level 01 absolute elevation"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "level 00 elevation"
+        },
+        {
+          "value": 45.5,
+          "unit": "m",
+          "context": "level 00 absolute elevation"
+        },
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "A3 highest elevation"
+        },
+        {
+          "value": 78.35,
+          "unit": "m",
+          "context": "A3 highest absolute elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "North elevation of a multi-story residential building for plot 3, showing various floor levels and absolute elevations."
+        },
+        {
+          "type": "site_plan",
+          "description": "Small contextual site plan showing the layout of multiple plots (A1-D5)."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 61,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית צפונית תא שטח 1",
+        "תא שטח 1",
+        "קומות",
+        "B1",
+        "A1",
+        "קנ\"מ 1:500",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מנהלת התחדשות עירונית",
+        "KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "absolute ground level"
+        },
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "relative ground level"
+        },
+        {
+          "value": 85.45,
+          "unit": "m",
+          "context": "absolute highest level B1"
+        },
+        {
+          "value": 45.45,
+          "unit": "m",
+          "context": "relative highest level B1"
+        },
+        {
+          "value": 72.85,
+          "unit": "m",
+          "context": "absolute highest level A1"
+        },
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "relative highest level A1"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Elevation drawing of building B1 showing 14 floors and various absolute and relative height levels."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation drawing of building A1 showing 9 floors and various absolute and relative height levels."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 62,
+      "page_type": "elevation",
+      "ta_shetach_refs": [
+        1
+      ],
+      "visible_text_labels": [
+        "מתחם הטייסים – נס ציונה",
+        "חזית דרומית תא שטח 1",
+        "תא שטח 1",
+        "קומת קרקע",
+        "קומת גג",
+        "ק",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "KIKA BRAZ",
+        "ARCHITECTS & URBAN PLANNERS",
+        "AURA",
+        "הנדסה",
+        "ניהול פרויקטים"
+      ],
+      "visible_dimensions": [
+        {
+          "value": 0.0,
+          "unit": "m",
+          "context": "relative ground floor elevation"
+        },
+        {
+          "value": 40.0,
+          "unit": "m",
+          "context": "absolute ground floor elevation"
+        },
+        {
+          "value": 4.5,
+          "unit": "m",
+          "context": "relative floor 01 elevation"
+        },
+        {
+          "value": 44.5,
+          "unit": "m",
+          "context": "absolute floor 01 elevation"
+        },
+        {
+          "value": 7.65,
+          "unit": "m",
+          "context": "relative floor 02 elevation"
+        },
+        {
+          "value": 47.65,
+          "unit": "m",
+          "context": "absolute floor 02 elevation"
+        },
+        {
+          "value": 10.8,
+          "unit": "m",
+          "context": "relative floor 03 elevation"
+        },
+        {
+          "value": 50.8,
+          "unit": "m",
+          "context": "absolute floor 03 elevation"
+        },
+        {
+          "value": 13.95,
+          "unit": "m",
+          "context": "relative floor 04 elevation"
+        },
+        {
+          "value": 53.95,
+          "unit": "m",
+          "context": "absolute floor 04 elevation"
+        },
+        {
+          "value": 17.1,
+          "unit": "m",
+          "context": "relative floor 05 elevation"
+        },
+        {
+          "value": 57.1,
+          "unit": "m",
+          "context": "absolute floor 05 elevation"
+        },
+        {
+          "value": 20.25,
+          "unit": "m",
+          "context": "relative floor 06 elevation"
+        },
+        {
+          "value": 60.25,
+          "unit": "m",
+          "context": "absolute floor 06 elevation"
+        },
+        {
+          "value": 23.4,
+          "unit": "m",
+          "context": "relative floor 07 elevation"
+        },
+        {
+          "value": 63.4,
+          "unit": "m",
+          "context": "absolute floor 07 elevation"
+        },
+        {
+          "value": 26.55,
+          "unit": "m",
+          "context": "relative floor 08 elevation"
+        },
+        {
+          "value": 66.55,
+          "unit": "m",
+          "context": "absolute floor 08 elevation"
+        },
+        {
+          "value": 29.7,
+          "unit": "m",
+          "context": "relative floor 09 elevation"
+        },
+        {
+          "value": 69.7,
+          "unit": "m",
+          "context": "absolute floor 09 elevation"
+        },
+        {
+          "value": 32.85,
+          "unit": "m",
+          "context": "relative floor 10 elevation"
+        },
+        {
+          "value": 72.85,
+          "unit": "m",
+          "context": "absolute floor 10 elevation"
+        },
+        {
+          "value": 36.0,
+          "unit": "m",
+          "context": "relative floor 11 elevation"
+        },
+        {
+          "value": 76.0,
+          "unit": "m",
+          "context": "absolute floor 11 elevation"
+        },
+        {
+          "value": 39.15,
+          "unit": "m",
+          "context": "relative floor 12 elevation"
+        },
+        {
+          "value": 79.15,
+          "unit": "m",
+          "context": "absolute floor 12 elevation"
+        },
+        {
+          "value": 42.3,
+          "unit": "m",
+          "context": "relative floor 13 elevation"
+        },
+        {
+          "value": 82.3,
+          "unit": "m",
+          "context": "absolute floor 13 elevation"
+        },
+        {
+          "value": 45.45,
+          "unit": "m",
+          "context": "relative floor 14 elevation"
+        },
+        {
+          "value": 85.45,
+          "unit": "m",
+          "context": "absolute floor 14 elevation"
+        }
+      ],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "elevation",
+          "description": "Elevation of building D1 showing 9 floors above ground, with relative and absolute elevation levels."
+        },
+        {
+          "type": "elevation",
+          "description": "Elevation of building C1 showing 13 floors above ground, with relative and absolute elevation levels."
+        }
+      ],
+      "page_quality": "ok"
+    },
+    {
+      "page_number": 63,
+      "page_type": "rendering",
+      "ta_shetach_refs": [],
+      "visible_text_labels": [
+        "הדמיה להמחשה בלבד",
+        "תכנית עיצוב",
+        "עיריית נס-ציונה",
+        "מינהלת התחדשות עירונית",
+        "הנדסה",
+        "ניהול פרויקטים"
+      ],
+      "visible_dimensions": [],
+      "tables_present": [],
+      "diagrams_present": [
+        {
+          "type": "rendering",
+          "description": "A realistic rendering of multi-story residential buildings, a street with cars, and pedestrians."
+        }
+      ],
+      "page_quality": "ok"
+    }
+  ]
+}
