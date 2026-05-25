@@ -36,6 +36,13 @@ from typing import Any, Dict, List, Optional, Tuple
 ABSOLUTE_CEILING_M = 91.0
 CEILING_TOLERANCE_M = 0.0   # hard limit per takanon; even 0.01 m is a violation
 CONSISTENCY_THRESHOLD_M = 0.5  # spread above which "drawings disagree" finding fires
+GROUND_REF_THRESHOLD_M = 0.5   # spread above which "ground reference drift" finding fires
+
+# Sanity range for absolute ground references on this 91 m site.
+# Site grade lives ~40-55 m above sea level (per M1 data: 40, 42, 43, 44.5, 45.5,
+# 47.75, 49.1, 49.5, 49.7). Anything outside this range is probably mislabeled.
+GROUND_VALUE_MIN_M = 35.0
+GROUND_VALUE_MAX_M = 55.0
 
 # Pages we read from. Cross-sections + elevations.
 CHATAKHIM_PAGES = {48, 49, 50, 51}
@@ -259,6 +266,85 @@ def collect_height_records(manifests_doc: Dict[str, Any]) -> List[Dict[str, Any]
     return records
 
 
+def _scan_ground_references(
+    manifests_doc: Dict[str, Any],
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Phase 7.3a — extract per-building absolute ground references.
+
+    Two extraction paths:
+
+    1. **Explicit ground entries**: M1 context contains "ground" + a building ID
+       + "absolute" (e.g. "absolute ground level elevation for building B4"
+       → 47.75 m on p49). Value is taken directly when in the absolute-ground
+       range (35-55 m above sea level for this site).
+
+    2. **Inferred from paired labels**: M1 context contains a building ID +
+       "ground" and has TWO values on the same context — one relative (0.0 m)
+       and one absolute (e.g. "absolute elevation, building B4 ground"
+       → 0.0 + 49.1 on p57). The larger is the absolute ground.
+
+    Returns { building_id_uppercase → [
+        { "page": int, "page_type": str, "ground_m": float, "context": str }, ...
+    ] }
+    """
+    out: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+    seen: set[Tuple[str, int, float]] = set()
+
+    for p in manifests_doc.get("manifests", []) or []:
+        n = p.get("page_number")
+        if n not in ALL_SOURCE_PAGES:
+            continue
+        page_type = p.get("page_type") or "unknown"
+        # Group dimensions by full context (for paired-label detection)
+        ctx_groups: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        for d in p.get("visible_dimensions") or []:
+            try:
+                val = float(d.get("value"))
+            except (TypeError, ValueError):
+                continue
+            ctx = (d.get("context") or "").strip()
+            ctx_groups[ctx.lower()].append({"val": val, "raw_ctx": ctx})
+
+        for ctx_low, entries in ctx_groups.items():
+            # Require absolute + building ID + ground hint
+            if not _ABSOLUTE_HINT_RE.search(ctx_low):
+                continue
+            if not _GROUND_CTX_RE.search(ctx_low):
+                continue
+            m = _BUILDING_ID_RE.search(ctx_low)
+            if not m:
+                continue
+            # Determine the absolute ground value:
+            # If paired (0.0 + larger), take the larger; otherwise take the value
+            # that's in the absolute-ground range.
+            ground_candidates = [
+                e["val"] for e in entries
+                if GROUND_VALUE_MIN_M <= e["val"] <= GROUND_VALUE_MAX_M
+            ]
+            if not ground_candidates:
+                continue
+            # If multiple candidates on same context, take the maximum
+            # (the absolute one, vs any paired smaller one that slipped through)
+            ground_m = max(ground_candidates)
+            raw_ctx = entries[0]["raw_ctx"]
+            for bid in m.group(1).upper().split("/"):
+                key = (bid, n, round(ground_m, 2))
+                if key in seen:
+                    continue
+                seen.add(key)
+                out[bid].append({
+                    "page": n,
+                    "page_type": page_type,
+                    "ground_m": round(ground_m, 2),
+                    "context": raw_ctx,
+                })
+
+    # Sort each building's entries by page
+    for bid in out:
+        out[bid].sort(key=lambda e: e["page"])
+    return dict(out)
+
+
 def _scan_paired_above_ground(
     manifests_doc: Dict[str, Any],
 ) -> Dict[Tuple[int, str], float]:
@@ -420,6 +506,101 @@ def _build_consistency_finding(building_id: str, plot_id: Optional[int],
         min_top_m=round(min_val, 2),
         spread_m=round(spread, 2),
         value_list=values,
+    )
+
+
+def _build_ground_reference_finding(
+    building_id: str,
+    plot_id: Optional[int],
+    ground_entries: List[Dict[str, Any]],
+    above_ground_heights: List[float],
+) -> Dict[str, Any]:
+    """Phase 7.3a: emit a ground-reference inconsistency finding."""
+    grounds = [e["ground_m"] for e in ground_entries]
+    spread = max(grounds) - min(grounds)
+    n_sources = len(ground_entries)
+
+    # Hebrew labels for page types
+    pt_he = {"elevation": "חזית", "cross_section": "חתך"}
+    bullets = "\n".join(
+        f"- {e['ground_m']:.2f} מ\' ({pt_he.get(e['page_type'], e['page_type'])} עמ\' {e['page']})"
+        for e in sorted(ground_entries, key=lambda x: x["page"])
+    )
+
+    # Sanity: is above-ground height consistent?
+    # Require ≥2 samples to claim consistency. With a single sample we don't
+    # know if the building's height matches across drawings — be honest.
+    if len(above_ground_heights) >= 2:
+        ag_spread = max(above_ground_heights) - min(above_ground_heights)
+        ag_consistent = ag_spread <= CONSISTENCY_THRESHOLD_M
+        ag_value = round(min(above_ground_heights), 2) if ag_consistent else None
+    elif len(above_ground_heights) == 1:
+        ag_spread = None
+        ag_consistent = None  # unknown — only one sample
+        ag_value = round(above_ground_heights[0], 2)
+    else:
+        ag_spread = None
+        ag_consistent = None
+        ag_value = None
+
+    if ag_consistent is True and ag_value is not None:
+        ag_clause = (
+            f'הגובה המוצע מעל הקרקע ({ag_value:.2f} מ\') זהה ב-{n_sources} '
+            f'התשריטים — חוסר העקביות הוא בקו האפס המוחלט ולא בגובה המבנה.'
+        )
+    elif ag_consistent is False:
+        ag_clause = (
+            f'בנוסף, הגובה מעל הקרקע אינו עקבי בין התשריטים '
+            f'(פער של {ag_spread:.2f} מ\'). למבנה יש לפיכך שתי בעיות נפרדות: '
+            f'הן בקו האפס המוחלט והן בגובה המוצע. שתיהן דורשות הבהרה.'
+        )
+    else:
+        ag_clause = (
+            'לא היה ניתן לוודא עקביות הגובה מעל הקרקע מנתוני התשריטים '
+            f'הזמינים (קיים רק מדגם {len(above_ground_heights)}). יש לוודא '
+            'ידנית שגם גובה המבנה עקבי בין התשריטים.'
+        )
+
+    reasoning = (
+        f'מבנה {building_id} מופיע ב-{n_sources} תשריטים עם ערכי קרקע '
+        f'מוחלטים שונים:\n{bullets}\n\n'
+        f'הפער בין הערכים ({spread:.2f} מ\') חורג מסבילות סבירה לעיצוב. '
+        f'{ag_clause}\n\n'
+        f'חשיבות: בדיקת התקרה המוחלטת (סעיף 6.7, 91 מ\' מעל פני הים) '
+        f'תלויה בקו האפס שנבחר. אם המבנה משורטט עם קרקע ב-'
+        f'{max(grounds):.2f} מ\' בגרסה אחת וב-{min(grounds):.2f} מ\' באחרת, '
+        f'הגובה המוחלט עשוי להשתנות ב-{spread:.2f} מ\' בהתאם להבחירה.\n\n'
+        f'יש להבהיר באיזה קו אפס מתבסס כל תשריט (רחוב, חצר, מפלס כניסה), '
+        f'ולציין באופן עקבי את הקרקע הקנונית בכל התשריטים. במידת הצורך, '
+        f'להוסיף הערה הסברתית: "מפלס +0.00 = X מ\' מעל פני הים — '
+        f'נקודת ייחוס כניסה ראשית" (או דומה).'
+    )
+
+    return _build_finding(
+        clause_id=f"chatakhim.ground_reference.{building_id}",
+        plot_id=plot_id,
+        indicator="requires_review",
+        reasoning=reasoning,
+        source_pages=sorted({e["page"] for e in ground_entries}),
+        building_id=building_id,
+        check_type="ground_reference",
+        max_ground_m=round(max(grounds), 2),
+        min_ground_m=round(min(grounds), 2),
+        spread_m=round(spread, 2),
+        # ag_consistent can be True / False / None (unknown). JSON-encode as
+        # str when None for human readability of the persistent log.
+        above_ground_consistent=("unknown" if ag_consistent is None else ag_consistent),
+        above_ground_height_m=ag_value,
+        ground_entries=ground_entries,
+        # value_list — used by the standard render path as a generic evidence table
+        value_list=[
+            {
+                "elevation_m": e["ground_m"],
+                "source_page": e["page"],
+                "source_context": e["context"],
+            }
+            for e in ground_entries
+        ],
     )
 
 
@@ -593,11 +774,51 @@ def produce_chatakhim_findings(manifests_doc: Dict[str, Any]) -> Tuple[List[Dict
     by_bld = aggregate_by_building(records)
     by_plot = aggregate_plot_level_tops(records)
     paired_above_ground = _scan_paired_above_ground(manifests_doc)
+    ground_refs_by_bld = _scan_ground_references(manifests_doc)
+
+    # Augment ground refs with INFERRED values from paired top labels.
+    # When a top entry has paired (relative, absolute) labels on the same page,
+    # ground = absolute_top - above_ground (the paired_above_ground value).
+    # Example: A2 p53 has paired (32.85, 77.35) for "absolute elevation building A2"
+    # → ground = 77.35 - 32.85 = 44.50 m, even though M1 didn't tag it as "ground".
+    _inferred_seen: set[Tuple[str, int, float]] = set()
+    for bid, slot in by_bld.items():
+        page_type_by_page = {v["source_page"]: v["page_type"] for v in slot["top_values"]}
+        for v in slot["top_values"]:
+            page = v["source_page"]
+            ag = paired_above_ground.get((page, bid))
+            if ag is None:
+                continue
+            inferred_ground = round(v["elevation_m"] - ag, 2)
+            if not (GROUND_VALUE_MIN_M <= inferred_ground <= GROUND_VALUE_MAX_M):
+                continue
+            # Skip if we already have an explicit ground from M1 for this page+building
+            existing = ground_refs_by_bld.get(bid, [])
+            if any(
+                e["page"] == page and abs(e["ground_m"] - inferred_ground) < 0.05
+                for e in existing
+            ):
+                continue
+            dup_key = (bid, page, inferred_ground)
+            if dup_key in _inferred_seen:
+                continue
+            _inferred_seen.add(dup_key)
+            ground_refs_by_bld.setdefault(bid, []).append({
+                "page": page,
+                "page_type": page_type_by_page.get(page, "unknown"),
+                "ground_m": inferred_ground,
+                "context": f"{v['source_context']} (inferred ground = absolute − relative)",
+            })
+    # Re-sort entries by page
+    for bid in ground_refs_by_bld:
+        ground_refs_by_bld[bid].sort(key=lambda e: e["page"])
 
     findings: List[Dict[str, Any]] = []
     ceiling_buildings: List[str] = []
     consistency_buildings: List[str] = []
     consistency_dropped: List[Dict[str, str]] = []
+    ground_ref_buildings: List[str] = []
+    ground_ref_dropped: List[Dict[str, Any]] = []
 
     for bid, slot in sorted(by_bld.items()):
         values = slot["top_values"]
@@ -630,6 +851,42 @@ def produce_chatakhim_findings(manifests_doc: Dict[str, Any]) -> Tuple[List[Dict
             findings.append(_build_plot_ceiling_finding(plot_id, values))
             plot_ceiling_plots.append(plot_id)
 
+    # Phase 7.3a — ground-reference inconsistency findings
+    for bid, ground_entries in sorted(ground_refs_by_bld.items()):
+        distinct_grounds = sorted({e["ground_m"] for e in ground_entries})
+        if len(distinct_grounds) < 2:
+            continue
+        spread = max(distinct_grounds) - min(distinct_grounds)
+        if spread <= GROUND_REF_THRESHOLD_M:
+            continue
+        # Derive above-ground heights per contributing page (for sanity check).
+        # Dedupe by page — multiple ground entries from the same page would
+        # otherwise inflate the sample count without adding real evidence.
+        ag_by_page: Dict[int, float] = {}
+        for e in ground_entries:
+            ag = paired_above_ground.get((e["page"], bid))
+            if ag is not None:
+                ag_by_page[e["page"]] = ag
+        above_ground_heights: List[float] = list(ag_by_page.values())
+        plot_id = _infer_plot_from_building(bid)
+        # Drop if all ground entries are on the same page (no real "between drawings"
+        # inconsistency to surface)
+        contributing_pages = {e["page"] for e in ground_entries}
+        if len(contributing_pages) < 2:
+            ground_ref_dropped.append({
+                "building_id": bid,
+                "spread_m": round(spread, 2),
+                "drop_reason": (
+                    "single-page artifact: all ground references come from one page; "
+                    "no cross-drawing inconsistency to surface."
+                ),
+            })
+            continue
+        findings.append(_build_ground_reference_finding(
+            bid, plot_id, ground_entries, above_ground_heights,
+        ))
+        ground_ref_buildings.append(bid)
+
     summary = {
         "buildings_audited": sorted(by_bld.keys()),
         "buildings_with_top_values": [b for b, s in by_bld.items() if s["top_values"]],
@@ -638,8 +895,12 @@ def produce_chatakhim_findings(manifests_doc: Dict[str, Any]) -> Tuple[List[Dict
         "ceiling_violations_plot_level": sorted(plot_ceiling_plots),
         "consistency_warnings_buildings": sorted(consistency_buildings),
         "consistency_findings_dropped_as_artifacts": consistency_dropped,
+        "ground_reference_warnings_buildings": sorted(ground_ref_buildings),
+        "ground_reference_findings_dropped_as_artifacts": ground_ref_dropped,
+        "buildings_with_ground_references": sorted(ground_refs_by_bld.keys()),
         "absolute_ceiling_m": ABSOLUTE_CEILING_M,
         "consistency_threshold_m": CONSISTENCY_THRESHOLD_M,
+        "ground_reference_threshold_m": GROUND_REF_THRESHOLD_M,
         "source_pages_used": sorted(ALL_SOURCE_PAGES),
         "total_height_records_parsed": len(records),
     }

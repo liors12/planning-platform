@@ -1769,6 +1769,8 @@ def _render_chatakhim_card(finding: dict) -> str:
         )
     elif check_type == "consistency":
         title = f"בניין {building_id} — חוסר עקביות בין תשריטים"
+    elif check_type == "ground_reference":
+        title = f"מבנה {building_id} — חוסר עקביות בגובה הקרקע המוחלט בין תשריטים"
     else:
         title = finding.get("clause_id") or "ממצא חתכים"
 
@@ -1776,8 +1778,13 @@ def _render_chatakhim_card(finding: dict) -> str:
     if plot_id is not None:
         meta_pieces.append(f"תא שטח {plot_id}")
     if building_id:
-        meta_pieces.append(f"בניין {building_id}")
-    meta_pieces.append(f"תקרת §6.7: {ceiling_m:.2f} מ׳ מעל פני הים")
+        meta_pieces.append(f"מבנה {building_id}")
+    if check_type == "ground_reference":
+        spread_m = finding.get("spread_m")
+        if spread_m is not None:
+            meta_pieces.append(f"פער מקסימלי: {float(spread_m):.2f} מ׳")
+    else:
+        meta_pieces.append(f"תקרת §6.7: {ceiling_m:.2f} מ׳ מעל פני הים")
     meta = " · ".join(meta_pieces)
 
     # Value table
@@ -1831,16 +1838,24 @@ def _render_chatakhim_section(chatakhim_findings: list[dict]) -> str:
     n_consistency = sum(
         1 for f in chatakhim_findings if f.get("check_type") == "consistency"
     )
+    n_ground_ref = sum(
+        1 for f in chatakhim_findings if f.get("check_type") == "ground_reference"
+    )
+    n_total = n_ceiling + n_consistency + n_ground_ref
     summary_he = (
-        f"נבדקו {n_ceiling + n_consistency} ממצאים: "
-        f"{n_ceiling} חריגות מהתקרה המוחלטת, {n_consistency} חוסרי עקביות בין תשריטים."
+        f"נבדקו {n_total} ממצאים: "
+        f"{n_ceiling} חריגות מהתקרה המוחלטת, "
+        f"{n_consistency} חוסרי עקביות בין תשריטים, "
+        f"{n_ground_ref} חוסרי עקביות בקו האפס."
     )
     intro = (
         "פרק זה מאגד בדיקות גובה מוחלט שחולצו מתשריטי החתכים והחזיתות בהגשה "
-        "(עמ׳ 48-51 לחתכים, 52-62 לחזיתות). שני סוגי בדיקות:"
+        "(עמ׳ 48-51 לחתכים, 52-62 לחזיתות). שלושה סוגי בדיקות:"
         " (1) השוואה מול תקרת §6.7 לתב\"ע (91 מ׳ מעל פני הים — מגבלת מסלול טיסה, "
         "לא תינתן הקלה);"
-        " (2) השוואה בין-מקורית: האם תשריטים שונים של אותו מבנה מציגים את אותו גובה."
+        " (2) השוואה בין-מקורית: האם תשריטים שונים של אותו מבנה מציגים את אותו גובה;"
+        " (3) עקביות קו אפס: האם תשריטים שונים של אותו מבנה מתייחסים לאותו "
+        "קו אפס מוחלט (מעל פני הים)."
     )
     provenance = (
         "הערכים בטבלאות שלהלן חולצו ישירות מהציטוטים הוויזואליים של מספרי-מפלסים "

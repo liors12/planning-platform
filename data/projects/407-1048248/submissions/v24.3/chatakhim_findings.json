@@ -1,7 +1,7 @@
 {
   "project_id": "407-1048248",
   "submission_id": "v24.3",
-  "generated_at": "2026-05-25T05:57:29Z",
+  "generated_at": "2026-05-25T06:27:32Z",
   "source_pages": [
     48,
     49,
@@ -72,8 +72,25 @@
         "drop_reason": "mixed-source artifact: spread combines cross-section cut planes (not necessarily the building's true top) with elevation drawings (authoritative full-facade tops)."
       }
     ],
+    "ground_reference_warnings_buildings": [
+      "A2",
+      "B4"
+    ],
+    "ground_reference_findings_dropped_as_artifacts": [],
+    "buildings_with_ground_references": [
+      "A1",
+      "A2",
+      "A4",
+      "A5",
+      "B4",
+      "B5",
+      "C1",
+      "C3",
+      "D1"
+    ],
     "absolute_ceiling_m": 91.0,
     "consistency_threshold_m": 0.5,
+    "ground_reference_threshold_m": 0.5,
     "source_pages_used": [
       48,
       49,
@@ -120,6 +137,109 @@
           "elevation_m": 91.8,
           "source_page": 58,
           "source_context": "absolute elevation, floor 13, plot 5"
+        }
+      ]
+    },
+    {
+      "clause_id": "chatakhim.ground_reference.A2",
+      "ta_shetach_takanon": 2,
+      "compliance_indicator": "requires_review",
+      "reasoning": "מבנה A2 מופיע ב-2 תשריטים עם ערכי קרקע מוחלטים שונים:\n- 44.50 מ' (חזית עמ' 53)\n- 42.00 מ' (חזית עמ' 57)\n\nהפער בין הערכים (2.50 מ') חורג מסבילות סבירה לעיצוב. הגובה המוצע מעל הקרקע (32.85 מ') זהה ב-2 התשריטים — חוסר העקביות הוא בקו האפס המוחלט ולא בגובה המבנה.\n\nחשיבות: בדיקת התקרה המוחלטת (סעיף 6.7, 91 מ' מעל פני הים) תלויה בקו האפס שנבחר. אם המבנה משורטט עם קרקע ב-44.50 מ' בגרסה אחת וב-42.00 מ' באחרת, הגובה המוחלט עשוי להשתנות ב-2.50 מ' בהתאם להבחירה.\n\nיש להבהיר באיזה קו אפס מתבסס כל תשריט (רחוב, חצר, מפלס כניסה), ולציין באופן עקבי את הקרקע הקנונית בכל התשריטים. במידת הצורך, להוסיף הערה הסברתית: \"מפלס +0.00 = X מ' מעל פני הים — נקודת ייחוס כניסה ראשית\" (או דומה).",
+      "source_pages": [
+        53,
+        57
+      ],
+      "source_type": "chatakhim_evidence",
+      "building_id": "A2",
+      "check_type": "ground_reference",
+      "ceiling_m": 91.0,
+      "ceiling_source_section": "§6.7",
+      "max_ground_m": 44.5,
+      "min_ground_m": 42.0,
+      "spread_m": 2.5,
+      "above_ground_consistent": true,
+      "above_ground_height_m": 32.85,
+      "ground_entries": [
+        {
+          "page": 53,
+          "page_type": "elevation",
+          "ground_m": 44.5,
+          "context": "absolute elevation building A2 (inferred ground = absolute − relative)"
+        },
+        {
+          "page": 57,
+          "page_type": "elevation",
+          "ground_m": 42.0,
+          "context": "absolute elevation, building A2 ground"
+        }
+      ],
+      "value_list": [
+        {
+          "elevation_m": 44.5,
+          "source_page": 53,
+          "source_context": "absolute elevation building A2 (inferred ground = absolute − relative)"
+        },
+        {
+          "elevation_m": 42.0,
+          "source_page": 57,
+          "source_context": "absolute elevation, building A2 ground"
+        }
+      ]
+    },
+    {
+      "clause_id": "chatakhim.ground_reference.B4",
+      "ta_shetach_takanon": 4,
+      "compliance_indicator": "requires_review",
+      "reasoning": "מבנה B4 מופיע ב-3 תשריטים עם ערכי קרקע מוחלטים שונים:\n- 47.75 מ' (חתך עמ' 49)\n- 49.10 מ' (חזית עמ' 57)\n- 47.75 מ' (חזית עמ' 57)\n\nהפער בין הערכים (1.35 מ') חורג מסבילות סבירה לעיצוב. לא היה ניתן לוודא עקביות הגובה מעל הקרקע מנתוני התשריטים הזמינים (קיים רק מדגם 1). יש לוודא ידנית שגם גובה המבנה עקבי בין התשריטים.\n\nחשיבות: בדיקת התקרה המוחלטת (סעיף 6.7, 91 מ' מעל פני הים) תלויה בקו האפס שנבחר. אם המבנה משורטט עם קרקע ב-49.10 מ' בגרסה אחת וב-47.75 מ' באחרת, הגובה המוחלט עשוי להשתנות ב-1.35 מ' בהתאם להבחירה.\n\nיש להבהיר באיזה קו אפס מתבסס כל תשריט (רחוב, חצר, מפלס כניסה), ולציין באופן עקבי את הקרקע הקנונית בכל התשריטים. במידת הצורך, להוסיף הערה הסברתית: \"מפלס +0.00 = X מ' מעל פני הים — נקודת ייחוס כניסה ראשית\" (או דומה).",
+      "source_pages": [
+        49,
+        57
+      ],
+      "source_type": "chatakhim_evidence",
+      "building_id": "B4",
+      "check_type": "ground_reference",
+      "ceiling_m": 91.0,
+      "ceiling_source_section": "§6.7",
+      "max_ground_m": 49.1,
+      "min_ground_m": 47.75,
+      "spread_m": 1.35,
+      "above_ground_consistent": "unknown",
+      "above_ground_height_m": 42.3,
+      "ground_entries": [
+        {
+          "page": 49,
+          "page_type": "cross_section",
+          "ground_m": 47.75,
+          "context": "absolute ground level elevation for building B4"
+        },
+        {
+          "page": 57,
+          "page_type": "elevation",
+          "ground_m": 49.1,
+          "context": "absolute elevation, building B4 ground"
+        },
+        {
+          "page": 57,
+          "page_type": "elevation",
+          "ground_m": 47.75,
+          "context": "absolute elevation, building B4 top (inferred ground = absolute − relative)"
+        }
+      ],
+      "value_list": [
+        {
+          "elevation_m": 47.75,
+          "source_page": 49,
+          "source_context": "absolute ground level elevation for building B4"
+        },
+        {
+          "elevation_m": 49.1,
+          "source_page": 57,
+          "source_context": "absolute elevation, building B4 ground"
+        },
+        {
+          "elevation_m": 47.75,
+          "source_page": 57,
+          "source_context": "absolute elevation, building B4 top (inferred ground = absolute − relative)"
         }
       ]
     }
