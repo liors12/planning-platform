@@ -1,7 +1,7 @@
 {
   "project_id": "407-1048248",
   "submission_id": "v24.3",
-  "generated_at": "2026-05-25T06:27:32Z",
+  "generated_at": "2026-05-25T06:51:40Z",
   "source_pages": [
     48,
     49,
@@ -131,12 +131,20 @@
         {
           "elevation_m": 91.3,
           "source_page": 50,
-          "source_context": "absolute elevation, top of building 5"
+          "source_context": "absolute elevation, top of building 5",
+          "source_view": "cross_section",
+          "taxonomy_type": "INTERMEDIATE_LEVEL",
+          "taxonomy_confidence": "medium",
+          "taxonomy_reasoning": "cross-section cut-top is not the building's full top (intersects at cut location only)"
         },
         {
           "elevation_m": 91.8,
           "source_page": 58,
-          "source_context": "absolute elevation, floor 13, plot 5"
+          "source_context": "absolute elevation, floor 13, plot 5",
+          "source_view": "elevation",
+          "taxonomy_type": "STATUTORY_LIMIT_ANNOTATION",
+          "taxonomy_confidence": "high",
+          "taxonomy_reasoning": "floor-ladder reference (structural floor index, not roof claim)"
         }
       ]
     },
@@ -164,25 +172,41 @@
           "page": 53,
           "page_type": "elevation",
           "ground_m": 44.5,
-          "context": "absolute elevation building A2 (inferred ground = absolute − relative)"
+          "context": "absolute elevation building A2 (inferred ground = absolute − relative)",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "medium",
+          "taxonomy_reasoning": "inferred from paired (relative_above_ground, absolute_top) label"
         },
         {
           "page": 57,
           "page_type": "elevation",
           "ground_m": 42.0,
-          "context": "absolute elevation, building A2 ground"
+          "context": "absolute elevation, building A2 ground",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "high",
+          "taxonomy_reasoning": "explicit ground annotation in M1 context"
         }
       ],
       "value_list": [
         {
           "elevation_m": 44.5,
           "source_page": 53,
-          "source_context": "absolute elevation building A2 (inferred ground = absolute − relative)"
+          "source_context": "absolute elevation building A2 (inferred ground = absolute − relative)",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "medium",
+          "taxonomy_reasoning": "inferred from paired (relative_above_ground, absolute_top) label"
         },
         {
           "elevation_m": 42.0,
           "source_page": 57,
-          "source_context": "absolute elevation, building A2 ground"
+          "source_context": "absolute elevation, building A2 ground",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "high",
+          "taxonomy_reasoning": "explicit ground annotation in M1 context"
         }
       ]
     },
@@ -210,36 +234,60 @@
           "page": 49,
           "page_type": "cross_section",
           "ground_m": 47.75,
-          "context": "absolute ground level elevation for building B4"
+          "context": "absolute ground level elevation for building B4",
+          "source_view": "cross_section",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "high",
+          "taxonomy_reasoning": "explicit ground annotation in M1 context"
         },
         {
           "page": 57,
           "page_type": "elevation",
           "ground_m": 49.1,
-          "context": "absolute elevation, building B4 ground"
+          "context": "absolute elevation, building B4 ground",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "high",
+          "taxonomy_reasoning": "explicit ground annotation in M1 context"
         },
         {
           "page": 57,
           "page_type": "elevation",
           "ground_m": 47.75,
-          "context": "absolute elevation, building B4 top (inferred ground = absolute − relative)"
+          "context": "absolute elevation, building B4 top (inferred ground = absolute − relative)",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "medium",
+          "taxonomy_reasoning": "inferred from paired (relative_above_ground, absolute_top) label"
         }
       ],
       "value_list": [
         {
           "elevation_m": 47.75,
           "source_page": 49,
-          "source_context": "absolute ground level elevation for building B4"
+          "source_context": "absolute ground level elevation for building B4",
+          "source_view": "cross_section",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "high",
+          "taxonomy_reasoning": "explicit ground annotation in M1 context"
         },
         {
           "elevation_m": 49.1,
           "source_page": 57,
-          "source_context": "absolute elevation, building B4 ground"
+          "source_context": "absolute elevation, building B4 ground",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "high",
+          "taxonomy_reasoning": "explicit ground annotation in M1 context"
         },
         {
           "elevation_m": 47.75,
           "source_page": 57,
-          "source_context": "absolute elevation, building B4 top (inferred ground = absolute − relative)"
+          "source_context": "absolute elevation, building B4 top (inferred ground = absolute − relative)",
+          "source_view": "elevation",
+          "taxonomy_type": "GROUND_REFERENCE",
+          "taxonomy_confidence": "medium",
+          "taxonomy_reasoning": "inferred from paired (relative_above_ground, absolute_top) label"
         }
       ]
     }

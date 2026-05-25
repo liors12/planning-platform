@@ -83,6 +83,93 @@ _PLOT_LEVEL_RE = re.compile(r"(?:top\s+of\s+building|building)\s+(\d{1,2})(?!\d)
 TOP_VALUE_MIN_M = 60.0
 TOP_VALUE_MAX_M = 100.0
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Value-type taxonomy (Phase 7.3b)
+# ─────────────────────────────────────────────────────────────────────────────
+# Every parsed dimension is classified into one of five buckets. The bucket
+# travels with the record and becomes a first-class field that downstream
+# filters and renderers can query — replacing the context-regex special cases
+# that the Option-3 surgical filter (M7.2) used.
+
+VT_TRUE_BUILDING_TOP = "TRUE_BUILDING_TOP"
+VT_INTERMEDIATE_LEVEL = "INTERMEDIATE_LEVEL"
+VT_STATUTORY_LIMIT_ANNOTATION = "STATUTORY_LIMIT_ANNOTATION"
+VT_GROUND_REFERENCE = "GROUND_REFERENCE"
+VT_UNCERTAIN = "UNCERTAIN"
+
+# Hebrew + English markers used by the classifier
+_GROUND_TOKENS_RE = re.compile(r"\bground\b|קרקע", re.IGNORECASE)
+_FLOOR_LADDER_RE = re.compile(r"\bfloor\s+\d{1,2}\b.*?\bplot\s+\d{1,2}\b", re.IGNORECASE)
+_ENVELOPE_TOKENS_RE = re.compile(
+    r"\benvelope\b|\blimit\b|מעטפת|מקסימום|תקרת|maximum",
+    re.IGNORECASE,
+)
+_TOP_TOKENS_RE = re.compile(r"\btop\b|\broof\b|\bhighest\b|גג", re.IGNORECASE)
+_INTERMEDIATE_TOKENS_RE = re.compile(
+    r"\bpodium\b|\bmechanical\b|\bintermediate\b|פודיום|טכני|מפלס\s+ביניים",
+    re.IGNORECASE,
+)
+
+
+def _classify_value_type(
+    context: str,
+    source_view: str,
+    value_m: float,
+) -> Tuple[str, str, str]:
+    """Phase 7.3b — classify a parsed dimension into the value-type taxonomy.
+
+    Returns (value_type, confidence ∈ {high, medium, low}, reasoning_he).
+
+    Rule order — first match wins:
+      1. GROUND_REFERENCE        — explicit ground annotation
+      2. STATUTORY_LIMIT_ANNOTATION — floor-ladder reference ("floor N, plot M")
+      3. STATUTORY_LIMIT_ANNOTATION — envelope/limit token
+      4. INTERMEDIATE_LEVEL      — cross-section "top" (cut intersection, not roof)
+      5. INTERMEDIATE_LEVEL      — explicit podium/mechanical marker
+      6. TRUE_BUILDING_TOP       — elevation "top"/"roof"/"highest"
+      7. TRUE_BUILDING_TOP       — value in absolute-top range on an elevation page
+      8. UNCERTAIN               — fallback
+    """
+    ctx = context or ""
+    sv = source_view or ""
+
+    # Rule 1 — explicit ground
+    if _GROUND_TOKENS_RE.search(ctx):
+        return (VT_GROUND_REFERENCE, "high",
+                "explicit ground annotation in M1 context")
+    # Rule 2 — floor-ladder reference (floor N, plot M)
+    if _FLOOR_LADDER_RE.search(ctx):
+        return (VT_STATUTORY_LIMIT_ANNOTATION, "high",
+                "floor-ladder reference (structural floor index, not roof claim)")
+    # Rule 3 — envelope/limit tokens
+    if _ENVELOPE_TOKENS_RE.search(ctx):
+        return (VT_STATUTORY_LIMIT_ANNOTATION, "high",
+                "envelope/limit marker in M1 context")
+    # Rule 4 — cross-section + top → intermediate cut
+    if sv == "cross_section" and _TOP_TOKENS_RE.search(ctx):
+        return (VT_INTERMEDIATE_LEVEL, "medium",
+                "cross-section cut-top is not the building's full top "
+                "(intersects at cut location only)")
+    # Rule 5 — explicit intermediate-level marker
+    if _INTERMEDIATE_TOKENS_RE.search(ctx):
+        return (VT_INTERMEDIATE_LEVEL, "high",
+                "podium / mechanical / intermediate-floor marker in M1 context")
+    # Rule 6 — elevation + top → true building top
+    if sv == "elevation" and _TOP_TOKENS_RE.search(ctx):
+        return (VT_TRUE_BUILDING_TOP, "high",
+                "elevation-page top/roof annotation (full-facade view)")
+    # Rule 7 — elevation page + value in absolute-top range (paired-label
+    # contexts often drop the "top" word but the value clearly is a roof,
+    # e.g. p53 "absolute elevation building A2" → 77.35 m)
+    if sv == "elevation" and TOP_VALUE_MIN_M <= value_m <= TOP_VALUE_MAX_M:
+        return (VT_TRUE_BUILDING_TOP, "medium",
+                "elevation-page value in absolute-top range "
+                "(paired-label inferred)")
+    # Rule 8 — fallback
+    return (VT_UNCERTAIN, "low",
+            "no taxonomy rule matched the context — needs reviewer eyes")
+
 # "absolute" hint — we only want absolute (above sea level) values, never relative-only
 _ABSOLUTE_HINT_RE = re.compile(r"\babsolute\b", re.IGNORECASE)
 
@@ -186,6 +273,15 @@ def _classify_dimension(
     elif plot_match:
         plot_id = int(plot_match.group(1))
 
+    # Phase 7.3b — typed taxonomy classification (additive metadata)
+    # source_view: M1's page_type, surfaced as a first-class field so downstream
+    # queries don't have to peek at it indirectly.
+    source_view = (page_refs and "") or ""  # placeholder; real value injected below
+    # (source_view is injected by collect_height_records when wrapping records;
+    #  here we leave it for the augmentation pass to add)
+
+    vtype, vt_conf, vt_reason = _classify_value_type(ctx, "", val)
+
     records: List[Dict[str, Any]] = []
     if bid_match:
         raw = bid_match.group(1).upper()
@@ -197,6 +293,10 @@ def _classify_dimension(
                 "elevation_m": val,
                 "source_page": page_number,
                 "source_context": ctx,
+                # Phase 7.3b additive fields
+                "taxonomy_type": vtype,
+                "taxonomy_confidence": vt_conf,
+                "taxonomy_reasoning": vt_reason,
             })
     elif plot_id is not None and value_type == "top":
         records.append({
@@ -206,6 +306,9 @@ def _classify_dimension(
             "elevation_m": val,
             "source_page": page_number,
             "source_context": ctx,
+            "taxonomy_type": vtype,
+            "taxonomy_confidence": vt_conf,
+            "taxonomy_reasoning": vt_reason,
         })
     elif value_type == "top" and page_refs and len(page_refs) == 1:
         # Page with a single plot ref and a top value with no in-context plot/building
@@ -217,6 +320,9 @@ def _classify_dimension(
             "elevation_m": val,
             "source_page": page_number,
             "source_context": ctx,
+            "taxonomy_type": vtype,
+            "taxonomy_confidence": vt_conf,
+            "taxonomy_reasoning": vt_reason,
         })
     # else: ambiguous — page has multiple plot refs and context lacks attribution. Skip.
 
@@ -262,6 +368,20 @@ def collect_height_records(manifests_doc: Dict[str, Any]) -> List[Dict[str, Any]
         for d in p.get("visible_dimensions") or []:
             for rec in _classify_dimension(d, n, page_refs=page_refs):
                 rec["page_type"] = page_type
+                # Phase 7.3b — source_view mirrors page_type as a first-class field
+                # so downstream filters query a name that reflects intent ("source_view")
+                # rather than a M1 implementation detail ("page_type").
+                rec["source_view"] = page_type
+                # Re-classify with the actual source_view now that we know it
+                # (the inner _classify_dimension didn't have access to it).
+                vt, vt_conf, vt_reason = _classify_value_type(
+                    rec.get("source_context") or "",
+                    page_type,
+                    rec.get("elevation_m") or 0.0,
+                )
+                rec["taxonomy_type"] = vt
+                rec["taxonomy_confidence"] = vt_conf
+                rec["taxonomy_reasoning"] = vt_reason
                 records.append(rec)
     return records
 
@@ -337,6 +457,13 @@ def _scan_ground_references(
                     "page_type": page_type,
                     "ground_m": round(ground_m, 2),
                     "context": raw_ctx,
+                    # Phase 7.3b additive metadata — ground entries are
+                    # explicit GROUND_REFERENCE by definition (the scanner
+                    # only emits when _GROUND_CTX_RE matches).
+                    "source_view": page_type,
+                    "taxonomy_type": VT_GROUND_REFERENCE,
+                    "taxonomy_confidence": "high",
+                    "taxonomy_reasoning": "explicit ground annotation in M1 context",
                 })
 
     # Sort each building's entries by page
@@ -414,6 +541,11 @@ def aggregate_by_building(records: List[Dict[str, Any]]) -> Dict[str, Dict[str, 
             "source_page": r["source_page"],
             "source_context": r["source_context"],
             "page_type": r.get("page_type", "unknown"),
+            # Phase 7.3b additive metadata
+            "source_view": r.get("source_view") or r.get("page_type", "unknown"),
+            "taxonomy_type": r.get("taxonomy_type", VT_UNCERTAIN),
+            "taxonomy_confidence": r.get("taxonomy_confidence", "low"),
+            "taxonomy_reasoning": r.get("taxonomy_reasoning", ""),
         })
     # Sort + dedupe each building's value list by (page, elevation)
     for bld in by_bld.values():
@@ -430,6 +562,11 @@ def aggregate_plot_level_tops(records: List[Dict[str, Any]]) -> Dict[int, List[D
                 "elevation_m": r["elevation_m"],
                 "source_page": r["source_page"],
                 "source_context": r["source_context"],
+                # Phase 7.3b additive metadata
+                "source_view": r.get("source_view") or r.get("page_type", "unknown"),
+                "taxonomy_type": r.get("taxonomy_type", VT_UNCERTAIN),
+                "taxonomy_confidence": r.get("taxonomy_confidence", "low"),
+                "taxonomy_reasoning": r.get("taxonomy_reasoning", ""),
             })
     return dict(by_plot)
 
@@ -592,12 +729,17 @@ def _build_ground_reference_finding(
         above_ground_consistent=("unknown" if ag_consistent is None else ag_consistent),
         above_ground_height_m=ag_value,
         ground_entries=ground_entries,
-        # value_list — used by the standard render path as a generic evidence table
+        # value_list — used by the standard render path as a generic evidence table.
+        # Phase 7.3b: include source_view + taxonomy metadata as additive fields.
         value_list=[
             {
                 "elevation_m": e["ground_m"],
                 "source_page": e["page"],
                 "source_context": e["context"],
+                "source_view": e.get("source_view") or e.get("page_type", "unknown"),
+                "taxonomy_type": e.get("taxonomy_type", VT_GROUND_REFERENCE),
+                "taxonomy_confidence": e.get("taxonomy_confidence", "high"),
+                "taxonomy_reasoning": e.get("taxonomy_reasoning", ""),
             }
             for e in ground_entries
         ],
@@ -701,29 +843,37 @@ def _consistency_finding_is_real(
     values: List[Dict[str, Any]],
     paired_above_ground: Dict[Tuple[int, str], float],
 ) -> Tuple[bool, str]:
-    """Phase 7.2 Option-3 surgical filter.
+    """Phase 7.2 Option-3 surgical filter — migrated in Phase 7.3b to query
+    the typed taxonomy fields (source_view, taxonomy_type) instead of M1
+    page_type regex. Behavior preserved.
 
     Decides whether a candidate consistency finding represents a genuine
     drawing inconsistency or a known parser artifact. Returns (is_real, reason).
 
     Two known false-positive patterns:
 
-    1. **Mixed source views**: the spread mixes cross-section values with
-       elevation values. Cross-sections show specific cut planes through the
-       building — the labeled "top" is the cut's high point, not the building's
-       true top. Elevations show the full facade and ARE authoritative. Mixing
-       the two manufactures false spread (e.g. B4 in v24.3: 77.45 from p49
-       cross-section + 80.60 from p51 cross-section + 90.05 from p57 elevation).
+    1. **Mixed source views**: the spread mixes cross-section values
+       (INTERMEDIATE_LEVEL — partial cut planes) with elevation values
+       (TRUE_BUILDING_TOP — full facade). Mixing manufactures false spread
+       (e.g. B4 in v24.3: 77.45 + 80.60 cross-section vs 90.05 elevation).
 
     2. **All-elevation but ground-reference mismatch**: two elevation drawings
        of the same building can use different absolute ground references
        (street grade vs courtyard grade). Above-ground heights match; only the
        absolute baseline differs. Detected via paired relative-absolute labels.
     """
-    page_types = {v.get("page_type") for v in values}
-    has_cross_section = "cross_section" in page_types
-    has_elevation = "elevation" in page_types
+    # Query the typed fields (Phase 7.3b). source_view falls back to page_type
+    # for records produced before the refactor or by sub-paths that didn't
+    # populate it (none today, but keeps the migration safe).
+    source_views = {v.get("source_view") or v.get("page_type") for v in values}
+    has_cross_section = "cross_section" in source_views
+    has_elevation = "elevation" in source_views
 
+    # Wording preserved verbatim from M7.2 (drop_reason strings are part of the
+    # consistency_findings_dropped_as_artifacts log and the byte-identical
+    # contract). The corresponding taxonomy labels are:
+    #   cross-section "top" → INTERMEDIATE_LEVEL
+    #   elevation "top"     → TRUE_BUILDING_TOP
     if has_cross_section and has_elevation:
         return False, (
             "mixed-source artifact: spread combines cross-section cut planes "
@@ -808,6 +958,13 @@ def produce_chatakhim_findings(manifests_doc: Dict[str, Any]) -> Tuple[List[Dict
                 "page_type": page_type_by_page.get(page, "unknown"),
                 "ground_m": inferred_ground,
                 "context": f"{v['source_context']} (inferred ground = absolute − relative)",
+                # Phase 7.3b additive metadata — inferred ground from paired
+                # top label is still a GROUND_REFERENCE, just with lower
+                # confidence than an explicit annotation.
+                "source_view": page_type_by_page.get(page, "unknown"),
+                "taxonomy_type": VT_GROUND_REFERENCE,
+                "taxonomy_confidence": "medium",
+                "taxonomy_reasoning": "inferred from paired (relative_above_ground, absolute_top) label",
             })
     # Re-sort entries by page
     for bid in ground_refs_by_bld:
