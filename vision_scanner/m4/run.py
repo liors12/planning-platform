@@ -125,6 +125,12 @@ def main(argv: List[str] | None = None) -> int:
              "Used by the CAD plot-completeness check. Default: 1,2,3,4,5 (v24.3).",
     )
     parser.add_argument(
+        "--include-chatakhim-findings",
+        action="store_true",
+        help="Phase 7.2+: parse M1 page_manifests on the cross-section + elevation "
+             "pages to produce absolute-height ceiling + drawing-consistency findings.",
+    )
+    parser.add_argument(
         "--log-path", type=Path, default=None,
         help="Run-log JSONL (default: <output dir>/audit_results.m4.run_log.jsonl)",
     )
@@ -159,6 +165,26 @@ def main(argv: List[str] | None = None) -> int:
         print(f"  CAD finding: plot_completeness → "
               f"{finding.get('compliance_indicator')} ({n_missing} missing plots)")
 
+    chatakhim_findings: list = []
+    if args.include_chatakhim_findings:
+        from ..m2.parsers.chatakhim_height_parser import (
+            produce_chatakhim_findings,
+            PROJECT_ROOT as _CHAT_ROOT,
+        )
+        print("  Phase 7.2 chatakhim height parse — reading M1 manifests...")
+        manifests_path = (
+            _CHAT_ROOT / "data" / "projects" / args.project_id
+            / "submissions" / args.submission_id / "page_manifests.json"
+        )
+        manifests = json.loads(manifests_path.read_text(encoding="utf-8"))
+        chatakhim_findings, chat_summary = produce_chatakhim_findings(manifests)
+        print(f"  buildings audited: {len(chat_summary['buildings_audited'])} "
+              f"→ {chat_summary['buildings_audited']}")
+        print(f"  ceiling violations (buildings): {chat_summary['ceiling_violations_buildings']}")
+        print(f"  ceiling violations (plot-level): {chat_summary['ceiling_violations_plot_level']}")
+        print(f"  consistency warnings: {chat_summary['consistency_warnings_buildings']}")
+        print(f"  total chatakhim findings: {len(chatakhim_findings)}")
+
     document = build_m4_document(
         engine_doc, vision_doc, critic_doc,
         engine_path=args.engine_results,
@@ -166,7 +192,7 @@ def main(argv: List[str] | None = None) -> int:
         critic_path=args.critic_findings,
         enabled_clause_ids=enabled_m2_clauses,
         translate_hebrew=not args.no_translate,
-        cad_findings=cad_findings or None,
+        cad_findings=(cad_findings + chatakhim_findings) or None,
     )
 
     known_m2_clauses = {f.get("clause_id") for f in vision_doc.get("findings", [])}

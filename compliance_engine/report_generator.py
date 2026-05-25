@@ -791,6 +791,87 @@ table.cad-missing-plots td.area-cell {
 }
 
 /* ============================================
+   SECTION 2ג — Chatakhim (cross-section) height-audit findings (Phase 7.2)
+   Visual identity: purple accent (#5D3A9B border + lavender background)
+   distinct from 2א (red/amber sidecars) and 2ב (blue CAD).
+   ============================================ */
+.chat-chapter { page-break-before: always; }
+.chat-chapter .chapter-intro { margin-bottom: 4mm; }
+.chat-chapter .chat-provenance {
+  margin-bottom: 6mm;
+  padding: 4mm 5mm;
+  background: #F3EEFA;
+  border-right: 3px solid #5D3A9B;
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: #3B2666;
+  line-height: 1.55;
+}
+.chat-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid #5D3A9B;
+  border-radius: 4px;
+  background: #FAF7FE;
+  page-break-inside: avoid;
+}
+.chat-card.chat-ceiling { border-right-color: #B71C1C; background: #FDF5F5; }
+.chat-card.chat-consistency { border-right-color: #B8651A; background: #FFFAF0; }
+.chat-card.chat-clean { border-right-color: #2E7D32; background: #F2FAF4; }
+.chat-card .chat-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #3B2666;
+  margin-bottom: 2mm;
+}
+.chat-card.chat-ceiling .chat-head { color: #B71C1C; }
+.chat-card.chat-consistency .chat-head { color: #B8651A; }
+.chat-card.chat-clean .chat-head { color: #2E7D32; }
+.chat-card .chat-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.chat-card .chat-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin-bottom: 4mm;
+}
+table.chat-values {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 3mm;
+  direction: rtl;
+  table-layout: fixed;
+}
+table.chat-values th {
+  background: #ECE3F6;
+  border: 1px solid #C8B6E0;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #3B2666;
+  text-align: right;
+}
+table.chat-values td {
+  border: 1px solid #DCD0EC;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.chat-values td.elev-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  width: 22%;
+}
+table.chat-values td.elev-cell.over-ceiling { color: #B71C1C; }
+table.chat-values td.page-cell { width: 18%; }
+table.chat-values td.context-cell { color: var(--gray-mid); font-size: 9.5pt; }
+
+/* ============================================
    APPENDIX A passing-rules summary (M6 Phase 6.D)
    ============================================ */
 .passing-summary {
@@ -880,8 +961,13 @@ def generate_audit_pdf(
     # Phase 7.1: split CAD-evidence findings out of the standard 2א sidecar list
     # — they get their own section 2ב with a distinct visual identity (blue
     # accent, CAD-provenance explainer).
+    # Phase 7.2: chatakhim-evidence findings get their own section 2ג (purple).
     cad_findings = [f for f in all_sidecar_findings if f.get("source_type") == "cad_evidence"]
-    sidecar_findings = [f for f in all_sidecar_findings if f.get("source_type") != "cad_evidence"]
+    chatakhim_findings = [f for f in all_sidecar_findings if f.get("source_type") == "chatakhim_evidence"]
+    sidecar_findings = [
+        f for f in all_sidecar_findings
+        if f.get("source_type") not in ("cad_evidence", "chatakhim_evidence")
+    ]
     coverage_report = _load_coverage_report(output_path)
 
     parts: list[str] = []
@@ -891,6 +977,7 @@ def generate_audit_pdf(
         plan_number, residential_parcels, discipline_results,
         has_sidecar=bool(sidecar_findings),
         has_cad=bool(cad_findings),
+        has_chatakhim=bool(chatakhim_findings),
         has_section_5=bool(coverage_report),
     ))
     parts.append(_render_section_1())
@@ -899,6 +986,8 @@ def generate_audit_pdf(
         parts.append(_render_sidecar_section(sidecar_findings))
     if cad_findings:
         parts.append(_render_cad_section(cad_findings))
+    if chatakhim_findings:
+        parts.append(_render_chatakhim_section(chatakhim_findings))
     parts.append(_render_section_3(discipline_results))
     parts.append(_render_section_4(content_results, discipline_results, format_results,
                                     residential_parcels=residential_parcels))
@@ -1056,6 +1145,7 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
                 *,
                 has_sidecar: bool = False,
                 has_cad: bool = False,
+                has_chatakhim: bool = False,
                 has_section_5: bool = False) -> str:
     rows: list[str] = []
     rows.append(_toc_row("1.", "ניתוח תכנון עירוני", "#sec-1", "main"))
@@ -1071,6 +1161,9 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
     # Phase 7.1: 2ב CAD-evidence section (only when CAD findings present)
     if has_cad:
         rows.append(_toc_row("2ב.", 'ממצאי בדיקה מבוססת תשריט CAD', "#sec-cad", "main"))
+    # Phase 7.2: 2ג chatakhim height audit (only when chatakhim findings present)
+    if has_chatakhim:
+        rows.append(_toc_row("2ג.", 'ממצאי בדיקת חתכים — אימות גבהים מוחלטים', "#sec-chat", "main"))
 
     rows.append(_toc_row("3.", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", "#sec-3", "main"))
     seen = set()
@@ -1628,6 +1721,138 @@ def _render_cad_section(cad_findings: list[dict]) -> str:
       <h2 class="chapter-num-title">2ב. ממצאי בדיקה מבוססת תשריט CAD</h2>
       <p class="chapter-intro">{_esc(intro)}</p>
       <div class="cad-provenance">{_esc(provenance)}</div>
+      {cards}
+    </div>
+    """
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 2ג — Chatakhim (cross-section) height-audit findings (Phase 7.2)
+# Derived from the M1 chatakhim_height_parser. Two finding types:
+#   - ceiling      → red card (non_compliant): max top elevation > 91 m
+#   - consistency  → amber card (requires_review): drawings disagree by >0.5 m
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _render_chatakhim_card(finding: dict) -> str:
+    check_type = finding.get("check_type") or "unknown"
+    indicator = (finding.get("compliance_indicator") or "").lower()
+    building_id = finding.get("building_id")
+    plot_id = finding.get("ta_shetach_takanon")
+    reasoning = finding.get("reasoning") or ""
+    value_list = finding.get("value_list") or []
+    ceiling_m = float(finding.get("ceiling_m", 91.0))
+
+    # Color driven by indicator severity, not check type:
+    #   non_compliant  → red (chat-ceiling)
+    #   requires_review → amber (chat-consistency) — covers reframed plot-level
+    #   ceiling and any consistency finding
+    #   compliant     → green (chat-clean)
+    if indicator == "non_compliant":
+        css_extra = "chat-ceiling"
+    elif indicator == "requires_review":
+        css_extra = "chat-consistency"
+    elif indicator == "compliant":
+        css_extra = "chat-clean"
+    else:
+        css_extra = ""
+
+    if check_type in ("ceiling", "ceiling_plot_level"):
+        if indicator == "non_compliant":
+            title_severity = "חריגה מתקרה מוחלטת"
+        else:
+            title_severity = "ערכים מעל התקרה — דרושה הבהרת האדריכל"
+        title = (
+            f"בניין {building_id} — {title_severity}"
+            if building_id
+            else f"תא שטח {plot_id} — {title_severity} (בניין לא מתויג)"
+        )
+    elif check_type == "consistency":
+        title = f"בניין {building_id} — חוסר עקביות בין תשריטים"
+    else:
+        title = finding.get("clause_id") or "ממצא חתכים"
+
+    meta_pieces = []
+    if plot_id is not None:
+        meta_pieces.append(f"תא שטח {plot_id}")
+    if building_id:
+        meta_pieces.append(f"בניין {building_id}")
+    meta_pieces.append(f"תקרת §6.7: {ceiling_m:.2f} מ׳ מעל פני הים")
+    meta = " · ".join(meta_pieces)
+
+    # Value table
+    rows = ""
+    for v in sorted(value_list, key=lambda x: (x.get("source_page", 0), x.get("elevation_m", 0))):
+        elev = float(v.get("elevation_m", 0))
+        page = v.get("source_page", "—")
+        ctx = (v.get("source_context") or "")[:80]
+        over_cls = " over-ceiling" if elev > ceiling_m else ""
+        rows += (
+            f"<tr>"
+            f'<td class="elev-cell{over_cls}">{elev:,.2f} מ׳</td>'
+            f'<td class="page-cell">עמ׳ {page}</td>'
+            f'<td class="context-cell">{_esc(ctx)}</td>'
+            f"</tr>"
+        )
+    table_html = (
+        f"""
+        <table class="chat-values">
+          <thead>
+            <tr><th>גובה מוחלט</th><th>מקור</th><th>הקשר בתשריט</th></tr>
+          </thead>
+          <tbody>{rows}</tbody>
+        </table>"""
+        if rows
+        else ""
+    )
+
+    return f"""
+    <div class="chat-card {css_extra}">
+      <div class="chat-head">{_esc(title)}</div>
+      <div class="chat-meta">{_esc(meta)}</div>
+      <div class="chat-reasoning">{_esc(reasoning)}</div>
+      {table_html}
+    </div>
+    """
+
+
+def _render_chatakhim_section(chatakhim_findings: list[dict]) -> str:
+    """Render Phase 7.2 chatakhim-evidence findings as section 2ג.
+
+    If the list is empty (caller guards this), shows a green-tinted summary card.
+    Otherwise renders one purple card per ceiling/consistency finding.
+    """
+    cards = "".join(_render_chatakhim_card(f) for f in chatakhim_findings)
+
+    n_ceiling = sum(
+        1 for f in chatakhim_findings
+        if f.get("check_type") in ("ceiling", "ceiling_plot_level")
+    )
+    n_consistency = sum(
+        1 for f in chatakhim_findings if f.get("check_type") == "consistency"
+    )
+    summary_he = (
+        f"נבדקו {n_ceiling + n_consistency} ממצאים: "
+        f"{n_ceiling} חריגות מהתקרה המוחלטת, {n_consistency} חוסרי עקביות בין תשריטים."
+    )
+    intro = (
+        "פרק זה מאגד בדיקות גובה מוחלט שחולצו מתשריטי החתכים והחזיתות בהגשה "
+        "(עמ׳ 48-51 לחתכים, 52-62 לחזיתות). שני סוגי בדיקות:"
+        " (1) השוואה מול תקרת §6.7 לתב\"ע (91 מ׳ מעל פני הים — מגבלת מסלול טיסה, "
+        "לא תינתן הקלה);"
+        " (2) השוואה בין-מקורית: האם תשריטים שונים של אותו מבנה מציגים את אותו גובה."
+    )
+    provenance = (
+        "הערכים בטבלאות שלהלן חולצו ישירות מהציטוטים הוויזואליים של מספרי-מפלסים "
+        "בתשריטי ההגשה (קריאת תוויות אבסולוטיות בלבד; ערכים יחסיים סוננו). "
+        "מקור הנתון מצוטט פר ערך בעמודה 'הקשר בתשריט'."
+    )
+    return f"""
+    <div class="chapter chat-chapter" id="sec-chat">
+      <div class="eyebrow">{_esc(EYEBROW)}</div>
+      <h2 class="chapter-num-title">2ג. ממצאי בדיקת חתכים — אימות גבהים מוחלטים</h2>
+      <p class="chapter-intro">{_esc(intro)}</p>
+      <div class="chat-provenance">{_esc(provenance)}<br>{_esc(summary_he)}</div>
       {cards}
     </div>
     """

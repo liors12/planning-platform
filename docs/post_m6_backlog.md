@@ -188,6 +188,36 @@ Southern elevations show "בניין קיים". No review of interface distances
 ### Waste collection logistics
 Vehicle turning radii, access paths for waste trucks, dumpster location vs entrance. Some visually auditable (turning radii arcs), some require explicit declaration.
 
+### Ground-reference inconsistency between drawings
+
+Phase 7.2 verification surfaced a new finding category that wasn't in the original consultation list: the architect's drawings sometimes use different absolute ground references for the same building. Examples from v24.3:
+
+- Building A2: ground at 44.50 m (p53 elevation) vs 42.00 m (p57 elevation) — 2.50 m delta
+- Building B4: ground at 47.75 m (p49 cross-section) vs 49.10 m (p57 elevation) — 1.35 m delta
+
+Both drawings independently show consistent above-ground heights for these buildings (A2: 32.85 m on both pages; B4: 42.30 m on the elevation). The inconsistency is in the absolute baseline (sea-level reference), not the building geometry.
+
+This matters because: absolute-elevation ceiling checks (§6.7's 91 m limit) depend on which ground reference is used. If the architect drew the same building once with ground at 44.50 m and once at 42.00 m, the absolute top differs by 2.50 m even though the building is the same.
+
+For Phase 7.3+: add a "ground reference consistency" check per building, separate from "top elevation consistency." Flag any building where ground references differ by >0.5 m across drawings.
+
+### Phase 7.3+ — chatakhim parser sophistication
+
+The Phase 7.2 verification revealed that M1's "absolute top" context label is too coarse — it conflates three distinct value categories:
+
+- **TRUE_BUILDING_TOP**: full-facade roof from elevation drawing (authoritative)
+- **INTERMEDIATE_LEVEL**: cross-section cut top, podium roof, mechanical floor, lower wing roof
+- **STATUTORY_LIMIT_ANNOTATION**: architect-drawn envelope line showing legal max (not built)
+- **UNCERTAIN**: insufficient context to classify
+
+The 7.3 parser should add `value_type` and `source_view` fields per extracted record. Rules:
+- Prefer elevation-page values over cross-section values for ceiling and consistency checks
+- Detect paired relative-absolute labels (e.g., "32.85 m" + "77.35 m" on same context) → treat lower as relative
+- Detect floor-ladder pages → top-of-ladder is INTERMEDIATE_LEVEL, not building top
+- Track ground reference per page → enables the ground-consistency finding above
+
+Phase 7.2 shipped a defensive filter (drop consistency findings when contributing values are all elevation with consistent relative heights; drop when contributing values mix cross-section and elevation sources) as a surgical workaround. The full parser refactor is 7.3+ work.
+
 ---
 
 ## Tech debt
