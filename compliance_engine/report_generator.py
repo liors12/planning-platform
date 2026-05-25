@@ -710,6 +710,87 @@ table.signature-table td.signature-cell { width: 32%; }
 }
 
 /* ============================================
+   SECTION 2ב — CAD-evidence section (Phase 7.1)
+   Visual identity: blue accent (vs red/amber for sidecar). Signals
+   "geometric source of truth from the planning authority's own CAD."
+   ============================================ */
+.cad-chapter { page-break-before: always; }
+.cad-chapter .chapter-intro {
+  margin-bottom: 4mm;
+}
+.cad-chapter .cad-provenance {
+  margin-bottom: 6mm;
+  padding: 4mm 5mm;
+  background: #EFF4FA;
+  border-right: 3px solid #1E5AA8;
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: #294F7D;
+  line-height: 1.55;
+}
+.cad-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid #1E5AA8;  /* CAD-blue */
+  border-radius: 4px;
+  background: #F7FAFD;
+  page-break-inside: avoid;
+}
+.cad-card .cad-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #1E5AA8;
+  margin-bottom: 2mm;
+}
+.cad-card .cad-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.cad-card .cad-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin-bottom: 4mm;
+}
+table.cad-missing-plots {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 3mm;
+  direction: rtl;
+}
+table.cad-missing-plots th {
+  background: #E6EDF6;
+  border: 1px solid #BCCBE0;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #1E5AA8;
+  text-align: right;
+}
+table.cad-missing-plots td {
+  border: 1px solid #D8E1ED;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.cad-missing-plots td.cellno-cell {
+  font-weight: 700;
+  width: 12%;
+}
+table.cad-missing-plots td.code-cell {
+  width: 18%;
+  color: var(--gray-mid);
+  font-variant-numeric: tabular-nums;
+}
+table.cad-missing-plots td.area-cell {
+  width: 24%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
    APPENDIX A passing-rules summary (M6 Phase 6.D)
    ============================================ */
 .passing-summary {
@@ -793,9 +874,14 @@ def generate_audit_pdf(
     format_results = audit_results.get("format", []) or []
 
     # Determine presence of M4 sidecar + M5 coverage data first, so TOC reflects them.
-    sidecar_findings = (
+    all_sidecar_findings = (
         (audit_results.get("m4_summary") or {}).get("sidecar_only_findings") or []
     )
+    # Phase 7.1: split CAD-evidence findings out of the standard 2א sidecar list
+    # — they get their own section 2ב with a distinct visual identity (blue
+    # accent, CAD-provenance explainer).
+    cad_findings = [f for f in all_sidecar_findings if f.get("source_type") == "cad_evidence"]
+    sidecar_findings = [f for f in all_sidecar_findings if f.get("source_type") != "cad_evidence"]
     coverage_report = _load_coverage_report(output_path)
 
     parts: list[str] = []
@@ -804,12 +890,15 @@ def generate_audit_pdf(
     parts.append(_render_toc(
         plan_number, residential_parcels, discipline_results,
         has_sidecar=bool(sidecar_findings),
+        has_cad=bool(cad_findings),
         has_section_5=bool(coverage_report),
     ))
     parts.append(_render_section_1())
     parts.append(_render_section_2(content_results, residential_parcels, plan_number))
     if sidecar_findings:
         parts.append(_render_sidecar_section(sidecar_findings))
+    if cad_findings:
+        parts.append(_render_cad_section(cad_findings))
     parts.append(_render_section_3(discipline_results))
     parts.append(_render_section_4(content_results, discipline_results, format_results,
                                     residential_parcels=residential_parcels))
@@ -966,6 +1055,7 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
                 discipline_results: list[dict],
                 *,
                 has_sidecar: bool = False,
+                has_cad: bool = False,
                 has_section_5: bool = False) -> str:
     rows: list[str] = []
     rows.append(_toc_row("1.", "ניתוח תכנון עירוני", "#sec-1", "main"))
@@ -978,6 +1068,9 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
     # M4: 2א sidecar (only when m4 enrichment present)
     if has_sidecar:
         rows.append(_toc_row("2א.", "ממצאי בדיקה ויזואלית נוספים", "#sec-m4-sidecar", "main"))
+    # Phase 7.1: 2ב CAD-evidence section (only when CAD findings present)
+    if has_cad:
+        rows.append(_toc_row("2ב.", 'ממצאי בדיקה מבוססת תשריט CAD', "#sec-cad", "main"))
 
     rows.append(_toc_row("3.", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", "#sec-3", "main"))
     seen = set()
@@ -1430,6 +1523,112 @@ def _render_sidecar_section(sidecar_findings: list[dict]) -> str:
       <h2 class="chapter-num-title">2א. ממצאי בדיקה ויזואלית נוספים</h2>
       <p class="chapter-intro">{_esc(intro)}</p>
       {''.join(cards)}
+    </div>
+    """
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Section 2ב — CAD-evidence findings (Phase 7.1)
+# These come from direct reading of the planning authority's CAD source files
+# (DWG tashrit, EPSG:2039 Israeli ITM). They are the MOST AUTHORITATIVE
+# findings the system produces — geometric truth from the system-of-record.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+_CAD_CLAUSE_TITLES_HE: dict[str, str] = {
+    "cad.plot_completeness": 'שלמות תאי שטח לפי תשריט התב"ע',
+}
+
+
+_CAD_INDICATOR_LABELS_HE: dict[str, str] = {
+    "non_compliant":   "לא תקין",
+    "missing":         "לא נמצא בהגשה",
+    "compliant":       "תקין",
+    "requires_review": "דורש בירור",
+}
+
+
+def _render_cad_card(finding: dict) -> str:
+    clause_id = finding.get("clause_id") or "—"
+    indicator = (finding.get("compliance_indicator") or "").lower()
+    title = _CAD_CLAUSE_TITLES_HE.get(clause_id, clause_id)
+    ind_label = _CAD_INDICATOR_LABELS_HE.get(indicator, indicator or "—")
+    reasoning_raw = finding.get("reasoning") or ""
+
+    # The reasoning string from plot_completeness.py contains an inline
+    # pseudo-table built with " | " separators (one row per missing plot).
+    # If present, split it out so we can render an actual HTML table.
+    prose_html = ""
+    missing_table_html = ""
+
+    # Prefer the structured `missing_plots` payload if available
+    missing = finding.get("missing_plots") or []
+    if missing:
+        # Strip the inline pseudo-table from the prose to avoid duplication
+        prose_lines = []
+        for line in reasoning_raw.split("\n"):
+            if " | " in line:
+                continue
+            prose_lines.append(line)
+        prose_html = _esc("\n".join(prose_lines).strip())
+        rows = "".join(
+            f"""
+            <tr>
+              <td class="cellno-cell">{int(m['cellno'])}</td>
+              <td>{_esc(m.get('code_description_he', '—'))}</td>
+              <td class="code-cell">{_esc(str(m.get('code', '—')))}</td>
+              <td class="area-cell">{float(m.get('area_m2', 0)):,.0f}</td>
+            </tr>"""
+            for m in sorted(missing, key=lambda x: int(x.get("cellno", 0)))
+        )
+        missing_table_html = f"""
+        <table class="cad-missing-plots">
+          <thead>
+            <tr>
+              <th>תא שטח</th>
+              <th>ייעוד</th>
+              <th>קוד תב"ע</th>
+              <th>שטח קנוני (מ"ר)</th>
+            </tr>
+          </thead>
+          <tbody>{rows}</tbody>
+        </table>"""
+    else:
+        prose_html = _esc(reasoning_raw)
+
+    crs = finding.get("source_crs") or "EPSG:2039"
+    return f"""
+    <div class="cad-card">
+      <div class="cad-head">{_esc(title)} — {_esc(ind_label)}</div>
+      <div class="cad-meta">מקור: תשריט התב"ע (קבצי DWG · CRS {_esc(crs)})</div>
+      <div class="cad-reasoning">{prose_html}</div>
+      {missing_table_html}
+    </div>
+    """
+
+
+def _render_cad_section(cad_findings: list[dict]) -> str:
+    """Render Phase 7.1 CAD-evidence findings as section 2ב."""
+    cards = "".join(_render_cad_card(f) for f in cad_findings)
+    intro = (
+        "ממצאים אלה מבוססים על קריאה ישירה של תשריט התב\"ע (קבצי DWG "
+        "במערכת הקואורדינטות הישראלית EPSG:2039 — ITM). הם הקבילים ביותר "
+        "מבחינה תכנונית — מקור הנתון הוא בסיס הרישום הגאומטרי של רשות "
+        "התכנון עצמה."
+    )
+    provenance = (
+        'הערכים בטבלאות שלהלן (שטחי תאי השטח, ייעודי הקרקע) חולצו ישירות '
+        'מהפוליגונים הגאומטריים של התשריט (חישוב שטח באמצעות Shapely). '
+        'תכונת "AREA" המופיעה בבלוקי הטקסט של ה-CAD אינה בשימוש כסמכותית '
+        'מאחר שזוהו בה אי-עקביות במספר תאי שטח (ראו לוג פנימי).'
+    )
+    return f"""
+    <div class="chapter cad-chapter" id="sec-cad">
+      <div class="eyebrow">{_esc(EYEBROW)}</div>
+      <h2 class="chapter-num-title">2ב. ממצאי בדיקה מבוססת תשריט CAD</h2>
+      <p class="chapter-intro">{_esc(intro)}</p>
+      <div class="cad-provenance">{_esc(provenance)}</div>
+      {cards}
     </div>
     """
 

@@ -113,6 +113,18 @@ def main(argv: List[str] | None = None) -> int:
         help="Skip the Flash-driven Hebrew translation pass (M5). Default: translate.",
     )
     parser.add_argument(
+        "--include-cad-findings",
+        action="store_true",
+        help="Phase 7.1+: build the takanon CAD dataset and append CAD-derived "
+             "findings (e.g. plot completeness) to m4_summary.sidecar_only_findings.",
+    )
+    parser.add_argument(
+        "--submitted-plots",
+        default="1,2,3,4,5",
+        help="Comma-separated plot numbers the architect did submit. "
+             "Used by the CAD plot-completeness check. Default: 1,2,3,4,5 (v24.3).",
+    )
+    parser.add_argument(
         "--log-path", type=Path, default=None,
         help="Run-log JSONL (default: <output dir>/audit_results.m4.run_log.jsonl)",
     )
@@ -133,6 +145,20 @@ def main(argv: List[str] | None = None) -> int:
     vision_doc = json.loads(args.vision_findings.read_text(encoding="utf-8"))
     critic_doc = json.loads(args.critic_findings.read_text(encoding="utf-8"))
 
+    cad_findings: list = []
+    if args.include_cad_findings:
+        from ..cad_ingest.plot_completeness import produce_plot_completeness_finding
+        from ..cad_ingest.takanon_dataset import build_takanon_plot_dataset
+        print("  Phase 7.1 CAD ingest — building takanon dataset...")
+        dataset = build_takanon_plot_dataset(args.project_id)
+        submitted = [int(s) for s in args.submitted_plots.split(",") if s.strip()]
+        print(f"  submitted_plots (architect): {submitted}")
+        finding = produce_plot_completeness_finding(dataset, submitted)
+        cad_findings.append(finding)
+        n_missing = len(finding.get("missing_plots", []))
+        print(f"  CAD finding: plot_completeness → "
+              f"{finding.get('compliance_indicator')} ({n_missing} missing plots)")
+
     document = build_m4_document(
         engine_doc, vision_doc, critic_doc,
         engine_path=args.engine_results,
@@ -140,6 +166,7 @@ def main(argv: List[str] | None = None) -> int:
         critic_path=args.critic_findings,
         enabled_clause_ids=enabled_m2_clauses,
         translate_hebrew=not args.no_translate,
+        cad_findings=cad_findings or None,
     )
 
     known_m2_clauses = {f.get("clause_id") for f in vision_doc.get("findings", [])}

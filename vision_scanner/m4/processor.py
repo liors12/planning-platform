@@ -493,6 +493,7 @@ def build_m4_document(
     *,
     enabled_clause_ids: Optional[set] = None,
     translate_hebrew: bool = True,
+    cad_findings: Optional[List[Dict[str, Any]]] = None,
 ) -> Dict[str, Any]:
     """Top-level: produce the M4AuditResults dict.
 
@@ -500,6 +501,11 @@ def build_m4_document(
       translate_hebrew: if True, run Flash-driven English→Hebrew translation
         on M2/M3/sidecar reasoning text before writing. Default True.
         Disable when running offline / for tests.
+      cad_findings: optional list of CAD-derived findings (Phase 7.1+) that get
+        appended to m4_summary.sidecar_only_findings. Each must already carry
+        the sidecar shape (clause_id, ta_shetach_takanon, compliance_indicator,
+        reasoning, source_pages) plus a source_type='cad_evidence' marker so
+        the report generator can render them with the dedicated CAD style.
     """
     critic_index = _index_critic_findings(critic_doc)
     m2_findings = vision_doc.get("findings", []) or []
@@ -533,6 +539,13 @@ def build_m4_document(
     if extra_sidecars:
         summary.setdefault("sidecar_only_findings", [])
         summary["sidecar_only_findings"].extend(extra_sidecars)
+
+    # Phase 7.1 — CAD-derived findings (e.g. plot completeness from the תב"ע
+    # tashrit DWG). These are the most authoritative source we have — they
+    # come from the planning authority's own geometric source-of-truth.
+    if cad_findings:
+        summary.setdefault("sidecar_only_findings", [])
+        summary["sidecar_only_findings"].extend(cad_findings)
 
     document = {
         "audit_run_id": engine_doc.get("audit_run_id"),

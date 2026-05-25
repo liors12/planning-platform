@@ -247,3 +247,15 @@ This validates whether the architect-facing voice is working.
 
 ### Submission re-run cycle
 v24.4 will eventually arrive. M6 pipeline should produce a comparable report. Diff against v24.3 should highlight what changed — both architect-side fixes and engine-side improvements. Build a "version diff" view as an M7 priority.
+
+---
+
+## CAD source data quality issues (for future authority outreach)
+
+During Phase 7.1 implementation, the following data quality issues were found in the takanon-side CAD source files (`407-1048248_תאי שטח.dwg`):
+
+- **Plot 9 AREA ATTRIB = 2086.27** but polygon area = 1194.77 (consistent with takanon schema). Identical to plot 20's AREA value — suspected copy-paste bug.
+- **Plot 20 AREA ATTRIB = 2086.27** but polygon area = 86.35 (consistent with takanon schema). Same copy-paste pattern.
+- **Plot 10 AREA ATTRIB = 1512.50** but polygon area = 1655.01 (consistent with takanon schema). Likely pre-revision stale attribute.
+
+These do not affect the audit pipeline (we use polygon-derived geometry as authoritative). They are worth flagging to the planning authority's CAD team for source data correction in their next tashrit revision cycle. See `data/projects/407-1048248/cad_attribute_discrepancies.json` for the full structured log.

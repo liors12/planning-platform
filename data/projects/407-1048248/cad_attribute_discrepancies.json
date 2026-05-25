@@ -1,0 +1,26 @@
+[
+  {
+    "plot_id": 9,
+    "polygon_area_m2": 1194.77,
+    "attribute_area_m2": 2086.27,
+    "discrepancy_percent": 74.6,
+    "verdict": "ATTRIBUTE_CORRUPTED",
+    "notes": "AREA attribute matches plot 20's value — suspected copy-paste bug in source CAD"
+  },
+  {
+    "plot_id": 10,
+    "polygon_area_m2": 1655.01,
+    "attribute_area_m2": 1512.5,
+    "discrepancy_percent": -8.6,
+    "verdict": "ATTRIBUTE_STALE",
+    "notes": "AREA attribute appears stale (likely pre-revision)"
+  },
+  {
+    "plot_id": 20,
+    "polygon_area_m2": 86.35,
+    "attribute_area_m2": 2086.27,
+    "discrepancy_percent": 2316.1,
+    "verdict": "ATTRIBUTE_CORRUPTED",
+    "notes": "AREA attribute matches plot 9's value — suspected copy-paste bug in source CAD"
+  }
+]

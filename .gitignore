@@ -67,6 +67,12 @@ data/**
 !data/projects/*/submissions/*/audit_results.m4.run_log.jsonl
 !data/projects/*/submissions/*/coverage_report.json
 !data/projects/*/submissions/*/*.md
+# Phase 7.1 — takanon CAD source files + derived dataset (per-project)
+!data/projects/*/takanon_cad/
+!data/projects/*/takanon_cad/*.dwg
+!data/projects/*/takanon_cad/*.DWG
+!data/projects/*/takanon_cad_dataset.json
+!data/projects/*/cad_attribute_discrepancies.json
 output/
 audit_outputs/*/
 
@@ -80,6 +86,12 @@ audit_outputs/*/
 # ── CAD binaries ──────────────────────────────────────────────────────
 *.dwg
 *.dxf
+# Exception: per-project takanon CAD source files are the system-of-record
+# for plot geometry (Phase 7.1). Whitelist the small canonical DWGs while
+# keeping derived DXFs ignored (they regenerate from the DWGs in ~1.4 s).
+!data/projects/*/takanon_cad/
+!data/projects/*/takanon_cad/*.dwg
+!data/projects/*/takanon_cad/*.DWG
 
 # ── Fonts ─────────────────────────────────────────────────────────────
 # Heebo + NotoSansHebrew are SIL OFL 1.1 — redistribution is permitted, so
