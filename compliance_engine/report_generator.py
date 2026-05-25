@@ -992,6 +992,285 @@ ul.passing-summary-list li {
   display: block;
   margin-bottom: 1mm;
 }
+
+/* ============================================
+   PHASE 7.5 — INTEGRATED COVER (cover + signatures + structural note)
+   Replaces the old full-bleed dark-green cover + separate signature page.
+   Top band stays dark-green (brand). Lower body is white and holds the
+   meta table, structural note, and the 10-row signature table.
+   ============================================ */
+.cover-v2 {
+  page: cover;
+  width: 210mm;
+  height: 297mm;
+  margin: 0;
+  padding: 0;
+  page-break-after: always;
+  position: relative;
+}
+.cover-v2 .cover-band {
+  background: #005030;
+  color: #fff;
+  padding: 18mm 22mm 12mm 22mm;
+  position: relative;
+}
+.cover-v2 .cover-band .logo {
+  position: absolute;
+  top: 12mm;
+  right: 22mm;
+  height: 18mm;
+  width: auto;
+}
+.cover-v2 .cover-band .brand-eyebrow {
+  font-size: 9.5pt;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 1mm;
+}
+.cover-v2 .cover-band .brand-name {
+  font-size: 15pt;
+  font-weight: 700;
+  margin: 0 0 7mm 0;
+}
+.cover-v2 .cover-band hr.rule {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  margin: 4mm 0 5mm 0;
+}
+.cover-v2 .cover-band .title {
+  font-size: 28pt;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin: 0 0 3mm 0;
+}
+.cover-v2 .cover-band .subtitle {
+  font-size: 12pt;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.4;
+  margin-bottom: 1mm;
+}
+.cover-v2 .cover-band .pill {
+  display: inline-block;
+  margin-top: 4mm;
+  padding: 1.5mm 6mm;
+  border: 1px solid rgba(255,255,255,0.45);
+  border-radius: 30px;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 10pt;
+}
+.cover-v2 .cover-body {
+  padding: 8mm 22mm 14mm 22mm;
+  color: #1a1a1a;
+}
+.cover-v2 .cover-meta {
+  font-size: 10.5pt;
+  line-height: 1.7;
+  color: var(--gray-dark);
+  margin-bottom: 5mm;
+}
+.cover-v2 .cover-meta .label {
+  color: var(--gray-mid);
+  display: inline-block;
+  min-width: 36mm;
+  font-weight: 700;
+}
+.cover-v2 .cover-note {
+  padding: 3.5mm 5mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--green-brand);
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: var(--gray-dark);
+  line-height: 1.6;
+  margin-bottom: 6mm;
+}
+.cover-v2 .cover-sig-title {
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 2mm 0;
+}
+.cover-v2 .cover-sig-sub {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin: 0 0 3mm 0;
+  line-height: 1.5;
+}
+.cover-v2 table.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.cover-v2 table.signature-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 1.5mm 4mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+}
+.cover-v2 table.signature-table td {
+  border: 1px solid var(--gray-light);
+  padding: 1mm 4mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  vertical-align: middle;
+  height: 8.5mm;
+}
+.cover-v2 table.signature-table td.discipline-cell {
+  background: #FAFAFA;
+  font-weight: 600;
+  width: 28%;
+}
+.cover-v2 table.signature-table td.name-cell      { width: 22%; }
+.cover-v2 table.signature-table td.date-cell      { width: 18%; }
+.cover-v2 table.signature-table td.signature-cell { width: 32%; }
+
+/* ============================================
+   PHASE 7.5 — ARCHITECT SUMMARY FRONT-MATTER (pages 2-N)
+   Three category pages (חסר / תיקונים / הבהרות) + map.
+   Each item links to a detail anchor via <a href="#sec-...">; WeasyPrint
+   converts these into PDF internal navigation. Page-numbers next to each
+   link come from CSS target-counter (same mechanism the TOC uses).
+   ============================================ */
+.summary-page {
+  page-break-before: always;
+  page-break-after: always;
+  direction: rtl;
+  text-align: right;
+}
+.summary-page .summary-eyebrow {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 4mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--gray-light);
+}
+.summary-page h2.summary-title {
+  font-size: 22pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 3mm 0;
+  line-height: 1.2;
+}
+.summary-page .summary-intro {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  margin-bottom: 6mm;
+  line-height: 1.6;
+}
+ol.summary-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+ol.summary-items > li {
+  margin-bottom: 2mm;
+  padding: 2.5mm 5mm 2.5mm 5mm;
+  border-right: 3px solid var(--gray-light);
+  background: var(--bg-callout);
+  border-radius: 2px;
+  page-break-inside: avoid;
+}
+ol.summary-items > li.sev-high   { border-right-color: var(--red); }
+ol.summary-items > li.sev-medium { border-right-color: var(--amber); }
+ol.summary-items > li.sev-low    { border-right-color: var(--gray-mid); }
+ol.summary-items > li .item-head {
+  margin-bottom: 1mm;
+}
+ol.summary-items > li .sev-tag {
+  display: inline-block;
+  font-size: 8.5pt;
+  font-weight: 700;
+  padding: 0.3mm 2.5mm;
+  border-radius: 6px;
+  margin-left: 2mm;
+  vertical-align: middle;
+}
+ol.summary-items > li.sev-high .sev-tag   { background: #FFE0E0; color: var(--red); }
+ol.summary-items > li.sev-medium .sev-tag { background: #FFF3E0; color: #B8651A; }
+ol.summary-items > li.sev-low .sev-tag    { background: #F0F0F0; color: var(--gray-mid); }
+ol.summary-items > li .id-tag {
+  display: inline-block;
+  font-size: 8.5pt;
+  color: var(--gray-mid);
+  font-weight: 700;
+  vertical-align: middle;
+}
+ol.summary-items > li .item-text {
+  font-size: 9.5pt;
+  color: var(--gray-dark);
+  line-height: 1.5;
+  margin: 0 0 1mm 0;
+}
+ol.summary-items > li a.item-link {
+  font-size: 9pt;
+  color: var(--green-brand);
+  text-decoration: none;
+  font-weight: 500;
+}
+ol.summary-items > li a.item-link::after {
+  content: " (עמ׳ " target-counter(attr(href), page) ")";
+  color: var(--green-brand);
+  font-weight: 500;
+}
+/* Map page */
+.summary-page table.summary-map {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 8mm 0;
+}
+.summary-page table.summary-map th,
+.summary-page table.summary-map td {
+  padding: 3mm 4mm;
+  border: 1px solid var(--gray-light);
+  font-size: 10pt;
+  text-align: right;
+  vertical-align: middle;
+}
+.summary-page table.summary-map th {
+  background: var(--gray-bg);
+  font-weight: 700;
+  color: var(--gray-dark);
+}
+.summary-page table.summary-map td.cat-cell { width: 65%; }
+.summary-page table.summary-map td.count-cell {
+  text-align: center;
+  font-weight: 700;
+  width: 18mm;
+  font-variant-numeric: tabular-nums;
+}
+.summary-page table.summary-map tr.total-row td {
+  background: #FAFAFA;
+  font-weight: 700;
+}
+.summary-page h3.summary-subhead {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 8mm 0 3mm 0;
+}
+.summary-page ul.summary-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 2.0;
+}
+.summary-page ul.summary-legend .sev-dot {
+  display: inline-block;
+  width: 4mm;
+  height: 4mm;
+  border-radius: 50%;
+  margin-left: 3mm;
+  vertical-align: middle;
+}
+.summary-page ul.summary-legend .sev-dot.sev-high   { background: var(--red); }
+.summary-page ul.summary-legend .sev-dot.sev-medium { background: var(--amber); }
+.summary-page ul.summary-legend .sev-dot.sev-low    { background: var(--gray-mid); }
 """
 
 NBSP_NUM = "&nbsp;&nbsp;"  # spacing between number and title (per reference)
@@ -1037,10 +1316,15 @@ def generate_audit_pdf(
     # Phase 7.4 — amenity inventory (Architecture C, soft policy, rendered as §3.11)
     amenity_inventory = (audit_results.get("m4_summary") or {}).get("amenity_inventory")
     coverage_report = _load_coverage_report(output_path)
+    # Phase 7.5 Step 1 — architect summary front-matter (categorized inventory)
+    architect_summary = _load_architect_summary(output_path)
 
     parts: list[str] = []
-    parts.append(_render_cover(meta, submission_metadata, plan_number))
-    parts.append(_render_signature_page())  # Fix 10 — cover page #2
+    # Phase 7.5: cover now carries the signature table (separate sig page dropped).
+    parts.append(_render_cover_with_signatures(meta, submission_metadata, plan_number))
+    # Phase 7.5: architect summary front-matter (חסר / תיקונים / הבהרות / map)
+    if architect_summary:
+        parts.append(_render_architect_summary_pages(architect_summary))
     parts.append(_render_toc(
         plan_number, residential_parcels, discipline_results,
         has_sidecar=bool(sidecar_findings),
@@ -1207,6 +1491,230 @@ def _render_signature_page() -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Phase 7.5 Step 1 — INTEGRATED COVER + SIGNATURES (page 1)
+# Replaces _render_cover() + _render_signature_page() in the parts list.
+# The old functions are retained for reference but no longer called from
+# generate_audit_pdf().
+# ─────────────────────────────────────────────────────────────────────────────
+
+_COVER_STRUCTURAL_NOTE_HE = (
+    "מסמך זה מחולק לשניים: בעמודים הראשונים — סיכום פעולות נדרשות מהאדריכל לפי "
+    "קטגוריות (חסר / תיקונים / הבהרות). לאחר מכן — דוח מקצועי מפורט עם הממצאים "
+    "והאסמכתאות. פריטים בסיכום מקושרים — לחיצה על פריט תעביר אותך לסעיף המתאים בדוח."
+)
+
+
+def _render_cover_with_signatures(
+    meta: dict, submission_metadata: dict, plan_number: str,
+) -> str:
+    """Single-page cover that combines brand band + meta + structural note +
+    signature table. Replaces the old full-bleed cover + separate sig page.
+    """
+    version = submission_metadata.get("submission_version", "")
+    sub_date = submission_metadata.get("submission_date", "")
+    sub_month_year = _sub_month_year_he(sub_date)
+    architect_full = (meta.get("architect_of_record") or "").strip()
+    architect_short = _format_architect_short(architect_full)
+    approval_label = _approval_label(meta)
+
+    sig_rows = "".join(
+        f'<tr>'
+        f'<td class="discipline-cell">{_esc(disc)}</td>'
+        f'<td class="name-cell"></td>'
+        f'<td class="date-cell"></td>'
+        f'<td class="signature-cell"></td>'
+        f'</tr>'
+        for disc in _SIGNATURE_DISCIPLINES_HE
+    )
+
+    return f"""
+    <div class="cover-v2">
+      <div class="cover-band">
+        <img class="logo" src="../nessziona_logo.png" alt="">
+        <div class="brand-eyebrow">NZC | מינהלת ההתחדשות העירונית</div>
+        <div class="brand-name">נס ציונה</div>
+        <hr class="rule">
+        <h1 class="title">סקירת תוכנית עיצוב</h1>
+        <div class="subtitle">תכנית בינוי ופיתוח — מתחם הטייסים-ההסתדרות</div>
+        <div class="subtitle">תכנית עיצוב גרסה {_esc(version)} · {_esc(sub_month_year)}</div>
+        <div class="pill">{_esc(DOC_TYPE_LABEL)}</div>
+      </div>
+      <div class="cover-body">
+        <div class="cover-meta">
+          <div><span class="label">תכנית סטטוטורית:</span> {_esc(plan_number)} {_esc(approval_label)}</div>
+          <div><span class="label">עורך התכנית:</span> אדריכלים {_esc(architect_short)}</div>
+          <div><span class="label">תאריך הסקירה:</span> {_today_he()}</div>
+        </div>
+        <div class="cover-note">{_esc(_COVER_STRUCTURAL_NOTE_HE)}</div>
+        <h2 class="cover-sig-title">טבלת חתימות — חוות דעת רב-תחומית</h2>
+        <p class="cover-sig-sub">לאישור הדוח על-ידי בעלי התפקידים במינהלת ההתחדשות העירונית בעיריית נס ציונה.</p>
+        <table class="signature-table">
+          <thead>
+            <tr>
+              <th>דיסציפלינה</th>
+              <th>שם</th>
+              <th>תאריך</th>
+              <th>חתימה</th>
+            </tr>
+          </thead>
+          <tbody>{sig_rows}</tbody>
+        </table>
+      </div>
+    </div>
+    """
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 7.5 Step 1 — ARCHITECT SUMMARY FRONT-MATTER (pages 2-N)
+# Reads inventory JSON written by vision_scanner.parsers.architect_summary_inventory.
+# Each item renders as a card with severity tag + ID + one-line text + link.
+# Links use <a href="#sec-...">; CSS target-counter inserts the page number.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_SEVERITY_LABELS_HE: dict[str, str] = {
+    "high":   "דחיפות גבוהה",
+    "medium": "דחיפות בינונית",
+    "low":    "דחיפות נמוכה",
+}
+
+
+def _load_architect_summary(pdf_output_path: Path) -> dict | None:
+    """Load architect_summary_inventory.json from the submission's data dir.
+
+    Same path resolution as _load_coverage_report — the PDF lives in
+    audit_outputs/{plan}/v{ver}/ but the inventory JSON lives in
+    data/projects/{plan}/submissions/v{ver}/.
+    """
+    try:
+        v_dir = pdf_output_path.parent
+        plan = v_dir.parent.name
+        ver = v_dir.name
+        repo_root = v_dir.parent.parent.parent
+        candidate = (
+            repo_root / "data" / "projects" / plan / "submissions" / ver
+            / "architect_summary_inventory.json"
+        )
+        if candidate.exists():
+            return json.loads(candidate.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return None
+
+
+def _render_architect_summary_pages(summary: dict) -> str:
+    """Render the architect summary front-matter — one page per category plus
+    a final map page."""
+    items_by_cat = summary.get("items_by_category", {}) or {}
+    category_order = summary.get("category_order", ["MISSING", "FIX", "CLARIFY"])
+    cat_labels = summary.get("category_labels_he", {})
+    cat_intros = summary.get("category_intros_he", {})
+    counts = summary.get("counts", {})
+
+    pages: list[str] = []
+    for cat in category_order:
+        items = items_by_cat.get(cat) or []
+        if not items:
+            continue
+        pages.append(
+            _render_summary_category_page(
+                cat,
+                cat_labels.get(cat, cat),
+                cat_intros.get(cat, ""),
+                items,
+            )
+        )
+    # Phase 7.5 Step 1 follow-up (Lior decision post-spike): map page dropped.
+    # _render_summary_map_page() is intentionally retained below but no longer
+    # called — kept for a possible future stats/summary layout per Ellen.
+    return "".join(pages)
+
+
+def _render_summary_category_page(
+    cat: str, label_he: str, intro_he: str, items: list[dict],
+) -> str:
+    """One page per category. Items inherit category ordering from inventory
+    (already sorted by severity then id) — we don't re-sort here."""
+    lis: list[str] = []
+    for item in items:
+        sev = item.get("severity", "low")
+        sev_label = _SEVERITY_LABELS_HE.get(sev, sev)
+        anchor = (item.get("anchor_target_id") or "").strip()
+        source = (item.get("source_section") or "").strip()
+        text = item.get("one_line_he") or ""
+        item_id = item.get("id") or ""
+        link_html = ""
+        if anchor and source:
+            link_html = (
+                f'<a class="item-link" href="#{_esc(anchor)}">'
+                f'← ראה {_esc(source)}'
+                f'</a>'
+            )
+        lis.append(f"""
+        <li class="sev-{_esc(sev)}">
+          <div class="item-head">
+            <span class="sev-tag">{_esc(sev_label)}</span>
+            <span class="id-tag">{_esc(item_id)}</span>
+          </div>
+          <p class="item-text">{_esc(text)}</p>
+          {link_html}
+        </li>""")
+
+    return f"""
+    <div class="summary-page" id="summary-{_esc(cat.lower())}">
+      <div class="summary-eyebrow">{_esc(EYEBROW)}</div>
+      <h2 class="summary-title">{_esc(label_he)}</h2>
+      <p class="summary-intro">{_esc(intro_he)}</p>
+      <ol class="summary-items">{''.join(lis)}</ol>
+    </div>
+    """
+
+
+def _render_summary_map_page(
+    category_order: list[str], cat_labels: dict, counts: dict,
+) -> str:
+    rows: list[str] = []
+    total = 0
+    for cat in category_order:
+        n = int(counts.get(cat) or 0)
+        total += n
+        label = cat_labels.get(cat, cat)
+        rows.append(
+            f'<tr>'
+            f'<td class="cat-cell">{_esc(label)}</td>'
+            f'<td class="count-cell">{n}</td>'
+            f'</tr>'
+        )
+    rows.append(
+        f'<tr class="total-row">'
+        f'<td class="cat-cell">סה״כ פעולות נדרשות</td>'
+        f'<td class="count-cell">{total}</td>'
+        f'</tr>'
+    )
+    intro = (
+        f"סיכום מספרי של {total} הפעולות הנדרשות מהאדריכל, מחולקות לשלוש קטגוריות. "
+        "כל פעולה מפורטת בעמודים הקודמים וכוללת קישור לסעיף המתאים בדוח המפורט. "
+        "סדר הפעולות בכל קטגוריה — לפי דחיפות."
+    )
+    return f"""
+    <div class="summary-page" id="summary-map">
+      <div class="summary-eyebrow">{_esc(EYEBROW)}</div>
+      <h2 class="summary-title">מפת פעולות נדרשות</h2>
+      <p class="summary-intro">{_esc(intro)}</p>
+      <table class="summary-map">
+        <thead><tr><th>קטגוריה</th><th class="count-cell">מס׳ פריטים</th></tr></thead>
+        <tbody>{''.join(rows)}</tbody>
+      </table>
+      <h3 class="summary-subhead">דירוג דחיפות</h3>
+      <ul class="summary-legend">
+        <li><span class="sev-dot sev-high"></span> דחיפות גבוהה — נדרש לפני ההגשה הבאה</li>
+        <li><span class="sev-dot sev-medium"></span> דחיפות בינונית — להשלמה לקראת הסקירה הבאה</li>
+        <li><span class="sev-dot sev-low"></span> דחיפות נמוכה — להשלמה לפני הסקירה הסופית</li>
+      </ul>
+    </div>
+    """
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # TOC — table-based, target-counter for page numbers
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -1310,16 +1818,29 @@ def _badges_table(items: list[tuple[int, str, str]]) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _render_section_1() -> str:
-    intro = ('פרק זה בוחן את האיכות התכנונית של ההצעה — שילוב במרקם, תנועה, מרחב ציבורי, '
-             'חזות. דורש שיפוט מקצועי של מהנדס/ת המינהלת.')
+    # Phase 7.5 Step 2 — rewritten as a report-wide architect-facing abstract.
+    # Previously claimed "ארבעה פרקים" (legacy from the original cover abstract,
+    # itself now removed by the Step 1 cover restructure). Honestly enumerates
+    # the three regulation layers checked and the five main report sections.
+    intro = (
+        'דוח זה הוא סקירה של תוכנית עיצוב גרסה 24.3 אל מול שלוש שכבות הרגולציה '
+        'הרלוונטיות: תקנון התב"ע (בדיקה מספרית פר-תא שטח), חוברת ההנחיות '
+        'העירוניות (בדיקה רב-תחומית בעשר דיסציפלינות), ותשריט הקובץ הסטטוטורי '
+        'בקבצי CAD (בדיקה גיאומטרית של תאי שטח וגבהים מוחלטים). מבנה הדוח: '
+        'פרק 2 — תאימות תוכן פר-תא שטח, כולל תתי-פרקים 2א (בדיקה ויזואלית של '
+        'מסמכי ההגשה), 2ב (תשריט CAD) ו-2ג (אימות גבהים מחתכים וחזיתות). פרק 3 '
+        '— בדיקה רב-תחומית עם תת-פרק 3.11 (מלאי שירותים לדיירים). פרק 4 — סיכום '
+        'הפעולות הנדרשות. פרק 5 — שקיפות כיסוי הבדיקה האוטומטית. נספח א — '
+        'ליקויי פורמט בחוברת ההגשה.'
+    )
     return f"""
     <div class="chapter" id="sec-1">
       {_chapter_open("1", "ניתוח תכנון עירוני", intro)}
       <div class="callout">
-        <div class="callout-title">דורש השלמה ידנית של מהנדס/ת המינהלת</div>
-        <p class="callout-body">הניתוח התכנוני האיכותי (שילוב בסביבה, תנועה, שצ"פ, מבני ציבור, חזות,
-          אשפה) דורש שיפוט מקצועי שאינו ניתן לאוטומציה. הוא לב הסקירה ויושלם לפני הפיכת הסקירה
-          לחוות דעת רשמית.</p>
+        <div class="callout-title">פרק זה דורש השלמה ידנית של מהנדס/ת המינהלת</div>
+        <p class="callout-body">הניתוח התכנוני האיכותי של פרק 1 (שילוב במרקם הקיים, השפעות
+          תנועה, איכות שצ"פ ומבני ציבור, חזות) אינו ניתן לאוטומציה ומחייב שיפוט מקצועי.
+          ההשלמה תתבצע על-ידי מהנדס/ת הוועדה לפני הפיכת הדוח לחוות דעת רשמית.</p>
       </div>
     </div>
     """
@@ -1809,6 +2330,59 @@ def _render_cad_section(cad_findings: list[dict]) -> str:
 #   - consistency  → amber card (requires_review): drawings disagree by >0.5 m
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Phase 7.5 Step 2 (Leak 3) — translate the M1 English source_context strings
+# to architect-facing Hebrew. The mapping covers every string observed in the
+# v24.3 corpus (7 distinct) plus the spec-anticipated variants for forward
+# compat. Unmapped strings warn and fall back to the raw English (audit-safe).
+
+import logging as _logging
+_chat_logger = _logging.getLogger("report_generator.chatakhim")
+
+_CHAT_CONTEXT_HE_MAP: dict[str, str] = {
+    # ── strings observed in v24.3 corpus ──
+    "absolute elevation, top of building 5":
+        "מפלס מוחלט, ראש מבנה 5",
+    "absolute elevation, floor 13, plot 5":
+        "מפלס מוחלט, קומה 13, תא שטח 5",
+    "absolute elevation, building B4 top (inferred ground = absolute − relative)":
+        "מפלס מוחלט, ראש מבנה B4 (קרקע נגזרת = מוחלט − יחסי)",
+    "absolute elevation, building B4 ground":
+        "מפלס קרקע מוחלט, מבנה B4",
+    "absolute ground level elevation for building B4":
+        "מפלס קרקע מוחלט, מבנה B4",
+    "absolute elevation, building A2 ground":
+        "מפלס קרקע מוחלט, מבנה A2",
+    "absolute elevation building A2 (inferred ground = absolute − relative)":
+        "מפלס מוחלט, מבנה A2 (קרקע נגזרת = מוחלט − יחסי)",
+    # ── spec-anticipated variants (forward compat) ──
+    "absolute top level elevation for building B4":
+        "מפלס מוחלט עליון, מבנה B4",
+    "absolute elevation, building B4 top":
+        "מפלס מוחלט, ראש מבנה B4",
+    "absolute elevation building A2":
+        "מפלס מוחלט, מבנה A2",
+    "absolute elevation, building A2 top":
+        "מפלס מוחלט, ראש מבנה A2",
+}
+
+
+def _translate_chat_context_he(raw: str) -> str:
+    """Map an M1 chatakhim source_context string from English to Hebrew.
+
+    On miss: emit a warning and return the original raw string (no silent
+    failure — audit can spot unmapped strings in PDF or logs).
+    """
+    if not raw:
+        return ""
+    stripped = raw.strip()
+    he = _CHAT_CONTEXT_HE_MAP.get(stripped)
+    if he is not None:
+        return he
+    _chat_logger.warning(
+        "Unmapped §2ג context string (falling back to English): %r", stripped,
+    )
+    return stripped
+
 
 def _render_chatakhim_card(finding: dict) -> str:
     check_type = finding.get("check_type") or "unknown"
@@ -1868,7 +2442,9 @@ def _render_chatakhim_card(finding: dict) -> str:
     for v in sorted(value_list, key=lambda x: (x.get("source_page", 0), x.get("elevation_m", 0))):
         elev = float(v.get("elevation_m", 0))
         page = v.get("source_page", "—")
-        ctx = (v.get("source_context") or "")[:80]
+        # Phase 7.5 Step 2 (Leak 3): translate M1 English context to Hebrew.
+        raw_ctx = v.get("source_context") or ""
+        ctx = _translate_chat_context_he(raw_ctx)[:80]
         over_cls = " over-ceiling" if elev > ceiling_m else ""
         rows += (
             f"<tr>"
@@ -2050,6 +2626,37 @@ def _render_section_5_coverage(report: dict) -> str:
         המקומית מקבל/ת תמונה מלאה לפני אישור ההגשה.
       </p>
 
+      <h3 class="subsection-num">5.0 מקורות הראיות</h3>
+      <p class="cov-help">
+        הבדיקה האוטומטית מורכבת מחמישה מקורות עצמאיים. כל ממצא בדוח נשען לפחות
+        על אחד מהם; חלק מהממצאים נשענים על שילוב של שניים ומעלה.
+      </p>
+      <table class="cov-table">
+        <thead><tr><th>מקור</th><th>תפקיד בדוח</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>מנוע הציות הדטרמיניסטי</b></td>
+            <td>בדיקה מספרית פר-תא שטח של פרמטרים מהתקנון (יח"ד, שטחי בנייה, גובה, חניה, תמהיל, שטחים מחלחלים). מזין את פרק 2.</td>
+          </tr>
+          <tr>
+            <td><b>סקירה ויזואלית של מסמכי ההגשה</b></td>
+            <td>קריאת תכניות, חזיתות וטבלאות באמצעות מודל ראייה. מזין את פרק 2א ומשמש כמקור עזר לחלק מבדיקות פרק 2.</td>
+          </tr>
+          <tr>
+            <td><b>מבקר ויזואלי</b></td>
+            <td>אימות צולב של הסקירה הראשונית — מקטין את הסיכון לטעויות חיזוי. מזין הצלבות בפרק 2א ובחלק מטענות הציטוט בפרק 3.</td>
+          </tr>
+          <tr>
+            <td><b>בדיקה גיאומטרית מבוססת תשריט (CAD)</b></td>
+            <td>קריאה ישירה של קבצי DWG מהקובץ הסטטוטורי (CRS ישראלי EPSG:2039). מזינה את פרק 2ב — שלמות תאי שטח ושטחים קנוניים.</td>
+          </tr>
+          <tr>
+            <td><b>אימות גבהים מוחלטים מחתכים וחזיתות</b></td>
+            <td>חילוץ תוויות מפלסים מוחלטים מתשריטי החתכים והחזיתות. מזין את פרק 2ג — בדיקת תקרת §6.7 ועקביות בין-תשריטית.</td>
+          </tr>
+        </tbody>
+      </table>
+
       <h3 class="subsection-num">5.1 קטגוריות שנבדקו במלואן</h3>
       <p class="cov-help">קטגוריות אלו כוסו על-ידי כללי בדיקה ייעודיים במנוע התאימות, בשילוב בדיקה ויזואלית ומשלימה של מסמכי ההגשה.</p>
       <table class="cov-table">
@@ -2149,13 +2756,10 @@ def _render_amenity_inventory_subsection(
         f"עמ' 45 לתא שטח 5)."
     )
     coverage_explainer_he = (
-        'בבסיס הידע הנוכחי מקודדת דרישה רגולטורית אחת בלבד לקטגוריית '
-        'השירותים לדיירים (§4.1.2.12 לתקנון התב"ע — חדרי אופניים). '
-        'לא נמצאו דרישות מקודדות עבור מועדון דיירים, חדר עגלות, חדר ועד בית, '
-        'חדר תאי דואר, מחסנים, חדרי כושר וכיו"ב. ייתכן שדרישות אלו קיימות '
-        'בחוברת ההנחיות המרחביות של נס ציונה ו/או במסמכי מדיניות מקומיים '
-        'נוספים שלא נטענו עדיין למערכת — מצב הקידוד הנוכחי: 33 חוקי '
-        'דיסציפלינה ב-discipline_rules.json, ללא קטגוריית "שירותים לדיירים".'
+        'בבסיס הידע הנגיש למערכת לא נמצאו דרישות מקודדות עבור רוב הקטגוריות '
+        'בטבלה. ייתכן שדרישות אלו קיימות בחוברת ההנחיות המרחביות של נס ציונה '
+        'או במסמכי מדיניות מקומיים נוספים. הטבלה מוצגת לסקירה ולא לבדיקת '
+        'ציות; בעתיד תתווסף עמודת חיווי ציות עם טעינת הדרישות המלאות.'
     )
     table_note_he = (
         'הטבלה להלן מוצגת לסקירת הצוות, ללא חיווי ציות. עמודת "הערה" '
