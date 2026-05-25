@@ -6,6 +6,49 @@ These items are NOT in scope for M6. They represent direction for M7 and beyond.
 
 ---
 
+## M7 — Discipline appendix audit (new scope dimension, surfaced after M6 work)
+
+**The requirement (verbatim from Lior, 2026-05-24):**
+
+The platform currently audits the architect's תוכנית עיצוב against the תב"ע תקנון. A new scope dimension is needed: audit the architect's **discipline-specific appendices (1:250)** against the **תב"ע נספחים (1:500)**.
+
+Seven disciplines requiring this paired-appendix review:
+
+1. אדריכלות
+2. תנועה
+3. פיזי — כבישים ופיתוח
+4. גינון ועצים
+5. ניקוז
+6. אשפה
+7. בנייה ציבורית
+
+Each architect-submitted discipline appendix (1:250) must be compared to the corresponding תב"ע appendix (1:500). The תב"ע נספחים are not yet in the system — Lior will upload them as part of M7 kickoff.
+
+### Open clarifying questions (must resolve before M7 design)
+
+1. Format of תב"ע nspachim (vector PDF / DWG / DXF / raster PDF / KML / SHP)?
+2. Are architect's discipline appendices separate files, or embedded in the 63-page תוכנית עיצוב we already audit?
+3. Comparison semantics — geometric overlay, feature presence, or organized side-by-side presentation?
+4. Per-discipline deliverable — visual overlay, list of discrepancies, or pass/fail verdict?
+5. Is discipline review gated on automatic comparison, or independent?
+6. בנייה ציבורית on the new list but not in the M6 signature page (10 disciplines). Add as 11th? Different sign workflow?
+
+### Likely architecture (subject to answers above)
+
+- New ingest pipeline for both architect's discipline appendices and תב"ע nspachim
+- If both vector: Shapely-based geometric comparison (preferred path per consultation insights)
+- If mixed: hybrid — vectorize the raster ones, then geometric ops
+- New section in the audit report: section 3 already organized by discipline, could host per-pair comparison summaries
+- Each discipline gets a sub-report; chief engineer + discipline reviewers each see relevant slice
+- Effort estimate: 3-5 weeks depending on format answers
+
+### Dependencies
+
+- This is the highest-priority M7 candidate. Conflicts with other backlog items (consultation insights below) only on engineering capacity.
+- DWG path (ODA File Converter, see backlog below) is a prerequisite if the תב"ע nspachim are in DWG. Build that first.
+
+---
+
 ## Phase 6.D Tier 2 — Pending Lior reference values
 
 The five deferred format-check automations. Each can move from `manual_review` to a deterministic handler once the listed reference value is supplied.
