@@ -832,7 +832,7 @@ def _build_finding(
         "building_id": building_id,
         "check_type": check_type,
         "ceiling_m": ABSOLUTE_CEILING_M,
-        "ceiling_source_section": "§6.7",
+        "ceiling_source_section": "סעיף 6.7",
     }
     finding.update(extras)
     return finding

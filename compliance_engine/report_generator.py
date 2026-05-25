@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -1166,55 +1167,38 @@ ol.summary-items {
   padding: 0;
   margin: 0;
 }
+/* M7.5.1: items render as a clean numbered list — no severity colored
+   accents, no sev-tag, no item ID prefix. Severity field still controls
+   within-category sort order (set by the inventory parser, not the CSS). */
 ol.summary-items > li {
-  margin-bottom: 2mm;
+  margin-bottom: 2.5mm;
   padding: 2.5mm 5mm 2.5mm 5mm;
-  border-right: 3px solid var(--gray-light);
   background: var(--bg-callout);
   border-radius: 2px;
   page-break-inside: avoid;
 }
-ol.summary-items > li.sev-high   { border-right-color: var(--red); }
-ol.summary-items > li.sev-medium { border-right-color: var(--amber); }
-ol.summary-items > li.sev-low    { border-right-color: var(--gray-mid); }
 ol.summary-items > li .item-head {
-  margin-bottom: 1mm;
+  margin-bottom: 0.5mm;
 }
-ol.summary-items > li .sev-tag {
+ol.summary-items > li .seq-num {
   display: inline-block;
-  font-size: 8.5pt;
+  font-size: 11pt;
   font-weight: 700;
-  padding: 0.3mm 2.5mm;
-  border-radius: 6px;
-  margin-left: 2mm;
+  color: var(--green-dark);
   vertical-align: middle;
-}
-ol.summary-items > li.sev-high .sev-tag   { background: #FFE0E0; color: var(--red); }
-ol.summary-items > li.sev-medium .sev-tag { background: #FFF3E0; color: #B8651A; }
-ol.summary-items > li.sev-low .sev-tag    { background: #F0F0F0; color: var(--gray-mid); }
-ol.summary-items > li .id-tag {
-  display: inline-block;
-  font-size: 8.5pt;
-  color: var(--gray-mid);
-  font-weight: 700;
-  vertical-align: middle;
+  min-width: 6mm;
 }
 ol.summary-items > li .item-text {
   font-size: 9.5pt;
   color: var(--gray-dark);
-  line-height: 1.5;
-  margin: 0 0 1mm 0;
+  line-height: 1.55;
+  margin: 0 0 1.5mm 0;
 }
 ol.summary-items > li a.item-link {
   font-size: 9pt;
-  color: var(--green-brand);
-  text-decoration: none;
-  font-weight: 500;
-}
-ol.summary-items > li a.item-link::after {
-  content: " (עמ׳ " target-counter(attr(href), page) ")";
-  color: var(--green-brand);
-  font-weight: 500;
+  color: var(--gray-mid);
+  text-decoration: underline;
+  font-weight: 400;
 }
 /* Map page */
 .summary-page table.summary-map {
@@ -1361,6 +1345,10 @@ def generate_audit_pdf(
 
 
 def _render_to_pdf(html_str: str, output_path: Path) -> None:
+    # M7.5.1 — defensive belt-and-braces: rewrite any remaining "§" to "סעיף "
+    # in the assembled HTML before WeasyPrint sees it. Catches stray clause
+    # refs from upstream JSON or future code that forgot the source-level fix.
+    html_str = _normalize_he_text(html_str)
     from weasyprint import HTML, CSS as WeasyCSS
     from weasyprint.text.fonts import FontConfiguration
     font_config = FontConfiguration()
@@ -1370,6 +1358,19 @@ def _render_to_pdf(html_str: str, output_path: Path) -> None:
         stylesheets=[WeasyCSS(string=_CSS, base_url=base, font_config=font_config)],
         font_config=font_config,
     )
+
+
+# M7.5.1 — § → סעיף normalize.  Architect can't accept § (regulatory section
+# symbol) in the document; this helper rewrites every occurrence to "סעיף ".
+# Source-level fixes were applied in 5 modules; this is the belt-and-braces.
+_SECTION_SIGN_RE = re.compile(r"§\s*")
+
+
+def _normalize_he_text(text: str) -> str:
+    """Replace every '§' (with optional trailing space) with 'סעיף '."""
+    if not text or "§" not in text:
+        return text
+    return _SECTION_SIGN_RE.sub("סעיף ", text)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1633,27 +1634,33 @@ def _render_summary_category_page(
     cat: str, label_he: str, intro_he: str, items: list[dict],
 ) -> str:
     """One page per category. Items inherit category ordering from inventory
-    (already sorted by severity then id) — we don't re-sort here."""
+    (already sorted by severity then id) — we don't re-sort here.
+
+    M7.5.1 polish:
+      - severity label/colored accent dropped from render (severity still
+        controls within-category sort order via the inventory parser)
+      - item ID (M01/F02/C01...) dropped from render — replaced with a per-
+        category sequence number (1, 2, ..., N).  IDs remain in the JSON
+        as record keys for future anchor use.
+      - page reference replaced with simple "לפרטים נוספים" hyperlink to
+        the detail-content anchor.
+    """
     lis: list[str] = []
-    for item in items:
-        sev = item.get("severity", "low")
-        sev_label = _SEVERITY_LABELS_HE.get(sev, sev)
+    for seq, item in enumerate(items, start=1):
         anchor = (item.get("anchor_target_id") or "").strip()
-        source = (item.get("source_section") or "").strip()
         text = item.get("one_line_he") or ""
         item_id = item.get("id") or ""
         link_html = ""
-        if anchor and source:
+        if anchor:
             link_html = (
-                f'<a class="item-link" href="#{_esc(anchor)}">'
-                f'← ראה {_esc(source)}'
-                f'</a>'
+                f'<a class="item-link" href="#{_esc(anchor)}">לפרטים נוספים</a>'
             )
+        # data-item-id preserves the internal ID on the rendered HTML for
+        # future anchor use without surfacing it to the architect.
         lis.append(f"""
-        <li class="sev-{_esc(sev)}">
+        <li data-item-id="{_esc(item_id)}">
           <div class="item-head">
-            <span class="sev-tag">{_esc(sev_label)}</span>
-            <span class="id-tag">{_esc(item_id)}</span>
+            <span class="seq-num">{seq}.</span>
           </div>
           <p class="item-text">{_esc(text)}</p>
           {link_html}
@@ -2434,7 +2441,7 @@ def _render_chatakhim_card(finding: dict) -> str:
         if spread_m is not None:
             meta_pieces.append(f"פער מקסימלי: {float(spread_m):.2f} מ׳")
     else:
-        meta_pieces.append(f"תקרת §6.7: {ceiling_m:.2f} מ׳ מעל פני הים")
+        meta_pieces.append(f"תקרת סעיף 6.7: {ceiling_m:.2f} מ׳ מעל פני הים")
     meta = " · ".join(meta_pieces)
 
     # Value table
@@ -2503,7 +2510,7 @@ def _render_chatakhim_section(chatakhim_findings: list[dict]) -> str:
     intro = (
         "פרק זה מאגד בדיקות גובה מוחלט שחולצו מתשריטי החתכים והחזיתות בהגשה "
         "(עמ׳ 48-51 לחתכים, 52-62 לחזיתות). שלושה סוגי בדיקות:"
-        " (1) השוואה מול תקרת §6.7 לתב\"ע (91 מ׳ מעל פני הים — מגבלת מסלול טיסה, "
+        " (1) השוואה מול תקרת סעיף 6.7 לתב\"ע (91 מ׳ מעל פני הים — מגבלת מסלול טיסה, "
         "לא תינתן הקלה);"
         " (2) השוואה בין-מקורית: האם תשריטים שונים של אותו מבנה מציגים את אותו גובה;"
         " (3) עקביות קו אפס: האם תשריטים שונים של אותו מבנה מתייחסים לאותו "
@@ -2652,7 +2659,7 @@ def _render_section_5_coverage(report: dict) -> str:
           </tr>
           <tr>
             <td><b>אימות גבהים מוחלטים מחתכים וחזיתות</b></td>
-            <td>חילוץ תוויות מפלסים מוחלטים מתשריטי החתכים והחזיתות. מזין את פרק 2ג — בדיקת תקרת §6.7 ועקביות בין-תשריטית.</td>
+            <td>חילוץ תוויות מפלסים מוחלטים מתשריטי החתכים והחזיתות. מזין את פרק 2ג — בדיקת תקרת סעיף 6.7 ועקביות בין-תשריטית.</td>
           </tr>
         </tbody>
       </table>

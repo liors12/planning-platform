@@ -46,7 +46,7 @@ AMENITIES: List[Dict[str, Any]] = [
         "key": "bike_room",
         "hebrew": "חדר אופניים",
         "label_patterns": ["אופניים"],
-        "regulatory_anchor": "§4.1.2.12 לתקנון התב\"ע — הוראה רכה",
+        "regulatory_anchor": "סעיף 4.1.2.12 לתקנון התב\"ע — הוראה רכה",
         "audit_note": "נבדק כתקין במסגרת מנוע הציות (סעיף 4.1.2.12).",
     },
     {
@@ -74,7 +74,7 @@ AMENITIES: List[Dict[str, Any]] = [
         "key": "private_storage",
         "hebrew": "מחסן (ברמת מבנה)",
         "label_patterns": ["מחסן"],
-        "regulatory_anchor": "§5 הערת שוליים בתקנון — ≤6 מ\"ר ליח\"ד (מחסן פרטי, לא ברמת מבנה)",
+        "regulatory_anchor": "סעיף 5 הערת שוליים בתקנון — ≤6 מ\"ר ליח\"ד (מחסן פרטי, לא ברמת מבנה)",
         "audit_note": "מצוין בנפרד מנושא שטחי הבנייה.",
     },
     {

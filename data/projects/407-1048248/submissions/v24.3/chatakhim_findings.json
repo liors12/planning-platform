@@ -1,7 +1,7 @@
 {
   "project_id": "407-1048248",
   "submission_id": "v24.3",
-  "generated_at": "2026-05-25T06:51:40Z",
+  "generated_at": "2026-05-25T10:45:13Z",
   "source_pages": [
     48,
     49,
@@ -124,7 +124,7 @@
       "building_id": null,
       "check_type": "ceiling_plot_level",
       "ceiling_m": 91.0,
-      "ceiling_source_section": "§6.7",
+      "ceiling_source_section": "סעיף 6.7",
       "max_top_m": 91.8,
       "delta_m": 0.8,
       "value_list": [
@@ -161,7 +161,7 @@
       "building_id": "A2",
       "check_type": "ground_reference",
       "ceiling_m": 91.0,
-      "ceiling_source_section": "§6.7",
+      "ceiling_source_section": "סעיף 6.7",
       "max_ground_m": 44.5,
       "min_ground_m": 42.0,
       "spread_m": 2.5,
@@ -223,7 +223,7 @@
       "building_id": "B4",
       "check_type": "ground_reference",
       "ceiling_m": 91.0,
-      "ceiling_source_section": "§6.7",
+      "ceiling_source_section": "סעיף 6.7",
       "max_ground_m": 49.1,
       "min_ground_m": 47.75,
       "spread_m": 1.35,

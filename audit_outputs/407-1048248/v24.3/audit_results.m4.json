@@ -7624,7 +7624,7 @@
         "building_id": null,
         "check_type": "ceiling_plot_level",
         "ceiling_m": 91.0,
-        "ceiling_source_section": "§6.7",
+        "ceiling_source_section": "סעיף 6.7",
         "max_top_m": 91.8,
         "delta_m": 0.8,
         "value_list": [
@@ -7661,7 +7661,7 @@
         "building_id": "A2",
         "check_type": "ground_reference",
         "ceiling_m": 91.0,
-        "ceiling_source_section": "§6.7",
+        "ceiling_source_section": "סעיף 6.7",
         "max_ground_m": 44.5,
         "min_ground_m": 42.0,
         "spread_m": 2.5,
@@ -7723,7 +7723,7 @@
         "building_id": "B4",
         "check_type": "ground_reference",
         "ceiling_m": 91.0,
-        "ceiling_source_section": "§6.7",
+        "ceiling_source_section": "סעיף 6.7",
         "max_ground_m": 49.1,
         "min_ground_m": 47.75,
         "spread_m": 1.35,
@@ -7794,7 +7794,7 @@
     ],
     "amenity_inventory": {
       "project_id": "407-1048248",
-      "generated_at": "2026-05-25T09:35:45Z",
+      "generated_at": "2026-05-25T10:44:54Z",
       "source_pages": [
         26,
         36,
@@ -7812,7 +7812,7 @@
         {
           "key": "bike_room",
           "hebrew": "חדר אופניים",
-          "regulatory_anchor": "§4.1.2.12 לתקנון התב\"ע — הוראה רכה",
+          "regulatory_anchor": "סעיף 4.1.2.12 לתקנון התב\"ע — הוראה רכה",
           "audit_note": "נבדק כתקין במסגרת מנוע הציות (סעיף 4.1.2.12).",
           "per_plot": {
             "1": {
@@ -7871,7 +7871,7 @@
         {
           "key": "private_storage",
           "hebrew": "מחסן (ברמת מבנה)",
-          "regulatory_anchor": "§5 הערת שוליים בתקנון — ≤6 מ\"ר ליח\"ד (מחסן פרטי, לא ברמת מבנה)",
+          "regulatory_anchor": "סעיף 5 הערת שוליים בתקנון — ≤6 מ\"ר ליח\"ד (מחסן פרטי, לא ברמת מבנה)",
           "audit_note": "מצוין בנפרד מנושא שטחי הבנייה.",
           "per_plot": {
             "1": {
