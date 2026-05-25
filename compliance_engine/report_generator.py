@@ -872,6 +872,72 @@ table.chat-values td.page-cell { width: 18%; }
 table.chat-values td.context-cell { color: var(--gray-mid); font-size: 9.5pt; }
 
 /* ============================================
+   SECTION 3.N — AMENITY INVENTORY (Phase 7.4, Architecture C)
+   No accent — inherits §3 styling. Soft policy, no verdicts.
+   ============================================ */
+.amen-subsection .amen-provenance,
+.amen-subsection .amen-coverage,
+.amen-subsection .amen-note {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  line-height: 1.6;
+  margin: 0 0 3mm 0;
+}
+.amen-subsection .amen-note {
+  font-style: italic;
+}
+table.amen-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4mm;
+  direction: rtl;
+  font-size: 9pt;
+}
+table.amen-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 2mm 2.5mm;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+  vertical-align: middle;
+}
+table.amen-table td {
+  border: 1px solid var(--gray-light);
+  padding: 2mm 2.5mm;
+  vertical-align: middle;
+  text-align: right;
+}
+table.amen-table td.amen-name-cell { font-weight: 600; width: 18%; }
+table.amen-table th.amen-plot-cell,
+table.amen-table td.amen-plot-cell { width: 8%; text-align: center; }
+table.amen-table td.amen-anchor-cell { width: 18%; font-size: 8.5pt; color: var(--gray-mid); }
+table.amen-table td.amen-note-cell   { width: 18%; font-size: 8.5pt; color: var(--gray-mid); }
+table.amen-table td.amen-yes  { color: var(--green-brand); font-weight: 600; text-align: center; }
+table.amen-table td.amen-no   { color: var(--gray-mid); text-align: center; font-size: 11pt; }
+table.amen-table td.amen-na   { color: var(--gray-light); text-align: center; font-style: italic; }
+table.amen-table .amen-raw {
+  display: block;
+  color: var(--gray-mid);
+  font-size: 8pt;
+  font-weight: 400;
+  margin-top: 0.5mm;
+}
+
+/* §4 amenity-clarification block — soft, not a violation */
+.amen-clarification {
+  margin: 3mm 0;
+  padding: 5mm 6mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--gray-mid);
+  border-radius: 2px;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* ============================================
    APPENDIX A passing-rules summary (M6 Phase 6.D)
    ============================================ */
 .passing-summary {
@@ -968,6 +1034,8 @@ def generate_audit_pdf(
         f for f in all_sidecar_findings
         if f.get("source_type") not in ("cad_evidence", "chatakhim_evidence")
     ]
+    # Phase 7.4 — amenity inventory (Architecture C, soft policy, rendered as §3.11)
+    amenity_inventory = (audit_results.get("m4_summary") or {}).get("amenity_inventory")
     coverage_report = _load_coverage_report(output_path)
 
     parts: list[str] = []
@@ -979,6 +1047,7 @@ def generate_audit_pdf(
         has_cad=bool(cad_findings),
         has_chatakhim=bool(chatakhim_findings),
         has_section_5=bool(coverage_report),
+        has_amenity_inventory=bool(amenity_inventory),
     ))
     parts.append(_render_section_1())
     parts.append(_render_section_2(content_results, residential_parcels, plan_number))
@@ -988,9 +1057,10 @@ def generate_audit_pdf(
         parts.append(_render_cad_section(cad_findings))
     if chatakhim_findings:
         parts.append(_render_chatakhim_section(chatakhim_findings))
-    parts.append(_render_section_3(discipline_results))
+    parts.append(_render_section_3(discipline_results, amenity_inventory=amenity_inventory))
     parts.append(_render_section_4(content_results, discipline_results, format_results,
-                                    residential_parcels=residential_parcels))
+                                    residential_parcels=residential_parcels,
+                                    amenity_inventory=amenity_inventory))
     if coverage_report:
         parts.append(_render_section_5_coverage(coverage_report))
     parts.append(_render_appendix_divider())
@@ -1146,7 +1216,8 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
                 has_sidecar: bool = False,
                 has_cad: bool = False,
                 has_chatakhim: bool = False,
-                has_section_5: bool = False) -> str:
+                has_section_5: bool = False,
+                has_amenity_inventory: bool = False) -> str:
     rows: list[str] = []
     rows.append(_toc_row("1.", "ניתוח תכנון עירוני", "#sec-1", "main"))
     rows.append(_toc_row("2.", f'בדיקת תאימות תוכן לתב"ע {plan_number}', "#sec-2", "main"))
@@ -1174,6 +1245,11 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
             seen.add(code)
             rows.append(_toc_row(f"3.{disc_i}", DISCIPLINE_NAME_HE[code],
                                   f"#sec-3-{disc_i}", "sub"))
+    # Phase 7.4: amenity inventory as §3.{N+1} (only when present)
+    if has_amenity_inventory:
+        amenity_idx = disc_i + 1
+        rows.append(_toc_row(f"3.{amenity_idx}", "שירותים לדיירים",
+                              "#sec-3-amenities", "sub"))
 
     rows.append(_toc_row("4.", "סיכום וממצאים סופיים", "#sec-4", "main"))
     # M5: section 5 coverage transparency (only when coverage_report.json present)
@@ -2013,7 +2089,11 @@ def _render_section_5_coverage(report: dict) -> str:
 # §3
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _render_section_3(discipline_results: list[dict]) -> str:
+def _render_section_3(
+    discipline_results: list[dict],
+    *,
+    amenity_inventory: dict | None = None,
+) -> str:
     intro = (
         'פרק זה בוחן את ההגשה מול חוברת ההנחיות העירונית של נס ציונה (407-0730606, פברואר 2026). '
         'הבדיקה מאורגנת בעשר דיסציפלינות. במקום בו התקבל פידבק ממנהל הדיסציפלינה — הוא משולב בתא ההערה.'
@@ -2033,11 +2113,109 @@ def _render_section_3(discipline_results: list[dict]) -> str:
         disc_i += 1
         subs.append(_discipline_subsection(f"3.{disc_i}", f"sec-3-{disc_i}", code, rules))
 
+    # Phase 7.4 — append amenity inventory as §3.{disc_i+1}
+    if amenity_inventory:
+        amenity_idx = disc_i + 1
+        subs.append(_render_amenity_inventory_subsection(
+            f"3.{amenity_idx}", "sec-3-amenities", amenity_inventory,
+        ))
+
     return f"""
     <div class="chapter" id="sec-3">
       {_chapter_open("3", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", intro)}
       {badges}
       {''.join(subs)}
+    </div>
+    """
+
+
+def _render_amenity_inventory_subsection(
+    num: str, anchor_id: str, inventory: dict,
+) -> str:
+    """Phase 7.4 — §3.N "שירותים לדיירים" inventory table (no verdicts).
+
+    Visual identity: inherits §3's standard sub-section styling. NOT a new
+    evidence source (cf. §2א/2ב/2ג which have their own accent colors) — this
+    is a soft-policy inventory whose role is to surface what the architect
+    drew without claiming compliance.
+    """
+    amenities = inventory.get("amenities") or []
+    residential_plots = inventory.get("residential_plots") or [1, 2, 3, 4, 5]
+    source_pages = inventory.get("source_pages") or [26, 36, 41, 45]
+
+    provenance_he = (
+        f"ממצאי מלאי של שירותים לדיירים שזוהו בדיאגרמות הפונקציות "
+        f"(עמ' 26 לתא שטח 1; עמ' 36 לתאי שטח 2+4; עמ' 41 לתא שטח 3; "
+        f"עמ' 45 לתא שטח 5)."
+    )
+    coverage_explainer_he = (
+        'בבסיס הידע הנוכחי מקודדת דרישה רגולטורית אחת בלבד לקטגוריית '
+        'השירותים לדיירים (§4.1.2.12 לתקנון התב"ע — חדרי אופניים). '
+        'לא נמצאו דרישות מקודדות עבור מועדון דיירים, חדר עגלות, חדר ועד בית, '
+        'חדר תאי דואר, מחסנים, חדרי כושר וכיו"ב. ייתכן שדרישות אלו קיימות '
+        'בחוברת ההנחיות המרחביות של נס ציונה ו/או במסמכי מדיניות מקומיים '
+        'נוספים שלא נטענו עדיין למערכת — מצב הקידוד הנוכחי: 33 חוקי '
+        'דיסציפלינה ב-discipline_rules.json, ללא קטגוריית "שירותים לדיירים".'
+    )
+    table_note_he = (
+        'הטבלה להלן מוצגת לסקירת הצוות, ללא חיווי ציות. עמודת "הערה" '
+        'תאוכלס בעתיד עם דרישות מקודדות.'
+    )
+
+    # Header row
+    plot_headers = "".join(
+        f'<th class="amen-plot-cell">תא שטח {p}</th>' for p in residential_plots
+    )
+    header_html = f"""
+    <thead>
+      <tr>
+        <th class="amen-name-cell">שירות</th>
+        {plot_headers}
+        <th class="amen-anchor-cell">אסמכתא רגולטורית</th>
+        <th class="amen-note-cell">הערה</th>
+      </tr>
+    </thead>
+    """
+
+    def _cell_for(amen, plot_id):
+        cell = amen["per_plot"].get(str(plot_id), {}) or {}
+        if cell.get("non_residential"):
+            return '<td class="amen-na">לא רלוונטי</td>'
+        if cell.get("detected"):
+            page = cell.get("source_page", "—")
+            raw = cell.get("raw_label", "")
+            # If the raw label adds information (e.g. "מתקני כושר" vs the canonical
+            # "חדר כושר"), surface it in parentheses
+            raw_display = ""
+            if raw and raw.strip() not in (amen.get("hebrew") or ""):
+                raw_display = f' <span class="amen-raw">({_esc(raw)})</span>'
+            return f'<td class="amen-yes">✓ עמ\' {page}{raw_display}</td>'
+        return '<td class="amen-no">—</td>'
+
+    body_rows = []
+    for amen in amenities:
+        cells = "".join(_cell_for(amen, p) for p in residential_plots)
+        anchor = _esc(amen.get("regulatory_anchor") or "—")
+        note = _esc(amen.get("audit_note") or "")
+        body_rows.append(f"""
+        <tr>
+          <td class="amen-name-cell">{_esc(amen["hebrew"])}</td>
+          {cells}
+          <td class="amen-anchor-cell">{anchor}</td>
+          <td class="amen-note-cell">{note}</td>
+        </tr>
+        """)
+
+    return f"""
+    <div class="subsection amen-subsection" id="{anchor_id}">
+      <h3 class="subsection-num">{_esc(num)} שירותים לדיירים</h3>
+      <p class="amen-provenance">{_esc(provenance_he)}</p>
+      <p class="amen-coverage">{_esc(coverage_explainer_he)}</p>
+      <p class="amen-note">{_esc(table_note_he)}</p>
+      <table class="amen-table">
+        {header_html}
+        <tbody>{''.join(body_rows)}</tbody>
+      </table>
     </div>
     """
 
@@ -2161,7 +2339,9 @@ def _discipline_badge_counts(discipline_results: list[dict]) -> list[tuple[int, 
 # ─────────────────────────────────────────────────────────────────────────────
 
 def _render_section_4(content_results, discipline_results, format_results,
-                       residential_parcels: list[dict] | None = None) -> str:
+                       residential_parcels: list[dict] | None = None,
+                       *,
+                       amenity_inventory: dict | None = None) -> str:
     intro = "פרק זה מסכם את ממצאי הסקירה ומדרג את הפעולות הנדרשות מכם לפני הסקירה הבאה."
     badges = _badges_table(_summary_badge_counts(content_results, discipline_results))
     banner = _verdict_banner_html(content_results, discipline_results)
@@ -2176,6 +2356,18 @@ def _render_section_4(content_results, discipline_results, format_results,
     else:
         list_html = '<p style="color:#7A7A7A;">אין פעולות נדרשות.</p>'
 
+    # Phase 7.4 — soft clarification request for amenity gaps. NOT a non_compliance
+    # claim — separated from the priority list to make the framing clear.
+    clarification_html = ""
+    if amenity_inventory and amenity_inventory.get("clarification_needed"):
+        cn = amenity_inventory["clarification_needed"]
+        clarification_html = f"""
+        <h3 class="subsection-num" style="margin-top:8mm">דרישות לעיון — שירותים לדיירים</h3>
+        <div class="amen-clarification">
+          {_esc(cn.get("hebrew") or "")}
+        </div>
+        """
+
     disclaimer = (
         'דוח זה נערך ע"י מנוע הבדיקה האוטומטי של פלטפורמת המינהלת. הדוח דורש סקירה וחתימה של '
         'מהנדס/ת הוועדה המקומית טרם הפיכתו לחוות דעת רשמית.'
@@ -2188,6 +2380,7 @@ def _render_section_4(content_results, discipline_results, format_results,
       {banner}
       <h3 class="subsection-num" style="margin-top:8mm">פעולות הנדרשות מכם לפני הסקירה הבאה</h3>
       {list_html}
+      {clarification_html}
       <p class="closing-paragraph">{_esc(disclaimer)}</p>
     </div>
     """

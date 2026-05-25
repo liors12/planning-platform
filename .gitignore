@@ -67,6 +67,7 @@ data/**
 !data/projects/*/submissions/*/audit_results.m4.run_log.jsonl
 !data/projects/*/submissions/*/coverage_report.json
 !data/projects/*/submissions/*/chatakhim_findings.json
+!data/projects/*/submissions/*/amenity_inventory.json
 !data/projects/*/submissions/*/*.md
 # Phase 7.1 — takanon CAD source files + derived dataset (per-project)
 !data/projects/*/takanon_cad/

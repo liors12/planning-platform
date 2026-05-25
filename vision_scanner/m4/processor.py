@@ -494,6 +494,7 @@ def build_m4_document(
     enabled_clause_ids: Optional[set] = None,
     translate_hebrew: bool = True,
     cad_findings: Optional[List[Dict[str, Any]]] = None,
+    amenity_inventory: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Top-level: produce the M4AuditResults dict.
 
@@ -546,6 +547,12 @@ def build_m4_document(
     if cad_findings:
         summary.setdefault("sidecar_only_findings", [])
         summary["sidecar_only_findings"].extend(cad_findings)
+
+    # Phase 7.4 — Amenity inventory (Architecture C, no verdicts).
+    # Stashed verbatim in summary; report_generator picks it up to render §3.11
+    # and the soft-clarification item in §4.
+    if amenity_inventory:
+        summary["amenity_inventory"] = amenity_inventory
 
     document = {
         "audit_run_id": engine_doc.get("audit_run_id"),

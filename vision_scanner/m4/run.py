@@ -131,6 +131,13 @@ def main(argv: List[str] | None = None) -> int:
              "pages to produce absolute-height ceiling + drawing-consistency findings.",
     )
     parser.add_argument(
+        "--include-amenity-inventory",
+        action="store_true",
+        help="Phase 7.4: build the resident-amenities inventory from M1 "
+             "functions_diagram pages; stash in m4_summary.amenity_inventory "
+             "for rendering as §3.11.",
+    )
+    parser.add_argument(
         "--log-path", type=Path, default=None,
         help="Run-log JSONL (default: <output dir>/audit_results.m4.run_log.jsonl)",
     )
@@ -185,6 +192,26 @@ def main(argv: List[str] | None = None) -> int:
         print(f"  consistency warnings: {chat_summary['consistency_warnings_buildings']}")
         print(f"  total chatakhim findings: {len(chatakhim_findings)}")
 
+    amenity_inventory = None
+    if args.include_amenity_inventory:
+        from ..parsers.amenity_inventory_parser import (
+            build_amenity_matrix,
+            PROJECT_ROOT as _AMEN_ROOT,
+        )
+        print("  Phase 7.4 amenity inventory — reading M1 manifests...")
+        manifests_path = (
+            _AMEN_ROOT / "data" / "projects" / args.project_id
+            / "submissions" / args.submission_id / "page_manifests.json"
+        )
+        manifests = json.loads(manifests_path.read_text(encoding="utf-8"))
+        amenity_inventory = build_amenity_matrix(manifests)
+        amenities_count = len(amenity_inventory.get("amenities") or [])
+        gaps = amenity_inventory.get("gaps_summary") or {}
+        print(f"  amenities tracked: {amenities_count}")
+        print(f"  always_detected: {gaps.get('always_detected')}")
+        print(f"  partial:         {gaps.get('partial')}")
+        print(f"  never_detected:  {gaps.get('never_detected')}")
+
     document = build_m4_document(
         engine_doc, vision_doc, critic_doc,
         engine_path=args.engine_results,
@@ -193,6 +220,7 @@ def main(argv: List[str] | None = None) -> int:
         enabled_clause_ids=enabled_m2_clauses,
         translate_hebrew=not args.no_translate,
         cad_findings=(cad_findings + chatakhim_findings) or None,
+        amenity_inventory=amenity_inventory,
     )
 
     known_m2_clauses = {f.get("clause_id") for f in vision_doc.get("findings", [])}
