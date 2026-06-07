@@ -1977,7 +1977,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2006,7 +2006,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2018,7 +2018,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2047,7 +2047,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2063,7 +2063,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2092,7 +2092,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2104,7 +2104,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2133,7 +2133,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2149,7 +2149,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2178,7 +2178,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2195,7 +2195,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2224,7 +2224,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2241,7 +2241,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2270,7 +2270,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2282,7 +2282,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2311,7 +2311,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2323,7 +2323,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2352,7 +2352,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -2364,7 +2364,7 @@
         "submission_setback_side_m": null
       },
       "failure_mode": "NONE",
-      "notes_he": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
+      "notes_he": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\nסעיף 4.1.2.4 בתקנון התב\"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.",
       "remediation_he": "יש להציג קווי בניין מסומנים על תכניות המגרש, ולוודא תיאום מלא עם התשריט המאושר.",
       "rule_code": "CONTENT_SETBACKS",
       "rule_name_he": "קווי בניין (front/side/rear)",
@@ -2393,7 +2393,7 @@
           "tag": "primary"
         }
       ],
-      "_original_notes_en": "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
+      "_original_notes_en": "קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב\"ע.\n\n[Vision evidence (confidence=high) clause 4.1.2.4]: The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24)."
     },
     {
       "confidence": "HIGH",
@@ -3174,11 +3174,11 @@
         76
       ],
       "booklet_section": "8.6",
-      "compliance_note": "נדרשת בדיקה הנדסית של כיווני הניקוז",
+      "compliance_note": "יש לציין בתכנית הניקוז את כיווני הזרימה המתוכננים בכל מפלס",
       "confidence": "HIGH",
       "discipline": "drainage",
       "evidence": {
-        "compliance_note": "נדרשת בדיקה הנדסית של כיווני הניקוז",
+        "compliance_note": "יש לציין בתכנית הניקוז את כיווני הזרימה המתוכננים בכל מפלס",
         "evidence_pages": [
           40,
           44
@@ -3193,7 +3193,7 @@
       ],
       "evidence_visual": "החצים והאחוזים בעמ' 40 ו-44 מצביעים בכיוונים שונים — לא היה לי זמן לבדוק כל חץ. אין סימון מפורש שהניקוז זורם לעבר השכנים, אך גם אין הוכחה לכך שאינו זורם לעברם.",
       "failure_mode": "NONE",
-      "notes_he": "(עמ' 40, 44) נדרשת בדיקה הנדסית של כיווני הניקוז",
+      "notes_he": "(עמ' 40, 44) יש לציין בתכנית הניקוז את כיווני הזרימה המתוכננים בכל מפלס",
       "remediation_he": "יש לציין מפורשות בתכניות שניקוז המגרש לא מופנה למגרשים פרטיים.",
       "required_artifact_he": "סימון כיוון ניקוז בתכנית",
       "rule_code": "DISC_DRAINAGE_NO_NEIGHBOR_RUNOFF",
@@ -3385,11 +3385,11 @@
         73
       ],
       "booklet_section": "8.5",
-      "compliance_note": "יש לדרוש הערה מפורשת על שילוט ללא צבע על הקרקע",
+      "compliance_note": "יש להוסיף הערה מפורשת על שילוט ללא צבע על הקרקע",
       "confidence": "HIGH",
       "discipline": "fire",
       "evidence": {
-        "compliance_note": "יש לדרוש הערה מפורשת על שילוט ללא צבע על הקרקע",
+        "compliance_note": "יש להוסיף הערה מפורשת על שילוט ללא צבע על הקרקע",
         "evidence_pages": [
           25,
           35,
@@ -3408,7 +3408,7 @@
       ],
       "evidence_visual": "הסימון בתוכניות הוא צבע חום — אבל זהו צבע דיאגרמתי בלבד (לפי לגנדה). אין הערה מפורשת לגבי דרישת שילוט בפועל.",
       "failure_mode": "NONE",
-      "notes_he": "(עמ' 25, 35, 40, 44) יש לדרוש הערה מפורשת על שילוט ללא צבע על הקרקע",
+      "notes_he": "(עמ' 25, 35, 40, 44) יש להוסיף הערה מפורשת על שילוט ללא צבע על הקרקע",
       "remediation_he": "יש להוסיף בתכנית את ההערה: 'סימון רחבת כיבוי אש באמצעות שילוט בלבד ללא צביעה'.",
       "required_artifact_he": "הערה על סימון רחבת כיבוי בתכנית",
       "rule_code": "DISC_FIRE_SIGNAGE_NOT_PAINT",
@@ -3945,11 +3945,11 @@
         52
       ],
       "booklet_section": "7.2",
-      "compliance_note": "המערכת היא כנראה פניאומטית עם דחיסה בקרקע (ראו 3.1 רביעי). נדרשת בדיקה הנדסית אם יש חדרי איסוף/שוטים בכל קומה",
+      "compliance_note": "המערכת היא כנראה פניאומטית עם דחיסה בקרקע. יש לציין על תכניות הקומות הטיפוסיות את מיקום חדרי איסוף הפסולת או שוטי הפסולת בכל קומה, ולסמנם בלגנדה",
       "confidence": "HIGH",
       "discipline": "shafa",
       "evidence": {
-        "compliance_note": "המערכת היא כנראה פניאומטית עם דחיסה בקרקע (ראו 3.1 רביעי). נדרשת בדיקה הנדסית אם יש חדרי איסוף/שוטים בכל קומה",
+        "compliance_note": "המערכת היא כנראה פניאומטית עם דחיסה בקרקע. יש לציין על תכניות הקומות הטיפוסיות את מיקום חדרי איסוף הפסולת או שוטי הפסולת בכל קומה, ולסמנם בלגנדה",
         "evidence_pages": [
           25,
           30,
@@ -3976,7 +3976,7 @@
       ],
       "evidence_visual": "בדיאגרמות האשפה (עמ' 25, 35, 40, 44) נראים חדרי אצירת אשפה צהובים ברמת הקרקע צמודים לכניסות הבניינים, וכן חדרי דחסנית כתומים. בקומות הטיפוסיות (עמ' 30, 38, 43, 47) הצבע הצהוב משויך בלגנדה לדירות 2 חדרים ולא לחדרי אשפה — לכן לא ניתן לאשר ויזואלית אם קיים חדר פסולת ייעודי בכל קומה.",
       "failure_mode": "NONE",
-      "notes_he": "(עמ' 25, 30, 35, 38, 40, 43, 44, 47) המערכת היא כנראה פניאומטית עם דחיסה בקרקע (ראו 3.1 רביעי). נדרשת בדיקה הנדסית אם יש חדרי איסוף/שוטים בכל קומה",
+      "notes_he": "(עמ' 25, 30, 35, 38, 40, 43, 44, 47) המערכת היא כנראה פניאומטית עם דחיסה בקרקע. יש לציין על תכניות הקומות הטיפוסיות את מיקום חדרי איסוף הפסולת או שוטי הפסולת בכל קומה, ולסמנם בלגנדה",
       "remediation_he": "יש לסמן חדר פסולת קומתי בכל מפלס שימושי בקומות הטיפוסיות ולציין את שטחו.",
       "required_artifact_he": "סימון חדרי פסולת קומתיים בקומה הטיפוסית",
       "rule_code": "DISC_SHAFA_FLOOR_COLLECTION_ROOMS",
@@ -3995,11 +3995,11 @@
         71
       ],
       "booklet_section": "8.x",
-      "compliance_note": "חסר — יש לדרוש סימון רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
+      "compliance_note": "יש לסמן רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
       "confidence": "HIGH",
       "discipline": "shafa",
       "evidence": {
-        "compliance_note": "חסר — יש לדרוש סימון רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
+        "compliance_note": "יש לסמן רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
         "evidence_pages": [
           24,
           25,
@@ -4024,7 +4024,7 @@
       ],
       "evidence_visual": "בתוכניות הפיתוח ובדיאגרמות האשפה לא אותרה רחבה ייעודית המסומנת כ\"רחבת גזם\" באף תא שטח. הרחבות החומות בדיאגרמות מתויגות כ\"רחבת כיבוי\" — לא רחבת גזם.",
       "failure_mode": "POLICY_VIOLATION",
-      "notes_he": "(עמ' 24, 25, 34, 35, 39, 40, 44) חסר — יש לדרוש סימון רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
+      "notes_he": "(עמ' 24, 25, 34, 35, 39, 40, 44) יש לסמן רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ\"מ 1:500",
       "remediation_he": "יש להוסיף סימון רחבת גזם ייעודית בכל תא שטח, בקנ\"מ 1:500, באבן משתלבת, ברצועה הצמודה לרחוב.",
       "required_artifact_he": "סימון רחבת גזם בתכנית פיתוח פר תא שטח",
       "rule_code": "DISC_SHAFA_GAZAM_YARD",

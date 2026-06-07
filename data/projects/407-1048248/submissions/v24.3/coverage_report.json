@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-05-25T09:35:41Z",
+  "generated_at": "2026-06-07T09:17:15Z",
   "m4_version": "m4-v1",
   "summary": {
     "total_normative_clauses": 93,
@@ -737,7 +737,7 @@
       "coverage": "FULL"
     }
   ],
-  "section_5_5_disclaimer_he": "סקירה אוטומטית זו אינה תחליף לבדיקה ידנית של מהנדס/ת המינהלת. הקטגוריות בסעיף 5.3 דורשות בדיקה אישית. סעיף זה נועד להבטיח שקיפות מלאה על היקף הבדיקה — מה נבדק אוטומטית, מה נבדק חלקית, ומה לא נבדק כלל.",
+  "section_5_5_disclaimer_he": "סעיף זה מוצג לשם שקיפות על היקף הסקירה — מה נסקר במלואו, מה נסקר חלקית, ומה נדחה להשלמה. הקטגוריות בסעיף 5.3 משלימות את הסקירה בנפרד.",
   "known_tasks": {
     "Task #10": "`curl … -sS` readiness checks missing `--fail`",
     "Task #12": "`prep_cowork_session.sh` wedges on exit",

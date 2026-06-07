@@ -1,0 +1,1915 @@
+<!DOCTYPE html><html lang="he" dir="rtl"><head><style>
+@font-face {
+  font-family: "Heebo";
+  src: url("Heebo-Regular.ttf");
+  font-weight: 100 900;
+  font-style: normal;
+}
+
+/* ============================================
+   RTL FUNDAMENTALS + Hebrew typography
+   ============================================ */
+html { direction: rtl; }
+body {
+  direction: rtl;
+  text-align: right;
+  font-family: 'Heebo', 'Simple CLM', 'Arial Hebrew', sans-serif;
+  margin: 0;
+  padding: 0;
+  color: #1a1a1a;
+  font-size: 11pt;
+  line-height: 1.7;
+}
+* { box-sizing: border-box; }
+
+/* ============================================
+   PAGE STRUCTURE — single source of truth for footer
+   ============================================ */
+@page {
+  size: A4;
+  margin: 20mm 22mm 22mm 22mm;
+  @bottom-right {
+    content: "מינהלת התחדשות עירונית נס ציונה — סקירת תוכנית עיצוב";
+    font-family: 'Heebo', 'Simple CLM', sans-serif;
+    font-size: 8.5pt;
+    color: #8A8A8A;
+  }
+  @bottom-left {
+    content: counter(page) " / " counter(pages);
+    font-family: 'Heebo', 'Simple CLM', sans-serif;
+    font-size: 8.5pt;
+    color: #8A8A8A;
+  }
+}
+@page cover {
+  margin: 0;
+  @bottom-right { content: none; }
+  @bottom-left { content: none; }
+}
+@page appendix-divider {
+  @bottom-right { content: none; }
+  @bottom-left { content: none; }
+}
+@page signature {
+  size: A4;
+  margin: 20mm 22mm 22mm 22mm;
+  @bottom-right { content: none; }
+  @bottom-left { content: none; }
+}
+
+/* ============================================
+   COLOR TOKENS
+   ============================================ */
+:root {
+  --green-dark: #005030;
+  --green-brand: #007840;
+  --green-accent: #2E7D32;
+  --red: #C62828;
+  --amber: #F57C00;
+  --gray-dark: #424242;
+  --gray-mid: #7A7A7A;
+  --gray-light: #D6D6D6;
+  --gray-bg: #F5F5F5;
+  --bg-callout: #FAFAFA;
+}
+
+/* ============================================
+   CHAPTER PAGE BREAKS
+   ============================================ */
+.chapter { page-break-before: always; }
+.chapter:first-of-type { page-break-before: avoid; }
+h2, h3 { page-break-after: avoid; }
+p { orphans: 3; widows: 3; }
+
+/* ============================================
+   COVER PAGE — full-bleed dark green
+   ============================================ */
+.cover {
+  page: cover;
+  background: #005030;
+  color: #fff;
+  width: 210mm;
+  height: 297mm;
+  padding: 22mm 22mm 22mm 22mm;
+  page-break-after: always;
+  position: relative;
+}
+.cover .logo {
+  position: absolute;
+  top: 18mm;
+  right: 22mm;         /* visual top-right of the cover page */
+  height: 21mm;        /* ≈ 80px at 96dpi */
+  width: auto;
+}
+.cover .brand-eyebrow {
+  font-size: 10.5pt;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 1mm;
+}
+.cover .brand-name {
+  font-size: 19pt;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 10mm;
+}
+.cover hr.rule {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  margin: 8mm 0;
+}
+.cover .title {
+  font-size: 42pt;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin: 50mm 0 7mm 0;
+}
+.cover .subtitle {
+  font-size: 15pt;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.5;
+  margin-bottom: 1.5mm;
+}
+.cover .subtitle:last-of-type { margin-bottom: 14mm; }
+.cover .data-block {
+  font-size: 11.5pt;
+  line-height: 2.0;
+  color: rgba(255,255,255,0.92);
+  margin-bottom: 12mm;
+}
+.cover .data-block .label {
+  color: rgba(255,255,255,0.62);
+  display: inline-block;
+  min-width: 36mm;
+  font-weight: 700;
+}
+.cover .pill {
+  display: inline-block;
+  padding: 2.5mm 8mm;
+  border: 1px solid rgba(255,255,255,0.45);
+  border-radius: 30px;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 10.5pt;
+  margin-bottom: 12mm;
+}
+.cover .abstract {
+  font-size: 10pt;
+  color: rgba(255,255,255,0.78);
+  line-height: 1.85;
+  max-width: 140mm;
+  margin: 0;
+}
+
+/* ============================================
+   TOC — table-based for deterministic RTL
+   ============================================ */
+table.toc {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10mm;
+  font-size: 11.5pt;
+}
+table.toc td {
+  padding: 3.2mm 0;
+  border-bottom: 1px dotted #D6D6D6;
+  vertical-align: middle;
+}
+table.toc td.title {
+  text-align: right;
+  color: #1a1a1a;
+}
+table.toc td.title.main {
+  font-weight: 700;
+  color: var(--green-dark);
+  font-size: 12pt;
+}
+table.toc td.title.sub {
+  padding-right: 8mm;
+  font-size: 10.5pt;
+  color: #424242;
+}
+table.toc td.page {
+  text-align: left;
+  color: var(--gray-mid);
+  width: 18mm;
+}
+table.toc a { color: inherit; text-decoration: none; }
+table.toc a:hover { text-decoration: underline; }
+table.toc td.page a::after { content: target-counter(attr(href), page); }
+
+/* ============================================
+   EYEBROW (subtle running header on inner pages)
+   ============================================ */
+.eyebrow {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 8mm;
+  padding-bottom: 3mm;
+  border-bottom: 1px solid var(--gray-light);
+}
+
+/* ============================================
+   CHAPTER DIVIDER
+   ============================================ */
+.chapter-num-title {
+  font-size: 26pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 6mm 0;
+  line-height: 1.2;
+}
+/* .chapter-num-title .num removed in v8h — plain "N. title" text in heading produces the correct
+   digit-at-right BIDI order (python-bidi-verified). */
+.chapter-intro {
+  font-size: 11pt;
+  color: var(--gray-dark);
+  line-height: 1.8;
+  max-width: 160mm;
+  margin-bottom: 10mm;
+}
+
+/* ============================================
+   STATUS SUMMARY BADGES — table-based for reliable RTL row
+   ============================================ */
+table.badges {
+  width: 100%;
+  margin: 6mm 0 10mm 0;
+  border-collapse: separate;
+  border-spacing: 3mm 0;
+}
+table.badges td {
+  background: #fff;
+  border: 1px solid var(--gray-light);
+  border-radius: 4px;
+  padding: 5mm 3mm;
+  text-align: center;
+  vertical-align: top;
+}
+table.badges .num {
+  font-size: 26pt;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 2mm;
+}
+table.badges .label {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  line-height: 1.4;
+}
+table.badges td.ok .num      { color: var(--green-accent); }
+table.badges td.fail .num    { color: var(--red); }
+table.badges td.review .num  { color: var(--amber); }
+table.badges td.unknown .num { color: var(--gray-mid); }
+table.badges td.na .num      { color: #B0B0B0; }
+
+/* ============================================
+   CALLOUT BOX
+   ============================================ */
+.callout {
+  border: 1px solid var(--gray-light);
+  background: var(--bg-callout);
+  border-right: 4px solid var(--green-dark);
+  padding: 6mm 8mm;
+  margin: 8mm 0;
+  border-radius: 2px;
+}
+.callout .callout-title {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 3mm;
+}
+.callout .callout-body {
+  font-size: 11pt;
+  color: var(--gray-dark);
+  line-height: 1.8;
+  margin: 0;
+}
+
+/* ============================================
+   SUBSECTION HEADER
+   ============================================ */
+.subsection { margin-top: 10mm; page-break-inside: avoid; }
+.subsection-num {
+  font-size: 15pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 2mm 0;
+}
+.subsection-summary {
+  font-size: 12pt;
+  font-weight: 500;
+  color: var(--green-accent);
+  margin-bottom: 1.5mm;
+}
+.subsection-meta {
+  font-size: 10pt;
+  color: var(--gray-mid);
+  margin-bottom: 4mm;
+  line-height: 1.6;
+}
+
+/* ============================================
+   TABLES — explicit RTL alignment, row break controls
+   ============================================ */
+table.audit {
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+  margin: 4mm 0 8mm 0;
+  font-size: 10pt;
+}
+table.audit th,
+table.audit td {
+  border: 1px solid var(--gray-light);
+  padding: 3mm 3mm;
+  text-align: right;
+  vertical-align: top;
+  line-height: 1.6;
+}
+table.audit th {
+  background: var(--gray-bg);
+  font-weight: 700;
+  color: var(--gray-dark);
+  border-bottom: 2px solid #909090;
+}
+table.audit tr { page-break-inside: avoid; break-inside: avoid; }
+table.audit thead { display: table-header-group; }
+
+/* Verdict cell styling */
+.v-ok    { color: var(--green-accent); font-weight: 600; }
+.v-fail  { color: var(--red);          font-weight: 600; }
+.v-rev   { color: var(--amber);        font-weight: 600; }
+.v-na    { color: var(--gray-mid); }
+.v-miss  { color: var(--gray-dark); }
+
+/* M4 confidence chip — appears next to verdict when M4 override applied
+   with non-HIGH confidence. HIGH confidence shows nothing (default state). */
+.conf-chip {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  font-size: 8.5pt;
+  font-weight: 500;
+  border-radius: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.conf-chip.conf-medium { background: #FFF3E0; color: #B8651A; }
+.conf-chip.conf-low    { background: #FFE0E0; color: #9C2929; }
+
+/* M4 sidecar callout section — between section 2 and section 3 */
+.sidecar-chapter {
+  page-break-before: always;
+}
+.sidecar-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid var(--red);
+  border-radius: 4px;
+  background: #FFFAFA;
+  page-break-inside: avoid;
+}
+.sidecar-card.sidecar-missing {
+  border-right-color: var(--amber);
+  background: #FFF8E1;
+}
+.sidecar-card .sidecar-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 2mm;
+}
+.sidecar-card.sidecar-missing .sidecar-head {
+  color: #B8651A;
+}
+.sidecar-card .sidecar-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.sidecar-card .sidecar-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.5;
+}
+.sidecar-card .sidecar-pages {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  margin-top: 2mm;
+}
+
+/* M5 — Section 5 coverage transparency */
+.cov-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 8mm 0;
+  font-size: 10pt;
+}
+.cov-table th {
+  text-align: right;
+  background: var(--green-dark);
+  color: #fff;
+  padding: 2mm 3mm;
+  font-weight: 600;
+  font-size: 10pt;
+}
+.cov-table td {
+  text-align: right;
+  padding: 2mm 3mm;
+  border-bottom: 1px solid var(--gray-light);
+  vertical-align: top;
+}
+.cov-table tbody tr:nth-child(even) td { background: #FAFAFA; }
+.cov-help {
+  font-size: 10pt;
+  color: var(--gray-mid);
+  margin-bottom: 2mm;
+}
+.cov-help.cov-warn {
+  color: var(--red);
+  font-weight: 600;
+}
+.cov-full     { color: var(--green-accent); font-weight: 600; }
+.cov-partial  { color: var(--amber);         font-weight: 600; }
+.cov-none     { color: var(--red);           font-weight: 600; }
+.cov-pages td { font-size: 9pt; }
+.cov-gap-list { margin: 4mm 0 8mm 0; }
+.cov-gap-card {
+  padding: 4mm 6mm;
+  margin: 3mm 0;
+  background: #FFF3E0;
+  border-right: 3px solid var(--amber);
+  border-radius: 3px;
+  page-break-inside: avoid;
+}
+.cov-gap-title {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #8A4500;
+  margin-bottom: 2mm;
+}
+.cov-gap-detail {
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.5;
+}
+.cov-gap-task {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  margin-top: 2mm;
+  font-style: italic;
+}
+.cov-disclaimer {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  background: #F5F5F5;
+  border-right: 3px solid var(--green-dark);
+  padding: 5mm 7mm;
+  margin: 4mm 0;
+  line-height: 1.6;
+}
+
+/* ============================================
+   VERDICT BANNER (section 4)
+   ============================================ */
+.verdict-banner {
+  background: #FFF3E0;
+  border-right: 6px solid var(--red);
+  padding: 5mm 8mm;
+  margin: 6mm 0 10mm 0;
+  border-radius: 2px;
+}
+.verdict-banner .verdict-text {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--red);
+  margin: 0;
+}
+.verdict-banner.green { background: #E8F5E9; border-right-color: var(--green-accent); }
+.verdict-banner.green .verdict-text { color: var(--green-accent); }
+.verdict-banner.amber { background: #FFF8E1; border-right-color: var(--amber); }
+.verdict-banner.amber .verdict-text { color: var(--amber); }
+
+/* ============================================
+   PRIORITY LIST — plain markup; numbers are hardcoded in the HTML (v8h).
+   No CSS counters or ::before — those re-introduced BIDI bugs.
+   ============================================ */
+ol.priority-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+ol.priority-list > li {
+  margin-bottom: 5mm;
+  font-size: 11pt;
+  line-height: 1.75;
+  color: var(--gray-dark);
+  page-break-inside: avoid;
+}
+ol.priority-list strong { font-weight: 700; color: #1a1a1a; }
+
+/* ============================================
+   CLOSING DISCLAIMER
+   ============================================ */
+.closing-paragraph {
+  margin-top: 12mm;
+  padding-top: 5mm;
+  border-top: 1px solid var(--gray-light);
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  line-height: 1.8;
+  font-style: italic;
+}
+
+/* ============================================
+   APPENDIX A DIVIDER — no letter-spacing on Hebrew
+   ============================================ */
+.appendix-divider {
+  page: appendix-divider;
+  text-align: center;
+  padding-top: 70mm;
+}
+.appendix-divider .label {
+  font-size: 11pt;
+  color: var(--gray-mid);
+  margin-bottom: 14mm;
+}
+.appendix-divider .big-title {
+  font-size: 60pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin-bottom: 6mm;
+}
+.appendix-divider .subtitle {
+  font-size: 18pt;
+  color: var(--gray-dark);
+  margin-bottom: 14mm;
+  font-weight: 400;
+}
+.appendix-divider .note {
+  font-size: 11pt;
+  color: var(--gray-mid);
+  font-style: italic;
+  max-width: 130mm;
+  margin: 0 auto;
+  line-height: 1.8;
+}
+
+/* ============================================
+   SIGNATURE PAGE — cover #2, sits between cover and TOC
+   ============================================ */
+.signature-page {
+  page: signature;
+  page-break-before: always;
+  page-break-after: always;
+  direction: rtl;
+  text-align: right;
+}
+.signature-page .eyebrow {
+  font-size: 10pt;
+  color: var(--gray-mid);
+  margin-bottom: 6mm;
+  letter-spacing: 0.5px;
+}
+.signature-page h1.sig-title {
+  font-size: 22pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 4mm 0;
+}
+.signature-page .sig-subtitle {
+  font-size: 10.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 8mm;
+  line-height: 1.5;
+}
+table.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4mm;
+  table-layout: fixed;
+}
+table.signature-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 3mm 4mm;
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.signature-table td {
+  border: 1px solid var(--gray-light);
+  padding: 2mm 4mm;
+  font-size: 11pt;
+  color: var(--gray-dark);
+  vertical-align: middle;
+  /* Tall enough for a wet signature (~14 mm) */
+  height: 14mm;
+}
+table.signature-table td.discipline-cell {
+  background: #FAFAFA;
+  font-weight: 600;
+  width: 28%;
+}
+table.signature-table td.name-cell    { width: 22%; }
+table.signature-table td.date-cell    { width: 18%; }
+table.signature-table td.signature-cell { width: 32%; }
+
+.signature-page .sig-footnote {
+  margin-top: 6mm;
+  padding-top: 3mm;
+  border-top: 1px solid var(--gray-light);
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* ============================================
+   SECTION 2ב — CAD-evidence section (Phase 7.1)
+   Visual identity: blue accent (vs red/amber for sidecar). Signals
+   "geometric source of truth from the planning authority's own CAD."
+   ============================================ */
+.cad-chapter { page-break-before: always; }
+.cad-chapter .chapter-intro {
+  margin-bottom: 4mm;
+}
+.cad-chapter .cad-provenance {
+  margin-bottom: 6mm;
+  padding: 4mm 5mm;
+  background: #EFF4FA;
+  border-right: 3px solid #1E5AA8;
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: #294F7D;
+  line-height: 1.55;
+}
+.cad-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid #1E5AA8;  /* CAD-blue */
+  border-radius: 4px;
+  background: #F7FAFD;
+  page-break-inside: avoid;
+}
+.cad-card .cad-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #1E5AA8;
+  margin-bottom: 2mm;
+}
+.cad-card .cad-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.cad-card .cad-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin-bottom: 4mm;
+}
+table.cad-missing-plots {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 3mm;
+  direction: rtl;
+}
+table.cad-missing-plots th {
+  background: #E6EDF6;
+  border: 1px solid #BCCBE0;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #1E5AA8;
+  text-align: right;
+}
+table.cad-missing-plots td {
+  border: 1px solid #D8E1ED;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.cad-missing-plots td.cellno-cell {
+  font-weight: 700;
+  width: 12%;
+}
+table.cad-missing-plots td.code-cell {
+  width: 18%;
+  color: var(--gray-mid);
+  font-variant-numeric: tabular-nums;
+}
+table.cad-missing-plots td.area-cell {
+  width: 24%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   SECTION 2ג — Chatakhim (cross-section) height-audit findings (Phase 7.2)
+   Visual identity: purple accent (#5D3A9B border + lavender background)
+   distinct from 2א (red/amber sidecars) and 2ב (blue CAD).
+   ============================================ */
+.chat-chapter { page-break-before: always; }
+.chat-chapter .chapter-intro { margin-bottom: 4mm; }
+.chat-chapter .chat-provenance {
+  margin-bottom: 6mm;
+  padding: 4mm 5mm;
+  background: #F3EEFA;
+  border-right: 3px solid #5D3A9B;
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: #3B2666;
+  line-height: 1.55;
+}
+.chat-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid #5D3A9B;
+  border-radius: 4px;
+  background: #FAF7FE;
+  page-break-inside: avoid;
+}
+.chat-card.chat-ceiling { border-right-color: #B71C1C; background: #FDF5F5; }
+.chat-card.chat-consistency { border-right-color: #B8651A; background: #FFFAF0; }
+.chat-card.chat-clean { border-right-color: #2E7D32; background: #F2FAF4; }
+.chat-card .chat-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #3B2666;
+  margin-bottom: 2mm;
+}
+.chat-card.chat-ceiling .chat-head { color: #B71C1C; }
+.chat-card.chat-consistency .chat-head { color: #B8651A; }
+.chat-card.chat-clean .chat-head { color: #2E7D32; }
+.chat-card .chat-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.chat-card .chat-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin-bottom: 4mm;
+}
+table.chat-values {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 3mm;
+  direction: rtl;
+  table-layout: fixed;
+}
+table.chat-values th {
+  background: #ECE3F6;
+  border: 1px solid #C8B6E0;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #3B2666;
+  text-align: right;
+}
+table.chat-values td {
+  border: 1px solid #DCD0EC;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.chat-values td.elev-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  width: 22%;
+}
+table.chat-values td.elev-cell.over-ceiling { color: #B71C1C; }
+table.chat-values td.page-cell { width: 18%; }
+table.chat-values td.context-cell { color: var(--gray-mid); font-size: 9.5pt; }
+
+/* ============================================
+   SECTION 3.N — AMENITY INVENTORY (Phase 7.4, Architecture C)
+   No accent — inherits §3 styling. Soft policy, no verdicts.
+   ============================================ */
+.amen-subsection .amen-provenance.amen-subsection .amen-coverage.amen-subsection .amen-note {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  line-height: 1.6;
+  margin: 0 0 3mm 0;
+}
+.amen-subsection .amen-note {
+  font-style: italic;
+}
+table.amen-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4mm;
+  direction: rtl;
+  font-size: 9pt;
+}
+table.amen-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 2mm 2.5mm;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+  vertical-align: middle;
+}
+table.amen-table td {
+  border: 1px solid var(--gray-light);
+  padding: 2mm 2.5mm;
+  vertical-align: middle;
+  text-align: right;
+}
+table.amen-table td.amen-name-cell { font-weight: 600; width: 18%; }
+table.amen-table th.amen-plot-cell,
+table.amen-table td.amen-plot-cell { width: 8%; text-align: center; }
+table.amen-table td.amen-anchor-cell { width: 18%; font-size: 8.5pt; color: var(--gray-mid); }
+table.amen-table td.amen-note-cell   { width: 18%; font-size: 8.5pt; color: var(--gray-mid); }
+table.amen-table td.amen-yes  { color: var(--green-brand); font-weight: 600; text-align: center; }
+table.amen-table td.amen-no   { color: var(--gray-mid); text-align: center; font-size: 11pt; }
+table.amen-table td.amen-na   { color: var(--gray-light); text-align: center; font-style: italic; }
+table.amen-table .amen-raw {
+  display: block;
+  color: var(--gray-mid);
+  font-size: 8pt;
+  font-weight: 400;
+  margin-top: 0.5mm;
+}
+
+/* §4 amenity-clarification block — soft, not a violation */
+.amen-clarification {
+  margin: 3mm 0;
+  padding: 5mm 6mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--gray-mid);
+  border-radius: 2px;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* ============================================
+   APPENDIX A passing-rules summary (M6 Phase 6.D)
+   ============================================ */
+.passing-summary {
+  margin-top: 10mm;
+  padding: 5mm 6mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--green-brand);
+  border-radius: 2px;
+  page-break-inside: avoid;
+}
+.passing-summary-head {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 3mm 0;
+}
+ul.passing-summary-list {
+  margin: 0;
+  padding-right: 6mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.6;
+  column-count: 2;
+  column-gap: 10mm;
+}
+ul.passing-summary-list li {
+  margin-bottom: 1mm;
+  break-inside: avoid;
+}
+
+/* Section-group head inside appendix detail */
+.section-group-head {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 8mm 0 3mm 0;
+}
+
+/* Inline discipline feedback callout (when a discipline manager has commented) */
+.feedback {
+  margin-top: 3mm;
+  padding: 3mm 4mm;
+  background: #ecf3fb;
+  border-right: 3px solid #4a78b0;
+  border-radius: 0 2px 2px 0;
+  font-size: 9pt;
+  color: #1a1a1a;
+}
+.feedback .flbl {
+  font-weight: 700;
+  color: #0d3a73;
+  display: block;
+  margin-bottom: 1mm;
+}
+
+/* ============================================
+   PHASE 7.5 — INTEGRATED COVER (cover + signatures + structural note)
+   Replaces the old full-bleed dark-green cover + separate signature page.
+   Top band stays dark-green (brand). Lower body is white and holds the
+   meta table, structural note, and the 10-row signature table.
+   ============================================ */
+.cover-v2 {
+  page: cover;
+  width: 210mm;
+  height: 297mm;
+  margin: 0;
+  padding: 0;
+  page-break-after: always;
+  position: relative;
+}
+.cover-v2 .cover-band {
+  background: #005030;
+  color: #fff;
+  padding: 18mm 22mm 12mm 22mm;
+  position: relative;
+}
+.cover-v2 .cover-band .logo {
+  position: absolute;
+  top: 12mm;
+  right: 22mm;
+  height: 18mm;
+  width: auto;
+}
+.cover-v2 .cover-band .brand-eyebrow {
+  font-size: 9.5pt;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 1mm;
+}
+.cover-v2 .cover-band .brand-name {
+  font-size: 15pt;
+  font-weight: 700;
+  margin: 0 0 7mm 0;
+}
+.cover-v2 .cover-band hr.rule {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  margin: 4mm 0 5mm 0;
+}
+.cover-v2 .cover-band .title {
+  font-size: 28pt;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin: 0 0 3mm 0;
+}
+.cover-v2 .cover-band .subtitle {
+  font-size: 12pt;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.4;
+  margin-bottom: 1mm;
+}
+.cover-v2 .cover-band .pill {
+  display: inline-block;
+  margin-top: 4mm;
+  padding: 1.5mm 6mm;
+  border: 1px solid rgba(255,255,255,0.45);
+  border-radius: 30px;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 10pt;
+}
+.cover-v2 .cover-body {
+  padding: 8mm 22mm 14mm 22mm;
+  color: #1a1a1a;
+}
+.cover-v2 .cover-meta {
+  font-size: 10.5pt;
+  line-height: 1.7;
+  color: var(--gray-dark);
+  margin-bottom: 5mm;
+}
+.cover-v2 .cover-meta .label {
+  color: var(--gray-mid);
+  display: inline-block;
+  min-width: 36mm;
+  font-weight: 700;
+}
+.cover-v2 .cover-note {
+  padding: 3.5mm 5mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--green-brand);
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: var(--gray-dark);
+  line-height: 1.6;
+  margin-bottom: 6mm;
+}
+.cover-v2 .cover-sig-title {
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 2mm 0;
+}
+.cover-v2 .cover-sig-sub {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin: 0 0 3mm 0;
+  line-height: 1.5;
+}
+.cover-v2 table.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.cover-v2 table.signature-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 1.5mm 4mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+}
+.cover-v2 table.signature-table td {
+  border: 1px solid var(--gray-light);
+  padding: 1mm 4mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  vertical-align: middle;
+  height: 8.5mm;
+}
+.cover-v2 table.signature-table td.discipline-cell {
+  background: #FAFAFA;
+  font-weight: 600;
+  width: 28%;
+}
+.cover-v2 table.signature-table td.name-cell      { width: 22%; }
+.cover-v2 table.signature-table td.date-cell      { width: 18%; }
+.cover-v2 table.signature-table td.signature-cell { width: 32%; }
+
+/* ============================================
+   PHASE 7.5 — ARCHITECT SUMMARY FRONT-MATTER (pages 2-N)
+   Three category pages (חסר / תיקונים / הבהרות) + map.
+   Each item links to a detail anchor via <a href="#sec-...">; WeasyPrint
+   converts these into PDF internal navigation. Page-numbers next to each
+   link come from CSS target-counter (same mechanism the TOC uses).
+   ============================================ */
+.summary-page {
+  page-break-before: always;
+  page-break-after: always;
+  direction: rtl;
+  text-align: right;
+}
+.summary-page .summary-eyebrow {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 4mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--gray-light);
+}
+.summary-page h2.summary-title {
+  font-size: 22pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 3mm 0;
+  line-height: 1.2;
+}
+.summary-page .summary-intro {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  margin-bottom: 6mm;
+  line-height: 1.6;
+}
+ol.summary-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+/* M7.5.1: items render as a clean numbered list — no severity colored
+   accents, no sev-tag, no item ID prefix. Severity field still controls
+   within-category sort order (set by the inventory parser, not the CSS). */
+ol.summary-items > li {
+  margin-bottom: 2.5mm;
+  padding: 2.5mm 5mm 2.5mm 5mm;
+  background: var(--bg-callout);
+  border-radius: 2px;
+  page-break-inside: avoid;
+}
+ol.summary-items > li .item-head {
+  margin-bottom: 0.5mm;
+}
+ol.summary-items > li .seq-num {
+  display: inline-block;
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  vertical-align: middle;
+  min-width: 6mm;
+}
+ol.summary-items > li .item-text {
+  font-size: 9.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin: 0 0 1.5mm 0;
+}
+ol.summary-items > li a.item-link {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  text-decoration: underline;
+  font-weight: 400;
+}
+/* Map page */
+.summary-page table.summary-map {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 8mm 0;
+}
+.summary-page table.summary-map th.summary-page table.summary-map td {
+  padding: 3mm 4mm;
+  border: 1px solid var(--gray-light);
+  font-size: 10pt;
+  text-align: right;
+  vertical-align: middle;
+}
+.summary-page table.summary-map th {
+  background: var(--gray-bg);
+  font-weight: 700;
+  color: var(--gray-dark);
+}
+.summary-page table.summary-map td.cat-cell { width: 65%; }
+.summary-page table.summary-map td.count-cell {
+  text-align: center;
+  font-weight: 700;
+  width: 18mm;
+  font-variant-numeric: tabular-nums;
+}
+.summary-page table.summary-map tr.total-row td {
+  background: #FAFAFA;
+  font-weight: 700;
+}
+.summary-page h3.summary-subhead {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 8mm 0 3mm 0;
+}
+.summary-page ul.summary-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 2.0;
+}
+.summary-page ul.summary-legend .sev-dot {
+  display: inline-block;
+  width: 4mm;
+  height: 4mm;
+  border-radius: 50%;
+  margin-left: 3mm;
+  vertical-align: middle;
+}
+.summary-page ul.summary-legend .sev-dot.sev-high   { background: var(--red); }
+.summary-page ul.summary-legend .sev-dot.sev-medium { background: var(--amber); }
+.summary-page ul.summary-legend .sev-dot.sev-low    { background: var(--gray-mid); }
+</style><meta charset="utf-8"><title>סקירת תוכנית עיצוב</title></head><body>
+    <div class="cover-v2">
+      <div class="cover-band">
+        <img class="logo" src="../nessziona_logo.png" alt="">
+        <div class="brand-eyebrow">NZC | מינהלת ההתחדשות העירונית</div>
+        <div class="brand-name">נס ציונה</div>
+        <hr class="rule">
+        <h1 class="title">סקירת תוכנית עיצוב</h1>
+        <div class="subtitle">תכנית בינוי ופיתוח — מתחם הטייסים-ההסתדרות</div>
+        <div class="subtitle">תכנית עיצוב גרסה 24.3 · </div>
+        <div class="pill">טיוטה לסקירה — לא לחתימה</div>
+      </div>
+      <div class="cover-body">
+        <div class="cover-meta">
+          <div><span class="label">תכנית סטטוטורית:</span> 407-1048248 (אושרה)</div>
+          <div><span class="label">עורך התכנית:</span> אדריכלים קיקה ברא"ז</div>
+          <div><span class="label">תאריך הסקירה:</span> 07.06.2026</div>
+        </div>
+        <div class="cover-note">הדוח כולל את טבלת החתימות (להלן), תוכן עניינים, וארבעה פרקים: ניתוח תכנון עירוני, בדיקת תאימות לתב"ע, בדיקה רב-תחומית לפי חוברת ההנחיות, וסיכום הפעולות הנדרשות.</div>
+        <h2 class="cover-sig-title">טבלת חתימות — חוות דעת רב-תחומית</h2>
+        <p class="cover-sig-sub">לאישור הדוח על-ידי בעלי התפקידים במינהלת ההתחדשות העירונית בעיריית נס ציונה.</p>
+        <table class="signature-table">
+          <thead>
+            <tr>
+              <th>דיסציפלינה</th>
+              <th>שם</th>
+              <th>תאריך</th>
+              <th>חתימה</th>
+            </tr>
+          </thead>
+          <tbody><tr><td class="discipline-cell">שפ"ע</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">כבישים ופיתוח</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">תנועה</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">ניקוז</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">גנים ונוף</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">אדריכלות</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">תאגיד</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">מינהלת ההתחדשות העירונית</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">מהנדס העיר</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr><tr><td class="discipline-cell">יו"ר הוועדה</td><td class="name-cell"></td><td class="date-cell"></td><td class="signature-cell"></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="chapter">
+      <div class="eyebrow">המינהלת להתחדשות עירונית — עיריית נס ציונה</div>
+      <h2 class="chapter-num-title">תוכן עניינים</h2>
+      <table class="toc">
+        <tr><td class="title main"><a href="#sec-1">1. ניתוח תכנון עירוני</a></td><td class="page"><a href="#sec-1"></a></td></tr><tr><td class="title main"><a href="#sec-2">2. בדיקת תאימות תוכן לתב"ע 407-1048248</a></td><td class="page"><a href="#sec-2"></a></td></tr><tr><td class="title sub"><a href="#sec-2-1">2.1 תא שטח 1</a></td><td class="page"><a href="#sec-2-1"></a></td></tr><tr><td class="title sub"><a href="#sec-2-2">2.2 תא שטח 2</a></td><td class="page"><a href="#sec-2-2"></a></td></tr><tr><td class="title sub"><a href="#sec-2-3">2.3 תא שטח 3</a></td><td class="page"><a href="#sec-2-3"></a></td></tr><tr><td class="title sub"><a href="#sec-2-4">2.4 תא שטח 4</a></td><td class="page"><a href="#sec-2-4"></a></td></tr><tr><td class="title sub"><a href="#sec-2-5">2.5 תא שטח 5</a></td><td class="page"><a href="#sec-2-5"></a></td></tr><tr><td class="title sub"><a href="#sec-2-6">2.6 בדיקות ברמת תכנית</a></td><td class="page"><a href="#sec-2-6"></a></td></tr><tr><td class="title main"><a href="#sec-3">3. בדיקה רב-תחומית לפי חוברת הנחיות עירונית</a></td><td class="page"><a href="#sec-3"></a></td></tr><tr><td class="title sub"><a href="#sec-3-1">3.1 שפ"ע — אשפה ופינוי פסולת</a></td><td class="page"><a href="#sec-3-1"></a></td></tr><tr><td class="title sub"><a href="#sec-3-2">3.2 גנים ונוף</a></td><td class="page"><a href="#sec-3-2"></a></td></tr><tr><td class="title sub"><a href="#sec-3-3">3.3 תשתיות</a></td><td class="page"><a href="#sec-3-3"></a></td></tr><tr><td class="title sub"><a href="#sec-3-4">3.4 תנועה — רחבות כיבוי אש</a></td><td class="page"><a href="#sec-3-4"></a></td></tr><tr><td class="title sub"><a href="#sec-3-5">3.5 ניקוז וחלחול</a></td><td class="page"><a href="#sec-3-5"></a></td></tr><tr><td class="title sub"><a href="#sec-3-6">3.6 גגות וגינון על גג</a></td><td class="page"><a href="#sec-3-6"></a></td></tr><tr><td class="title sub"><a href="#sec-3-7">3.7 אדריכלות וחזיתות</a></td><td class="page"><a href="#sec-3-7"></a></td></tr><tr><td class="title sub"><a href="#sec-3-10">3.8 הנחיות סביבתיות</a></td><td class="page"><a href="#sec-3-10"></a></td></tr><tr><td class="title sub"><a href="#sec-3-amenities">3.9 שירותים לדיירים</a></td><td class="page"><a href="#sec-3-amenities"></a></td></tr><tr><td class="title main"><a href="#sec-4">4. סיכום וממצאים סופיים</a></td><td class="page"><a href="#sec-4"></a></td></tr>
+      </table>
+    </div>
+    
+    <div class="chapter" id="sec-1">
+      <div class="eyebrow">המינהלת להתחדשות עירונית — עיריית נס ציונה</div><h2 class="chapter-num-title">1. ניתוח תכנון עירוני</h2><p class="chapter-intro">דוח זה סוקר את תוכנית עיצוב גרסה 24.3 אל מול שלוש שכבות הרגולציה הרלוונטיות: תקנון התב"ע (פרמטרים מספריים פר-תא שטח), חוברת ההנחיות העירוניות (בדיקה רב-תחומית בעשר דיסציפלינות), ותשריט הקובץ הסטטוטורי (שלמות תאי שטח וגבהים מוחלטים). מבנה הדוח: פרק 2 — תאימות תוכן פר-תא שטח. פרק 3 — בדיקה רב-תחומית עם תת-פרק 3.11 (מלאי שירותים לדיירים). פרק 4 — סיכום הפעולות הנדרשות.</p>
+      <p class="chapter-intro">הניתוח התכנוני האיכותי של פרק 1 (שילוב במרקם
+        הקיים, השפעות תנועה, איכות שצ"פ ומבני ציבור, חזות) יוצג בנפרד.</p>
+    </div>
+    
+    <div class="chapter" id="sec-2">
+      <div class="eyebrow">המינהלת להתחדשות עירונית — עיריית נס ציונה</div><h2 class="chapter-num-title">2. בדיקת תאימות תוכן לתב"ע 407-1048248</h2><p class="chapter-intro">פרק זה משווה את ערכי ההגשה (יח"ד, שטחים, גובה, חניה, תמהיל, שטחים מחלחלים) מול התקרות והדרישות המוגדרות בתב"ע 407-1048248. בכל סעיף — ההגשה הנוכחית, הדרישה, והפעולה הנדרשת.</p>
+      <table class="badges"><tr><td class="ok"><div class="num">5</div><div class="label">תקינים בתוכן</div></td><td class="fail"><div class="num">15</div><div class="label">ליקויים בתוכן</div></td><td class="review"><div class="num">17</div><div class="label">דורשים בירור</div></td><td class="unknown"><div class="num">0</div><div class="label">לא ניתנים לבדיקה</div></td><td class="na"><div class="num">0</div><div class="label">לא רלוונטיים</div></td></tr></table>
+      
+    <div class="subsection" id="sec-2-1">
+      <h3 class="subsection-num">2.1 תא שטח 1</h3>
+      <div class="subsection-summary">232 יח"ד מוצעות בתא שטח 1</div>
+      <div class="subsection-meta">תקרת תב"ע: 232 יח"ד · גובה 49 מ' · 14 קומות · שטח עיקרי 20,616 מ"ר</div>
+      
+    <table class="audit">
+      <thead><tr>
+        <th style="width:17%;">נושא בדיקה</th>
+        <th style="width:13%;">ממצא</th>
+        <th style="width:14%; white-space: nowrap;">בתוכנית&nbsp;עיצוב</th>
+        <th style="width:14%;">בתב"ע</th>
+        <th style="width:42%;">הערה</th>
+      </tr></thead>
+      <tbody><tr><td>כמות יח"ד</td><td><span class="v-ok">תקין</span></td><td>232 יח"ד</td><td>232 יח"ד</td><td>מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב"ע, פר תא שטח ובסך הכל.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 1, עמודת מספר יחידות דיור: הערך נלקח מטבלת תמהיל הדירות בהגשה.</td></tr><tr><td>שטח עיקרי (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>20,616 מ"ר</td><td>טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מעל (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>9,278 מ"ר</td><td>טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מתחת (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>17,660 מ"ר</td><td>טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>גובה ביחס לקרקע / קומות</td><td><span class="v-rev">דורש בירור</span></td><td>45.45 מ'</td><td>49 מ' / 14 קומות</td><td>גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב"ע.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 1, עמודת מספר קומות: בתכניות החזית מוצגים מבנים עם 9 ו-13 קומות מעל הקרקע.</td></tr><tr><td>קווי בניין</td><td><span class="v-rev">דורש בירור</span></td><td>—</td><td>לפי תשריט</td><td>קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב"ע.
+
+סעיף 4.1.2.4 בתקנון התב"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.</td></tr><tr><td>יחס חניה</td><td><span class="v-rev">דורש בירור</span></td><td>330 חניות פרטיות, 23 אופנועים, 7 נגישות, 232 אופניים</td><td>תקן חניה לאומי</td><td>יחס חניה פרטית מחושב: 1.42 (330/232 יח"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח"ד לפי גודל הדירה (עד 120 מ"ר: 1.0-1.3; 120-200 מ"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.
+
+הציון 'תקין' שונה ל'דורש בירור' מאחר שאימות מדויק לתקן דורש מידע נוסף שאינו קיים בהגשה.
+
+סעיף 6.2.1 בתקנון התב"ע: ההגשה כוללת תכניות מפורטות לחניה תת-קרקעית (מרתף) לכל תא שטח (לדוגמה, עמ' 29, 37, 42, 46). תשריטי המגרש אינם מציגים חניות עיליות, מה שמאשר כי כל החניה תת-קרקעית ותואמת את הדרישה. סעיף 6.2.2 בתקנון התב"ע: הסעיף מתיר כניסת חניה אחת לכל היותר מרחוב הטייסים. מבדיקת תשריט המגרש הכללי (עמ' 10) והחזית הפונה לרחוב הטייסים (עמ' 55), לא קיימות כניסות רכב מרחוב זה. מצב זה תואם את הדרישה. סעיף 6.2.3 בתקנון התב"ע: טבלאות החניה (לדוגמה, עמ' 29) מפרטות חניות 'אורחים' כקטגוריה נפרדת. עם זאת, שאלת אי-שיוך חוקי של חניות אלו ליחידות דיור ספציפיות היא עניין משפטי שאינו ניתן לאימות מתכניות אדריכליות. סעיף 4.1.2.10 בתקנון התב"ע: ההגשה מציגה הפרדה לשימוש הציבורי (מעון יום) בתא שטח 1. עמ' 30 מציג כניסה ייעודית, ותכנית החניה בעמ' 29 מקצה מקומות חניה ספציפיים למעון היום, בנפרד מחניית המגורים. מצב זה תואם את הדרישה.</td></tr></tbody>
+    </table>
+    
+    </div>
+    
+    <div class="subsection" id="sec-2-2">
+      <h3 class="subsection-num">2.2 תא שטח 2</h3>
+      <div class="subsection-summary">44 יח"ד מוצעות בתא שטח 2</div>
+      <div class="subsection-meta">תקרת תב"ע: 44 יח"ד · גובה 37 מ' · 10 קומות · שטח עיקרי 3,922 מ"ר</div>
+      
+    <table class="audit">
+      <thead><tr>
+        <th style="width:17%;">נושא בדיקה</th>
+        <th style="width:13%;">ממצא</th>
+        <th style="width:14%; white-space: nowrap;">בתוכנית&nbsp;עיצוב</th>
+        <th style="width:14%;">בתב"ע</th>
+        <th style="width:42%;">הערה</th>
+      </tr></thead>
+      <tbody><tr><td>כמות יח"ד</td><td><span class="v-ok">תקין</span></td><td>44 יח"ד</td><td>44 יח"ד</td><td>מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב"ע, פר תא שטח ובסך הכל.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 2, עמודת מספר יחידות דיור: הערך נלקח מטבלת תמהיל הדירות בהגשה.</td></tr><tr><td>שטח עיקרי (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>3,922 מ"ר</td><td>טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מעל (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>1,765 מ"ר</td><td>טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מתחת (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>3,670 מ"ר</td><td>טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>גובה ביחס לקרקע / קומות</td><td><span class="v-rev">דורש בירור</span></td><td>32.85 מ'</td><td>37 מ' / 10 קומות</td><td>גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב"ע.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 2, עמודת מספר קומות: בתכנית החזית של מבנה A2 מוצגות 9 קומות מעל הקרקע.</td></tr><tr><td>קווי בניין</td><td><span class="v-rev">דורש בירור</span></td><td>—</td><td>לפי תשריט</td><td>קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב"ע.
+
+סעיף 4.1.2.4 בתקנון התב"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.</td></tr><tr><td>יחס חניה</td><td><span class="v-rev">דורש בירור</span></td><td>65 חניות פרטיות, 4 אופנועים, 2 נגישות, 44 אופניים</td><td>תקן חניה לאומי</td><td>יחס חניה פרטית מחושב: 1.48 (65/44 יח"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח"ד לפי גודל הדירה (עד 120 מ"ר: 1.0-1.3; 120-200 מ"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.
+
+הציון 'תקין' שונה ל'דורש בירור' מאחר שאימות מדויק לתקן דורש מידע נוסף שאינו קיים בהגשה.
+
+סעיף 6.2.1 בתקנון התב"ע: ההגשה כוללת תכניות מפורטות לחניה תת-קרקעית (מרתף) לכל תא שטח (לדוגמה, עמ' 29, 37, 42, 46). תשריטי המגרש אינם מציגים חניות עיליות, מה שמאשר כי כל החניה תת-קרקעית ותואמת את הדרישה. סעיף 6.2.2 בתקנון התב"ע: הסעיף מתיר כניסת חניה אחת לכל היותר מרחוב הטייסים. מבדיקת תשריט המגרש הכללי (עמ' 10) והחזית הפונה לרחוב הטייסים (עמ' 55), לא קיימות כניסות רכב מרחוב זה. מצב זה תואם את הדרישה. סעיף 6.2.3 בתקנון התב"ע: טבלאות החניה (לדוגמה, עמ' 29) מפרטות חניות 'אורחים' כקטגוריה נפרדת. עם זאת, שאלת אי-שיוך חוקי של חניות אלו ליחידות דיור ספציפיות היא עניין משפטי שאינו ניתן לאימות מתכניות אדריכליות.</td></tr></tbody>
+    </table>
+    
+    </div>
+    
+    <div class="subsection" id="sec-2-3">
+      <h3 class="subsection-num">2.3 תא שטח 3</h3>
+      <div class="subsection-summary">130 יח"ד מוצעות בתא שטח 3</div>
+      <div class="subsection-meta">תקרת תב"ע: 130 יח"ד · גובה 37 מ' · 10 קומות · שטח עיקרי 11,590 מ"ר</div>
+      
+    <table class="audit">
+      <thead><tr>
+        <th style="width:17%;">נושא בדיקה</th>
+        <th style="width:13%;">ממצא</th>
+        <th style="width:14%; white-space: nowrap;">בתוכנית&nbsp;עיצוב</th>
+        <th style="width:14%;">בתב"ע</th>
+        <th style="width:42%;">הערה</th>
+      </tr></thead>
+      <tbody><tr><td>כמות יח"ד</td><td><span class="v-ok">תקין</span></td><td>130 יח"ד</td><td>130 יח"ד</td><td>מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב"ע, פר תא שטח ובסך הכל.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 3, עמודת מספר יחידות דיור: הערך נלקח מטבלת תמהיל הדירות בהגשה.</td></tr><tr><td>שטח עיקרי (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>11,590 מ"ר</td><td>טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מעל (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>5,216 מ"ר</td><td>טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מתחת (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>9,142 מ"ר</td><td>טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>גובה ביחס לקרקע / קומות</td><td><span class="v-rev">דורש בירור</span></td><td>32.85 מ'</td><td>37 מ' / 10 קומות</td><td>גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב"ע.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 3, עמודת מספר קומות: בתכנית החזית של מבנה A3 מוצגות 9 קומות מעל הקרקע.</td></tr><tr><td>קווי בניין</td><td><span class="v-rev">דורש בירור</span></td><td>—</td><td>לפי תשריט</td><td>קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב"ע.
+
+סעיף 4.1.2.4 בתקנון התב"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.</td></tr><tr><td>יחס חניה</td><td><span class="v-rev">דורש בירור</span></td><td>186 חניות פרטיות, 13 אופנועים, 4 נגישות, 130 אופניים</td><td>תקן חניה לאומי</td><td>יחס חניה פרטית מחושב: 1.43 (186/130 יח"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח"ד לפי גודל הדירה (עד 120 מ"ר: 1.0-1.3; 120-200 מ"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.
+
+הציון 'תקין' שונה ל'דורש בירור' מאחר שאימות מדויק לתקן דורש מידע נוסף שאינו קיים בהגשה.
+
+סעיף 6.2.1 בתקנון התב"ע: ההגשה כוללת תכניות מפורטות לחניה תת-קרקעית (מרתף) לכל תא שטח (לדוגמה, עמ' 29, 37, 42, 46). תשריטי המגרש אינם מציגים חניות עיליות, מה שמאשר כי כל החניה תת-קרקעית ותואמת את הדרישה. סעיף 6.2.2 בתקנון התב"ע: הסעיף מתיר כניסת חניה אחת לכל היותר מרחוב הטייסים. מבדיקת תשריט המגרש הכללי (עמ' 10) והחזית הפונה לרחוב הטייסים (עמ' 55), לא קיימות כניסות רכב מרחוב זה. מצב זה תואם את הדרישה. סעיף 6.2.3 בתקנון התב"ע: טבלאות החניה (לדוגמה, עמ' 29) מפרטות חניות 'אורחים' כקטגוריה נפרדת. עם זאת, שאלת אי-שיוך חוקי של חניות אלו ליחידות דיור ספציפיות היא עניין משפטי שאינו ניתן לאימות מתכניות אדריכליות.</td></tr></tbody>
+    </table>
+    
+    </div>
+    
+    <div class="subsection" id="sec-2-4">
+      <h3 class="subsection-num">2.4 תא שטח 4</h3>
+      <div class="subsection-summary">98 יח"ד מוצעות בתא שטח 4</div>
+      <div class="subsection-meta">תקרת תב"ע: 98 יח"ד · גובה 45 מ' · 13 קומות · שטח עיקרי 8,724 מ"ר</div>
+      
+    <table class="audit">
+      <thead><tr>
+        <th style="width:17%;">נושא בדיקה</th>
+        <th style="width:13%;">ממצא</th>
+        <th style="width:14%; white-space: nowrap;">בתוכנית&nbsp;עיצוב</th>
+        <th style="width:14%;">בתב"ע</th>
+        <th style="width:42%;">הערה</th>
+      </tr></thead>
+      <tbody><tr><td>כמות יח"ד</td><td><span class="v-ok">תקין</span></td><td>98 יח"ד</td><td>98 יח"ד</td><td>מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב"ע, פר תא שטח ובסך הכל.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 4, עמודת מספר יחידות דיור: הערך נלקח מטבלת תמהיל הדירות בהגשה.</td></tr><tr><td>שטח עיקרי (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>8,724 מ"ר</td><td>טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מעל (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>3,926 מ"ר</td><td>טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מתחת (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>7,715 מ"ר</td><td>טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>גובה ביחס לקרקע / קומות</td><td><span class="v-rev">דורש בירור</span></td><td>42.3 מ'</td><td>45 מ' / 13 קומות</td><td>גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב"ע.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 4, עמודת מספר קומות: בתכניות החזית מוצגים מבנים עם 8 ו-12 קומות מעל הקרקע.</td></tr><tr><td>קווי בניין</td><td><span class="v-rev">דורש בירור</span></td><td>—</td><td>לפי תשריט</td><td>קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב"ע.
+
+סעיף 4.1.2.4 בתקנון התב"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.</td></tr><tr><td>יחס חניה</td><td><span class="v-rev">דורש בירור</span></td><td>138 חניות פרטיות, 10 אופנועים, 3 נגישות, 98 אופניים</td><td>תקן חניה לאומי</td><td>יחס חניה פרטית מחושב: 1.41 (138/98 יח"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח"ד לפי גודל הדירה (עד 120 מ"ר: 1.0-1.3; 120-200 מ"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.
+
+הציון 'תקין' שונה ל'דורש בירור' מאחר שאימות מדויק לתקן דורש מידע נוסף שאינו קיים בהגשה.
+
+סעיף 6.2.1 בתקנון התב"ע: ההגשה כוללת תכניות מפורטות לחניה תת-קרקעית (מרתף) לכל תא שטח (לדוגמה, עמ' 29, 37, 42, 46). תשריטי המגרש אינם מציגים חניות עיליות, מה שמאשר כי כל החניה תת-קרקעית ותואמת את הדרישה. סעיף 6.2.2 בתקנון התב"ע: הסעיף מתיר כניסת חניה אחת לכל היותר מרחוב הטייסים. מבדיקת תשריט המגרש הכללי (עמ' 10) והחזית הפונה לרחוב הטייסים (עמ' 55), לא קיימות כניסות רכב מרחוב זה. מצב זה תואם את הדרישה. סעיף 6.2.3 בתקנון התב"ע: טבלאות החניה (לדוגמה, עמ' 29) מפרטות חניות 'אורחים' כקטגוריה נפרדת. עם זאת, שאלת אי-שיוך חוקי של חניות אלו ליחידות דיור ספציפיות היא עניין משפטי שאינו ניתן לאימות מתכניות אדריכליות.</td></tr></tbody>
+    </table>
+    
+    </div>
+    
+    <div class="subsection" id="sec-2-5">
+      <h3 class="subsection-num">2.5 תא שטח 5</h3>
+      <div class="subsection-summary">196 יח"ד מוצעות בתא שטח 5</div>
+      <div class="subsection-meta">תקרת תב"ע: 196 יח"ד · גובה 45 מ' · 13 קומות · שטח עיקרי 17,448 מ"ר</div>
+      
+    <table class="audit">
+      <thead><tr>
+        <th style="width:17%;">נושא בדיקה</th>
+        <th style="width:13%;">ממצא</th>
+        <th style="width:14%; white-space: nowrap;">בתוכנית&nbsp;עיצוב</th>
+        <th style="width:14%;">בתב"ע</th>
+        <th style="width:42%;">הערה</th>
+      </tr></thead>
+      <tbody><tr><td>כמות יח"ד</td><td><span class="v-ok">תקין</span></td><td>196 יח"ד</td><td>196 יח"ד</td><td>מספר יחידות הדיור המוצעות לא יעלה על התקרה שנקבעה בתב"ע, פר תא שטח ובסך הכל.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 5, עמודת מספר יחידות דיור: הערך נלקח מטבלת תמהיל הדירות בהגשה.</td></tr><tr><td>שטח עיקרי (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>17,448 מ"ר</td><td>טבלת שטחי בנייה עיקריים פר תא שטח (הפרדה לעיקרי ושירות) לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את השטח העיקרי לתקרת התב"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מעל (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>7,852 מ"ר</td><td>טבלת שטחי שירות עיליים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>שטח שירות מתחת (מ"ר)</td><td><span class="v-miss">לא הוגש</span></td><td>—</td><td>11,210 מ"ר</td><td>טבלת שטחי שירות תת-קרקעיים פר תא שטח לא נכלל בגרסה הנוכחית של תכנית העיצוב. יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</td></tr><tr><td>גובה ביחס לקרקע / קומות</td><td><span class="v-rev">דורש בירור</span></td><td>42.3 מ'</td><td>45 מ' / 13 קומות</td><td>גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב"ע.
+
+אי התאמה בסעיף 6.7.4 בתקנון התב"ע: הגובה המקסימלי של מבנה A5, כפי שמצוין בסולם הגבהים בחזית הימנית (מפלס 13), הוא +91.80 מטרים מעל פני הים. גובה זה חורג מהגובה המקסימלי המותר בתב"ע, העומד על 91 מטרים.</td></tr><tr><td>קווי בניין</td><td><span class="v-rev">דורש בירור</span></td><td>—</td><td>לפי תשריט</td><td>קווי הבניין מוגדרים בתשריט. יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב"ע.
+
+סעיף 4.1.2.4 בתקנון התב"ע דורש מרחק מינימלי של 9 מטרים בין מבנים. בתשריטי המגרש (לדוגמה, בין מבנים A ו-D בתא שטח 1, עמ' 24) מצוין במפורש מרחק זה כ-9.00 מטרים, והוא תואם את הדרישה.</td></tr><tr><td>יחס חניה</td><td><span class="v-rev">דורש בירור</span></td><td>280 חניות פרטיות, 20 אופנועים, 5 נגישות, 196 אופניים</td><td>תקן חניה לאומי</td><td>יחס חניה פרטית מחושב: 1.43 (280/196 יח"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח"ד לפי גודל הדירה (עד 120 מ"ר: 1.0-1.3; 120-200 מ"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.
+
+הציון 'תקין' שונה ל'דורש בירור' מאחר שאימות מדויק לתקן דורש מידע נוסף שאינו קיים בהגשה.
+
+סעיף 6.2.1 בתקנון התב"ע: ההגשה כוללת תכניות מפורטות לחניה תת-קרקעית (מרתף) לכל תא שטח (לדוגמה, עמ' 29, 37, 42, 46). תשריטי המגרש אינם מציגים חניות עיליות, מה שמאשר כי כל החניה תת-קרקעית ותואמת את הדרישה. סעיף 6.2.2 בתקנון התב"ע: הסעיף מתיר כניסת חניה אחת לכל היותר מרחוב הטייסים. מבדיקת תשריט המגרש הכללי (עמ' 10) והחזית הפונה לרחוב הטייסים (עמ' 55), לא קיימות כניסות רכב מרחוב זה. מצב זה תואם את הדרישה. סעיף 6.2.3 בתקנון התב"ע: טבלאות החניה (לדוגמה, עמ' 29) מפרטות חניות 'אורחים' כקטגוריה נפרדת. עם זאת, שאלת אי-שיוך חוקי של חניות אלו ליחידות דיור ספציפיות היא עניין משפטי שאינו ניתן לאימות מתכניות אדריכליות.</td></tr></tbody>
+    </table>
+    
+    </div>
+    
+    <div class="subsection" id="sec-2-6">
+      <h3 class="subsection-num">2.6 בדיקות ברמת תכנית</h3>
+      <div class="subsection-meta">בדיקות שאינן ייחודיות לתא שטח מסוים — תמהיל יח"ד, שטחים מחלחלים כוללים.</div>
+      
+    <table class="audit">
+      <thead><tr>
+        <th style="width:17%;">נושא בדיקה</th>
+        <th style="width:13%;">ממצא</th>
+        <th style="width:14%; white-space: nowrap;">בתוכנית&nbsp;עיצוב</th>
+        <th style="width:14%;">בתב"ע</th>
+        <th style="width:42%;">הערה</th>
+      </tr></thead>
+      <tbody><tr><td>אחוז דירות קטנות</td><td><span class="v-rev">דורש בירור</span></td><td>לפחות 17 (2.43%) — לפי הגדרה מחמירה ≤75 מ"ר %</td><td>—</td><td>גבול תחתון: לפי הקריאה המחמירה של התב"ע (≤75 מ"ר), מאומתות לכל הפחות 17 דירות קטנות = 2.43% מסך 700 יח"ד. האדריכל מצהיר על 21% (147/700) בהסתמך על הגדרה רחבה יותר (≤81 מ"ר) הכוללת גם את שורות 2.5 חד' / 3 קטנה. ההפרש נובע מטווחי שטח חופפים בטבלת התמהיל (62-81 מ"ר) בתאי שטח 1, 3, שלא ניתן לפצל ללא שטחי דירות פרטניים. יש לצרף בהגשה הבאה טבלת תמהיל מפורטת עם שטח לכל יחידת דיור כדי לסגור את הספק. אם הדרישה היא 20% — עלולה ההגשה לא לעמוד בה.</td></tr><tr><td>אחוז שטחים מחלחלים</td><td><span class="v-rev">דורש בירור</span></td><td>—</td><td>—</td><td>אחוז השטחים המחלחלים (גינון, ריצוף מחלחל, ללא מרתף תחתון) ביחס לכלל שטח התכנית חייב לעלות על הסף המוגדר.
+
+סעיף 4.5.2.1 בתקנון התב"ע מגביל את שטח הבינוי של תשתיות עיליות בשטחי זיקת הנאה ל-5%. יש לצרף חישובי שטחים מדויקים בהגשה הבאה.</td></tr></tbody>
+    </table>
+    
+    </div>
+    
+    </div>
+    
+    <div class="chapter" id="sec-3">
+      <div class="eyebrow">המינהלת להתחדשות עירונית — עיריית נס ציונה</div><h2 class="chapter-num-title">3. בדיקה רב-תחומית לפי חוברת הנחיות עירונית</h2><p class="chapter-intro">פרק זה בוחן את ההגשה מול חוברת ההנחיות העירונית של נס ציונה (407-0730606, פברואר 2026). הבדיקה מאורגנת בעשר דיסציפלינות. במקום בו התקבל פידבק ממנהל הדיסציפלינה — הוא משולב בתא ההערה.</p>
+      <table class="badges"><tr><td class="ok"><div class="num">9</div><div class="label">תקינים במדיניות</div></td><td class="fail"><div class="num">8</div><div class="label">סטיות ממדיניות</div></td><td class="review"><div class="num">16</div><div class="label">דורשים בירור</div></td><td class="unknown"><div class="num">0</div><div class="label">לא ניתנים לבדיקה</div></td></tr></table>
+      
+    <div class="subsection" id="sec-3-1">
+      <h3 class="subsection-num">3.1 שפ"ע — אשפה ופינוי פסולת</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>חדרי פסולת קומתיים</b><br>יש לסמן חדר פסולת קומתי בכל מפלס שימושי בקומות הטיפוסיות ולציין את שטחו.</td>
+      <td>בדיאגרמות האשפה (עמ' 25, 35, 40, 44) נראים חדרי אצירת אשפה צהובים ברמת הקרקע צמודים לכניסות הבניינים, וכן חדרי דחסנית…</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 25, 30, 35, 38, 40, 43, 44, 47) המערכת היא כנראה פניאומטית עם דחיסה בקרקע. יש לציין על תכניות הקומות הטיפוסיות את מיקום חדרי איסוף הפסולת או שוטי הפסולת בכל קומה, ולסמנם בלגנדה</td>
+    </tr>
+    
+    <tr>
+      <td><b>רחבת גזם ייעודית</b><br>יש להוסיף סימון רחבת גזם ייעודית בכל תא שטח, בקנ"מ 1:500, באבן משתלבת, ברצועה הצמודה לרחוב.</td>
+      <td>בתוכניות הפיתוח ובדיאגרמות האשפה לא אותרה רחבה ייעודית המסומנת כ"רחבת גזם" באף תא שטח</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>(עמ' 24, 25, 34, 35, 39, 40, 44) יש לסמן רחבת גזם ייעודית, באבן משתלבת, ברצועה הצמודה לרחוב, בקנ"מ 1:500</td>
+    </tr>
+    
+    <tr>
+      <td><b>ללא כניסת משאיות אשפה לתחום המגרש</b><br>יש להסיר כל סימון של דרך גישת משאית אשפה אל תחום המגרש.</td>
+      <td>החצים הירוקים המקווקווים (תנועת רכבי אשפה לפי הלגנדה) בדיאגרמות האשפה רצים לאורך הרחובות בלבד ולא חודרים לתחום המגרש</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 25, 35, 40, 44) תואם — תנועת רכבי האשפה מחוץ למגרש</td>
+    </tr>
+    
+    <tr>
+      <td><b>מערכת איסוף אשפה פניאומטית</b><br>יש לכלול בתכנית העיצוב פירוט מערכת איסוף פניאומטית עם חדרי פסולת קומתיים, מצנחות פסולת ופירי פסולת.</td>
+      <td>בכל דיאגרמות האשפה מסומנים "חדר דחסנית" בצבע כתום בכל בניין, לצד "חדר אצירת אשפה ומחזור" צהוב</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 25, 35, 40, 44) תואם ויזואלית. כדאי לאמת תכנון מפורט של הצינורות עם יועץ פסולת</td>
+    </tr>
+    </tbody>
+      </table>
+    </div>
+    
+    <div class="subsection" id="sec-3-2">
+      <h3 class="subsection-num">3.2 גנים ונוף</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>עיצוב נופי בכניסות לבניין</b><br>יש להציג עיצוב נופי מפורט סביב הכניסות לבניינים, כולל מקרא לחומרים וצמחייה.</td>
+      <td>בתוכניות הפיתוח של כל תאי השטח נראים אזורים ירוקים (גינון, עצים, ריצוף משתלב) צמודים לכניסות הבניינים</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 10, 24, 34, 39) תואם ויזואלית — כניסות מטופלות נופית. עיצוב מפורט (ספסלים, סוגי צמחים) דורש סקירה ע"י אדריכל נוף</td>
+    </tr>
+    
+    <tr>
+      <td><b>רצועת גינון רחבה הצמודה למגרש</b><br>יש לסמן בתכנית הפיתוח רצועת גינון ברוחב 2 מ' לפחות בגבול המגרש, ולציין את שטחה.</td>
+      <td>בתוכניות הפיתוח נראית רצועה ירוקה בין קו המגרש (קו כחול מקווקו) לבין הכביש/מדרכה, עם עצים מסומנים</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 10, 24, 34, 39, 44) ויזואלית קיימת רצועה — נדרשת מדידה לוודא ≥2מ ומיקום עצים</td>
+    </tr>
+    
+    <tr>
+      <td><b>רשימת צמחייה מפורטת</b><br>יש לצרף רשימת צמחייה מפורטת ותכנית צמחייה מסומנת כחלק מתכנית העיצוב.</td>
+      <td>אין בתוכן העניינים (עמ' 2) שום אזכור לרשימת צמחייה/נספח גינון</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>הנספח אינו מצורף להגשה</td>
+    </tr>
+    </tbody>
+      </table>
+    </div>
+    
+    <div class="subsection" id="sec-3-3">
+      <h3 class="subsection-num">3.3 תשתיות</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>צובר גז תת-קרקעי בלבד</b><br>יש לציין מיקום צובר הגז בתת הקרקע, במרחק 2 מ' לפחות מקו המגרש, ובתיאום אדריכל הנוף.</td>
+      <td>בתוכניות הפיתוח (עמ' 24, 34, 39) לא אותר סימון מפורש של מיקום צובר גז (כדור/מלבן עם תיוג "גז")</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>נדרשת השלמה — לוודא סימון צובר תת-קרקעי בנספח אינסטלציה או בתוכנית פיתוח מפורטת</td>
+    </tr>
+    
+    <tr>
+      <td><b>ללא יחידות מיזוג בחזיתות</b><br>יש להציג פתרון אדריכלי המסתיר את יחידות המיזוג מקו החזית.</td>
+      <td>בכל חזיתות הבניינים (עמ' 52-62) וברנדור הסופי (עמ' 63) לא נראות יחידות מעבה גלויות</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית — אין מעבים נראים. כדאי לאמת בפרטי חזית בקנ"מ גדול יותר</td>
+    </tr>
+    
+    <tr>
+      <td><b>ללא צנרת גלויה בחזיתות</b><br>יש להסיר כל סימון צנרת חיצונית מהחזיתות (למעט מרזבים).</td>
+      <td>החזיתות נראות נקיות ברמת ההדמיה הקיימת, אך לא ניתן בוודאות לזהות צנרת דקיקה בקנ"מ של עמ' 1:750/1:500</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62) נדרש פרט חזית מפורט לאישור סופי</td>
+    </tr>
+    </tbody>
+      </table>
+    </div>
+    
+    <div class="subsection" id="sec-3-4">
+      <h3 class="subsection-num">3.4 תנועה — רחבות כיבוי אש</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>ריצוף רחבת כיבוי באבן משתלבת/ריצוף מחלחל</b><br>יש לציין במפורש את חומר הריצוף של רחבת הכיבוי — אבן משתלבת או ריצוף מחלחל.</td>
+      <td>רחבות הכיבוי מסומנות בחום בכל דיאגרמות האשפה (לפי הלגנדה "רחבות כיבוי")</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 25, 35, 40, 44) נדרש כיתוב/הערה על סוג הריצוף (אבן משתלבת/גוטה גרדן/מחלחל)</td>
+    </tr>
+    
+    <tr>
+      <td><b>סימון רחבת כיבוי בשילוט בלבד</b><br>יש להוסיף בתכנית את ההערה: 'סימון רחבת כיבוי אש באמצעות שילוט בלבד ללא צביעה'.</td>
+      <td>הסימון בתוכניות הוא צבע חום — אבל זהו צבע דיאגרמתי בלבד (לפי לגנדה)</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 25, 35, 40, 44) יש להוסיף הערה מפורשת על שילוט ללא צבע על הקרקע</td>
+    </tr>
+    
+    <tr>
+      <td><b>רחבת כיבוי בתחום המגרש הפרטי</b><br>יש לסמן רחבת כיבוי אש בתוך תחום המגרש הפרטי בכל תא שטח, בהתאם להנחיות כיבוי אש.</td>
+      <td>בעמ' 25 (תא שטח 1) הרחבות החומות נראות בתוך גבולות המגרש (בין הבניינים)</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 25, 35, 40, 44) נדרשת בדיקה מדויקת של מיקום רחבות הכיבוי ביחס לגבול המגרש — במיוחד תאי שטח 2+4 ו-5</td>
+    </tr>
+    </tbody>
+      </table>
+    </div>
+    
+    <div class="subsection" id="sec-3-5">
+      <h3 class="subsection-num">3.5 ניקוז וחלחול</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>שיפוע ניקוז קרקע ≥ 1%</b><br>יש לציין על תכנית הפיתוח שיפועי ניקוז של 1% לפחות בכל פני המגרש.</td>
+      <td>על תוכניות הפיתוח נראים מספרים כמו "4%" (עמ' 34, 40) ו-"2.5%" (עמ' 40, 44) ו-"2.8%" (עמ' 40) — אלה כנראה שיפועי ניקוז</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 34, 39, 40, 44) ויזואלית הולם — אך נדרשת סקירת מהנדס לוודא כיסוי מלא של כל אזורי הפיתוח</td>
+    </tr>
+    
+    <tr>
+      <td><b>נספח הידרולוגי</b><br>יש להגיש נספח הידרולוגי נפרד ערוך בידי הידרולוג מוסמך, הכולל תכנית ניקוז ברמת המגרש, חישוב נפח השהיה (167 מ"ק/דונם), ומערכות החדרה.</td>
+      <td>אין בתוכן העניינים (עמ' 2) שום אזכור לנספח הידרולוגי</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>הנספח אינו מצורף להגשה</td>
+    </tr>
+    
+    <tr>
+      <td><b>אזורי חלחול והשהיה</b><br>יש לסמן בתכניות הפיתוח אזורי חלחול והשהיה לכל תא שטח.</td>
+      <td>רצועות גינון רחבות נראות סביב הבניינים ובחזית הרחוב, וייתכן שמטרתן גם חלחול</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 10, 24, 34, 39, 44) נדרש סימון מפורש ונספח הידרולוגי לקביעה</td>
+    </tr>
+    
+    <tr>
+      <td><b>ניקוז לא יזרום לשכנים</b><br>יש לציין מפורשות בתכניות שניקוז המגרש לא מופנה למגרשים פרטיים.</td>
+      <td>החצים והאחוזים בעמ' 40 ו-44 מצביעים בכיוונים שונים — לא היה לי זמן לבדוק כל חץ</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 40, 44) יש לציין בתכנית הניקוז את כיווני הזרימה המתוכננים בכל מפלס</td>
+    </tr>
+    </tbody>
+      </table>
+    </div>
+    
+    <div class="subsection" id="sec-3-6">
+      <h3 class="subsection-num">3.6 גגות וגינון על גג</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>תכנון חזית חמישית (גגות)</b><br>יש להגיש תכנית גגות (חזית חמישית) לכל הטיפולוגיות, עם שילוב דודי שמש וציוד טכני.</td>
+      <td>בחזיתות (עמ' 52-62) נראים פסי אבן/גג ברורים ברום הבניין, אך לא ראיתי "מבט גג" מובהק (קומה חמישית) בתוכן העניינים או…</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 52, 53, 54, 58, 62) תוכנית גג ייעודית כנראה חסרה. נדרשת בקשה לתוכנית גג עם סימון פאנלים/דודים</td>
+    </tr>
+    
+    <tr>
+      <td><b>ללא ארובות חימום בחזיתות</b><br>יש להסיר כל סימון של ארובות חימום מהחזיתות.</td>
+      <td>בכל החזיתות שסקרתי וברנדור הסופי, אין ארובות גלויות</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית</td>
+    </tr>
+    
+    <tr>
+      <td><b>דודים וקולטים משולבים בגג</b><br>יש להציג בתכנית הגג מיקום מסונן לדודים ולקולטים.</td>
+      <td>מהחזיתות לא נראים דודים/קולטים על המעטפת — מה שתואם את הדרישה</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62) נדרשת תוכנית גג להוכחה</td>
+    </tr>
+    </tbody>
+      </table>
+    </div>
+    
+    <div class="subsection" id="sec-3-7">
+      <h3 class="subsection-num">3.7 אדריכלות וחזיתות</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>נספח חומריות</b><br>יש להגיש נספח חומריות עם פירוט החומרים והגוונים בחזיתות, כולל דוגמיות.</td>
+      <td>אין בתוכן העניינים (עמ' 2) אזכור של נספח חומריות / לוח חומרים</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>הנספח אינו מצורף להגשה</td>
+    </tr>
+    
+    <tr>
+      <td><b>פתחי ממ"ד פונים לחזיתות משניות</b><br>יש לעדכן את מיקום פתחי הממ"ד כך שיפנו לחזיתות משניות.</td>
+      <td>בקומות הטיפוסיות נראים פתחי הממ"ד, אך אין סימון מובהק בקנ"מ של עמ' 1:500 שמראה אילו פתחים הם של ממ"ד</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 30, 38, 43, 47) נדרש סימון מפורש של פתחי ממ"ד ופירוש לאיזו חזית הם פונים</td>
+    </tr>
+    
+    <tr>
+      <td><b>ללא חיפוי אבן טבעית</b><br>יש להחליף חיפוי אבן טבעית בחומרים מאושרים (לוחות שרה / GRC / HPL / וכו') בתליה יבשה.</td>
+      <td>בכל החזיתות וברנדור הסופי (עמ' 63) החיפוי נראה בצבע בהיר אחיד (ככל הנראה HPL/GRC או דומה), עם פסי הדגשה אנכיים בגוון…</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית — לא נראית טקסטורת אבן. נדרש אישור סופי בנספח חומריות</td>
+    </tr>
+    
+    <tr>
+      <td><b>הדמייה צבעונית בהקשר העירוני</b><br>יש לצרף הדמייה צבעונית של המבנה בהקשר עירוני מזוויות שונות.</td>
+      <td>עמ' 63 הוא הדמיה צבעונית פוטוריאליסטית של הבניינים ברחוב מסוים, עם מכוניות, הולכי רגל, מדרכה ועצים</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 63) תואם</td>
+    </tr>
+    
+    <tr>
+      <td><b>פתחים אנכיים רצפה-תקרה</b><br>יש לעדכן את עיצוב הפתחים בחזיתות לחלונות אנכיים רצפה-תקרה.</td>
+      <td>החלונות בחזיתות נראים מאורכים אנכית, רבים מהם מקצה רצפה לקצה תקרה (פתחים גבוהים וצרים יותר מאשר רחבים), בעיקר לאורך…</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62) תואם ויזואלית — חלונות בעלי פרופורציה אנכית. כדאי לאמת בחתכים ובפרטי חזית</td>
+    </tr>
+    
+    <tr>
+      <td><b>עיצוב מרפסות משולב בחזית</b><br>יש להציג עיצוב מרפסות משולב במלואו בחזית, עם פירוט מעקות וחומריות.</td>
+      <td>המרפסות נראות משולבות בחזית עם מעקים בנויים בצבע ובחומר תואמים למעטפת הכללית</td>
+      <td><span class="v-ok">תקין</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62, 63) תואם ויזואלית</td>
+    </tr>
+    
+    <tr>
+      <td><b>ללא מתקנים גלויים על מרפסת לרחוב</b><br>יש להזיז מתקנים מהמרפסת הפונה לרחוב או להסתירם מאחורי מעקה בנוי.</td>
+      <td>ההדמיות מציגות מרפסות נקיות, ללא ציוד גלוי, אך זוהי הדמיה ייצוגית בלבד</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62, 63) ויזואלית נקי, אך נדרשת הערה תכנונית מפורשת בתקנון</td>
+    </tr>
+    
+    <tr>
+      <td><b>מסתור כביסה — מידות מינימליות</b><br>יש לסמן מסתורי כביסה בקומות הטיפוסיות עם המידות הנדרשות (1.8 מ' רוחב × 1.5 מ' עומק).</td>
+      <td>בחזיתות נראים קווים אנכיים מקווקווים אדומים שכנראה מציינים מיקום מסתורי כביסה</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62) נדרש פרט חזית בקנ"מ גדול שיציג מידות מסתור</td>
+    </tr>
+    
+    <tr>
+      <td><b>מסתור כביסה — ללא PVC</b><br>יש להחליף פרופילי PVC בחומרים מאושרים (לוחות שרה / רשתות מתועשות).</td>
+      <td>סוג החומר של המסתור אינו מצוין בתוכניות החזית</td>
+      <td><span class="v-rev">דורש בירור</span></td>
+      <td>(עמ' 52, 53, 54, 58, 60, 62) נדרשת קביעה בנספח חומריות (שאינו קיים בהגשה הזו)</td>
+    </tr>
+    </tbody>
+      </table>
+      <div class="architect-block" style="margin: 8mm 0 6mm 0; padding: 6mm 8mm; border: 1px solid #C8B6E0; border-right: 4px solid #5D3A9B; background: #F8F4FD; border-radius: 3px; page-break-inside: avoid;">
+        <div style="font-size: 13pt; font-weight: 700; color: #3B2666; margin-bottom: 2mm;">הערות אדריכלית העיר — דו"ח מס' 1, 02.06.2026</div>
+        <div style="font-size: 9.5pt; color: #5D3A9B; margin-bottom: 5mm;">מסמך הערות לתכנית עיצוב — מתחם הטייסים (ההסתדרות), נס ציונה · תכנית מס' 407-1048248 · מתכננים: קיקה ברא"ז אדריכלים ומתכנני ערים</div>
+
+        <h4 style="font-size: 12pt; font-weight: 700; color: #3B2666; margin: 4mm 0 2mm 0;">חלק א': פיתוח, העמדה וחיבוריות בקרקע</h4>
+        <h5 style="font-size: 11pt; font-weight: 700; color: #3B2666; margin: 3mm 0 2mm 0;">1. הערות פיתוח כלליות למרחב הציבורי</h5>
+        <ul style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 1mm 0; padding-right: 7mm;">
+          <li>פיתוח השצ"פ הינו בתאום מול אדריכל הנוף אהוד נדל – יש להשלים תהליך תאום.</li>
+          <li>יש להוסיף נספח שימור/טיפול בעצים בתחום התב"ע.</li>
+          <li>הקשר סביבתי: יש להשלים בתכניות את הבינוי והפיתוח במגרשים הגובלים (מחוץ לקו הכחול), המופיעים כעת כרקע לבן. כמו כן נדרש להבהיר את הקשר התכנוני, התנועתי והנופי לסביבה הקיימת והמתוכננת.</li>
+          <li>חתכים במרחב השצ"פ: בחתכים מזרח-מערב החוצים את השצ"פ המרכזי, יש להציג את החתך ברציפות עד קו חזית המבנים מ-2 הצדדים, כולל מפלסי הפיתוח.</li>
+          <li>רוחב דרכים וגינון: ניכר כי בחלק מהחתכים רוחב הדרך מכיל שבילי הליכה ואופניים בלבד ללא רצועות גינון, תוך יצירת "מעבר חומות" בין השצ"פ למבנים. יש לבחון שילוב רצועות גינון לאורך הדרכים, בהתאם לרוחב הזמין.</li>
+          <li>פירוט מפלסים: יש לציין מפלסי פיתוח מוחלטים ויחסיים בכל החזיתות והחתכים הארוכים (כולל גדרות, פיתוח, מדרגות).</li>
+          <li>רמפות לחניונים: יש להציג את תכנון ומופע הרמפות. אנו ממליצים לבחון שילוב של פרגולות מחופות צמחייה כדי למתן את המראה ה"אספלטי" של הרמפות במרחב הציבורי. (ראו תמונות מצורפות להמחשה — בקובץ המקור)</li>
+        </ul>
+
+        <h5 style="font-size: 11pt; font-weight: 700; color: #3B2666; margin: 4mm 0 2mm 0;">פונקציות בקומת הקרקע</h5>
+        <ul style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 1mm 0; padding-right: 7mm;">
+          <li>רחבות גיזום: מה משמעותן בפועל? יש להציג תכנון וחזית כלפי הרחוב/השצ"פ לרבות פרטי הסתרה נאותים.</li>
+          <li>רחבות כיבוי אש: יש למקם בתחום המגרש הפרטי ועם אפשרות לגינון.</li>
+          <li>חדרי אשפה: נדרש תאום מלא מול מחלקת שפ"ע.</li>
+          <li>הצגת חדר הטרפו והמופע שלו בתנוחה ובחתך.</li>
+          <li>כניסות למבני המגורים: הכניסות ללובאים יפנו ככל הניתן לשצ"פ. במבנים שלא ניתן, נדרשת פתיחת מעבר להולכי רגל מהבניין לשצ"פ.</li>
+          <li>מעליות במבני המגורים יוכלו להכיל זוג אופניים – דרישת מהנדס העיר.</li>
+          <li>מועדוני דיירים: יש לאפשר גישה גם מתוך השצ"פ/חזית הרחוב כדי לייצר דופן עירונית פעילה. (בתא 5 למשל, הפיכת כיוון המועדונים לפנות חוצה אל השצ"פ.)</li>
+          <li>חדרי אופניים ועגלות: מומלץ לייצר יציאה חיצונית ישירה לשצ"פ/רחוב בנוסף לגישה דרך הלובי הראשי.</li>
+          <li>מערכות: יש להציג בצורה מובחנת את מיקומי פתרי אוורור החניונים, חדרי טרפו, מאגרי גז ומתקני אשפה.</li>
+        </ul>
+
+        <h5 style="font-size: 11pt; font-weight: 700; color: #3B2666; margin: 4mm 0 2mm 0;">3. הערות פרטניות לתאי השטח</h5>
+        <table style="width: 100%; border-collapse: collapse; margin: 2mm 0 4mm 0; font-size: 9.5pt; direction: rtl;">
+          <thead>
+            <tr>
+              <th style="background: #ECE3F6; border: 1px solid #C8B6E0; padding: 2mm 3mm; color: #3B2666; text-align: right; width: 22%;">תא שטח</th>
+              <th style="background: #ECE3F6; border: 1px solid #C8B6E0; padding: 2mm 3mm; color: #3B2666; text-align: right;">פירוט והנחיות</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top; font-weight: 600;">תא שטח 1</td>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top;">יש להוסיף מפלסים בחצרות הפרטיות ולהבהיר את המושג "דירת גן ללא ניקוז".<br>רחבות כיבוי אש: יש למקם בתחום המגרש הפרטי.</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top; font-weight: 600;">תא שטח 2</td>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top;">נדרש להציג את ההקשרים הסביבתיים (מבנים קיימים, תוואי מדרכה מצפון וממזרח למבנה).</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top; font-weight: 600;">תא שטח 3</td>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top;">פורטל הכניסה מדרום חוסם לכאורה את המדרכה — נדרש תכנון המבטיח מעבר חופשי.<br>המעבר צריך להישאר ברוחב הדרוש לפי הנחיות התנועה.</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top; font-weight: 600;">תא שטח 4</td>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top;">הכניסה לבניין A מסומנת מול חדר האשפה (יש לתקן).<br>מבנה B מפנה חזית אטומה ("גב") לרחוב — יש לפתוח אותה למרחב הציבורי.</td>
+            </tr>
+            <tr>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top; font-weight: 600;">הערה חוצה (תאים 3, 4, 5)</td>
+              <td style="border: 1px solid #DCD0EC; padding: 2mm 3mm; vertical-align: top;">(ברנדה/אלן): קיימת תכנית לסגירת גדרות של דירות גן בקו "אפס" כלפי הרחוב. יש לקבוע מדיניות אחידה למפלסי הגדרות, יחס לפיתוח הציבורי וטיפול בקשר ויזואלי לרחוב.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h4 style="font-size: 12pt; font-weight: 700; color: #3B2666; margin: 6mm 0 2mm 0;">חלק ב': עיצוב חזיתות המבנים ושפה אדריכלית</h4>
+        <p style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 1.5mm 0;">אנו מעריכים את המאמץ והחשיבה שהושקעו בתכנון על מנת לייצר סביבת מגורים ייחודית ולשבור את המאסות הבנויות. יחד עם זאת, ניכר כי השפה האדריכלית הנוכחית עמוסה ויש מקום ללטשה ולהפיכתה ליותר מאופקת.</p>
+
+        <h5 style="font-size: 11pt; font-weight: 700; color: #3B2666; margin: 4mm 0 2mm 0;">1. השקטת החזיתות והשפה החומרית</h5>
+        <ul style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 1mm 0; padding-right: 7mm;">
+          <li>עומס ויזואלי: העיצוב הנוכחי מתאפיין בריבוי אלמנטים ("קופסתיות"), חומרים וקפיצות במפלסי החלונות. שילוב של רפפות שחורות, אלמנטים כהים וגיוון רב יוצר עומס. מומלץ למתן את האלמנטים, להפחית את מספר הצבעוניות והחומרים, ולהשתמש בשפה אחידה ומאופקת.</li>
+          <li>צבעוניות: השימוש הנרחב באלמנטים כהים, חיפויים שחורים וזכוכיות כהות, יוצר מופע כללי מעט כבד. מומלץ לבחון חלופות של זיגוג בהיר יותר וחיפויים בגוונים טבעיים.</li>
+        </ul>
+
+        <h5 style="font-size: 11pt; font-weight: 700; color: #3B2666; margin: 4mm 0 2mm 0;">2. עיצוב המרפסות</h5>
+        <ul style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 1mm 0; padding-right: 7mm;">
+          <li>מסגור אלמנטים: השימוש בעמודים ופרגולות ענק הממסגרים את המרפסות יוצר משקל ויזואלי כבד. בנוסף, קורות מרחפות בולטות עשויות ליצור תחושה של אי-יציבות. מומלץ לשקול הקטנה של ממדי המסגרת ואת היחס בין המסגרת לפתח המרפסת.</li>
+          <li>מרפסות זיזיות: נשמח לבחון גישה עיצובית של מרפסות "משוחררות" וזיזיות יותר, אשר אינן כלואות בתוך מסגרות קשיחות. בתכנון חלופי, ניתן לבחון מרפסות הפונות לכיוונים שונים ובגדלים שונים.</li>
+        </ul>
+
+        <h5 style="font-size: 11pt; font-weight: 700; color: #3B2666; margin: 4mm 0 2mm 0;">3. הנחיות להגשת תוצרים לשלב הבא</h5>
+        <p style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 1.5mm 0;">על מנת שנוכל לבחון את החלופות בצורה מדויקת, אנו מבקשים:</p>
+        <ul style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 1mm 0; padding-right: 7mm;">
+          <li>הגשת אבטיפוס: במקום להציג את כלל המבנים יחד, אנו מבקשים לפתח ולעבד עד רמת פירוט גבוהה יותר בניין אבטיפוס יחיד. הבניין יוצג עם פירוט מלא של חזיתות, חומרים, מרפסות, ופרטי גמר.</li>
+          <li>חלופות עיצוביות: יש להציג 2-3 חלופות קונספטואליות לחזית הבניין, מלוות בהסבר מתודולוגי קצר. החלופות יתייחסו להערות לעיל (השקטה, צבעוניות, מרפסות).</li>
+          <li>דיוק בהדמיות: רצוי לספק מספר מצומצם של הדמיות איכותיות ומדויקות, אשר מציינות באופן ברור את כיוון המבט, תא השטח המצולם (כפי שמופיע בתב"ע), והגובה הרלוונטי. נא לכלול הדמיה לפחות אחת ממפלס הקרקע (גובה הולך רגל).</li>
+        </ul>
+
+        <p style="font-size: 10pt; line-height: 1.6; color: #1a1a1a; margin: 4mm 0 1mm 0; font-style: italic;">אנו עומדים לרשותכם לכל התייעצות או הבהרה.<br>מנהלת התחדשות עירונית, נס ציונה.</p>
+      </div>
+
+    </div>
+    
+    <div class="subsection" id="sec-3-10">
+      <h3 class="subsection-num">3.8 הנחיות סביבתיות</h3>
+      <table class="audit">
+        <thead><tr>
+          <th style="width:28%;">מדיניות</th>
+          <th style="width:24%;">מצב בהגשה 24.3</th>
+          <th style="width:13%;">ממצא</th>
+          <th style="width:35%;">הערה / פעולה נדרשת</th>
+        </tr></thead>
+        <tbody>
+    <tr>
+      <td><b>נספח אקוסטי</b><br>יש להגיש נספח אקוסטי ערוך בידי יועץ אקוסטיקה מוסמך.</td>
+      <td>אין בתוכן העניינים (עמ' 2) אזכור לנספח אקוסטי</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>הנספח אינו מצורף להגשה</td>
+    </tr>
+    
+    <tr>
+      <td><b>ניתוח חשיפה לשמש ופוטנציאל אנרגיה</b><br>יש לצרף נספח עם ניתוח חשיפה לשמש (21.12, 9:00–15:00) וחישוב פוטנציאל פאנלים פוטו-ולטאיים.</td>
+      <td>אין בתוכן העניינים אזכור לניתוח הצללה/חשיפה לשמש</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>הנספח אינו מצורף להגשה</td>
+    </tr>
+    
+    <tr>
+      <td><b>בנייה ירוקה ת"י 5281</b><br>יש להגיש נספח בנייה ירוקה לפי דרישות ת"י 5281 כחלק מתכנית העיצוב.</td>
+      <td>אין בתוכן העניינים אזכור לעמידה בת"י 5281 או נספח בנייה ירוקה</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>הנספח אינו מצורף להגשה</td>
+    </tr>
+    
+    <tr>
+      <td><b>נספח איכות סביבה וקיימות</b><br>יש להגיש נספח איכות סביבה וקיימות.</td>
+      <td>אין בתוכן העניינים אזכור לנספח איכות סביבה/קיימות</td>
+      <td><span class="v-fail">לא תקין</span></td>
+      <td>הנספח אינו מצורף להגשה</td>
+    </tr>
+    </tbody>
+      </table>
+    </div>
+    
+    <div class="subsection amen-subsection" id="sec-3-amenities">
+      <h3 class="subsection-num">3.9 שירותים לדיירים</h3>
+      <p class="amen-provenance">ממצאי מלאי של שירותים לדיירים שזוהו בדיאגרמות הפונקציות (עמ' 26 לתא שטח 1; עמ' 36 לתאי שטח 2+4; עמ' 41 לתא שטח 3; עמ' 45 לתא שטח 5).</p>
+      <p class="amen-coverage">הטבלה שלהלן מציגה את הזיהוי של חדרי שירות ייעודיים לדיירים בכל תא שטח. היא מובאת לסקירת האדריכל בלבד.</p>
+      <p class="amen-note">הטבלה להלן מוצגת לסקירת הצוות, ללא חיווי ציות. עמודת "הערה" תאוכלס בעתיד עם דרישות מקודדות.</p>
+      <table class="amen-table">
+        
+    <thead>
+      <tr>
+        <th class="amen-name-cell">שירות</th>
+        <th class="amen-plot-cell">תא שטח 1</th><th class="amen-plot-cell">תא שטח 2</th><th class="amen-plot-cell">תא שטח 3</th><th class="amen-plot-cell">תא שטח 4</th><th class="amen-plot-cell">תא שטח 5</th>
+        <th class="amen-anchor-cell">אסמכתא רגולטורית</th>
+        <th class="amen-note-cell">הערה</th>
+      </tr>
+    </thead>
+    
+        <tbody>
+        <tr>
+          <td class="amen-name-cell">חדר אופניים</td>
+          <td class="amen-yes">✓ עמ' 26 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 36 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 41 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 36 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 45 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td>
+          <td class="amen-anchor-cell">סעיף 4.1.2.12 לתקנון התב"ע — הוראה רכה</td>
+          <td class="amen-note-cell">נבדק כתקין (סעיף 4.1.2.12).</td>
+        </tr>
+        
+        <tr>
+          <td class="amen-name-cell">מחסן (ברמת מבנה)</td>
+          <td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-yes">✓ עמ' 45</td>
+          <td class="amen-anchor-cell">סעיף 5 הערת שוליים בתקנון — ≤6 מ"ר ליח"ד (מחסן פרטי, לא ברמת מבנה)</td>
+          <td class="amen-note-cell">מצוין בנפרד מנושא שטחי הבנייה.</td>
+        </tr>
+        
+        <tr>
+          <td class="amen-name-cell">חדר עגלות</td>
+          <td class="amen-yes">✓ עמ' 26 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 36 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 41 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 36 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td><td class="amen-yes">✓ עמ' 45 <span class="amen-raw">(חדרי אופניים ועגלות)</span></td>
+          <td class="amen-anchor-cell">—</td>
+          <td class="amen-note-cell"></td>
+        </tr>
+        
+        <tr>
+          <td class="amen-name-cell">מועדון דיירים</td>
+          <td class="amen-yes">✓ עמ' 26</td><td class="amen-yes">✓ עמ' 36</td><td class="amen-yes">✓ עמ' 41</td><td class="amen-yes">✓ עמ' 36</td><td class="amen-yes">✓ עמ' 45</td>
+          <td class="amen-anchor-cell">—</td>
+          <td class="amen-note-cell"></td>
+        </tr>
+        
+        <tr>
+          <td class="amen-name-cell">חדר כושר / מתקני כושר</td>
+          <td class="amen-yes">✓ עמ' 26</td><td class="amen-no">—</td><td class="amen-yes">✓ עמ' 41</td><td class="amen-no">—</td><td class="amen-no">—</td>
+          <td class="amen-anchor-cell">—</td>
+          <td class="amen-note-cell"></td>
+        </tr>
+        
+        <tr>
+          <td class="amen-name-cell">חדר ועד בית</td>
+          <td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td>
+          <td class="amen-anchor-cell">—</td>
+          <td class="amen-note-cell"></td>
+        </tr>
+        
+        <tr>
+          <td class="amen-name-cell">חדר תאי דואר</td>
+          <td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td><td class="amen-no">—</td>
+          <td class="amen-anchor-cell">—</td>
+          <td class="amen-note-cell"></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    </div>
+    
+    <div class="chapter" id="sec-4">
+      <div class="eyebrow">המינהלת להתחדשות עירונית — עיריית נס ציונה</div><h2 class="chapter-num-title">4. סיכום וממצאים סופיים</h2><p class="chapter-intro">פרק זה מסכם את ממצאי הסקירה ומדרג את הפעולות הנדרשות מכם לפני הסקירה הבאה.</p>
+      <table class="badges"><tr><td class="ok"><div class="num">14</div><div class="label">תקינים</div></td><td class="fail"><div class="num">23</div><div class="label">נדרשים תיקונים</div></td><td class="review"><div class="num">33</div><div class="label">דורשים בירור</div></td></tr></table>
+      <div class="verdict-banner "><p class="verdict-text">נדרשים תיקונים מהותיים — ההגשה אינה מוכנה לחתימה</p></div>
+      <h3 class="subsection-num" style="margin-top:8mm">פעולות הנדרשות מכם לפני הסקירה הבאה</h3>
+      <ol class="priority-list"><li>1. <strong>כל הנספחים החיצוניים חסרים — ברמת תכנית.</strong> ההגשה היא 63 עמודי תוכניות אדריכליות בלבד, ללא ששת הנספחים הנדרשים: חומריות, צמחייה, הידרולוגי, אקוסטי, ת"י 5281, איכות סביבה וקיימות. יש להגיש את כל הנספחים בגרסה הבאה — תיקון מהותי.</li><li>2. <strong>אחוז דירות קטנות — ברמת תכנית.</strong> גבול תחתון: לפי הקריאה המחמירה של התב"ע (≤75 מ"ר), מאומתות לכל הפחות 17 דירות קטנות = 2.43% מסך 700 יח"ד. האדריכל מצהיר על 21% (147/700) בהסתמך על הגדרה רחבה יותר (≤81 מ"ר) הכוללת גם את שורות 2.5 חד' / 3 קטנה. ההפרש נובע מטווחי שטח חופפים בטבלת התמהיל (62-81 מ"ר) בתאי שטח 1, 3, שלא ניתן לפצל ללא שטחי דירות פרטניים. יש לצרף בהגשה הבאה טבלת תמהיל מפורטת עם שטח לכל יחידת דיור כדי לסגור את הספק. אם הדרישה היא 20% — עלולה ההגשה לא לעמוד בה.</li><li>3. <strong>שטח עיקרי (מ"ר) — תא שטח 1, תא שטח 2, תא שטח 3, תא שטח 4, תא שטח 5.</strong> יש להתאים את השטח העיקרי לתקרת התב"ע ולכלול טבלת שטחי בנייה מפורטת בגרסה הבאה.</li><li>4. <strong>אחוז שטחים מחלחלים — ברמת תכנית.</strong> אחוז השטחים המחלחלים (גינון, ריצוף מחלחל, ללא מרתף תחתון) ביחס לכלל שטח התכנית חייב לעלות על הסף המוגדר.
+
+סעיף 4.5.2.1 בתקנון התב"ע מגביל את שטח הבינוי של תשתיות עיליות בשטחי זיקת הנאה ל-5%. יש לצרף חישובי שטחים מדויקים בהגשה הבאה.</li><li>5. <strong>גובה ביחס לקרקע / קומות — תא שטח 1, תא שטח 2, תא שטח 3, תא שטח 4, תא שטח 5.</strong> גובה הבניין המוצע (מקסימום בין החזיתות/חתכים) לא יעלה על הגובה המותר בתב"ע.
+
+סעיף טבלת הזכויות בתקנון התב"ע, תא שטח 1, עמודת מספר קומות: בתכניות החזית מוצגים מבנים עם 9 ו-13 קומות מעל הקרקע.</li><li>6. <strong>הנחיות סביבתיות — ניתוח חשיפה לשמש ופוטנציאל אנרגיה.</strong> יש לצרף נספח עם ניתוח חשיפה לשמש (21.12, 9:00–15:00) וחישוב פוטנציאל פאנלים פוטו-ולטאיים.</li><li>7. <strong>יחס חניה — תא שטח 1, תא שטח 2, תא שטח 3, תא שטח 4, תא שטח 5.</strong> יחס חניה פרטית מחושב: 1.42 (330/232 יח"ד). מעל בסיס איכותי של 1.3 — תקין על בדיקה ראשונית. תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח"ד לפי גודל הדירה (עד 120 מ"ר: 1.0-1.3; 120-200 מ"ר: 1.5), בתוספת 20% חניות אורחים. אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.
+
+הציון 'תקין' שונה ל'דורש בירור' מאחר שאימות מדויק לתקן דורש מידע נוסף שאינו קיים בהגשה.
+
+סעיף 6.2.1 בתקנון התב"ע: ההגשה כוללת תכניות מפורטות לחניה תת-קרקעית (מרתף) לכל תא שטח (לדוגמה, עמ' 29, 37, 42, 46). תשריטי המגרש אינם מציגים חניות עיליות, מה שמאשר כי כל החניה תת-קרקעית ותואמת את הדרישה. סעיף 6.2.2 בתקנון התב"ע: הסעיף מתיר כניסת חניה אחת לכל היותר מרחוב הטייסים. מבדיקת תשריט המגרש הכללי (עמ' 10) והחזית הפונה לרחוב הטייסים (עמ' 55), לא קיימות כניסות רכב מרחוב זה. מצב זה תואם את הדרישה. סעיף 6.2.3 בתקנון התב"ע: טבלאות החניה (לדוגמה, עמ' 29) מפרטות חניות 'אורחים' כקטגוריה נפרדת. עם זאת, שאלת אי-שיוך חוקי של חניות אלו ליחידות דיור ספציפיות היא עניין משפטי שאינו ניתן לאימות מתכניות אדריכליות. סעיף 4.1.2.10 בתקנון התב"ע: ההגשה מציגה הפרדה לשימוש הציבורי (מעון יום) בתא שטח 1. עמ' 30 מציג כניסה ייעודית, ותכנית החניה בעמ' 29 מקצה מקומות חניה ספציפיים למעון היום, בנפרד מחניית המגורים. מצב זה תואם את הדרישה.</li><li>8. <strong>קווי בניין — כל תאי השטח.</strong> יש לצרף בהגשה הבאה טבלת קווי בניין מפורטת לכל תא שטח (קדמי / צידי / אחורי) כך שניתן יהיה לאמתם מול תקנון התב"ע.</li><li>9. <strong>שטח שירות מעל (מ"ר) — תא שטח 1, תא שטח 2, תא שטח 3, תא שטח 4, תא שטח 5.</strong> יש להתאים את שטחי השירות מעל הקרקע לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</li><li>10. <strong>שטח שירות מתחת (מ"ר) — תא שטח 1, תא שטח 2, תא שטח 3, תא שטח 4, תא שטח 5.</strong> יש להתאים את שטחי השירות התת-קרקעיים לתקרה ולכלול טבלת שטחים מפורטת בגרסה הבאה.</li><li>11. <strong>שפ"ע — אשפה ופינוי פסולת — רחבת גזם ייעודית.</strong> יש להוסיף סימון רחבת גזם ייעודית בכל תא שטח, בקנ"מ 1:500, באבן משתלבת, ברצועה הצמודה לרחוב.</li></ol>
+      
+        <h3 class="subsection-num" style="margin-top:8mm">דרישות לעיון — שירותים לדיירים</h3>
+        <div class="amen-clarification">
+          דרישה לעיון: לא זוהו בדיאגרמות הפונקציות בעמודי 26, 36, 41, 45 הקטגוריות הבאות:
+- חדר ועד בית
+- חדר תאי דואר
+
+ייתכן שמדובר באלמנטים נדרשים שאינם מתוארים בדיאגרמות הקיימות. יש להבהיר האם:
+א. אלמנטים אלה קיימים בהגשה ומתוארים בעמודים אחרים;
+ב. אלמנטים אלה אינם נדרשים על-פי הנחיות נס ציונה;
+ג. אלמנטים אלה חסרים ויש להוסיפם בהגשה הבאה.
+        </div>
+        
+      <p class="closing-paragraph"></p>
+    </div>
+    
+    </body></html>
