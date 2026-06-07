@@ -39,7 +39,7 @@ VERDICT_TO_VCLASS_AND_LABEL: dict[str, tuple[str, str]] = {
     "fail":            ("v-fail", "לא תקין"),
     "fail_borderline": ("v-fail", "נדרש תיקון"),
     "not_submitted":   ("v-miss", "לא הוגש"),
-    "requires_review": ("v-rev",  "דורש בירור"),
+    "requires_review": ("v-rev",  "נדרשת השלמה"),
     "unevaluable":     ("v-na",   "לא ניתן לבדיקה"),
     "not_applicable":  ("v-na",   "לא רלוונטי"),
 }
@@ -975,6 +975,16 @@ ul.passing-summary-list li {
   font-weight: 700;
   color: var(--green-dark);
   margin: 8mm 0 3mm 0;
+}
+
+/* M7.8 — page references rendered at end of cell, de-emphasized.
+   Light grey, same body font size but lighter weight, so the architect's
+   eye lands on the directive prose first and the reference recedes. */
+.page-ref {
+  color: var(--gray-mid);
+  font-weight: 400;
+  font-size: 9.5pt;
+  white-space: nowrap;
 }
 
 /* Inline discipline feedback callout (when a discipline manager has commented) */
@@ -2139,7 +2149,7 @@ def _content_badge_counts(content_results: list[dict]) -> list[tuple[int, str, s
     return [
         (c["ok"],      "תקינים בתוכן",       "ok"),
         (c["fail"],    "ליקויים בתוכן",       "fail"),
-        (c["review"],  "דורשים בירור",        "review"),
+        (c["review"],  "נדרשת השלמה",        "review"),
         (c["unknown"], "לא ניתנים לבדיקה",    "unknown"),
         (c["na"],      "לא רלוונטיים",        "na"),
     ]
@@ -2179,7 +2189,7 @@ def _sidecar_indicator_label(indicator: str) -> str:
         "non_compliant":           "לא תקין",
         "missing":                 "לא נמצא בהגשה",
         "compliant":               "תקין",
-        "requires_review":         "דורש בירור",
+        "requires_review":         "נדרשת השלמה",
         "deferred_to_dwg":         'דורש בדיקה בקובץ DWG',
         # Bug A guard spawns — engine deterministic pass holds, but evidence /
         # provenance signals from M3 critic or M2 deserve מהנדס/ת attention.
@@ -2249,7 +2259,7 @@ _CAD_INDICATOR_LABELS_HE: dict[str, str] = {
     "non_compliant":   "לא תקין",
     "missing":         "לא נמצא בהגשה",
     "compliant":       "תקין",
-    "requires_review": "דורש בירור",
+    "requires_review": "נדרשת השלמה",
 }
 
 
@@ -2566,12 +2576,12 @@ def _load_coverage_report(pdf_output_path: Path) -> dict | None:
 
 
 def _verdict_count_summary_he(vc: dict) -> str:
-    """Render a tiny inline verdict-count summary like 'תקין 8 · דורש בירור 3'."""
+    """Render a tiny inline verdict-count summary like 'תקין 8 · נדרשת השלמה 3'."""
     pieces: list[str] = []
     for v, lbl in [
         ("pass", "תקין"),
         ("fail", "לא תקין"),
-        ("requires_review", "דורש בירור"),
+        ("requires_review", "נדרשת השלמה"),
         ("not_submitted", "לא הוגש"),
         ("not_applicable", "לא רלוונטי"),
     ]:
@@ -2844,13 +2854,19 @@ def _discipline_row_html(r: dict) -> str:
         policy = r.get("notes_he", "")
 
     submission_state = _submission_state_he(r)
-    note = _action_note_he(r)
+    # M7.8 — _action_note_he now returns (body, page_ref); render page_ref
+    # at the END of the cell in a light-grey de-emphasized span.
+    note_body, note_pages = _action_note_he(r)
+    page_ref_html = (
+        f' <span class="page-ref">{_esc(note_pages)}</span>'
+        if note_pages else ''
+    )
     return f"""
     <tr>
       <td><b>{_esc(title)}</b><br>{_esc(policy)}</td>
       <td>{_esc(submission_state)}</td>
       <td><span class="{vclass}">{vlabel}</span></td>
-      <td>{_esc(note)}{feedback}</td>
+      <td>{_esc(note_body)}{page_ref_html}{feedback}</td>
     </tr>
     """
 
@@ -2903,22 +2919,26 @@ def _terse_state(text: str, max_chars: int = 120) -> str:
     return s
 
 
-def _action_note_he(r: dict) -> str:
-    """Right-column action note. v8j: prefer Cowork's compliance_note prefixed
-    with `(עמ' N, M)` from evidence_pages when available."""
+def _action_note_he(r: dict) -> tuple[str, str]:
+    """Right-column action note.  M7.8: returns ``(body, page_ref)`` so the
+    renderer can put the page reference at the END of the cell in a
+    de-emphasized ``<span class="page-ref">`` instead of prepending it.
+
+    For Cowork-sourced findings the page list comes from ``evidence_pages``;
+    for other findings the page reference is empty (page numbers, if any,
+    are baked into ``notes_he`` from the translator output and surfaced via
+    the surrounding cell text).
+    """
     ev = r.get("evidence", {}) or {}
     if ev.get("source") == "cowork_discipline_findings_v24.3":
         pages = r.get("evidence_pages") or ev.get("evidence_pages") or []
         note = (r.get("compliance_note") or ev.get("compliance_note") or "").strip()
-        if pages and note:
-            return f"(עמ' {', '.join(str(p) for p in pages)}) {note}"
-        if pages:
-            return f"(עמ' {', '.join(str(p) for p in pages)})"
-        if note:
-            return note
-        return r.get("remediation_he", "") or "—"
+        page_ref = f"(עמ' {', '.join(str(p) for p in pages)})" if pages else ""
+        body = note or r.get("remediation_he", "") or "—"
+        return body, page_ref
     v = r.get("verdict", "")
-    return r.get("remediation_he", "") if v != "pass" else "ראה ראיות."
+    body = r.get("remediation_he", "") if v != "pass" else "ראה ראיות."
+    return body, ""
 
 
 def _discipline_badge_counts(discipline_results: list[dict]) -> list[tuple[int, str, str]]:
@@ -2936,7 +2956,7 @@ def _discipline_badge_counts(discipline_results: list[dict]) -> list[tuple[int, 
     return [
         (c["ok"],      "תקינים במדיניות",     "ok"),
         (c["fail"],    "סטיות ממדיניות",      "fail"),
-        (c["review"],  "דורשים בירור",        "review"),
+        (c["review"],  "נדרשת השלמה",        "review"),
         (c["unknown"], "לא ניתנים לבדיקה",    "unknown"),
     ]
 
@@ -3002,7 +3022,7 @@ def _summary_badge_counts(content_results, discipline_results) -> list[tuple[int
     return [
         (count(content_results, is_pass) + count(discipline_results, is_pass), "תקינים", "ok"),
         (count(content_results, is_fail) + count(discipline_results, is_fail), "נדרשים תיקונים", "fail"),
-        (count(content_results, is_review) + count(discipline_results, is_review), "דורשים בירור", "review"),
+        (count(content_results, is_review) + count(discipline_results, is_review), "נדרשת השלמה", "review"),
     ]
 
 
@@ -3216,7 +3236,7 @@ def _format_badge_counts(format_results: list[dict]) -> list[tuple[int, str, str
             c["unknown"] += 1
     return [
         (c["fail"],    "טעויות בפורמט",        "fail"),
-        (c["review"],  "דורשים בירור",          "review"),
+        (c["review"],  "נדרשת השלמה",          "review"),
         (c["unknown"], "לא ניתנים לבדיקה",      "unknown"),
         (c["ok"],      "ללא טעויות (לא מוצגים)", "ok"),
     ]
@@ -3240,7 +3260,7 @@ def _format_row_html(r: dict) -> str:
     title = _format_rule_title(r)
     kind = _format_verdict_kind(r)
     label_css = {"fail": ("נדרש תיקון", "v-fail"),
-                 "review": ("דורש בירור", "v-rev"),
+                 "review": ("נדרשת השלמה", "v-rev"),
                  "missing": ("לא ניתן לבדיקה", "v-miss")}.get(kind, ("—", "v-na"))
     evidence = _format_evidence_he(r)
     note = r.get("notes_he", "")

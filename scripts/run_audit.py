@@ -277,10 +277,90 @@ def _print_verdict_summary(label: str, rules: list[dict], include_total: bool = 
 # CLI dispatch
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _run_from_html(html_path: Path, output_pdf: Path | None) -> int:
+    """M7.7 --from-html: skip everything; pipe `html_path` straight to WeasyPrint.
+
+    Cheapest possible loop for HTML-editing iteration. Embeds the report
+    generator's CSS so the dumped HTML is self-rendering. Output defaults
+    to the same stem as the input.
+    """
+    from compliance_engine.report_generator import _CSS, FONT_DIR
+    from weasyprint import HTML, CSS as WeasyCSS
+    from weasyprint.text.fonts import FontConfiguration
+
+    html_path = Path(html_path)
+    if not html_path.exists():
+        print(f"ERROR: HTML not found at {html_path}", file=sys.stderr)
+        return 1
+    if output_pdf is None:
+        output_pdf = html_path.with_suffix(".pdf")
+    else:
+        output_pdf = Path(output_pdf)
+        output_pdf.parent.mkdir(parents=True, exist_ok=True)
+
+    html_str = html_path.read_text(encoding="utf-8")
+    font_config = FontConfiguration()
+    base = str(FONT_DIR) + "/"
+    HTML(string=html_str, base_url=base).write_pdf(
+        str(output_pdf),
+        stylesheets=[WeasyCSS(string=_CSS, base_url=base, font_config=font_config)],
+        font_config=font_config,
+    )
+    print(f"PDF rendered: {output_pdf}")
+    return 0
+
+
+def _run_render_only(project_key: str, submission_version: str,
+                     output_subdir: str) -> int:
+    """M7.7 --render-only: skip the engine, render straight from existing
+    audit_results.m4.json + project schema + submission metadata.
+
+    Use when only the report_generator templates or m4 JSON content has
+    changed and the analysis (engine compliance run, M1-M4 pipeline)
+    doesn't need to re-execute.
+    """
+    from compliance_engine.report_generator import generate_audit_pdf
+
+    submission_dir = ROOT / "projects" / project_key / "submissions" / f"v{submission_version}"
+    metadata_path = submission_dir / "metadata.json"
+    if not metadata_path.exists():
+        print(f"ERROR: metadata not found at {metadata_path}", file=sys.stderr)
+        return 1
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+
+    schema_path = ROOT / "projects" / project_key / f"project-schema-{project_key}-v2.json"
+    if not schema_path.exists():
+        schema_path = ROOT / f"project-schema-{project_key}-v2.json"
+    if not schema_path.exists():
+        print(f"ERROR: schema not found for {project_key}", file=sys.stderr)
+        return 1
+
+    output_dir = ROOT / output_subdir / project_key / f"v{submission_version}"
+    m4_path = output_dir / "audit_results.m4.json"
+    if not m4_path.exists():
+        print(f"ERROR: --render-only needs an existing {m4_path}", file=sys.stderr)
+        print(f"       Run a full audit first, then iterate with --render-only.", file=sys.stderr)
+        return 1
+
+    project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
+    results_for_pdf = json.loads(m4_path.read_text(encoding="utf-8"))
+    pdf_out = output_dir / f"audit_report_{submission_version}.pdf"
+    print(f"--render-only: using {m4_path}")
+    generate_audit_pdf(
+        audit_results=results_for_pdf,
+        project_schema=project_schema,
+        submission_metadata=metadata,
+        output_path=pdf_out,
+    )
+    print(f"PDF report: {pdf_out}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Run a full compliance audit on a submission.",
-        epilog="Either --job-dir DIR or positional PROJECT_KEY + SUBMISSION_VERSION required.",
+        epilog="Either --job-dir DIR or positional PROJECT_KEY + SUBMISSION_VERSION required. "
+               "Use --from-html for a WeasyPrint-only pass; --render-only to skip the engine.",
     )
     parser.add_argument("project_key", nargs="?",
                         help="(legacy) e.g., 407-1048248")
@@ -293,7 +373,24 @@ def main(argv: list[str] | None = None) -> int:
                         help="(legacy) override the audit_outputs root.")
     parser.add_argument("--no-pdf", action="store_true",
                         help="(legacy) skip PDF report generation.")
+    parser.add_argument("--from-html", type=Path, default=None,
+                        help="M7.7: render PDF directly from this HTML file. "
+                             "Skips ALL analysis — no engine, no pipeline. "
+                             "Pairs with the HTML dump that report_generator "
+                             "writes alongside every PDF.")
+    parser.add_argument("--from-html-output", type=Path, default=None,
+                        help="With --from-html: output PDF path. "
+                             "Default: same stem as input HTML.")
+    parser.add_argument("--render-only", action="store_true",
+                        help="M7.7: skip the engine + analysis; render PDF "
+                             "from the existing audit_results.m4.json. "
+                             "Requires a prior full run for this submission.")
     args = parser.parse_args(argv)
+
+    # M7.7: --from-html is the lightest path — pure WeasyPrint pass, no
+    # project schema, no submission metadata.
+    if args.from_html is not None:
+        return _run_from_html(args.from_html, args.from_html_output)
 
     if args.job_dir is not None:
         return _run_with_job_dir(args.job_dir)
@@ -301,6 +398,14 @@ def main(argv: list[str] | None = None) -> int:
     if not args.project_key or not args.submission_version:
         parser.error(
             "either --job-dir DIR or positional PROJECT_KEY SUBMISSION_VERSION required"
+        )
+
+    # M7.7: --render-only skips the engine + pipeline; re-renders only.
+    if args.render_only:
+        return _run_render_only(
+            project_key=args.project_key,
+            submission_version=args.submission_version,
+            output_subdir=args.output_dir,
         )
 
     return _run_legacy_positional(
