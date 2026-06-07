@@ -1349,6 +1349,16 @@ def _render_to_pdf(html_str: str, output_path: Path) -> None:
     # in the assembled HTML before WeasyPrint sees it. Catches stray clause
     # refs from upstream JSON or future code that forgot the source-level fix.
     html_str = _normalize_he_text(html_str)
+    # M7.6 — also dump the assembled HTML alongside the PDF so it can be
+    # surgically edited for one-off report restructures (e.g. Ellen handoffs)
+    # and re-rendered with `weasyprint <html> <pdf>` without re-running the
+    # whole pipeline. Embedded CSS so the dumped file is self-rendering.
+    html_full = html_str.replace(
+        "<head>",
+        f'<head><style>{_CSS}</style>',
+        1,
+    )
+    output_path.with_suffix(".html").write_text(html_full, encoding="utf-8")
     from weasyprint import HTML, CSS as WeasyCSS
     from weasyprint.text.fonts import FontConfiguration
     font_config = FontConfiguration()
@@ -1769,7 +1779,7 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
     rows.append(_toc_row("4.", "סיכום וממצאים סופיים", "#sec-4", "main"))
     # M5: section 5 coverage transparency (only when coverage_report.json present)
     if has_section_5:
-        rows.append(_toc_row("5.", "היקף הבדיקה האוטומטית", "#sec-5", "main"))
+        rows.append(_toc_row("5.", "היקף הסקירה", "#sec-5", "main"))
     rows.append(_toc_row("נספח א", "ליקויי פורמט בחוברת ההגשה", "#sec-appendix-a", "main"))
 
     return f"""
@@ -1829,26 +1839,24 @@ def _render_section_1() -> str:
     # Previously claimed "ארבעה פרקים" (legacy from the original cover abstract,
     # itself now removed by the Step 1 cover restructure). Honestly enumerates
     # the three regulation layers checked and the five main report sections.
+    # M7.6 Part A — architect-facing intro, scrubbed of CAD-as-method and
+    # "אוטומטית" framing. Callout (which addressed the engineer about manual
+    # completion of §1) removed entirely; replaced by an architect-facing
+    # placeholder note about the qualitative analysis being held aside.
     intro = (
-        'דוח זה הוא סקירה של תוכנית עיצוב גרסה 24.3 אל מול שלוש שכבות הרגולציה '
-        'הרלוונטיות: תקנון התב"ע (בדיקה מספרית פר-תא שטח), חוברת ההנחיות '
+        'דוח זה סוקר את תוכנית עיצוב גרסה 24.3 אל מול שלוש שכבות הרגולציה '
+        'הרלוונטיות: תקנון התב"ע (פרמטרים מספריים פר-תא שטח), חוברת ההנחיות '
         'העירוניות (בדיקה רב-תחומית בעשר דיסציפלינות), ותשריט הקובץ הסטטוטורי '
-        'בקבצי CAD (בדיקה גיאומטרית של תאי שטח וגבהים מוחלטים). מבנה הדוח: '
-        'פרק 2 — תאימות תוכן פר-תא שטח, כולל תתי-פרקים 2א (בדיקה ויזואלית של '
-        'מסמכי ההגשה), 2ב (תשריט CAD) ו-2ג (אימות גבהים מחתכים וחזיתות). פרק 3 '
-        '— בדיקה רב-תחומית עם תת-פרק 3.11 (מלאי שירותים לדיירים). פרק 4 — סיכום '
-        'הפעולות הנדרשות. פרק 5 — שקיפות כיסוי הבדיקה האוטומטית. נספח א — '
-        'ליקויי פורמט בחוברת ההגשה.'
+        '(שלמות תאי שטח וגבהים מוחלטים). מבנה הדוח: '
+        'פרק 2 — תאימות תוכן פר-תא שטח. פרק 3 — בדיקה רב-תחומית עם תת-פרק 3.11 '
+        '(מלאי שירותים לדיירים). פרק 4 — סיכום הפעולות הנדרשות. פרק 5 — היקף '
+        'הסקירה. נספח א — ליקויי פורמט בחוברת ההגשה.'
     )
     return f"""
     <div class="chapter" id="sec-1">
       {_chapter_open("1", "ניתוח תכנון עירוני", intro)}
-      <div class="callout">
-        <div class="callout-title">פרק זה דורש השלמה ידנית של מהנדס/ת המינהלת</div>
-        <p class="callout-body">הניתוח התכנוני האיכותי של פרק 1 (שילוב במרקם הקיים, השפעות
-          תנועה, איכות שצ"פ ומבני ציבור, חזות) אינו ניתן לאוטומציה ומחייב שיפוט מקצועי.
-          ההשלמה תתבצע על-ידי מהנדס/ת הוועדה לפני הפיכת הדוח לחוות דעת רשמית.</p>
-      </div>
+      <p class="chapter-intro">הניתוח התכנוני האיכותי של פרק 1 (שילוב במרקם
+        הקיים, השפעות תנועה, איכות שצ"פ ומבני ציבור, חזות) יוצג בנפרד.</p>
     </div>
     """
 
@@ -2210,9 +2218,9 @@ def _render_sidecar_section(sidecar_findings: list[dict]) -> str:
         </div>
         """)
     intro = (
-        "פרק זה מאגד ממצאי בדיקה ויזואלית של מסמכי ההגשה שלא ניתן היה לשלבם כעדכון "
-        "של שורת בדיקה קיימת בטבלאות שלעיל — בדרך כלל משום שאין סעיף ייעודי לנושא "
-        "במנוע הבדיקה. נדרשת תשומת לב מיוחדת של מהנדס/ת הוועדה לפני אישור ההגשה."
+        "פרק זה מאגד ממצאי סקירה של מסמכי ההגשה שאינם נכנסים בטבלאות שלעיל — "
+        "בדרך כלל משום שאין סעיף ייעודי לנושא בטבלאות התקנון. יש לעיין בכל אחד "
+        "מהפריטים ולפעול בהתאם."
     )
     return f"""
     <div class="chapter sidecar-chapter" id="sec-m4-sidecar">
@@ -2626,43 +2634,11 @@ def _render_section_5_coverage(report: dict) -> str:
     return f"""
     <div class="chapter" id="sec-5">
       <div class="eyebrow">{_esc(EYEBROW)}</div>
-      <h2 class="chapter-num-title">5. היקף הבדיקה האוטומטית</h2>
+      <h2 class="chapter-num-title">5. היקף הסקירה</h2>
       <p class="chapter-intro">
-        סעיף זה מתעד באופן שקוף את היקף הבדיקה האוטומטית שבוצעה על ההגשה — מה נבדק
-        במלואו, מה נבדק חלקית, ומה לא נבדק כלל. מטרתו לוודא שמהנדס/ת הוועדה
-        המקומית מקבל/ת תמונה מלאה לפני אישור ההגשה.
+        סעיף זה מתעד את היקף הסקירה — מה נסקר במלואו, מה נסקר חלקית, ומה נדחה
+        להשלמה. הוא משמש מפה לאדריכל ולוועדה המקומית של מה הוצג בדוח ומה לא.
       </p>
-
-      <h3 class="subsection-num">5.0 מקורות הראיות</h3>
-      <p class="cov-help">
-        הבדיקה האוטומטית מורכבת מחמישה מקורות עצמאיים. כל ממצא בדוח נשען לפחות
-        על אחד מהם; חלק מהממצאים נשענים על שילוב של שניים ומעלה.
-      </p>
-      <table class="cov-table">
-        <thead><tr><th>מקור</th><th>תפקיד בדוח</th></tr></thead>
-        <tbody>
-          <tr>
-            <td><b>מנוע הציות הדטרמיניסטי</b></td>
-            <td>בדיקה מספרית פר-תא שטח של פרמטרים מהתקנון (יח"ד, שטחי בנייה, גובה, חניה, תמהיל, שטחים מחלחלים). מזין את פרק 2.</td>
-          </tr>
-          <tr>
-            <td><b>סקירה ויזואלית של מסמכי ההגשה</b></td>
-            <td>קריאת תכניות, חזיתות וטבלאות באמצעות מודל ראייה. מזין את פרק 2א ומשמש כמקור עזר לחלק מבדיקות פרק 2.</td>
-          </tr>
-          <tr>
-            <td><b>מבקר ויזואלי</b></td>
-            <td>אימות צולב של הסקירה הראשונית — מקטין את הסיכון לטעויות חיזוי. מזין הצלבות בפרק 2א ובחלק מטענות הציטוט בפרק 3.</td>
-          </tr>
-          <tr>
-            <td><b>בדיקה גיאומטרית מבוססת תשריט (CAD)</b></td>
-            <td>קריאה ישירה של קבצי DWG מהקובץ הסטטוטורי (CRS ישראלי EPSG:2039). מזינה את פרק 2ב — שלמות תאי שטח ושטחים קנוניים.</td>
-          </tr>
-          <tr>
-            <td><b>אימות גבהים מוחלטים מחתכים וחזיתות</b></td>
-            <td>חילוץ תוויות מפלסים מוחלטים מתשריטי החתכים והחזיתות. מזין את פרק 2ג — בדיקת תקרת סעיף 6.7 ועקביות בין-תשריטית.</td>
-          </tr>
-        </tbody>
-      </table>
 
       <h3 class="subsection-num">5.1 קטגוריות שנבדקו במלואן</h3>
       <p class="cov-help">קטגוריות אלו כוסו על-ידי כללי בדיקה ייעודיים במנוע התאימות, בשילוב בדיקה ויזואלית ומשלימה של מסמכי ההגשה.</p>
@@ -2678,8 +2654,8 @@ def _render_section_5_coverage(report: dict) -> str:
         <tbody>{partial_rows or '<tr><td colspan="3">—</td></tr>'}</tbody>
       </table>
 
-      <h3 class="subsection-num">5.3 קטגוריות שלא נבדקו אוטומטית — דורש בדיקה ידנית של מהנדס/ת</h3>
-      <p class="cov-help cov-warn">⚠ הסעיפים שלהלן אינם נבדקים על-ידי המנוע. נדרשת בדיקה ידנית של מהנדס/ת המינהלת לפני חתימה על חוות דעת.</p>
+      <h3 class="subsection-num">5.3 קטגוריות שלא נסקרו בדוח זה</h3>
+      <p class="cov-help cov-warn">⚠ הסעיפים שלהלן אינם מכוסים בסקירה. יש להשלימם בנפרד לפני חתימה על חוות דעת.</p>
       <table class="cov-table">
         <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th></tr></thead>
         <tbody>{none_rows or '<tr><td colspan="2">—</td></tr>'}</tbody>
@@ -2763,10 +2739,8 @@ def _render_amenity_inventory_subsection(
         f"עמ' 45 לתא שטח 5)."
     )
     coverage_explainer_he = (
-        'בבסיס הידע הנגיש למערכת לא נמצאו דרישות מקודדות עבור רוב הקטגוריות '
-        'בטבלה. ייתכן שדרישות אלו קיימות בחוברת ההנחיות המרחביות של נס ציונה '
-        'או במסמכי מדיניות מקומיים נוספים. הטבלה מוצגת לסקירה ולא לבדיקת '
-        'ציות; בעתיד תתווסף עמודת חיווי ציות עם טעינת הדרישות המלאות.'
+        'הטבלה שלהלן מציגה את הזיהוי של חדרי שירות ייעודיים לדיירים בכל תא '
+        'שטח. היא מובאת לסקירת האדריכל בלבד.'
     )
     table_note_he = (
         'הטבלה להלן מוצגת לסקירת הצוות, ללא חיווי ציות. עמודת "הערה" '
@@ -2882,29 +2856,51 @@ def _discipline_row_html(r: dict) -> str:
 
 
 def _submission_state_he(r: dict) -> str:
+    # M7.6 Part A (A2) — "מצב בהגשה" must be terse: ≤1 sentence, no narrative
+    # explanation, no method framing (no "בדיקה ויזואלית"/"אוטומטית"). The
+    # surviving long visual descriptions get trimmed to their first clause.
     ev = r.get("evidence", {}) or {}
-    # v8j: when Cowork's hand-extracted findings supplied the verdict, show
-    # the visual description verbatim — it's the human-verified ground truth.
     if ev.get("source") == "cowork_discipline_findings_v24.3":
         visual = (r.get("evidence_visual") or ev.get("evidence_visual") or "").strip()
         if visual:
-            return visual
+            return _terse_state(visual)
         return "—"
     ct = ev.get("check_type")
     if ct == "text_pattern":
         if ev.get("found_any"):
             pgs = sorted({pg for v in ev.get("matched_pages", {}).values() for pg in v})
-            return f"אותרו אזכורים בעמודים: {pgs[:6]}"
-        # v8i: don't expose the engine's keyword-search failure as a "finding".
-        return "פריט ויזואלי — לא ניתן לבדיקה אוטומטית."
+            return f"אותר בעמ' {', '.join(str(p) for p in pgs[:4])}"
+        return "—"
     if ct == "annex_required":
         if ev.get("annex_found"):
             pgs = sorted({pg for v in ev.get("matched_pages", {}).values() for pg in v})
-            return f"נספח אותר (עמודים: {pgs[:6]})."
-        return "הנספח לא אותר בהגשה."
+            return f"נספח אותר (עמ' {', '.join(str(p) for p in pgs[:4])})"
+        return "לא הוגש"
     if ct == "manual_review":
-        return "בדיקה ויזואלית — לא מבוצעת אוטומטית."
+        return "—"
     return "—"
+
+
+def _terse_state(text: str, max_chars: int = 120) -> str:
+    """Reduce a long submission-state cell to a single short factual clause.
+
+    Strips parentheticals, page-number lists, and trailing rationale; keeps
+    only the first sentence-ish segment (split on period, semicolon, or em-dash).
+    Caps total length at max_chars.
+    """
+    if not text:
+        return ""
+    s = text.strip()
+    # Take only the first clause / sentence
+    for sep in (". ", "; ", " — ", " · "):
+        idx = s.find(sep)
+        if 0 < idx < max_chars:
+            s = s[:idx]
+            break
+    s = s.strip().rstrip(".;:,")
+    if len(s) > max_chars:
+        s = s[:max_chars].rsplit(" ", 1)[0] + "…"
+    return s
 
 
 def _action_note_he(r: dict) -> str:
@@ -2979,10 +2975,10 @@ def _render_section_4(content_results, discipline_results, format_results,
         </div>
         """
 
-    disclaimer = (
-        'דוח זה נערך ע"י מנוע הבדיקה האוטומטי של פלטפורמת המינהלת. הדוח דורש סקירה וחתימה של '
-        'מהנדס/ת הוועדה המקומית טרם הפיכתו לחוות דעת רשמית.'
-    )
+    # M7.6 Part A — closing engine-disclaimer removed. The signature table on
+    # the cover is the report's authentication; no need for an automation
+    # footer here.
+    disclaimer = ""
 
     return f"""
     <div class="chapter" id="sec-4">
@@ -3261,7 +3257,7 @@ def _format_row_html(r: dict) -> str:
 def _format_evidence_he(r: dict) -> str:
     ev = r.get("evidence", {}) or {}
     if ev.get("check_method") == "manual_review":
-        return "דורש בדיקה ויזואלית של מהנדס/ת"
+        return "פריט להשלמה ידנית בהגשה הבאה"
     pages = ev.get("pages_checked") or []
     if r.get("verdict") in ("fail", "fail_borderline"):
         if pages:

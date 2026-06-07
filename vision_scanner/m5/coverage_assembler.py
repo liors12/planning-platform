@@ -269,10 +269,10 @@ def assemble_coverage_report(
         })
 
     # 5.5 — disclaimer (single Hebrew block)
+    # M7.6 Part A — architect-facing, no "אוטומטית" / staff-direction framing.
     disclaimer_he = (
-        "סקירה אוטומטית זו אינה תחליף לבדיקה ידנית של מהנדס/ת המינהלת. "
-        "הקטגוריות בסעיף 5.3 דורשות בדיקה אישית. סעיף זה נועד להבטיח שקיפות "
-        "מלאה על היקף הבדיקה — מה נבדק אוטומטית, מה נבדק חלקית, ומה לא נבדק כלל."
+        "סעיף זה מוצג לשם שקיפות על היקף הסקירה — מה נסקר במלואו, מה נסקר "
+        "חלקית, ומה נדחה להשלמה. הקטגוריות בסעיף 5.3 משלימות את הסקירה בנפרד."
     )
 
     # known_issues references (so 5.3 cards can footnote them)
