@@ -344,6 +344,11 @@ table.badges td.review .num  { color: var(--amber); }
 table.badges td.unknown .num { color: var(--gray-mid); }
 table.badges td.na .num      { color: #B0B0B0; }
 
+/* M8.1 — count-summary badges removed from the report.  The badge tables
+   are still rendered (so the engine code path stays stable + future
+   reports that want them can override this rule), but hidden by default. */
+table.badges { display: none; }
+
 /* ============================================
    CALLOUT BOX
    ============================================ */
@@ -1028,7 +1033,7 @@ ul.passing-summary-list li {
 .cover-v2 .cover-band .logo {
   position: absolute;
   top: 12mm;
-  right: 22mm;
+  left: 22mm;
   height: 18mm;
   width: auto;
 }
@@ -1771,7 +1776,7 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
     if has_chatakhim:
         rows.append(_toc_row("2ג.", 'ממצאי בדיקת חתכים — אימות גבהים מוחלטים', "#sec-chat", "main"))
 
-    rows.append(_toc_row("3.", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", "#sec-3", "main"))
+    rows.append(_toc_row("3.", "בדיקה רב-תחומית", "#sec-3", "main"))
     seen = set()
     disc_i = 0
     for code in DISCIPLINE_ORDER:
@@ -2722,7 +2727,7 @@ def _render_section_3(
 
     return f"""
     <div class="chapter" id="sec-3">
-      {_chapter_open("3", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", intro)}
+      {_chapter_open("3", "בדיקה רב-תחומית", intro)}
       {badges}
       {''.join(subs)}
     </div>
