@@ -1346,7 +1346,8 @@ def generate_audit_pdf(
         has_section_5=bool(coverage_report),
         has_amenity_inventory=bool(amenity_inventory),
     ))
-    parts.append(_render_section_1())
+    # _render_section_1() removed — qualitative planning analysis is held aside
+    # in a separate document. TOC + cover-note enumeration updated to match.
     parts.append(_render_section_2(content_results, residential_parcels, plan_number))
     if sidecar_findings:
         parts.append(_render_sidecar_section(sidecar_findings))
@@ -1535,8 +1536,8 @@ def _render_cover(meta: dict, submission_metadata: dict, plan_number: str) -> st
       <hr class="rule">
 
       <p class="abstract">דוח זה מציג בדיקה אוטומטית של הציות התכנוני לתב"ע {_esc(plan_number)}.
-        הוא כולל ארבעה פרקים: ניתוח תכנון עירוני, בדיקת תאימות לתב"ע, בדיקה רב-תחומית לפי חוברת
-        ההנחיות העירונית, ונספח טכני של תאימות פורמט. הדוח מהווה טיוטה מקדימה לחוות דעת מהנדס
+        הוא כולל שלושה פרקים: בדיקת תאימות לתב"ע, בדיקה רב-תחומית לפי חוברת
+        ההנחיות העירונית, וסיכום הפעולות הנדרשות, לצד נספח טכני של תאימות פורמט. הדוח מהווה טיוטה מקדימה לחוות דעת מהנדס
         הוועדה המקומית.</p>
     </div>
     """
@@ -1863,7 +1864,6 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
                 has_section_5: bool = False,
                 has_amenity_inventory: bool = False) -> str:
     rows: list[str] = []
-    rows.append(_toc_row("1.", "ניתוח תכנון עירוני", "#sec-1", "main"))
     rows.append(_toc_row("2.", f'בדיקת תאימות תוכן לתב"ע {plan_number}', "#sec-2", "main"))
     for i, p in enumerate(residential_parcels, start=1):
         rows.append(_toc_row(f"2.{i}", _parcel_label_he(p), f"#sec-2-{i}", "sub"))
