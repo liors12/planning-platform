@@ -26,7 +26,8 @@ jobs:
         shell: bash
         run: |
           cd app/sidecar
-          pip install --upgrade pip
+          # NOTE: don't `pip install --upgrade pip` here — on Windows runner
+          # it errors out demanding `python -m pip` form. Existing pip is fine.
           pip install sqlcipher3-binary
           grep -v "^sqlcipher3" requirements.txt > requirements-no-sqlcipher.txt
           pip install -r requirements-no-sqlcipher.txt
