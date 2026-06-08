@@ -337,15 +337,24 @@ def _run_render_only(project_key: str, submission_version: str,
 
     output_dir = ROOT / output_subdir / project_key / f"v{submission_version}"
     m4_path = output_dir / "audit_results.m4.json"
-    if not m4_path.exists():
-        print(f"ERROR: --render-only needs an existing {m4_path}", file=sys.stderr)
+    # Prefer the post-M4 sanitized JSON when present — it carries the same
+    # rows/verdicts as m4.json but with auditor-voice scrubbed out of §3
+    # discipline cells (see vision_scanner/m4/sanitizer_hebrew.py).
+    sanitized_path = output_dir / "audit_results.m4.sanitized.json"
+    if sanitized_path.exists():
+        source_path = sanitized_path
+    elif m4_path.exists():
+        source_path = m4_path
+    else:
+        print(f"ERROR: --render-only needs an existing {m4_path} "
+              f"(or {sanitized_path})", file=sys.stderr)
         print(f"       Run a full audit first, then iterate with --render-only.", file=sys.stderr)
         return 1
 
     project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    results_for_pdf = json.loads(m4_path.read_text(encoding="utf-8"))
+    results_for_pdf = json.loads(source_path.read_text(encoding="utf-8"))
     pdf_out = output_dir / f"audit_report_{submission_version}.pdf"
-    print(f"--render-only: using {m4_path}")
+    print(f"--render-only: using {source_path}")
     generate_audit_pdf(
         audit_results=results_for_pdf,
         project_schema=project_schema,
