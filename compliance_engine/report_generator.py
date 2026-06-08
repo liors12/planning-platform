@@ -1296,7 +1296,6 @@ def generate_audit_pdf(
 
     content_results = audit_results.get("content", []) or []
     discipline_results = audit_results.get("disciplines", []) or []
-    format_results = audit_results.get("format", []) or []
 
     # Determine presence of M4 sidecar + M5 coverage data first, so TOC reflects them.
     all_sidecar_findings = (
@@ -1314,7 +1313,6 @@ def generate_audit_pdf(
     ]
     # Phase 7.4 — amenity inventory (Architecture C, soft policy, rendered as §3.11)
     amenity_inventory = (audit_results.get("m4_summary") or {}).get("amenity_inventory")
-    coverage_report = _load_coverage_report(output_path)
     # Phase 7.5 Step 1 — architect summary front-matter (categorized inventory)
     architect_summary = _load_architect_summary(output_path)
 
@@ -1329,7 +1327,6 @@ def generate_audit_pdf(
         has_sidecar=bool(sidecar_findings),
         has_cad=bool(cad_findings),
         has_chatakhim=bool(chatakhim_findings),
-        has_section_5=bool(coverage_report),
         has_amenity_inventory=bool(amenity_inventory),
     ))
     parts.append(_render_section_1())
@@ -1341,13 +1338,6 @@ def generate_audit_pdf(
     if chatakhim_findings:
         parts.append(_render_chatakhim_section(chatakhim_findings))
     parts.append(_render_section_3(discipline_results, amenity_inventory=amenity_inventory))
-    parts.append(_render_section_4(content_results, discipline_results, format_results,
-                                    residential_parcels=residential_parcels,
-                                    amenity_inventory=amenity_inventory))
-    if coverage_report:
-        parts.append(_render_section_5_coverage(coverage_report))
-    parts.append(_render_appendix_divider())
-    parts.append(_render_appendix_detail(format_results))
 
     html_doc = (
         '<!DOCTYPE html>'
@@ -1607,9 +1597,8 @@ _SEVERITY_LABELS_HE: dict[str, str] = {
 def _load_architect_summary(pdf_output_path: Path) -> dict | None:
     """Load architect_summary_inventory.json from the submission's data dir.
 
-    Same path resolution as _load_coverage_report — the PDF lives in
-    audit_outputs/{plan}/v{ver}/ but the inventory JSON lives in
-    data/projects/{plan}/submissions/v{ver}/.
+    The PDF lives in audit_outputs/{plan}/v{ver}/ but the inventory JSON
+    lives in data/projects/{plan}/submissions/v{ver}/.
     """
     try:
         v_dir = pdf_output_path.parent
@@ -1756,7 +1745,6 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
                 has_sidecar: bool = False,
                 has_cad: bool = False,
                 has_chatakhim: bool = False,
-                has_section_5: bool = False,
                 has_amenity_inventory: bool = False) -> str:
     rows: list[str] = []
     rows.append(_toc_row("1.", "ניתוח תכנון עירוני", "#sec-1", "main"))
@@ -1790,12 +1778,6 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
         amenity_idx = disc_i + 1
         rows.append(_toc_row(f"3.{amenity_idx}", "שירותים לדיירים",
                               "#sec-3-amenities", "sub"))
-
-    rows.append(_toc_row("4.", "סיכום וממצאים סופיים", "#sec-4", "main"))
-    # M5: section 5 coverage transparency (only when coverage_report.json present)
-    if has_section_5:
-        rows.append(_toc_row("5.", "היקף הסקירה", "#sec-5", "main"))
-    rows.append(_toc_row("נספח א", "ליקויי פורמט בחוברת ההגשה", "#sec-appendix-a", "main"))
 
     return f"""
     <div class="chapter">
@@ -1864,8 +1846,7 @@ def _render_section_1() -> str:
         'העירוניות (בדיקה רב-תחומית בעשר דיסציפלינות), ותשריט הקובץ הסטטוטורי '
         '(שלמות תאי שטח וגבהים מוחלטים). מבנה הדוח: '
         'פרק 2 — תאימות תוכן פר-תא שטח. פרק 3 — בדיקה רב-תחומית עם תת-פרק 3.11 '
-        '(מלאי שירותים לדיירים). פרק 4 — סיכום הפעולות הנדרשות. פרק 5 — היקף '
-        'הסקירה. נספח א — ליקויי פורמט בחוברת ההגשה.'
+        '(מלאי שירותים לדיירים).'
     )
     return f"""
     <div class="chapter" id="sec-1">
@@ -2553,143 +2534,6 @@ def _render_chatakhim_section(chatakhim_findings: list[dict]) -> str:
       {cards}
     </div>
     """
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# M5 Section 5 — coverage transparency
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _load_coverage_report(pdf_output_path: Path) -> dict | None:
-    """Look for a coverage_report.json alongside the PDF (in the submission's
-    data/ dir, not in audit_outputs/). The PDF is written to
-    audit_outputs/{plan}/v{ver}/, but the coverage data lives in
-    data/projects/{plan}/submissions/v{ver}/."""
-    # Walk up from pdf path; the audit_outputs structure mirrors the data tree.
-    try:
-        # audit_outputs/{plan}/v{ver}/audit_report_{ver}.pdf → extract plan + ver
-        v_dir = pdf_output_path.parent
-        plan = v_dir.parent.name  # e.g. 407-1048248
-        ver = v_dir.name  # e.g. v24.3
-        # Repo root = audit_outputs/.. (the PDF dir is rooted at audit_outputs)
-        repo_root = v_dir.parent.parent.parent
-        candidate = repo_root / "data" / "projects" / plan / "submissions" / ver / "coverage_report.json"
-        if candidate.exists():
-            return json.loads(candidate.read_text(encoding="utf-8"))
-    except Exception:
-        pass
-    return None
-
-
-def _verdict_count_summary_he(vc: dict) -> str:
-    """Render a tiny inline verdict-count summary like 'תקין 8 · נדרשת השלמה 3'."""
-    pieces: list[str] = []
-    for v, lbl in [
-        ("pass", "תקין"),
-        ("fail", "לא תקין"),
-        ("requires_review", "נדרשת השלמה"),
-        ("not_submitted", "לא הוגש"),
-        ("not_applicable", "לא רלוונטי"),
-    ]:
-        n = vc.get(v) or 0
-        if n:
-            pieces.append(f"{lbl} {n}")
-    return " · ".join(pieces) or "—"
-
-
-def _render_section_5_coverage(report: dict) -> str:
-    summary = report.get("summary") or {}
-    full = report.get("section_5_1_full") or []
-    partial = report.get("section_5_2_partial") or []
-    none = report.get("section_5_3_none") or []
-    gaps = report.get("section_5_3_highlighted_gaps") or []
-    page_rows = report.get("section_5_4_page_rows") or []
-    disclaimer = report.get("section_5_5_disclaimer_he") or ""
-    page_cov = summary.get("page_coverage") or {}
-
-    # 5.1 full
-    full_rows = "".join(
-        f"<tr><td>{_esc(e.get('category_he') or '')}</td>"
-        f"<td>{int(e.get('normative_clauses') or 0)}</td>"
-        f"<td>{_esc(_verdict_count_summary_he(e.get('verdict_counts') or {}))}</td></tr>"
-        for e in full
-    )
-    # 5.2 partial
-    partial_rows = "".join(
-        f"<tr><td>{_esc(e.get('category_he') or '')}</td>"
-        f"<td>{int(e.get('normative_clauses') or 0)}</td>"
-        f"<td>{_esc(_verdict_count_summary_he(e.get('verdict_counts') or {}))}</td></tr>"
-        for e in partial
-    )
-    # 5.3 none — categories + highlighted gap cards
-    none_rows = "".join(
-        f"<tr><td>{_esc(e.get('category_he') or '')}</td>"
-        f"<td>{int(e.get('normative_clauses') or 0)}</td></tr>"
-        for e in none
-    )
-    # Note: g.get('task_ref') is intentionally NOT rendered — task IDs are
-    # internal-only. Ellen sees only the Hebrew title + detail.
-    gap_cards = "".join(
-        f"""<div class="cov-gap-card">
-          <div class="cov-gap-title">{_esc(g.get('title') or '')}</div>
-          <div class="cov-gap-detail">{_esc(g.get('detail') or '')}</div>
-        </div>"""
-        for g in gaps
-    )
-    # 5.4 page rows
-    cov_label = {"FULL": "מלא", "PARTIAL": "חלקי", "UNADDRESSED": "לא נבדק"}
-    cov_class = {"FULL": "cov-full", "PARTIAL": "cov-partial", "UNADDRESSED": "cov-none"}
-    page_table_rows = "".join(
-        f"<tr><td>{int(r.get('page_number') or 0)}</td>"
-        f"<td>{_esc(r.get('page_type_he') or '')}</td>"
-        f"<td>{_esc(', '.join(str(x) for x in (r.get('ta_shetach_refs') or [])) or '—')}</td>"
-        f"<td class=\"{cov_class.get(r.get('coverage'), '')}\">{_esc(cov_label.get(r.get('coverage'), '—'))}</td></tr>"
-        for r in page_rows
-    )
-
-    return f"""
-    <div class="chapter" id="sec-5">
-      <div class="eyebrow">{_esc(EYEBROW)}</div>
-      <h2 class="chapter-num-title">5. היקף הסקירה</h2>
-      <p class="chapter-intro">
-        סעיף זה מתעד את היקף הסקירה — מה נסקר במלואו, מה נסקר חלקית, ומה נדחה
-        להשלמה. הוא משמש מפה לאדריכל ולוועדה המקומית של מה הוצג בדוח ומה לא.
-      </p>
-
-      <h3 class="subsection-num">5.1 קטגוריות שנבדקו במלואן</h3>
-      <p class="cov-help">קטגוריות אלו כוסו על-ידי כללי בדיקה ייעודיים במנוע התאימות, בשילוב בדיקה ויזואלית ומשלימה של מסמכי ההגשה.</p>
-      <table class="cov-table">
-        <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th><th>פילוח ממצאים</th></tr></thead>
-        <tbody>{full_rows or '<tr><td colspan="3">—</td></tr>'}</tbody>
-      </table>
-
-      <h3 class="subsection-num">5.2 קטגוריות שנבדקו חלקית</h3>
-      <p class="cov-help">כיסוי חלקי — חלק מהסעיפים נבדקו, חלק דורשים השלמה ידנית או קובץ DWG.</p>
-      <table class="cov-table">
-        <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th><th>פילוח ממצאים</th></tr></thead>
-        <tbody>{partial_rows or '<tr><td colspan="3">—</td></tr>'}</tbody>
-      </table>
-
-      <h3 class="subsection-num">5.3 קטגוריות שלא נסקרו בדוח זה</h3>
-      <p class="cov-help cov-warn">⚠ הסעיפים שלהלן אינם מכוסים בסקירה. יש להשלימם בנפרד לפני חתימה על חוות דעת.</p>
-      <table class="cov-table">
-        <thead><tr><th>קטגוריה</th><th>סעיפים נורמטיביים</th></tr></thead>
-        <tbody>{none_rows or '<tr><td colspan="2">—</td></tr>'}</tbody>
-      </table>
-      <div class="cov-gap-list">{gap_cards}</div>
-
-      <h3 class="subsection-num">5.4 כיסוי לפי עמודי ההגשה</h3>
-      <p class="cov-help">מפת כיסוי לפי עמודים בהגשה: כל אחד מ-63 העמודים מסומן כ"מלא" / "חלקי" / "לא נבדק". העמודים בקטגוריה "לא נבדק" דורשים תשומת לב.</p>
-      <table class="cov-table cov-pages">
-        <thead><tr><th>עמוד</th><th>סוג עמוד</th><th>תאי שטח</th><th>כיסוי</th></tr></thead>
-        <tbody>{page_table_rows}</tbody>
-      </table>
-
-      <h3 class="subsection-num">5.5 הסתייגות</h3>
-      <p class="cov-disclaimer">{_esc(disclaimer)}</p>
-    </div>
-    """
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # §3
 # ─────────────────────────────────────────────────────────────────────────────
@@ -2964,399 +2808,6 @@ def _discipline_badge_counts(discipline_results: list[dict]) -> list[tuple[int, 
         (c["review"],  "נדרשת השלמה",        "review"),
         (c["unknown"], "לא ניתנים לבדיקה",    "unknown"),
     ]
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# §4
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _render_section_4(content_results, discipline_results, format_results,
-                       residential_parcels: list[dict] | None = None,
-                       *,
-                       amenity_inventory: dict | None = None) -> str:
-    intro = "פרק זה מסכם את ממצאי הסקירה ומדרג את הפעולות הנדרשות מכם לפני הסקירה הבאה."
-    badges = _badges_table(_summary_badge_counts(content_results, discipline_results))
-    banner = _verdict_banner_html(content_results, discipline_results)
-
-    valid_pids = {p["parcel_id"] for p in (residential_parcels or [])}
-    items = _priority_items(content_results, discipline_results, valid_pids=valid_pids)
-    if items:
-        list_html = '<ol class="priority-list">' + "".join(
-            f'<li>{i + 1}. <strong>{_esc(it["title_with_plots"])}.</strong> {_esc(it["body"])}</li>'
-            for i, it in enumerate(items)
-        ) + '</ol>'
-    else:
-        list_html = '<p style="color:#7A7A7A;">אין פעולות נדרשות.</p>'
-
-    # Phase 7.4 — soft clarification request for amenity gaps. NOT a non_compliance
-    # claim — separated from the priority list to make the framing clear.
-    clarification_html = ""
-    if amenity_inventory and amenity_inventory.get("clarification_needed"):
-        cn = amenity_inventory["clarification_needed"]
-        clarification_html = f"""
-        <h3 class="subsection-num" style="margin-top:8mm">דרישות לעיון — שירותים לדיירים</h3>
-        <div class="amen-clarification">
-          {_esc(cn.get("hebrew") or "")}
-        </div>
-        """
-
-    # M7.6 Part A — closing engine-disclaimer removed. The signature table on
-    # the cover is the report's authentication; no need for an automation
-    # footer here.
-    disclaimer = ""
-
-    return f"""
-    <div class="chapter" id="sec-4">
-      {_chapter_open("4", "סיכום וממצאים סופיים", intro)}
-      {badges}
-      {banner}
-      <h3 class="subsection-num" style="margin-top:8mm">פעולות הנדרשות מכם לפני הסקירה הבאה</h3>
-      {list_html}
-      {clarification_html}
-      <p class="closing-paragraph">{_esc(disclaimer)}</p>
-    </div>
-    """
-
-
-def _summary_badge_counts(content_results, discipline_results) -> list[tuple[int, str, str]]:
-    def count(results, predicate) -> int:
-        return sum(1 for r in results if predicate(r.get("verdict")))
-    is_fail = lambda v: v in ("fail", "fail_borderline", "not_submitted")
-    is_review = lambda v: v == "requires_review"
-    is_pass = lambda v: v in ("pass", "pass_with_note")
-    return [
-        (count(content_results, is_pass) + count(discipline_results, is_pass), "תקינים", "ok"),
-        (count(content_results, is_fail) + count(discipline_results, is_fail), "נדרשים תיקונים", "fail"),
-        (count(content_results, is_review) + count(discipline_results, is_review), "נדרשת השלמה", "review"),
-    ]
-
-
-def _verdict_banner_html(content_results, discipline_results) -> str:
-    any_fail = any(r.get("verdict") in ("fail", "fail_borderline", "not_submitted")
-                   for r in content_results + discipline_results)
-    any_review = any(r.get("verdict") == "requires_review"
-                     for r in content_results + discipline_results)
-    if any_fail:
-        text = 'נדרשים תיקונים מהותיים — ההגשה אינה מוכנה לחתימה'
-        cls = ""
-    elif any_review:
-        text = 'נדרשים הבהרות לפני חתימה'
-        cls = "amber"
-    else:
-        text = 'ההגשה מוכנה לחתימה — אין ליקויים מהותיים'
-        cls = "green"
-    return f'<div class="verdict-banner {cls}"><p class="verdict-text">{_esc(text)}</p></div>'
-
-
-def _priority_items(content_results, discipline_results,
-                     *, valid_pids: set[str] | None = None) -> list[dict]:
-    """Build the §4 priority list.
-
-    - Skip results for plot IDs outside the project's valid set (residential +
-      mixed-use; excludes שצ"פ, road, path). Plan-wide rules are always kept.
-    - Bug 6 consolidation: CONTENT_SETBACKS gets ONE row with a DWG-deferral
-      body — no per-plot enumeration — since the blocker is the same for all
-      plots (DWG parsing not yet implemented).
-    """
-    valid_pids = valid_pids if valid_pids is not None else set()
-    grouped: dict[str, dict] = {}
-
-    def bucket(rule_code, severity, title, body, plot_label, override_plots: str | None = None,
-               sort_rank: int = 5):
-        slot = grouped.setdefault(rule_code, {
-            "severity": severity, "title": title, "body": body, "plots": [],
-            "override_plots_label": override_plots, "sort_rank": sort_rank,
-        })
-        if override_plots:
-            slot["override_plots_label"] = override_plots
-        if plot_label and plot_label not in slot["plots"]:
-            slot["plots"].append(plot_label)
-
-    for r in content_results:
-        v = r.get("verdict")
-        if v not in ("fail", "fail_borderline", "not_submitted", "requires_review"):
-            continue
-        pid = r.get("ta_shetach_id")
-        if pid and valid_pids and pid not in valid_pids:
-            continue  # silently drop שצ"פ/road/path entries
-
-        code = r["rule_code"]
-
-        # Bug 6 consolidation — single setbacks entry with DWG-deferral note
-        if code == "CONTENT_SETBACKS":
-            bucket(
-                code, "major", "קווי בניין",
-                'בדיקה זו דורשת פירוק קובץ DWG (תכונה דחויה ל-v8a-3). עד אז — אימות ידני.',
-                None,
-                override_plots="כל תאי השטח",
-            )
-            continue
-
-        if code == "CONTENT_APARTMENT_MIX_SMALL":
-            sev = "critical"   # the single most important extraction-derived finding
-        elif code in ("CONTENT_UNIT_COUNT", "CONTENT_BUILDING_AREA_MAIN"):
-            sev = "critical"
-        else:
-            sev = "major"
-
-        title = _content_rule_label(code)
-        # For ambiguous (requires_review) rules — use the rule's own notes_he
-        # which contains the per-rule explanation (e.g., architect-vs-strict gap).
-        body = r.get("notes_he") if v == "requires_review" else r.get("remediation_he", "")
-        plot_lbl = _plot_label_he(pid) if pid else "ברמת תכנית"
-        bucket(code, sev, title, body or "", plot_lbl)
-
-    # v8j: Cowork JSON emits missing-annex situations as `fail` (not
-    # `not_submitted`). Collect every discipline fail/not_submitted, then peel
-    # off the annex-pattern ones into a single critical-severity row at the
-    # top — same consolidation pattern as DWG-deferred setbacks.
-    annex_fails: list[dict] = []
-    for r in discipline_results:
-        if r.get("verdict") not in ("fail", "not_submitted"):
-            continue
-        name = r.get("rule_name_he", "")
-        is_annex = ("נספח" in name) or ("רשימת צמחייה" in name) or ("5281" in name)
-        if is_annex:
-            annex_fails.append(r)
-            continue
-        sev = r.get("severity", "minor")
-        disc = DISCIPLINE_NAME_HE.get(r.get("discipline", ""), r.get("discipline", ""))
-        title = f"{disc} — {r.get('rule_name_he', r['rule_code'])}"
-        bucket(r["rule_code"], sev, title, r.get("remediation_he", ""), None)
-
-    if annex_fails:
-        bucket(
-            "DISC_ANNEXES_BUNDLE",
-            "critical",
-            "כל הנספחים החיצוניים חסרים",
-            'ההגשה היא 63 עמודי תוכניות אדריכליות בלבד, ללא ששת הנספחים הנדרשים: '
-            'חומריות, צמחייה, הידרולוגי, אקוסטי, ת"י 5281, איכות סביבה וקיימות. '
-            'יש להגיש את כל הנספחים בגרסה הבאה — תיקון מהותי.',
-            None,
-            override_plots="ברמת תכנית",
-            sort_rank=0,  # pin to the very top of the critical tier
-        )
-
-    order = {"critical": 0, "major": 1, "minor": 2, "info": 3}
-    items = sorted(
-        grouped.values(),
-        key=lambda x: (order.get(x["severity"], 9), x.get("sort_rank", 5), x["title"]),
-    )
-    out = []
-    for it in items:
-        if it.get("override_plots_label"):
-            plots = it["override_plots_label"]
-        else:
-            plots = ", ".join(it["plots"]) if it["plots"] else ""
-        title_full = it["title"] + (f" — {plots}" if plots else "")
-        out.append({"title_with_plots": title_full, "body": it["body"]})
-    return out
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Appendix A (divider + detail)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _render_appendix_divider() -> str:
-    return f"""
-    <div class="appendix-divider chapter" id="sec-appendix-a">
-      <div class="label">{_esc(EYEBROW)}</div>
-      <div class="big-title">נספח א</div>
-      <div class="subtitle">ליקויי פורמט בחוברת ההגשה</div>
-      <p class="note">סעיפי פורמט הסוטים מהסטנדרט שנקבע בחוברת ההנחיות העירונית.<br>
-        <em>סעיפים תקינים — אינם מוצגים.</em></p>
-    </div>
-    """
-
-
-def _render_appendix_detail(format_results: list[dict]) -> str:
-    visible = [r for r in format_results if _format_verdict_kind(r) in ("fail", "review", "missing")]
-    badges = _badges_table(_format_badge_counts(format_results))
-    intro = (
-        f'מנוע הפורמט בדק את ההגשה מול {len(format_results)} כללי פורמט. '
-        f'{len(visible)} כללים הניבו ממצא של אי-תאימות או הצריכו בדיקה ידנית. '
-        'שאר הכללים — תקינים ואינם מוצגים בנספח זה.'
-    )
-    groups: dict[str, list[dict]] = {}
-    for r in visible:
-        sec = _format_rule_section(r)
-        groups.setdefault(sec, []).append(r)
-
-    blocks = []
-    for sec in sorted(groups.keys(), key=_sec_sort_key):
-        rows_html = "".join(_format_row_html(r) for r in sorted(groups[sec], key=lambda x: x["rule_code"]))
-        blocks.append(f"""
-        <div class="section-group-head">סעיף {_esc(sec)} ({len(groups[sec])} ליקויים)</div>
-        <table class="audit">
-          <thead><tr>
-            <th style="width:30%;">הכלל</th>
-            <th style="width:14%;">ממצא</th>
-            <th style="width:30%;">ראיות</th>
-            <th style="width:26%;">הערה</th>
-          </tr></thead>
-          <tbody>{rows_html}</tbody>
-        </table>
-        """)
-
-    # Passing-rules summary — single-line summary + bulleted list (M6 Phase 6.D)
-    passing = [r for r in format_results if _format_verdict_kind(r) == "pass"]
-    if passing:
-        bullets = "".join(
-            f"<li>{_esc(_format_rule_title(r))}</li>"
-            for r in sorted(passing, key=lambda x: x.get("rule_code", ""))
-        )
-        passing_block = f"""
-        <div class="passing-summary">
-          <p class="passing-summary-head">כללי פורמט נוספים שעברו את הבדיקה: {len(passing)}</p>
-          <ul class="passing-summary-list">{bullets}</ul>
-        </div>
-        """
-    else:
-        passing_block = ""
-
-    body = f"""
-    <div class="chapter">
-      <div class="eyebrow">{_esc(EYEBROW)}</div>
-      <h2 class="chapter-num-title">נספח א — ליקויי פורמט שזוהו</h2>
-      <p class="chapter-intro">{_esc(intro)}</p>
-      {badges}
-      {''.join(blocks) if blocks else '<p style="color:#7A7A7A;">לא נמצאו ליקויי פורמט.</p>'}
-      {passing_block}
-    </div>
-    """
-    return body
-
-
-def _format_badge_counts(format_results: list[dict]) -> list[tuple[int, str, str]]:
-    c = {"ok": 0, "fail": 0, "review": 0, "unknown": 0}
-    for r in format_results:
-        k = _format_verdict_kind(r)
-        if k == "pass":
-            c["ok"] += 1
-        elif k == "fail":
-            c["fail"] += 1
-        elif k == "review":
-            c["review"] += 1
-        elif k == "missing":
-            c["unknown"] += 1
-    return [
-        (c["fail"],    "טעויות בפורמט",        "fail"),
-        (c["review"],  "נדרשת השלמה",          "review"),
-        (c["unknown"], "לא ניתנים לבדיקה",      "unknown"),
-        (c["ok"],      "ללא טעויות (לא מוצגים)", "ok"),
-    ]
-
-
-def _format_verdict_kind(r: dict) -> str:
-    v = r.get("verdict")
-    ev = r.get("evidence", {}) or {}
-    if v in ("pass", "pass_with_note"):
-        return "pass"
-    if v == "requires_review":
-        return "review" if ev.get("check_method") == "manual_review" else "fail"
-    if v in ("fail", "fail_borderline", "not_submitted"):
-        return "fail"
-    if v == "unevaluable":
-        return "missing"
-    return "missing"
-
-
-def _format_row_html(r: dict) -> str:
-    title = _format_rule_title(r)
-    kind = _format_verdict_kind(r)
-    label_css = {"fail": ("נדרש תיקון", "v-fail"),
-                 "review": ("נדרשת השלמה", "v-rev"),
-                 "missing": ("לא ניתן לבדיקה", "v-miss")}.get(kind, ("—", "v-na"))
-    evidence = _format_evidence_he(r)
-    note = r.get("notes_he", "")
-    return f"""
-    <tr>
-      <td>{_esc(title)}</td>
-      <td><span class="{label_css[1]}">{label_css[0]}</span></td>
-      <td>{_esc(evidence)}</td>
-      <td>{_esc(note)}</td>
-    </tr>
-    """
-
-
-def _format_evidence_he(r: dict) -> str:
-    ev = r.get("evidence", {}) or {}
-    if ev.get("check_method") == "manual_review":
-        return "פריט להשלמה ידנית בהגשה הבאה"
-    pages = ev.get("pages_checked") or []
-    if r.get("verdict") in ("fail", "fail_borderline"):
-        if pages:
-            short = pages[:4]
-            return f'לא נמצאו התאמות · עמ\' [{", ".join(str(p) for p in short)}{"…" if len(pages) > 4 else ""}]'
-        return "לא נמצאו התאמות"
-    if r.get("failure_mode") == "ENGINE_ERROR":
-        return f'שגיאת מנוע — {ev.get("extracted_values", {}).get("error", "")}'
-    return "—"
-
-
-def _format_rule_section(r: dict) -> str:
-    section_map = {
-        "FORMAT_PAGE_SIZE_A3_LANDSCAPE": "6.1", "FORMAT_TEXT_DIRECTION_RTL": "6.1",
-        "FORMAT_BACKGROUND_WHITE": "6.1", "FORMAT_FONT_HEBREW_SANS_SERIF": "6.2",
-        "FORMAT_HEADER_COLOR_CYAN": "6.2", "FORMAT_COVER_TITLE_TEXT": "6.3",
-        "FORMAT_COVER_PLAN_NUMBER": "6.3", "FORMAT_COVER_DATE": "6.3",
-        "FORMAT_COVER_SIGNATURE_TABLE": "6.3", "FORMAT_COVER_AERIAL_IMAGE": "6.3",
-        "FORMAT_TEAM_PAGE_EXISTS": "6.4", "FORMAT_TEAM_REQUIRED_DISCIPLINES": "6.4",
-        "FORMAT_TOC_EXISTS": "6.5", "FORMAT_TOC_THREE_COLUMNS": "6.5",
-        "FORMAT_CHAPTER_DIVIDER_PAGES": "6.6", "FORMAT_FOOTER_PRESENT_ALL_PAGES": "6.7",
-        "FORMAT_FOOTER_PAGE_NUMBERS": "6.7", "FORMAT_FOOTER_PROJECT_NAME": "6.7",
-        "FORMAT_LOGOS_FOOTER": "6.7", "FORMAT_CHAPTER_NUMBERING": "6.8",
-        "FORMAT_REQUIRED_CHAPTERS_TYPOLOGIES": "6.8", "FORMAT_REQUIRED_CHAPTER_ENVELOPE": "6.8",
-        "FORMAT_REQUIRED_CHAPTER_DEVELOPMENT": "6.8", "FORMAT_REQUIRED_CHAPTER_ENVIRONMENTAL": "6.8",
-        "FORMAT_REQUIRED_CHAPTER_INFRASTRUCTURE": "6.8", "FORMAT_TYPICAL_FLOOR_MIX_TABLE": "6.9",
-        "FORMAT_PARKING_TABLE": "6.9", "FORMAT_RENDERINGS_PRESENT": "6.9",
-        "FORMAT_LEGEND_ON_DEVELOPMENT_PAGES": "6.9", "FORMAT_SCALE_ANNOTATIONS": "6.10",
-        "FORMAT_NORTH_ARROW": "6.10", "FORMAT_REFERENT_SIGNATURE_PLACEHOLDERS": "6.10",
-        "FORMAT_VERSION_NOTATION": "6.10", "FORMAT_DIMENSIONS_ON_PLANS": "6.10",
-    }
-    return section_map.get(r.get("rule_code", ""), "אחר")
-
-
-def _format_rule_title(r: dict) -> str:
-    titles = {
-        "FORMAT_PAGE_SIZE_A3_LANDSCAPE": "גודל עמוד A3 לרוחב",
-        "FORMAT_TEXT_DIRECTION_RTL": "כיוון טקסט מימין לשמאל",
-        "FORMAT_BACKGROUND_WHITE": "רקע לבן",
-        "FORMAT_FONT_HEBREW_SANS_SERIF": "גופן עברי סנס-סריף",
-        "FORMAT_HEADER_COLOR_CYAN": "כותרות בצבע טורקיז",
-        "FORMAT_COVER_TITLE_TEXT": "שער — כותרת ראשית",
-        "FORMAT_COVER_PLAN_NUMBER": "שער — מספר תכנית",
-        "FORMAT_COVER_DATE": "שער — תאריך הגשה",
-        "FORMAT_COVER_SIGNATURE_TABLE": "שער — טבלת חתימות",
-        "FORMAT_COVER_AERIAL_IMAGE": "שער — הדמיה מרכזית",
-        "FORMAT_TEAM_PAGE_EXISTS": "עמוד צוות הפרויקט",
-        "FORMAT_TEAM_REQUIRED_DISCIPLINES": "צוות — דיסציפלינות נדרשות",
-        "FORMAT_TOC_EXISTS": "תוכן עניינים",
-        "FORMAT_TOC_THREE_COLUMNS": "תוכן עניינים — שלוש עמודות",
-        "FORMAT_CHAPTER_DIVIDER_PAGES": "עמודי מעבר לפרקים",
-        "FORMAT_FOOTER_PRESENT_ALL_PAGES": "כותרת תחתונה בכל עמוד",
-        "FORMAT_FOOTER_PAGE_NUMBERS": "מספרי עמודים בכותרת תחתונה",
-        "FORMAT_FOOTER_PROJECT_NAME": "שם הפרויקט בכותרת תחתונה",
-        "FORMAT_LOGOS_FOOTER": "לוגואים בכותרת תחתונה",
-        "FORMAT_CHAPTER_NUMBERING": "מספור פרקים X.Y",
-        "FORMAT_REQUIRED_CHAPTERS_TYPOLOGIES": "פרקי טיפולוגיות",
-        "FORMAT_REQUIRED_CHAPTER_ENVELOPE": "פרק מעטפת בניינים",
-        "FORMAT_REQUIRED_CHAPTER_DEVELOPMENT": "פרק פיתוח",
-        "FORMAT_REQUIRED_CHAPTER_ENVIRONMENTAL": "פרק הנחיות סביבתיות",
-        "FORMAT_REQUIRED_CHAPTER_INFRASTRUCTURE": "פרק הנחיות תשתיות",
-        "FORMAT_TYPICAL_FLOOR_MIX_TABLE": 'טבלת תמהיל יח"ד',
-        "FORMAT_PARKING_TABLE": "טבלת חניות במרתף",
-        "FORMAT_RENDERINGS_PRESENT": "הדמיות תלת-ממדיות",
-        "FORMAT_LEGEND_ON_DEVELOPMENT_PAGES": "מקרא לעמודי פיתוח",
-        "FORMAT_SCALE_ANNOTATIONS": "קני מידה 1:250",
-        "FORMAT_NORTH_ARROW": "חץ צפון על תוכניות",
-        "FORMAT_REFERENT_SIGNATURE_PLACEHOLDERS": "מקום לחתימת רפרנט עירוני",
-        "FORMAT_VERSION_NOTATION": "ציון גרסה ותאריך עדכון",
-        "FORMAT_DIMENSIONS_ON_PLANS": "מידות מסומנות על תוכניות",
-    }
-    return titles.get(r.get("rule_code", ""), r.get("rule_code", ""))
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
