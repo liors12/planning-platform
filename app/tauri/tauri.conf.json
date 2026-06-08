@@ -38,6 +38,16 @@
     "copyright": "© 2026 עיריית נס ציונה",
     "category": "Productivity",
     "shortDescription": "פלטפורמת בקרת ציות לתכנון עירוני",
-    "longDescription": "כלי לבדיקה אוטומטית של תכניות עיצוב מול תב\"ע וחוברת הנחיות עירוניות."
+    "longDescription": "כלי לבדיקה אוטומטית של תכניות עיצוב מול תב\"ע וחוברת הנחיות עירוניות.",
+    "windows": {
+      "webviewInstallMode": {
+        "type": "skip"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "displayLanguageSelector": false,
+        "languages": ["English"]
+      }
+    }
   }
 }

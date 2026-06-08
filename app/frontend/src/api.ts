@@ -286,6 +286,110 @@ export async function pollJobUntilDone(
   throw new Error(`job ${id} did not reach terminal status within ${timeoutMs}ms`);
 }
 
+// ── Phase 2b Module D: discipline comments + render ──────────────────────
+
+export interface DisciplineDef {
+  key: string;
+  label: string;
+}
+
+export interface DisciplinesResponse {
+  disciplines: DisciplineDef[];
+  statuses: string[];
+}
+
+export interface CommentOut {
+  id: string;
+  submission_id: number;
+  discipline_key: string;
+  status: string;
+  topic_he: string;
+  action_he: string;
+  author: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface CommentCreatePayload {
+  discipline_key: string;
+  status: string;
+  topic_he: string;
+  action_he: string;
+}
+
+export type CommentPatchPayload = Partial<CommentCreatePayload>;
+
+export async function listDisciplines(): Promise<DisciplinesResponse> {
+  return jsonOrThrow<DisciplinesResponse>(
+    await fetchOrThrow(`${SIDECAR_BASE}/disciplines`),
+    "GET /disciplines",
+  );
+}
+
+export async function listComments(submissionId: number): Promise<CommentOut[]> {
+  return jsonOrThrow<CommentOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/comments`),
+    `GET /submissions/${submissionId}/comments`,
+  );
+}
+
+export async function createComment(
+  submissionId: number,
+  payload: CommentCreatePayload,
+): Promise<CommentOut> {
+  return jsonOrThrow<CommentOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+    `POST /submissions/${submissionId}/comments`,
+  );
+}
+
+export async function patchComment(
+  submissionId: number,
+  commentId: string,
+  patch: CommentPatchPayload,
+): Promise<CommentOut> {
+  return jsonOrThrow<CommentOut>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/comments/${commentId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      },
+    ),
+    `PATCH /submissions/${submissionId}/comments/${commentId}`,
+  );
+}
+
+export async function deleteComment(
+  submissionId: number,
+  commentId: string,
+): Promise<void> {
+  const res = await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/comments/${commentId}`,
+    { method: "DELETE" },
+  );
+  if (!res.ok) {
+    throw new Error(
+      `DELETE /submissions/${submissionId}/comments/${commentId} → HTTP ${res.status}`,
+    );
+  }
+}
+
+export async function renderSubmission(submissionId: number): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/render`, {
+      method: "POST",
+    }),
+    `POST /submissions/${submissionId}/render`,
+  );
+}
+
+
 // ── Phase 1 demo: subprocess-isolation echo ──────────────────────────────
 
 export interface EchoResponse {

@@ -311,13 +311,18 @@ def _run_from_html(html_path: Path, output_pdf: Path | None) -> int:
 
 
 def _run_render_only(project_key: str, submission_version: str,
-                     output_subdir: str) -> int:
+                     output_subdir: str,
+                     comments_file: Path | None = None) -> int:
     """M7.7 --render-only: skip the engine, render straight from existing
     audit_results.m4.json + project schema + submission metadata.
 
     Use when only the report_generator templates or m4 JSON content has
     changed and the analysis (engine compliance run, M1-M4 pipeline)
     doesn't need to re-execute.
+
+    Phase 2b: with --comments-file PATH, merge discipline_comments rows
+    into §3 subsections at render time. Comments live only in the platform
+    DB and the snapshot file; audit_results.m4.json is never touched.
     """
     from compliance_engine.report_generator import generate_audit_pdf
 
@@ -345,12 +350,22 @@ def _run_render_only(project_key: str, submission_version: str,
     project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
     results_for_pdf = json.loads(m4_path.read_text(encoding="utf-8"))
     pdf_out = output_dir / f"audit_report_{submission_version}.pdf"
+
+    discipline_comments = None
+    if comments_file is not None:
+        if not comments_file.exists():
+            print(f"ERROR: --comments-file not found: {comments_file}", file=sys.stderr)
+            return 1
+        discipline_comments = json.loads(comments_file.read_text(encoding="utf-8"))
+        print(f"--render-only: merging {len(discipline_comments)} comment(s) from {comments_file}")
+
     print(f"--render-only: using {m4_path}")
     generate_audit_pdf(
         audit_results=results_for_pdf,
         project_schema=project_schema,
         submission_metadata=metadata,
         output_path=pdf_out,
+        discipline_comments=discipline_comments,
     )
     print(f"PDF report: {pdf_out}")
     return 0
@@ -385,6 +400,12 @@ def main(argv: list[str] | None = None) -> int:
                         help="M7.7: skip the engine + analysis; render PDF "
                              "from the existing audit_results.m4.json. "
                              "Requires a prior full run for this submission.")
+    parser.add_argument("--comments-file", type=Path, default=None,
+                        help="Phase 2b: with --render-only, merge "
+                             "discipline_comments JSON rows into §3 at render "
+                             "time. Each entry: {discipline_key, status, "
+                             "topic_he, action_he}. Does NOT modify "
+                             "audit_results.m4.json.")
     args = parser.parse_args(argv)
 
     # M7.7: --from-html is the lightest path — pure WeasyPrint pass, no
@@ -406,6 +427,7 @@ def main(argv: list[str] | None = None) -> int:
             project_key=args.project_key,
             submission_version=args.submission_version,
             output_subdir=args.output_dir,
+            comments_file=args.comments_file,
         )
 
     return _run_legacy_positional(

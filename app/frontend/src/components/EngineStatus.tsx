@@ -5,6 +5,7 @@ import { FindingsView } from "./FindingsView";
 interface Props {
   jobId: string;
   submissionId: number;
+  projectId: number;
   onTerminal: (j: JobOut) => void;
 }
 
@@ -22,7 +23,7 @@ const STATUS_CLASS: Record<JobStatus, string> = {
   failed: "s-failed",
 };
 
-export function EngineStatus({ jobId, submissionId, onTerminal }: Props) {
+export function EngineStatus({ jobId, submissionId, projectId, onTerminal }: Props) {
   const [job, setJob] = useState<JobOut | null>(null);
   const [findings, setFindings] = useState<unknown | null>(null);
   const [findingsErr, setFindingsErr] = useState<string | null>(null);
@@ -110,7 +111,7 @@ export function EngineStatus({ jobId, submissionId, onTerminal }: Props) {
 
       {findingsErr && <div className="error">{findingsErr}</div>}
 
-      {findings !== null && <FindingsView findings={findings} />}
+      {findings !== null && <FindingsView findings={findings} projectId={projectId} />}
     </div>
   );
 }

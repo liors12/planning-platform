@@ -28,14 +28,19 @@ from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import resolve_schema
-from .models import Job, Submission
+from .models import DisciplineComment, Job, Submission
 from .storage import findings_path
+from sqlalchemy import select
 
 log = logging.getLogger(__name__)
 
 
 # Wall-clock budget per docs/architecture/job_types.md `run_audit` row.
 RUN_AUDIT_BUDGET_S = 300.0
+
+# Phase 2b — render-only path skips M1-M4 (~2 sec WeasyPrint pass) but keep a
+# generous budget for cold cache / large reports.
+RENDER_BUDGET_S = 60.0
 
 # Path to the run_audit script. Resolved at module-load so we don't recompute
 # per job. Lives at <REPO_ROOT>/scripts/run_audit.py.
@@ -115,6 +120,37 @@ class EngineQueue:
             log.info("enqueued job %s for submission %s", job_id, submission_id)
             return job
 
+    def enqueue_render(self, submission_id: int) -> Job:
+        """Phase 2b Module D: queue a --render-only re-render that merges
+        the submission's current discipline_comments into the PDF.
+
+        Unlike enqueue_run_audit, the submission status is NOT flipped to
+        'analyzing' — re-rendering does not change the underlying analysis.
+        """
+        with Session(self._engine) as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise ValueError(f"submission {submission_id} not found")
+            job_id = str(uuid.uuid4())
+            job_dir = self._cfg.jobs_dir / job_id
+            job_dir.mkdir(parents=True, exist_ok=True)
+            job = Job(
+                id=job_id,
+                job_type="render_pdf",
+                submission_id=submission_id,
+                status="queued",
+                job_dir=str(job_dir),
+            )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            if self._loop is None:
+                raise RuntimeError("EngineQueue.start() was not called")
+            asyncio.run_coroutine_threadsafe(self._queue.put(job_id), self._loop)
+            log.info("enqueued render job %s for submission %s",
+                     job_id, submission_id)
+            return job
+
     def get_job(self, job_id: str) -> Optional[Job]:
         with Session(self._engine) as sess:
             return sess.get(Job, job_id)
@@ -147,14 +183,32 @@ class EngineQueue:
                 self._fail(sess, job, error_type="MissingSubmission",
                            error_message=f"submission {job.submission_id} not found at job-pickup time")
                 return
+            # Capture EVERY field we'll need after session close. SQLAlchemy's
+            # default expire_on_commit=True blanks all instance attributes at
+            # commit; once the `with` block exits, any access on the detached
+            # `sub` raises DetachedInstanceError. Caught a real-world hang here:
+            # `sub.id` accessed below the commit kept render jobs stuck at
+            # "running" forever because the worker raised before persist.
+            submission_id_local = sub.id
             project_id = sub.project_id
             project_tava_number = sub.project.tava_number
             submission_version_string = sub.version_string
             submission_pdf_path = sub.pdf_path
+            job_type = job.job_type
             job_dir_str = job.job_dir
             job.status = "running"
             job.started_at = datetime.now(timezone.utc)
             sess.commit()
+
+        if job_type == "render_pdf":
+            self._process_render_pdf(
+                job_id=job_id,
+                submission_id=submission_id_local,
+                project_tava_number=project_tava_number,
+                submission_version_string=submission_version_string,
+                job_dir_str=job_dir_str,
+            )
+            return
 
         # Heavy work happens outside the session (subprocess.run blocks).
         # Phase 2b: write job_input.json with platform paths and spawn
@@ -287,6 +341,103 @@ class EngineQueue:
             job.completed_at = now
             sess.commit()
             log.info("job %s finished: status=%s", job_id, job.status)
+
+    def _process_render_pdf(
+        self,
+        *,
+        job_id: str,
+        submission_id: int,
+        project_tava_number: str,
+        submission_version_string: str,
+        job_dir_str: str,
+    ) -> None:
+        """Phase 2b Module D: spawn `run_audit.py --render-only --comments-file ...`.
+
+        Writes the submission's current discipline_comments to job_dir/comments.json,
+        invokes the render path, and persists job status. No job_output.json is
+        produced — success = PDF exists at the canonical path.
+        """
+        error_payload = None
+        try:
+            job_dir = Path(job_dir_str)
+            normalized_version = _normalize_submission_version(submission_version_string)
+
+            # Snapshot comments to disk for the engine to read.
+            with Session(self._engine) as sess:
+                rows = sess.execute(
+                    select(DisciplineComment)
+                    .where(DisciplineComment.submission_id == submission_id)
+                    .order_by(DisciplineComment.discipline_key,
+                              DisciplineComment.created_at)
+                ).scalars().all()
+                comments_payload = [r.to_dict() for r in rows]
+            comments_path = job_dir / "comments.json"
+            comments_path.write_text(
+                json.dumps(comments_payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+            cmd = [
+                self._cfg.sidecar_python,
+                str(_RUN_AUDIT_PATH),
+                "--render-only",
+                "--comments-file", str(comments_path),
+                project_tava_number,
+                normalized_version,
+            ]
+            log.info("spawning render: %s", cmd)
+            result = subprocess.run(
+                cmd,
+                cwd=str(_RUN_AUDIT_PATH.parent.parent),
+                capture_output=True, text=True,
+                timeout=RENDER_BUDGET_S,
+                check=False,
+            )
+            if result.returncode != 0:
+                error_payload = {
+                    "error_type": "RenderNonZeroExit",
+                    "error_message": f"render exit code {result.returncode}",
+                    "stderr_tail": (result.stderr or "")[-4000:],
+                    "stdout_tail": (result.stdout or "")[-2000:],
+                }
+            else:
+                # Compute the canonical PDF path the render wrote to.
+                pdf_path = (
+                    _RUN_AUDIT_PATH.parent.parent / "audit_outputs"
+                    / project_tava_number / f"v{normalized_version}"
+                    / f"audit_report_{normalized_version}.pdf"
+                )
+                if not pdf_path.exists():
+                    error_payload = {
+                        "error_type": "MissingRenderOutput",
+                        "error_message": f"render exited 0 but no PDF at {pdf_path}",
+                    }
+                else:
+                    output_path_str = str(pdf_path)
+        except subprocess.TimeoutExpired:
+            error_payload = {
+                "error_type": "TimeoutExpired",
+                "error_message": f"render exceeded {RENDER_BUDGET_S}s wall-clock budget; killed",
+            }
+        except Exception as exc:
+            log.exception("render job %s crashed", job_id)
+            error_payload = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            now = datetime.now(timezone.utc)
+            if error_payload is not None:
+                job.status = "failed"
+                job.error_json = json.dumps(error_payload, ensure_ascii=False)
+            else:
+                job.status = "completed"
+                job.output_path = output_path_str
+            job.completed_at = now
+            sess.commit()
+            log.info("render job %s finished: status=%s", job_id, job.status)
 
     def _fail(self, sess: Session, job: Job, *, error_type: str, error_message: str) -> None:
         job.status = "failed"

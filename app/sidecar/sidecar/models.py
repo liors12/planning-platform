@@ -193,3 +193,50 @@ class Job(Base):
             "completed_at": self.completed_at.isoformat() if self.completed_at else None,
             "error": self.error_json,  # raw JSON-encoded blob; UI parses
         }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DisciplineComment — Phase 2b Module D (partial)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Referent notes that Ellen enters in the UI after her meetings. Stored
+# separately from `audit_results.m4.json` (the engine's pure output): the
+# render path merges them in as additional discipline rows at PDF generation
+# time, tagged "(הערת רפרנט)". Re-running the engine never clobbers them.
+
+class DisciplineComment(Base):
+    __tablename__ = "discipline_comments"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    submission_id: Mapped[int] = mapped_column(
+        ForeignKey("submissions.id", ondelete="CASCADE"), nullable=False, index=True,
+    )
+    discipline_key: Mapped[str] = mapped_column(String(32), nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False)
+    topic_he: Mapped[str] = mapped_column(String(255), nullable=False)
+    action_he: Mapped[str] = mapped_column(Text, nullable=False)
+    author: Mapped[str] = mapped_column(String(64), nullable=False,
+                                        default="user", server_default="user")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.datetime("now"),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.datetime("now"),
+        nullable=False,
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "submission_id": self.submission_id,
+            "discipline_key": self.discipline_key,
+            "status": self.status,
+            "topic_he": self.topic_he,
+            "action_he": self.action_he,
+            "author": self.author,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+        }

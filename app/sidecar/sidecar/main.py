@@ -26,6 +26,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import text
 
+from .comments import make_routers as make_comment_routers
 from .config import VERSION, load
 from .db import build_engine, initialize
 from .jobs.dispatch import JobError, run_job
@@ -77,7 +78,8 @@ app.add_middleware(
     ],
     # PATCH for project edits; multipart upload is POST so that's covered.
     # HEAD for pdf.js Range preflight on /submissions/{id}/pdf.
-    allow_methods=["GET", "HEAD", "POST", "PATCH"],
+    # DELETE for Phase 2b Module D — discipline comment removal.
+    allow_methods=["GET", "HEAD", "POST", "PATCH", "DELETE"],
     # Range is not a CORS-safelisted request header, so it triggers preflight
     # — allow it. Without this, react-pdf cannot send Range:bytes=... and
     # falls back to downloading the entire PDF before showing page 1.
@@ -172,6 +174,11 @@ _projects_subs_router, _subs_router = make_submission_routers(
 app.include_router(_projects_subs_router)
 app.include_router(_subs_router)
 app.include_router(make_jobs_router(QUEUE))
+
+# Phase 2b Module D — discipline comments + render trigger.
+_comments_router, _disciplines_router = make_comment_routers(ENGINE, QUEUE)
+app.include_router(_comments_router)
+app.include_router(_disciplines_router)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

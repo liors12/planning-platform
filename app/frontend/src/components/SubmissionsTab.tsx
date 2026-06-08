@@ -200,6 +200,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                 <EngineStatus
                   jobId={activeJobId}
                   submissionId={sub.id}
+                  projectId={project.id}
                   onTerminal={() => refresh()}
                 />
               )}

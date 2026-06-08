@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { archiveProject, getProject, getFindings, listSubmissions, type ProjectOut, type SubmissionOut } from "../api";
+import { CommentsTab } from "../components/CommentsTab";
 import { DebugOverlay } from "../components/DebugOverlay";
 import { SubmissionsTab } from "../components/SubmissionsTab";
 import { FindingsView } from "../components/FindingsView";
@@ -15,18 +16,19 @@ interface Props {
   onProjectChanged: () => void;
 }
 
-type TabKey = "overview" | "submissions" | "findings" | "guidelines" | "history" | "final";
+type TabKey = "overview" | "submissions" | "findings" | "comments" | "guidelines" | "history" | "final";
 
 const TAB_LABELS: Record<TabKey, string> = {
   overview: "סקירה",
   submissions: "הגשות",
   findings: "ממצאים",
+  comments: "הערות רפרנטים",
   guidelines: "הנחיות",
   history: "היסטוריה",
   final: "חוות דעת",
 };
 
-const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "guidelines", "history", "final"];
+const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "guidelines", "history", "final"];
 
 export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Props) {
   const [project, setProject] = useState<ProjectOut | null>(null);
@@ -54,20 +56,24 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
 
   useEffect(() => { refresh(); setTab("overview"); setFindings(null); setLatestCompleteSub(null); /* eslint-disable-next-line */ }, [projectId]);
 
-  // Lazy-load findings when the user switches to the Findings tab
+  // Lazy-load findings when the user switches to the Findings or Comments
+  // tab. Comments tab only needs latestCompleteSub (not the findings JSON).
   useEffect(() => {
-    if (tab !== "findings" || !project) return;
-    setFindings(null);
-    setFindingsErr(null);
+    if (!project) return;
+    if (tab !== "findings" && tab !== "comments") return;
+    if (tab === "findings") {
+      setFindings(null);
+      setFindingsErr(null);
+    }
     setLatestCompleteSub(null);
     listSubmissions(project.id)
       .then((subs) => {
         const completed = subs.find((s) => s.status === "complete");
         if (!completed) return;
         setLatestCompleteSub(completed);
-        return getFindings(completed.id);
+        if (tab === "findings") return getFindings(completed.id);
       })
-      .then((data) => { if (data !== undefined) setFindings(data); })
+      .then((data) => { if (tab === "findings" && data !== undefined) setFindings(data); })
       .catch((e) => setFindingsErr(String(e)));
   }, [tab, project]);
 
@@ -136,6 +142,9 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
             pdfTarget={pdfTarget}
             onJumpToPdfPage={jumpToPdfPage}
           />
+        )}
+        {tab === "comments" && (
+          <CommentsTab project={project} submission={latestCompleteSub} />
         )}
         {tab === "guidelines" && <Placeholder badge="בקרוב" title="עורך הנחיות" desc="עריכת ערכי הסף של בדיקות המנוע + יצירת גרסת מסמך דרישות מעודכן לאדריכל. יתווסף בעדכון הבא." />}
         {tab === "history" && <Placeholder badge="בקרוב" title="היסטוריה" desc="ציר זמן של כל הפעולות בפרויקט — יצירה, הגשות, ריצות בדיקה, עריכת הנחיות, החלטות מנהלי דיסציפלינה." />}

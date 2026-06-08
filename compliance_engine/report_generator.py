@@ -430,6 +430,19 @@ table.audit thead { display: table-header-group; }
 .v-na    { color: var(--gray-mid); }
 .v-miss  { color: var(--gray-dark); }
 
+/* Phase 2b Module D — referent comment tag in §3 action cells */
+.referent-tag {
+  display: inline-block;
+  margin-inline-start: 4px;
+  padding: 0 5px;
+  font-size: 8.5pt;
+  font-weight: 600;
+  color: var(--violet, #3B2666);
+  background: #F4EFFB;
+  border: 1px solid var(--violet, #3B2666);
+  border-radius: 3px;
+}
+
 /* M4 confidence chip — appears next to verdict when M4 override applied
    with non-HIGH confidence. HIGH confidence shows nothing (default state). */
 .conf-chip {
@@ -1284,6 +1297,7 @@ def generate_audit_pdf(
     submission_metadata: dict,
     output_path: Path,
     options: dict | None = None,
+    discipline_comments: list[dict] | None = None,
 ) -> Path:
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -1355,8 +1369,98 @@ def generate_audit_pdf(
         '<head><meta charset="utf-8"><title>סקירת תוכנית עיצוב</title></head>'
         '<body>' + "".join(parts) + '</body></html>'
     )
+    # Phase 2b Module D — merge referent comments at render time. They live
+    # only in the platform DB; never written back into audit_results.
+    if discipline_comments:
+        html_doc = _inject_discipline_comments(html_doc, discipline_comments)
     _render_to_pdf(html_doc, output_path)
     return output_path
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 2b Module D — discipline comment injection
+# ─────────────────────────────────────────────────────────────────────────────
+
+_REFERENT_TAG = "(הערת רפרנט)"
+
+
+def _comment_row_html(comment: dict) -> str:
+    """Render a referent comment as a §3 table row. Status maps to the same
+    badge classes used by engine rows so colors stay consistent."""
+    status = comment.get("status") or ""
+    status_class_map = {
+        "תקין": "v-ok",
+        "לא תקין": "v-fail",
+        "נדרשת השלמה": "v-rev",
+    }
+    cls = status_class_map.get(status, "v-rev")
+    topic = _esc(comment.get("topic_he") or "")
+    action = _esc(comment.get("action_he") or "")
+    status_he = _esc(status)
+    return (
+        '<tr>'
+        f'<td><b>{topic}</b></td>'
+        '<td>—</td>'
+        f'<td><span class="{cls}">{status_he}</span></td>'
+        f'<td>{action} <span class="referent-tag">{_REFERENT_TAG}</span></td>'
+        '</tr>'
+    )
+
+
+def _inject_discipline_comments(html: str, comments: list[dict]) -> str:
+    """Insert each comment as an extra `<tr>` in the `<tbody>` of the
+    matching `<div class="subsection" id="{discipline_key}">` block.
+
+    Comments whose discipline_key has no matching subsection are appended
+    in a fallback `<table>` at the end of `<div class="chapter" id="sec-3">`
+    so they're never dropped silently.
+    """
+    if not comments:
+        return html
+    grouped: dict[str, list[dict]] = {}
+    for c in comments:
+        grouped.setdefault(c.get("discipline_key", ""), []).append(c)
+
+    orphaned: list[dict] = []
+    for key, comment_list in grouped.items():
+        if not key:
+            orphaned.extend(comment_list)
+            continue
+        anchor = f'<div class="subsection" id="{key}">'
+        anchor_idx = html.find(anchor)
+        if anchor_idx < 0:
+            orphaned.extend(comment_list)
+            continue
+        # Find this subsection's </tbody> — it's the first one after anchor_idx.
+        tbody_close_idx = html.find("</tbody>", anchor_idx)
+        if tbody_close_idx < 0:
+            orphaned.extend(comment_list)
+            continue
+        rows_html = "".join(_comment_row_html(c) for c in comment_list)
+        html = html[:tbody_close_idx] + rows_html + html[tbody_close_idx:]
+
+    if orphaned:
+        # Append a fallback block at the very end of §3.
+        chapter_close = '</div>'
+        sec3_idx = html.find('<div class="chapter" id="sec-3">')
+        if sec3_idx >= 0:
+            sec3_end_idx = html.find('<div class="chapter"', sec3_idx + 1)
+            if sec3_end_idx < 0:
+                sec3_end_idx = html.find('</body>', sec3_idx)
+            fallback_rows = "".join(_comment_row_html(c) for c in orphaned)
+            fallback_block = (
+                '<div class="subsection" id="sec-3-orphan-comments">'
+                '<h3 class="subsection-num">3.X הערות רפרנט ללא דיסציפלינה תואמת</h3>'
+                '<table class="audit"><thead><tr>'
+                '<th style="width:28%;">נושא</th>'
+                '<th style="width:24%;">מצב בהגשה</th>'
+                '<th style="width:13%;">ממצא</th>'
+                '<th style="width:35%;">פעולה</th>'
+                f'</tr></thead><tbody>{fallback_rows}</tbody></table>'
+                '</div>'
+            )
+            html = html[:sec3_end_idx] + fallback_block + html[sec3_end_idx:]
+    return html
 
 
 def _render_to_pdf(html_str: str, output_path: Path) -> None:

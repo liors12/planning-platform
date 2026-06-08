@@ -1,0 +1,107 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:           # manual trigger
+  push:
+    tags:
+      - 'v*'                   # also triggers on version tags
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install sidecar dependencies (Windows-compatible)
+        # Plain `sqlcipher3` has no Windows wheels on PyPI — install
+        # `sqlcipher3-binary` (drop-in replacement with bundled SQLCipher) plus
+        # the rest of requirements.txt skipping the sqlcipher3 line.
+        shell: bash
+        run: |
+          cd app/sidecar
+          pip install --upgrade pip
+          pip install sqlcipher3-binary
+          grep -v "^sqlcipher3" requirements.txt > requirements-no-sqlcipher.txt
+          pip install -r requirements-no-sqlcipher.txt
+          pip install pyinstaller
+
+      - name: Build sidecar with PyInstaller (--onedir)
+        # Uses the existing backend.spec which already has the right
+        # hidden-imports + binary collection set up. Output lands at
+        # app/sidecar/dist/sidecar/sidecar.exe (+ supporting DLLs).
+        shell: bash
+        run: |
+          cd app/sidecar
+          pyinstaller backend.spec --noconfirm
+          ls dist/sidecar | head -20
+
+      - name: Stage sidecar bundle for Tauri
+        # Tauri's bundle.resources expects binaries under
+        # app/tauri/binaries/sidecar/**. lib.rs spawns binaries/sidecar/sidecar
+        # via BaseDirectory::Resource at runtime.
+        shell: bash
+        run: |
+          mkdir -p app/tauri/binaries/sidecar
+          cp -r app/sidecar/dist/sidecar/* app/tauri/binaries/sidecar/
+          ls app/tauri/binaries/sidecar | head -20
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        shell: bash
+        run: |
+          cd app/frontend
+          npm ci
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + Tauri build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            app/tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('app/tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install Tauri CLI
+        run: cargo install tauri-cli --version '^2' --locked
+
+      - name: Build Tauri app (NSIS installer)
+        # Unsigned for the pilot. NSIS installer config:
+        #   - installMode "currentUser" → per-user install to %LOCALAPPDATA%,
+        #     no UAC prompt (asInvoker semantics).
+        #   - webviewInstallMode "skip" → Ellen is on Windows 11; WebView2 is
+        #     pre-installed, no bootstrapper download needed.
+        # Both are set in app/tauri/tauri.conf.json under bundle.windows.
+        shell: bash
+        run: |
+          cd app/tauri
+          cargo tauri build --bundles nsis
+
+      - name: List build output
+        shell: bash
+        run: |
+          ls -la app/tauri/target/release/bundle/ || true
+          ls -la app/tauri/target/release/bundle/nsis/ || true
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ness-ziona-installer-windows
+          path: app/tauri/target/release/bundle/nsis/*.exe
+          retention-days: 30
+          if-no-files-found: error
