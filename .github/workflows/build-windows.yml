@@ -20,15 +20,15 @@ jobs:
           python-version: '3.11'
 
       - name: Install sidecar dependencies (Windows-compatible)
-        # Plain `sqlcipher3` has no Windows wheels on PyPI — install
-        # `sqlcipher3-binary` (drop-in replacement with bundled SQLCipher) plus
-        # the rest of requirements.txt skipping the sqlcipher3 line.
+        # sqlcipher3 has no Windows wheels on PyPI. Skip it for the pilot —
+        # db.py falls back to stdlib sqlite3 (no at-rest encryption) when the
+        # import fails. Phase 4 (Ellen-PIN-derived keys) will need a real
+        # Windows SQLCipher story (vcpkg / bundled DLL).
         shell: bash
         run: |
           cd app/sidecar
-          # NOTE: don't `pip install --upgrade pip` here — on Windows runner
-          # it errors out demanding `python -m pip` form. Existing pip is fine.
-          pip install sqlcipher3-binary
+          # Don't `pip install --upgrade pip` — Windows runner errors out
+          # demanding `python -m pip` form. Existing pip is fine.
           grep -v "^sqlcipher3" requirements.txt > requirements-no-sqlcipher.txt
           pip install -r requirements-no-sqlcipher.txt
           pip install pyinstaller

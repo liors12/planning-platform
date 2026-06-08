@@ -43,14 +43,18 @@ hidden_imports = [
     "fastapi",
     "pydantic",
     "pydantic_core",
-    # SQLCipher native + binding
-    "sqlcipher3",
 ]
 
-binaries = []
-# Collect the libsqlcipher dylib that sqlcipher3 links against. On macOS this
-# resolves the /opt/homebrew/opt/sqlcipher/lib reference at runtime.
-binaries += collect_dynamic_libs("sqlcipher3")
+# SQLCipher is optional — only collect it if installed (macOS dev build has
+# it; Windows pilot build falls back to stdlib sqlite3 via db.py's
+# try/except import). Conditional avoids "package not found" errors at
+# PyInstaller analysis time on Windows.
+try:
+    import sqlcipher3  # noqa: F401  # presence-only test
+    hidden_imports.append("sqlcipher3")
+    binaries = collect_dynamic_libs("sqlcipher3")
+except ImportError:
+    binaries = []
 
 a = Analysis(
     # Use the launcher shim (run_sidecar.py) so `sidecar.main` is imported as
