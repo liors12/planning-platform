@@ -33,6 +33,26 @@ jobs:
           pip install -r requirements-no-sqlcipher.txt
           pip install pyinstaller
 
+      - name: Download WeasyPrint Windows release (v68.1)
+        # WeasyPrint has no usable Windows wheel — its native GTK/Pango/Cairo
+        # deps aren't shippable through pip. Kozea publishes a standalone CLI
+        # zip with the full dependency stack bundled. We download it, unpack,
+        # and ship it next to the sidecar as a sibling Tauri resource. The
+        # engine spawns it as a subprocess from
+        # compliance_engine/report_generator.py:_render_to_pdf_via_subprocess.
+        shell: bash
+        run: |
+          cd app/sidecar
+          curl -L --fail -o weasyprint-windows.zip \
+            https://github.com/Kozea/WeasyPrint/releases/download/v68.1/weasyprint-windows.zip
+          unzip -q weasyprint-windows.zip -d weasyprint-zip
+          mkdir -p weasyprint_bundle
+          # The release zip contains a top-level dist/ folder with
+          # weasyprint.exe and its native DLLs. Copy its contents verbatim.
+          cp -r weasyprint-zip/dist/* weasyprint_bundle/
+          ls weasyprint_bundle | head -20
+          rm -rf weasyprint-zip weasyprint-windows.zip
+
       - name: Build sidecar with PyInstaller (--onedir)
         # Uses the existing backend.spec which already has the right
         # hidden-imports + binary collection set up. Output lands at
@@ -43,15 +63,26 @@ jobs:
           pyinstaller backend.spec --noconfirm
           ls dist/sidecar | head -20
 
-      - name: Stage sidecar bundle for Tauri
+      - name: Stage sidecar + WeasyPrint bundles for Tauri
         # Tauri's bundle.resources expects binaries under
         # app/tauri/binaries/sidecar/**. lib.rs spawns binaries/sidecar/sidecar
         # via BaseDirectory::Resource at runtime.
+        #
+        # WeasyPrint ships as a sibling at binaries/weasyprint/weasyprint.exe
+        # — the engine's _resolve_weasyprint_exe() looks for it relative to
+        # the sidecar's location at runtime.
         shell: bash
         run: |
           mkdir -p app/tauri/binaries/sidecar
           cp -r app/sidecar/dist/sidecar/* app/tauri/binaries/sidecar/
           ls app/tauri/binaries/sidecar | head -20
+
+          mkdir -p app/tauri/binaries/weasyprint
+          cp -r app/sidecar/weasyprint_bundle/* app/tauri/binaries/weasyprint/
+          echo "─── binaries/weasyprint/ contents ───"
+          ls app/tauri/binaries/weasyprint | head -20
+          test -f app/tauri/binaries/weasyprint/weasyprint.exe \
+            || { echo "FAIL: weasyprint.exe not staged"; exit 1; }
 
       - name: Set up Node.js
         uses: actions/setup-node@v4

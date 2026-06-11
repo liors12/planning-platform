@@ -63,7 +63,11 @@ a = Analysis(
     ["run_sidecar.py"],
     pathex=[],
     binaries=binaries,
-    datas=[],
+    # Stage the Heebo Hebrew font next to the engine. compliance_engine's
+    # _resolve_font_dir() reads it via sys._MEIPASS at runtime so WeasyPrint's
+    # base_url + @font-face declarations resolve. Path is relative to this
+    # spec file: app/sidecar/backend.spec → ../../assets/fonts.
+    datas=[("../../assets/fonts", "assets/fonts")],
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},

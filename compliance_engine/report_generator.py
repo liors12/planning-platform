@@ -19,12 +19,36 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import logging
+import os
 import re
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
+log = logging.getLogger(__name__)
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-FONT_DIR = PROJECT_ROOT / "assets" / "fonts"
+
+
+def _resolve_font_dir() -> Path:
+    """Resolve the font directory, PyInstaller-aware.
+
+    Dev / source-tree: walk up to <repo_root>/assets/fonts/.
+    PyInstaller --onedir bundle: sys._MEIPASS is the bundle root; the build
+    spec stages assets/fonts/ inside via `datas=[('../../assets/fonts',
+    'assets/fonts')]`.
+    """
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "assets" / "fonts"
+    return PROJECT_ROOT / "assets" / "fonts"
+
+
+FONT_DIR = _resolve_font_dir()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
@@ -1479,15 +1503,107 @@ def _render_to_pdf(html_str: str, output_path: Path) -> None:
         1,
     )
     output_path.with_suffix(".html").write_text(html_full, encoding="utf-8")
+    base = str(FONT_DIR) + "/"
+
+    # Phase 4 (Windows pilot) — WeasyPrint has no installable Python wheel
+    # on Windows that brings its native GTK/Pango/Cairo stack. We ship
+    # Kozea's official Windows CLI release (weasyprint.exe v68.1+) inside
+    # the Tauri bundle and spawn it as a subprocess. The macOS path stays
+    # the in-process Python import — unchanged from before this branch.
+    if sys.platform == "win32":
+        _render_to_pdf_via_subprocess(html_str, output_path, base)
+        return
+
     from weasyprint import HTML, CSS as WeasyCSS
     from weasyprint.text.fonts import FontConfiguration
     font_config = FontConfiguration()
-    base = str(FONT_DIR) + "/"
     HTML(string=html_str, base_url=base).write_pdf(
         str(output_path),
         stylesheets=[WeasyCSS(string=_CSS, base_url=base, font_config=font_config)],
         font_config=font_config,
     )
+
+
+def _resolve_weasyprint_exe() -> Path:
+    """Locate Kozea's bundled weasyprint.exe on Windows.
+
+    Resolution order:
+      1. WEASYPRINT_EXE_PATH env var (dev / testing override).
+      2. <sys.executable parent>/weasyprint/weasyprint.exe — useful when
+         the build copies WeasyPrint into the sidecar's own dir.
+      3. <sys.executable parent.parent>/weasyprint/weasyprint.exe — the
+         default Tauri bundle layout: binaries/sidecar/sidecar.exe is the
+         sidecar entry; weasyprint sits at the sibling binaries/weasyprint/
+         per `bundle.resources` glob in tauri.conf.json.
+    """
+    env_path = os.environ.get("WEASYPRINT_EXE_PATH")
+    if env_path:
+        p = Path(env_path)
+        if p.is_file():
+            return p
+    # PyInstaller --onedir: sys.executable is the bundle entry. In the Tauri
+    # release layout it lands under <Resources>/binaries/sidecar/sidecar.exe.
+    exe_dir = Path(sys.executable).resolve().parent
+    for candidate in (
+        exe_dir / "weasyprint" / "weasyprint.exe",
+        exe_dir.parent / "weasyprint" / "weasyprint.exe",
+    ):
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError(
+        "Windows PDF rendering is not available: weasyprint.exe was not "
+        "found. Set the WEASYPRINT_EXE_PATH environment variable, or "
+        "rebuild the bundle so weasyprint.exe ships at "
+        f"{exe_dir.parent / 'weasyprint' / 'weasyprint.exe'} "
+        f"(or the sibling-dir variant at {exe_dir / 'weasyprint' / 'weasyprint.exe'})."
+    )
+
+
+def _render_to_pdf_via_subprocess(
+    html_str: str, output_path: Path, base_url: str,
+) -> None:
+    """Windows path: write HTML + CSS to temp files and shell out to
+    Kozea's weasyprint.exe CLI. Native deps (Pango / Cairo / GdkPixbuf /
+    fontconfig) ship inside the WeasyPrint Windows release; we don't have
+    to drag the GTK stack through PyInstaller."""
+    exe = _resolve_weasyprint_exe()
+    log.info("rendering PDF via Windows weasyprint.exe: %s", exe)
+    # UTF-8 BOM on the HTML: paranoid safety against codepage misdetection
+    # when the CLI re-opens the file. The CSS is plain UTF-8 (no BOM —
+    # CSS parsers don't all tolerate it as well as HTML parsers).
+    BOM = "﻿"
+    tmp_dir = Path(tempfile.mkdtemp(prefix="wp_render_"))
+    try:
+        html_path = tmp_dir / "input.html"
+        css_path = tmp_dir / "style.css"
+        html_path.write_text(BOM + html_str, encoding="utf-8")
+        css_path.write_text(_CSS, encoding="utf-8")
+        cmd = [
+            str(exe),
+            "--stylesheet", str(css_path),
+            "--base-url", base_url,
+            str(html_path),
+            str(output_path),
+        ]
+        log.info("weasyprint.exe cmd: %s", " ".join(cmd))
+        result = subprocess.run(cmd, capture_output=True, check=False)
+        if result.returncode != 0:
+            stderr = result.stderr.decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"weasyprint.exe failed (exit={result.returncode}): "
+                f"{stderr[-2000:]}"
+            )
+    finally:
+        # Best-effort cleanup; never let a tempdir failure mask a render error.
+        try:
+            for p in tmp_dir.iterdir():
+                try:
+                    p.unlink()
+                except OSError:
+                    pass
+            tmp_dir.rmdir()
+        except OSError:
+            pass
 
 
 # M7.5.1 — § → סעיף normalize.  Architect can't accept § (regulatory section
