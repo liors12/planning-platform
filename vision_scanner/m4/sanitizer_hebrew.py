@@ -347,18 +347,81 @@ def _apply_sanitized(rows: list[dict], unique_in: list[str],
     return sanitize_meta
 
 
+# ─── content[] deterministic replacements ────────────────────────────────
+# Narrow, exact-string voice fixes on engine-emitted notes_he in content[]
+# rows. Routed OUTSIDE the LLM batch on purpose:
+#   - The strings are templates baked into the engine (CONTENT_SETBACKS,
+#     CONTENT_PARKING_RATIO), so an exact match is reliable.
+#   - The text contains numbers + section refs the LLM would have to
+#     preserve verbatim; a deterministic replace is safer.
+#   - Same input → byte-identical output → trivial regression diffing.
+# Add new (banned, replacement) tuples here as more voice issues surface
+# in the content[] pool.
+_CONTENT_NOTES_REPLACEMENTS: tuple[tuple[str, str], ...] = (
+    (
+        "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, "
+        "בדיקה זו דורשת אימות ידני של מהנדס/ת המינהלת מול התשריט.",
+        "קווי הבניין מוגדרים בתשריט בקובץ DWG. עד להטמעת פירוק DWG, "
+        "יש להבהיר את מרחקי קווי הבניין בתכנית.",
+    ),
+    (
+        "הציון 'תקין' שונה ל'דורש בירור'",
+        "הציון 'תקין' שונה ל'נדרשת השלמה'",
+    ),
+)
+
+
+def _sanitize_content_rows(content_rows: list[dict]) -> dict:
+    """Apply the deterministic `_CONTENT_NOTES_REPLACEMENTS` table to every
+    content[] row's `notes_he` field. Returns a meta dict with per-pattern
+    hit counts and the total number of rows touched.
+    """
+    per_pattern_hits: dict[int, int] = {i: 0 for i in range(len(_CONTENT_NOTES_REPLACEMENTS))}
+    rows_touched = 0
+    for row in content_rows:
+        original = row.get("notes_he")
+        if not isinstance(original, str) or not original:
+            continue
+        sanitized = original
+        for i, (banned, replacement) in enumerate(_CONTENT_NOTES_REPLACEMENTS):
+            if banned in sanitized:
+                per_pattern_hits[i] += sanitized.count(banned)
+                sanitized = sanitized.replace(banned, replacement)
+        if sanitized != original:
+            # Preserve the pre-sanitize text on the row, mirroring the
+            # `_original_*` convention used elsewhere in the m4 pipeline.
+            row.setdefault("_original_notes_he", original)
+            row["notes_he"] = sanitized
+            rows_touched += 1
+    return {
+        "rows_touched": rows_touched,
+        "per_pattern_hits": {
+            _CONTENT_NOTES_REPLACEMENTS[i][0][:60] + "…": n
+            for i, n in per_pattern_hits.items() if n > 0
+        },
+    }
+
+
 def sanitize_m4(in_path: Path, out_path: Path, *,
                 slice_discipline: str | None = None,
                 verbose: bool = True) -> dict:
-    """Read m4.json, sanitize §3 disciplines + §2א sidecar findings, write to
-    out_path. Returns the sanitize_meta dict.
+    """Read m4.json, sanitize §3 disciplines + §2א sidecar findings + §2/§5
+    content rows, write to out_path. Returns the sanitize_meta dict.
+
+    Two passes:
+      1. LLM (Flash) pass over disciplines[] + sidecar_only_findings[] —
+         broad voice/style rewrite preserving numbers + page refs.
+      2. Deterministic find-and-replace on content[].notes_he — narrow
+         exact-string fixes for engine templates the LLM doesn't see.
 
     When `slice_discipline` is set, ONLY rows with that discipline are
-    sanitized — sidecar findings are skipped in slice mode.
+    sanitized; the content[] deterministic pass also runs because it's
+    independent of discipline taxonomy.
     """
     data = json.loads(in_path.read_text(encoding="utf-8"))
     disciplines = data.get("disciplines", [])
     sidecar = (data.get("m4_summary") or {}).get("sidecar_only_findings") or []
+    content_rows = data.get("content", []) or []
 
     if slice_discipline:
         target_rows = [r for r in disciplines if r.get("discipline") == slice_discipline]
@@ -372,9 +435,10 @@ def sanitize_m4(in_path: Path, out_path: Path, *,
 
     if verbose:
         print(f"[m4-sanitizer] input: {in_path}")
-        print(f"[m4-sanitizer] slice: {slice_discipline or '(all §3 disciplines + §2א sidecar)'}")
+        print(f"[m4-sanitizer] slice: {slice_discipline or '(all §3 disciplines + §2א sidecar + content)'}")
         print(f"[m4-sanitizer] §3 target rows: {len(target_rows)}")
         print(f"[m4-sanitizer] §2א sidecar rows: {len(target_sidecar)}")
+        print(f"[m4-sanitizer] §2/§5 content rows (deterministic pass): {len(content_rows)}")
 
     # Collect strings from both pools, dedupe globally so identical text
     # appearing in both lists translates once.
@@ -393,11 +457,15 @@ def sanitize_m4(in_path: Path, out_path: Path, *,
               f"(§3={len(disc_unique)}, §2א={len(side_unique)})")
 
     if not unique_in:
+        # Even with no LLM work, still run the deterministic content[] pass —
+        # it's independent of the disciplines/sidecar text pool.
+        content_meta = _sanitize_content_rows(content_rows)
         out_path.write_text(json.dumps(data, ensure_ascii=False, indent=2),
                             encoding="utf-8")
         meta = {"version": SANITIZER_VERSION, "strings_in": 0,
                 "strings_replaced": 0, "strings_kept_original": 0,
-                "preservation_failures": []}
+                "preservation_failures": [],
+                "content_deterministic": content_meta}
         return meta
 
     unique_out = sanitize_batch(unique_in)
@@ -406,6 +474,11 @@ def sanitize_m4(in_path: Path, out_path: Path, *,
     # same function works.
     meta_disc = _apply_sanitized(target_rows, unique_in, unique_out)
     meta_side = _apply_sanitized(target_sidecar, unique_in, unique_out)
+
+    # Deterministic pass on content[] — no LLM call. Runs last so it can
+    # also fix up content[] strings that happened to match disciplines text
+    # in the LLM batch (currently they don't, but it's order-safe).
+    content_meta = _sanitize_content_rows(content_rows)
 
     # Merge meta — strings_in is global; preservation_failures is the union
     meta = {
@@ -416,6 +489,7 @@ def sanitize_m4(in_path: Path, out_path: Path, *,
         "preservation_failures":
             meta_disc["preservation_failures"]
             + meta_side["preservation_failures"],
+        "content_deterministic": content_meta,
     }
 
     data.setdefault("m4_summary", {})["sanitizer"] = meta
