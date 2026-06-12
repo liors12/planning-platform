@@ -312,7 +312,8 @@ def _run_from_html(html_path: Path, output_pdf: Path | None) -> int:
 
 def _run_render_only(project_key: str, submission_version: str,
                      output_subdir: str,
-                     comments_file: Path | None = None) -> int:
+                     comments_file: Path | None = None,
+                     base_dir: Path = ROOT) -> int:
     """M7.7 --render-only: skip the engine, render straight from existing
     audit_results.m4.json + project schema + submission metadata.
 
@@ -323,24 +324,31 @@ def _run_render_only(project_key: str, submission_version: str,
     Phase 2b: with --comments-file PATH, merge discipline_comments rows
     into §3 subsections at render time. Comments live only in the platform
     DB and the snapshot file; audit_results.m4.json is never touched.
+
+    `base_dir` is the root under which `projects/` and `<output_subdir>/`
+    live. Defaults to ROOT for backward-compat with the dev repo + the
+    macOS subprocess path. The Windows in-process render branch (see
+    queue_worker._process_render_pdf) passes `cfg.data_dir` so user data
+    resolves under %LOCALAPPDATA%\\Planning Platform\\ instead of inside
+    the PyInstaller bundle.
     """
     from compliance_engine.report_generator import generate_audit_pdf
 
-    submission_dir = ROOT / "projects" / project_key / "submissions" / f"v{submission_version}"
+    submission_dir = base_dir / "projects" / project_key / "submissions" / f"v{submission_version}"
     metadata_path = submission_dir / "metadata.json"
     if not metadata_path.exists():
         print(f"ERROR: metadata not found at {metadata_path}", file=sys.stderr)
         return 1
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
 
-    schema_path = ROOT / "projects" / project_key / f"project-schema-{project_key}-v2.json"
+    schema_path = base_dir / "projects" / project_key / f"project-schema-{project_key}-v2.json"
     if not schema_path.exists():
-        schema_path = ROOT / f"project-schema-{project_key}-v2.json"
+        schema_path = base_dir / f"project-schema-{project_key}-v2.json"
     if not schema_path.exists():
         print(f"ERROR: schema not found for {project_key}", file=sys.stderr)
         return 1
 
-    output_dir = ROOT / output_subdir / project_key / f"v{submission_version}"
+    output_dir = base_dir / output_subdir / project_key / f"v{submission_version}"
     m4_path = output_dir / "audit_results.m4.json"
     # Prefer the post-M4 sanitized JSON when present — it carries the same
     # rows/verdicts as m4.json but with auditor-voice scrubbed out of §3
