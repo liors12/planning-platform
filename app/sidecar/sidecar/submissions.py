@@ -97,9 +97,10 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 raise HTTPException(404, f"project {project_id} not found")
 
             # Validate version + prepare target directory upfront so we fail
-            # fast before streaming a multi-MB upload.
+            # fast before streaming a multi-MB upload. The storage tree is
+            # keyed by tava_number (matches the engine's audit_outputs tree).
             try:
-                target_dir = submission_dir(cfg, project_id, version_string)
+                target_dir = submission_dir(cfg, project.tava_number, version_string)
             except StorageError as exc:
                 raise HTTPException(422, f"{exc} {_VERSION_HINT}")
 
@@ -252,7 +253,15 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 raise HTTPException(404, f"submission {submission_id} not found")
             pdf_path = Path(sub.pdf_path)
         if not pdf_path.exists():
-            raise HTTPException(500, f"PDF gone from disk: {pdf_path}")
+            # Soft 404: the row exists but the bytes don't (e.g. user
+            # cleared cfg.data_dir, or storage was migrated and this row
+            # still points at the old layout). UI can react with a
+            # "re-upload required" prompt instead of erroring loudly.
+            raise HTTPException(
+                404,
+                f"submission {submission_id} PDF missing from disk "
+                f"(stale file_path: {sub.pdf_path}). Re-upload required.",
+            )
         file_size = pdf_path.stat().st_size
         return Response(
             status_code=200,
@@ -276,7 +285,15 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 raise HTTPException(404, f"submission {submission_id} not found")
             pdf_path = Path(sub.pdf_path)
         if not pdf_path.exists():
-            raise HTTPException(500, f"PDF gone from disk: {pdf_path}")
+            # Soft 404: the row exists but the bytes don't (e.g. user
+            # cleared cfg.data_dir, or storage was migrated and this row
+            # still points at the old layout). UI can react with a
+            # "re-upload required" prompt instead of erroring loudly.
+            raise HTTPException(
+                404,
+                f"submission {submission_id} PDF missing from disk "
+                f"(stale file_path: {sub.pdf_path}). Re-upload required.",
+            )
 
         file_size = pdf_path.stat().st_size
         filename = pdf_path.name
