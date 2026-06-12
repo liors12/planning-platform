@@ -19,7 +19,11 @@ NOT in scope here (Phase 2b+):
 from __future__ import annotations
 
 import logging
+import os
+import shutil
+import sys
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,7 +31,7 @@ from pydantic import BaseModel
 from sqlalchemy import text
 
 from .comments import make_routers as make_comment_routers
-from .config import VERSION, load
+from .config import VERSION, Config, load
 from .db import build_engine, initialize
 from .jobs.dispatch import JobError, run_job
 from .jobs_routes import make_router as make_jobs_router
@@ -48,12 +52,62 @@ DB_STATUS: dict = {}
 QUEUE = EngineQueue(cfg=CFG, engine=ENGINE)
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# First-run seed
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _resolve_seed_dir() -> Path | None:
+    """Locate the bundled seed/ directory, PyInstaller-aware.
+
+    Frozen: seed/ ships inside _MEIPASS (see backend.spec `datas=("seed",
+    "seed")`). Dev: seed/ lives at app/sidecar/seed/ next to backend.spec.
+    Returns None if the seed tree isn't present (dev with seed absent →
+    no-op; production builds always include it).
+    """
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            cand = Path(meipass) / "seed"
+            return cand if cand.exists() else None
+    # Dev: app/sidecar/seed/, relative to this file (sidecar/main.py)
+    cand = Path(__file__).resolve().parent.parent / "seed"
+    return cand if cand.exists() else None
+
+
+def _seed_data_dir(cfg: Config) -> dict:
+    """Copy the bundled pilot seed into cfg.data_dir if it's not already there.
+
+    Idempotent: only copies files whose destinations don't exist. Never
+    overwrites user data. Returns a small report dict for the startup log.
+    """
+    seed_dir = _resolve_seed_dir()
+    if seed_dir is None:
+        return {"seed_dir": None, "copied": 0, "skipped_existing": 0}
+
+    copied = 0
+    skipped = 0
+    for src in seed_dir.rglob("*"):
+        if not src.is_file():
+            continue
+        rel = src.relative_to(seed_dir)
+        dst = cfg.data_dir / rel
+        if dst.exists():
+            skipped += 1
+            continue
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dst)
+        copied += 1
+    return {"seed_dir": str(seed_dir), "copied": copied,
+            "skipped_existing": skipped}
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global DB_STATUS
     DB_STATUS = initialize(ENGINE)
-    log.info("sidecar starting on http://%s:%d (data_dir=%s, db=%s)",
-             CFG.bind_host, CFG.bind_port, CFG.data_dir, DB_STATUS)
+    seed_report = _seed_data_dir(CFG)
+    log.info("sidecar starting on http://%s:%d (data_dir=%s, db=%s, seed=%s)",
+             CFG.bind_host, CFG.bind_port, CFG.data_dir, DB_STATUS, seed_report)
     await QUEUE.start()
     yield
     await QUEUE.stop()

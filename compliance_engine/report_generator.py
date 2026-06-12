@@ -48,6 +48,32 @@ def _resolve_font_dir() -> Path:
     return PROJECT_ROOT / "assets" / "fonts"
 
 
+def _resolve_logo_path() -> Path:
+    """Resolve the Ness Ziona brand logo, PyInstaller-aware.
+
+    Same lookup pattern as _resolve_font_dir. The cover img <src> uses the
+    file:// URL of the result; WeasyPrint dereferences it at render time.
+    """
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "assets" / "nessziona_logo.png"
+    return PROJECT_ROOT / "assets" / "nessziona_logo.png"
+
+
+def _resolve_format_rules_path() -> Path:
+    """Resolve submission_format_rules.json — the engine's format-checker
+    ruleset. Bundled at the spec-root level via `datas=[('../../submission
+    _format_rules.json', '.')]` so it sits at _MEIPASS/submission_format
+    _rules.json inside the frozen build.
+    """
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "submission_format_rules.json"
+    return PROJECT_ROOT / "submission_format_rules.json"
+
+
 FONT_DIR = _resolve_font_dir()
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1663,10 +1689,18 @@ def _render_cover_with_signatures(
         for disc in _SIGNATURE_DISCIPLINES_HE
     )
 
+    # Use the resolved logo path as a file:// URL so WeasyPrint can find it
+    # regardless of where the PDF output lives (dev: ../nessziona_logo.png
+    # worked because the PDF sat at audit_outputs/<key>/v<ver>/; in a
+    # Windows install the output dir is under cfg.data_dir while the logo
+    # lives in _MEIPASS — the relative form would 404). _resolve_logo_path()
+    # picks the right copy on either OS.
+    logo_url = _resolve_logo_path().as_uri()
+
     return f"""
     <div class="cover-v2">
       <div class="cover-band">
-        <img class="logo" src="../nessziona_logo.png" alt="">
+        <img class="logo" src="{logo_url}" alt="">
         <div class="brand-eyebrow">NZC | מינהלת ההתחדשות העירונית</div>
         <div class="brand-name">נס ציונה</div>
         <hr class="rule">
