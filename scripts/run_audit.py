@@ -380,6 +380,44 @@ def _run_render_only(project_key: str, submission_version: str,
     return 0
 
 
+def _run_export_excel(project_key: str, submission_version: str,
+                      output_subdir: str) -> int:
+    """Export findings to an architect-response Excel workbook.
+
+    Uses the same source-preference rule as --render-only: prefer the
+    sanitized JSON (which the approved PDF was rendered from) and fall back
+    to the raw M4 JSON. Output filename includes the version suffix so
+    multiple submission versions can coexist in the same directory.
+    """
+    from compliance_engine.excel_export import export_findings_to_excel
+
+    output_dir = ROOT / output_subdir / project_key / f"v{submission_version}"
+    sanitized_path = output_dir / "audit_results.m4.sanitized.json"
+    m4_path = output_dir / "audit_results.m4.json"
+    if sanitized_path.exists():
+        source_path = sanitized_path
+    elif m4_path.exists():
+        source_path = m4_path
+    else:
+        print(f"ERROR: --export-excel needs an existing {sanitized_path} "
+              f"(or {m4_path})", file=sys.stderr)
+        print(f"       Run a full audit first, then iterate with --export-excel.",
+              file=sys.stderr)
+        return 1
+
+    audit_results = json.loads(source_path.read_text(encoding="utf-8"))
+    xlsx_path = output_dir / f"הערות_סקירה_v{submission_version}.xlsx"
+
+    print(f"--export-excel: using {source_path}")
+    export_findings_to_excel(
+        audit_results=audit_results,
+        output_path=xlsx_path,
+        report_version=submission_version,
+    )
+    print(f"Excel export: {xlsx_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Run a full compliance audit on a submission.",
@@ -409,6 +447,13 @@ def main(argv: list[str] | None = None) -> int:
                         help="M7.7: skip the engine + analysis; render PDF "
                              "from the existing audit_results.m4.json. "
                              "Requires a prior full run for this submission.")
+    parser.add_argument("--export-excel", action="store_true",
+                        help="Skip PDF rendering; instead export the "
+                             "audit_results.m4.sanitized.json (preferred) "
+                             "or audit_results.m4.json (fallback) as a "
+                             "single-sheet RTL Excel workbook for the "
+                             "architect-response workflow. Requires a prior "
+                             "full run for this submission.")
     parser.add_argument("--comments-file", type=Path, default=None,
                         help="Phase 2b: with --render-only, merge "
                              "discipline_comments JSON rows into §3 at render "
@@ -437,6 +482,15 @@ def main(argv: list[str] | None = None) -> int:
             submission_version=args.submission_version,
             output_subdir=args.output_dir,
             comments_file=args.comments_file,
+        )
+
+    # Architect-response workflow: skip PDF, emit XLSX from the same
+    # sanitized JSON the render path reads.
+    if args.export_excel:
+        return _run_export_excel(
+            project_key=args.project_key,
+            submission_version=args.submission_version,
+            output_subdir=args.output_dir,
         )
 
     return _run_legacy_positional(
