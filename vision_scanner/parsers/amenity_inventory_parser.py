@@ -47,7 +47,7 @@ AMENITIES: List[Dict[str, Any]] = [
         "hebrew": "חדר אופניים",
         "label_patterns": ["אופניים"],
         "regulatory_anchor": "סעיף 4.1.2.12 לתקנון התב\"ע — הוראה רכה",
-        "audit_note": "נבדק כתקין במסגרת מנוע הציות (סעיף 4.1.2.12).",
+        "audit_note": "נבדק כתקין (סעיף 4.1.2.12).",
     },
     {
         "key": "stroller_room",
