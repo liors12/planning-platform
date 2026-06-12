@@ -9,7 +9,13 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    timeout-minutes: 30
+    # 30 min was tight even with caches warm — `cargo install tauri-cli`
+    # alone compiled for 15-20 min on cold caches and we hit the wall
+    # during NSIS build on run 27398687926. With cargo-binstall pulling
+    # a prebuilt tauri-cli in seconds (see "Install Tauri CLI" step
+    # below), 60 min is generous headroom for the Tauri NSIS build
+    # itself.
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -109,8 +115,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Install Tauri CLI
-        run: cargo install tauri-cli --version '^2' --locked
+      - name: Install cargo-binstall
+        # cargo-binstall pulls prebuilt binaries from upstream GitHub releases
+        # instead of compiling from source. The setup action below downloads
+        # binstall itself in seconds.
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Tauri CLI (prebuilt binary)
+        # Previous "cargo install tauri-cli --locked" compiled from source —
+        # 15-20 min on cold caches, the dominant cost in run 27398687926
+        # which then ran out the 30-min job clock during the NSIS build.
+        # `cargo binstall` fetches the official Tauri release binary from
+        # https://github.com/tauri-apps/tauri/releases and finishes in <30s.
+        # --no-confirm is required in CI (no interactive prompt available);
+        # --locked tracks the same SemVer constraint we had before.
+        run: cargo binstall --no-confirm --locked tauri-cli@^2
 
       - name: Build Tauri app (NSIS installer)
         # Unsigned for the pilot. NSIS installer config:
