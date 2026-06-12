@@ -17,6 +17,7 @@ import asyncio
 import json
 import logging
 import subprocess
+import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -377,33 +378,80 @@ class EngineQueue:
                 encoding="utf-8",
             )
 
-            cmd = [
-                self._cfg.sidecar_python,
-                str(_RUN_AUDIT_PATH),
-                "--render-only",
-                "--comments-file", str(comments_path),
-                project_tava_number,
-                normalized_version,
-            ]
-            log.info("spawning render: %s", cmd)
-            result = subprocess.run(
-                cmd,
-                cwd=str(_RUN_AUDIT_PATH.parent.parent),
-                capture_output=True, text=True,
-                timeout=RENDER_BUDGET_S,
-                check=False,
-            )
-            if result.returncode != 0:
-                error_payload = {
-                    "error_type": "RenderNonZeroExit",
-                    "error_message": f"render exit code {result.returncode}",
-                    "stderr_tail": (result.stderr or "")[-4000:],
-                    "stdout_tail": (result.stdout or "")[-2000:],
-                }
+            # Branch by platform-frozen state. The frozen Windows build has no
+            # external Python interpreter to spawn (sidecar.exe IS the runtime
+            # and cfg.sidecar_python defaults to /opt/homebrew/bin/python3.13
+            # which doesn't exist on Windows). Falling through the subprocess
+            # path on macOS/dev keeps that flow byte-identical.
+            use_inproc = sys.platform == "win32" and getattr(sys, "frozen", False)
+
+            if use_inproc:
+                log.info(
+                    "render job %s: in-process path (win32+frozen) tava=%s ver=%s",
+                    job_id, project_tava_number, normalized_version,
+                )
+                # Local import: defers the engine import until a render job
+                # actually arrives, keeps sidecar cold-start light. The
+                # base_dir kwarg routes every user-data lookup through
+                # cfg.data_dir (= %LOCALAPPDATA%\\Planning Platform\\) so we
+                # never read or write into _MEIPASS.
+                sys.path.insert(0, str(_RUN_AUDIT_PATH.parent.parent))
+                from scripts.run_audit import _run_render_only  # type: ignore
+                try:
+                    rc = _run_render_only(
+                        project_key=project_tava_number,
+                        submission_version=normalized_version,
+                        output_subdir="audit_outputs",
+                        comments_file=comments_path,
+                        base_dir=self._cfg.data_dir,
+                    )
+                except Exception as exc:
+                    log.exception("render job %s in-process call raised", job_id)
+                    error_payload = {
+                        "error_type": type(exc).__name__,
+                        "error_message": str(exc),
+                    }
+                    rc = -1
+                if error_payload is None and rc != 0:
+                    error_payload = {
+                        "error_type": "RenderNonZeroExit",
+                        "error_message": f"in-process _run_render_only returned {rc}",
+                    }
             else:
-                # Compute the canonical PDF path the render wrote to.
+                cmd = [
+                    self._cfg.sidecar_python,
+                    str(_RUN_AUDIT_PATH),
+                    "--render-only",
+                    "--comments-file", str(comments_path),
+                    project_tava_number,
+                    normalized_version,
+                ]
+                log.info("spawning render: %s", cmd)
+                result = subprocess.run(
+                    cmd,
+                    cwd=str(_RUN_AUDIT_PATH.parent.parent),
+                    capture_output=True, text=True,
+                    timeout=RENDER_BUDGET_S,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    error_payload = {
+                        "error_type": "RenderNonZeroExit",
+                        "error_message": f"render exit code {result.returncode}",
+                        "stderr_tail": (result.stderr or "")[-4000:],
+                        "stdout_tail": (result.stdout or "")[-2000:],
+                    }
+
+            # Shared post-check — locate the PDF the render wrote (or should
+            # have written). In-process used cfg.data_dir as base; subprocess
+            # used _RUN_AUDIT_PATH.parent.parent (= repo root in dev).
+            if error_payload is None:
+                base_for_pdf = (
+                    self._cfg.data_dir if use_inproc
+                    else _RUN_AUDIT_PATH.parent.parent
+                )
                 pdf_path = (
-                    _RUN_AUDIT_PATH.parent.parent / "audit_outputs"
+                    base_for_pdf / "audit_outputs"
                     / project_tava_number / f"v{normalized_version}"
                     / f"audit_report_{normalized_version}.pdf"
                 )
