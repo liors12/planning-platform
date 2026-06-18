@@ -171,7 +171,16 @@ def initialize(engine: Engine) -> dict:
 
         # Verify journal mode actually took (WAL might not stick on some FS).
         journal_mode = conn.execute(text("PRAGMA journal_mode")).scalar()
-        cipher_version = conn.execute(text("PRAGMA cipher_version")).scalar()
+        # PRAGMA cipher_version is SQLCipher-only. Under stdlib sqlite3
+        # (Windows pilot fallback) the statement parses cleanly but returns
+        # zero rows — and .scalar() on a row-less result raises
+        # ResourceClosedError. Gate the probe on the backend we detected at
+        # import time so the encrypted-on-Mac signal stays visible without
+        # crashing the unencrypted-on-Windows boot.
+        if _BACKEND_NAME.startswith("sqlcipher"):
+            cipher_version = conn.execute(text("PRAGMA cipher_version")).scalar()
+        else:
+            cipher_version = None
         # Raw SQLite library version (distinct from SQLCipher's cipher_version
         # and from our app schema_version). Phase 1 § React-UI deliverable.
         sqlite_version = conn.execute(text("SELECT sqlite_version()")).scalar()
