@@ -121,6 +121,33 @@ class EngineQueue:
             log.info("enqueued job %s for submission %s", job_id, submission_id)
             return job
 
+    def enqueue_excel(self, submission_id: int) -> Job:
+        """Queue an architect-response Excel export. Fast (~1-2s), no
+        subprocess. Submission status is NOT changed."""
+        with Session(self._engine) as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise ValueError(f"submission {submission_id} not found")
+            job_id = str(uuid.uuid4())
+            job_dir = self._cfg.jobs_dir / job_id
+            job_dir.mkdir(parents=True, exist_ok=True)
+            job = Job(
+                id=job_id,
+                job_type="export_excel",
+                submission_id=submission_id,
+                status="queued",
+                job_dir=str(job_dir),
+            )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            if self._loop is None:
+                raise RuntimeError("EngineQueue.start() was not called")
+            asyncio.run_coroutine_threadsafe(self._queue.put(job_id), self._loop)
+            log.info("enqueued excel job %s for submission %s",
+                     job_id, submission_id)
+            return job
+
     def enqueue_render(self, submission_id: int) -> Job:
         """Phase 2b Module D: queue a --render-only re-render that merges
         the submission's current discipline_comments into the PDF.
@@ -208,6 +235,14 @@ class EngineQueue:
                 project_tava_number=project_tava_number,
                 submission_version_string=submission_version_string,
                 job_dir_str=job_dir_str,
+            )
+            return
+
+        if job_type == "export_excel":
+            self._process_export_excel(
+                job_id=job_id,
+                project_tava_number=project_tava_number,
+                submission_version_string=submission_version_string,
             )
             return
 
@@ -486,6 +521,66 @@ class EngineQueue:
             job.completed_at = now
             sess.commit()
             log.info("render job %s finished: status=%s", job_id, job.status)
+
+    def _process_export_excel(
+        self,
+        *,
+        job_id: str,
+        project_tava_number: str,
+        submission_version_string: str,
+    ) -> None:
+        """Generate the architect-response XLSX via the in-process engine
+        helper. Fast — no subprocess, no timeout budget needed at this size."""
+        error_payload = None
+        output_path_str: Optional[str] = None
+        try:
+            normalized_version = _normalize_submission_version(submission_version_string)
+            # Local import to keep cold-start light (same pattern as render).
+            sys.path.insert(0, str(_RUN_AUDIT_PATH.parent.parent))
+            from scripts.run_audit import _run_export_excel  # type: ignore
+            rc = _run_export_excel(
+                project_key=project_tava_number,
+                submission_version=normalized_version,
+                output_subdir="audit_outputs",
+                base_dir=self._cfg.data_dir,
+            )
+            if rc != 0:
+                error_payload = {
+                    "error_type": "ExcelNonZeroExit",
+                    "error_message": f"_run_export_excel returned {rc}",
+                }
+            else:
+                xlsx_path = (
+                    self._cfg.data_dir / "audit_outputs"
+                    / project_tava_number / f"v{normalized_version}"
+                    / f"הערות_סקירה_v{normalized_version}.xlsx"
+                )
+                if not xlsx_path.exists():
+                    error_payload = {
+                        "error_type": "MissingExcelOutput",
+                        "error_message": f"export exited 0 but no XLSX at {xlsx_path}",
+                    }
+                else:
+                    output_path_str = str(xlsx_path)
+        except Exception as exc:
+            log.exception("excel job %s crashed", job_id)
+            error_payload = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            now = datetime.now(timezone.utc)
+            if error_payload is not None:
+                job.status = "failed"
+                job.error_json = json.dumps(error_payload, ensure_ascii=False)
+            else:
+                job.status = "completed"
+                job.output_path = output_path_str
+            job.completed_at = now
+            sess.commit()
+            log.info("excel job %s finished: status=%s", job_id, job.status)
 
     def _fail(self, sess: Session, job: Job, *, error_type: str, error_message: str) -> None:
         job.status = "failed"

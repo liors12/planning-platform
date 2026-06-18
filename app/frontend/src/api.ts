@@ -59,6 +59,9 @@ export interface SubmissionOut {
   dwg_path: string | null;
   findings_json_path: string | null;
   uploaded_at: string;
+  has_audit_results: boolean;
+  has_report_pdf: boolean;
+  has_report_xlsx: boolean;
 }
 
 export type JobStatus = "queued" | "running" | "completed" | "failed";
@@ -387,6 +390,37 @@ export async function renderSubmission(submissionId: number): Promise<JobOut> {
     }),
     `POST /submissions/${submissionId}/render`,
   );
+}
+
+/** Render-only PDF that does NOT require comments (vs. /render above,
+ * which is the comments-aware path used by CommentsTab). */
+export async function renderReport(submissionId: number): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/render-report`, {
+      method: "POST",
+    }),
+    `POST /submissions/${submissionId}/render-report`,
+  );
+}
+
+export async function exportExcel(submissionId: number): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/export-excel`, {
+      method: "POST",
+    }),
+    `POST /submissions/${submissionId}/export-excel`,
+  );
+}
+
+/** Convenience URLs for <a href> downloads. The browser handles the
+ * file save dialog; we don't need fetch+blob plumbing for this. */
+export function reportPdfUrl(submissionId: number, nonce?: number): string {
+  const v = nonce ? `?v=${nonce}` : "";
+  return `${SIDECAR_BASE}/submissions/${submissionId}/report.pdf${v}`;
+}
+export function reportXlsxUrl(submissionId: number, nonce?: number): string {
+  const v = nonce ? `?v=${nonce}` : "";
+  return `${SIDECAR_BASE}/submissions/${submissionId}/report.xlsx${v}`;
 }
 
 

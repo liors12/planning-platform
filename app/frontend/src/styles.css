@@ -376,6 +376,19 @@ code, .path {
 .primary-btn .spinner { margin-inline-end: 6px; vertical-align: -2px; }
 .upload-validation-err { margin-block-start: 8px; font-size: 13px; }
 
+.submission-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.submission-downloads {
+  margin-block-start: 8px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 13px;
+}
+.download-link { color: var(--green); text-decoration: none; }
+.download-link:hover { text-decoration: underline; }
+.ghost-btn .spinner { margin-inline-end: 6px; vertical-align: -2px; }
+
 .submissions-list { margin-block-start: 18px; }
 .submission-card {
   background: var(--card-bg);

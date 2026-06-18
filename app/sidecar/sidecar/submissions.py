@@ -29,6 +29,40 @@ from .queue_worker import EngineQueue
 from .storage import StorageError, sanitize_upload_filename, submission_dir
 
 
+def _audit_outputs_dir(cfg: Config, tava_number: str, version_string: str) -> Path:
+    """The canonical per-submission output directory:
+    <data_dir>/audit_outputs/<tava>/v<version>/
+    Matches _run_render_only(base_dir=cfg.data_dir, output_subdir="audit_outputs").
+    Versions in the DB sometimes carry a "v" prefix and sometimes don't —
+    we always store on disk with the prefix."""
+    ver = version_string if version_string.startswith("v") else f"v{version_string}"
+    return cfg.data_dir / "audit_outputs" / tava_number / ver
+
+
+def _audit_results_path(cfg: Config, tava_number: str, version_string: str) -> Path | None:
+    """Return the on-disk audit_results JSON for this submission, preferring
+    the sanitized variant (what the approved PDF was rendered from) and
+    falling back to the raw M4. None if neither exists."""
+    out_dir = _audit_outputs_dir(cfg, tava_number, version_string)
+    for leaf in ("audit_results.m4.sanitized.json", "audit_results.m4.json"):
+        p = out_dir / leaf
+        if p.exists():
+            return p
+    return None
+
+
+def _report_pdf_path(cfg: Config, tava_number: str, version_string: str) -> Path:
+    """Where the render writes the report PDF. May or may not exist."""
+    ver_bare = version_string[1:] if version_string.startswith("v") else version_string
+    return _audit_outputs_dir(cfg, tava_number, version_string) / f"audit_report_{ver_bare}.pdf"
+
+
+def _report_xlsx_path(cfg: Config, tava_number: str, version_string: str) -> Path:
+    """Where _run_export_excel writes the architect-response workbook."""
+    ver_bare = version_string[1:] if version_string.startswith("v") else version_string
+    return _audit_outputs_dir(cfg, tava_number, version_string) / f"הערות_סקירה_v{ver_bare}.xlsx"
+
+
 # Two routers because the URL grouping crosses prefixes:
 _projects_subs_router = APIRouter(prefix="/projects", tags=["submissions"])
 _subs_router = APIRouter(prefix="/submissions", tags=["submissions"])
@@ -43,6 +77,14 @@ class SubmissionOut(BaseModel):
     dwg_path: str | None
     findings_json_path: str | None
     uploaded_at: str
+    # True iff audit_results.m4.sanitized.json (or .m4.json fallback)
+    # exists on disk under cfg.data_dir/audit_outputs/<tava>/v<ver>/.
+    # Frontend uses this to show "הפיקי דו״ח" / "הפיקי אקסל" — independent
+    # of DB status, so seeded pilots without findings_json_path still
+    # surface the buttons.
+    has_audit_results: bool = False
+    has_report_pdf: bool = False
+    has_report_xlsx: bool = False
 
 
 class JobOut(BaseModel):
@@ -77,6 +119,18 @@ def _stream_upload_to_disk(upload: UploadFile, target: Path) -> None:
 def make_routers(get_engine, cfg: Config, queue: EngineQueue):
     def _session() -> Session:
         return Session(get_engine())
+
+    def _hydrate(sub: Submission) -> SubmissionOut:
+        """Build a SubmissionOut with the on-disk flags resolved. Project
+        tava_number is read off the loaded relationship; safe because each
+        route opens its own session and we serialize before exit."""
+        tava = sub.project.tava_number
+        return SubmissionOut(
+            **sub.to_dict(),
+            has_audit_results=_audit_results_path(cfg, tava, sub.version_string) is not None,
+            has_report_pdf=_report_pdf_path(cfg, tava, sub.version_string).exists(),
+            has_report_xlsx=_report_xlsx_path(cfg, tava, sub.version_string).exists(),
+        )
 
     # ── POST /projects/{project_id}/submissions ────────────────────────
 
@@ -145,7 +199,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     f"submission {version_string!r} already exists for project {project_id}",
                 )
             sess.refresh(submission)
-            return SubmissionOut(**submission.to_dict())
+            return _hydrate(submission)
 
     # ── GET /projects/{project_id}/submissions ─────────────────────────
 
@@ -164,7 +218,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 .order_by(Submission.uploaded_at.desc(), Submission.id.desc())
                 .all()
             )
-            return [SubmissionOut(**r.to_dict()) for r in rows]
+            return [_hydrate(r) for r in rows]
 
     # ── GET /submissions/{id} ──────────────────────────────────────────
 
@@ -174,7 +228,108 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             sub = sess.get(Submission, submission_id)
             if sub is None:
                 raise HTTPException(404, f"submission {submission_id} not found")
-            return SubmissionOut(**sub.to_dict())
+            return _hydrate(sub)
+
+    # ── POST /submissions/{id}/render-report ───────────────────────────
+    # Re-render the PDF from existing audit_results, WITHOUT requiring
+    # comments (unlike /submissions/{id}/render in comments.py). Gated on
+    # the on-disk audit_results probe — not findings_json_path — so seeded
+    # pilot submissions with no DB findings record still work.
+
+    @_subs_router.post(
+        "/{submission_id}/render-report",
+        response_model=JobOut,
+        status_code=202,
+    )
+    def render_report(submission_id: int) -> JobOut:
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            if _audit_results_path(cfg, tava, sub.version_string) is None:
+                raise HTTPException(
+                    409,
+                    f"submission {submission_id} has no audit_results.m4.json on disk; "
+                    "run the engine first.",
+                )
+        job = queue.enqueue_render(submission_id)
+        return JobOut(**job.to_dict())
+
+    # ── POST /submissions/{id}/export-excel ────────────────────────────
+
+    @_subs_router.post(
+        "/{submission_id}/export-excel",
+        response_model=JobOut,
+        status_code=202,
+    )
+    def export_excel(submission_id: int) -> JobOut:
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            if _audit_results_path(cfg, tava, sub.version_string) is None:
+                raise HTTPException(
+                    409,
+                    f"submission {submission_id} has no audit_results.m4.json on disk; "
+                    "run the engine first.",
+                )
+        job = queue.enqueue_excel(submission_id)
+        return JobOut(**job.to_dict())
+
+    # ── GET /submissions/{id}/report.pdf ───────────────────────────────
+    # Streams the engine's generated report PDF (distinct from the
+    # /pdf endpoint above, which serves the original submission upload).
+
+    @_subs_router.get("/{submission_id}/report.pdf")
+    def get_report_pdf(submission_id: int):
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            version = sub.version_string
+        path = _report_pdf_path(cfg, tava, version)
+        if not path.exists():
+            raise HTTPException(404, f"report PDF not generated yet for submission {submission_id}")
+        return Response(
+            content=path.read_bytes(),
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f'inline; filename="{path.name}"',
+                "Cache-Control": "private, max-age=0, must-revalidate",
+            },
+        )
+
+    # ── GET /submissions/{id}/report.xlsx ──────────────────────────────
+
+    @_subs_router.get("/{submission_id}/report.xlsx")
+    def get_report_xlsx(submission_id: int):
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            version = sub.version_string
+        path = _report_xlsx_path(cfg, tava, version)
+        if not path.exists():
+            raise HTTPException(404, f"Excel report not generated yet for submission {submission_id}")
+        # Hebrew filename: RFC 5987 encoded for cross-browser correctness.
+        from urllib.parse import quote
+        ascii_name = f"audit_report_v{version.lstrip('v')}.xlsx"
+        utf8_name = quote(path.name)
+        return Response(
+            content=path.read_bytes(),
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": (
+                    f'attachment; filename="{ascii_name}"; '
+                    f"filename*=UTF-8''{utf8_name}"
+                ),
+                "Cache-Control": "private, max-age=0, must-revalidate",
+            },
+        )
 
     # ── POST /submissions/{id}/run-engine ──────────────────────────────
 

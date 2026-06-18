@@ -389,17 +389,22 @@ def _run_render_only(project_key: str, submission_version: str,
 
 
 def _run_export_excel(project_key: str, submission_version: str,
-                      output_subdir: str) -> int:
+                      output_subdir: str,
+                      base_dir: Path = ROOT) -> int:
     """Export findings to an architect-response Excel workbook.
 
     Uses the same source-preference rule as --render-only: prefer the
     sanitized JSON (which the approved PDF was rendered from) and fall back
     to the raw M4 JSON. Output filename includes the version suffix so
     multiple submission versions can coexist in the same directory.
+
+    `base_dir` mirrors _run_render_only — pass cfg.data_dir for the
+    Windows-packaged sidecar so reads/writes land in
+    %LOCALAPPDATA%\\Planning Platform\\ instead of _MEIPASS.
     """
     from compliance_engine.excel_export import export_findings_to_excel
 
-    output_dir = ROOT / output_subdir / project_key / f"v{submission_version}"
+    output_dir = base_dir / output_subdir / project_key / f"v{submission_version}"
     sanitized_path = output_dir / "audit_results.m4.sanitized.json"
     m4_path = output_dir / "audit_results.m4.json"
     if sanitized_path.exists():

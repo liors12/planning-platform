@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  listSubmissions, runEngine, uploadSubmission,
+  exportExcel, listSubmissions, pollJobUntilDone, renderReport,
+  reportPdfUrl, reportXlsxUrl, runEngine, uploadSubmission,
   type ProjectOut, type SubmissionOut,
 } from "../api";
 import { EngineStatus } from "./EngineStatus";
@@ -36,6 +37,14 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
   // Active engine job per submission. Keyed by submission_id.
   const [activeJobs, setActiveJobs] = useState<Record<number, string>>({});
+
+  // Per-submission state for the two output buttons. `busy` carries
+  // which output is currently generating; `nonce` bumps after a successful
+  // run so the download link's URL changes and dodges browser cache.
+  type OutputBusy = "pdf" | "xlsx" | null;
+  const [outputBusy, setOutputBusy] = useState<Record<number, OutputBusy>>({});
+  const [outputNonces, setOutputNonces] = useState<Record<number, number>>({});
+  const [outputErr, setOutputErr] = useState<Record<number, string>>({});
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -96,6 +105,34 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     } finally {
       setUploading(false);
       setUploadProgress("");
+    }
+  }
+
+  async function onGenerateOutput(
+    submissionId: number,
+    kind: "pdf" | "xlsx",
+  ) {
+    setOutputBusy((prev) => ({ ...prev, [submissionId]: kind }));
+    setOutputErr((prev) => ({ ...prev, [submissionId]: "" }));
+    try {
+      const job = kind === "pdf"
+        ? await renderReport(submissionId)
+        : await exportExcel(submissionId);
+      const terminal = await pollJobUntilDone(job.id, () => {}, 1000, 120_000);
+      if (terminal.status !== "completed") {
+        const detail = terminal.error
+          ? (() => { try { return JSON.parse(terminal.error!).error_message || terminal.error; }
+                     catch { return terminal.error; } })()
+          : "job failed";
+        setOutputErr((prev) => ({ ...prev, [submissionId]: String(detail) }));
+      } else {
+        setOutputNonces((prev) => ({ ...prev, [submissionId]: (prev[submissionId] ?? 0) + 1 }));
+        refresh();
+      }
+    } catch (e) {
+      setOutputErr((prev) => ({ ...prev, [submissionId]: String(e) }));
+    } finally {
+      setOutputBusy((prev) => ({ ...prev, [submissionId]: null }));
     }
   }
 
@@ -235,7 +272,56 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                 >
                   {sub.status === "complete" ? "הפעילי שוב את התוכנה" : "הפעילי את התוכנה"}
                 </button>
+
+                {sub.has_audit_results && (
+                  <>
+                    <button
+                      className="ghost-btn"
+                      onClick={() => onGenerateOutput(sub.id, "pdf")}
+                      disabled={!!outputBusy[sub.id]}
+                    >
+                      {outputBusy[sub.id] === "pdf" ? (
+                        <><span className="spinner" aria-hidden="true" />מפיקה דו״ח…</>
+                      ) : "הפיקי דו״ח"}
+                    </button>
+                    <button
+                      className="ghost-btn"
+                      onClick={() => onGenerateOutput(sub.id, "xlsx")}
+                      disabled={!!outputBusy[sub.id]}
+                    >
+                      {outputBusy[sub.id] === "xlsx" ? (
+                        <><span className="spinner" aria-hidden="true" />מפיקה אקסל…</>
+                      ) : "הפיקי אקסל"}
+                    </button>
+                  </>
+                )}
               </div>
+
+              {(sub.has_report_pdf || sub.has_report_xlsx || outputErr[sub.id]) && (
+                <div className="submission-downloads muted">
+                  {sub.has_report_pdf && (
+                    <a
+                      className="download-link"
+                      href={reportPdfUrl(sub.id, outputNonces[sub.id])}
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      📄 פתחי דו״ח (PDF)
+                    </a>
+                  )}
+                  {sub.has_report_xlsx && (
+                    <a
+                      className="download-link"
+                      href={reportXlsxUrl(sub.id, outputNonces[sub.id])}
+                    >
+                      📊 הורידי אקסל
+                    </a>
+                  )}
+                  {outputErr[sub.id] && (
+                    <span className="error" role="alert">{outputErr[sub.id]}</span>
+                  )}
+                </div>
+              )}
 
               {activeJobId && (
                 <EngineStatus
