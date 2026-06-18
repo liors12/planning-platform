@@ -45,6 +45,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   const [dwgFile, setDwgFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
+  const [validationErr, setValidationErr] = useState<string | null>(null);
 
   function refresh() {
     listSubmissions(project.id)
@@ -56,7 +57,17 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
   async function onUpload(e: React.FormEvent) {
     e.preventDefault();
-    if (!pdfFile || !version.trim()) return;
+    // Inline validation rather than disabling the button — so the user
+    // gets feedback explaining WHY the click didn't do anything.
+    if (!version.trim()) {
+      setValidationErr("יש להזין מספר גרסה");
+      return;
+    }
+    if (!pdfFile) {
+      setValidationErr("יש לבחור קובץ PDF");
+      return;
+    }
+    setValidationErr(null);
     setUploading(true);
     setErr(null);
     setUploadProgress(`מעלה ${pdfFile.name} (${(pdfFile.size / 1024 / 1024).toFixed(1)} MB)...`);
@@ -107,11 +118,13 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               <input
                 type="text"
                 value={version}
-                onChange={(e) => setVersion(e.target.value)}
+                onChange={(e) => {
+                  setVersion(e.target.value);
+                  if (validationErr && e.target.value.trim()) setValidationErr(null);
+                }}
                 placeholder="לדוגמה: v24.3"
                 disabled={uploading}
                 dir="ltr"
-                required
               />
             </label>
             <label className="form-field">
@@ -137,17 +150,34 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
             </label>
           </div>
 
-          {uploadProgress && <div className="muted upload-progress">{uploadProgress}</div>}
+          {uploadProgress && (
+            <div className="upload-progress" role="status" aria-live="polite">
+              <span className="spinner" aria-hidden="true" />
+              <span>{uploadProgress}</span>
+            </div>
+          )}
 
           <div className="form-actions">
             <button
               type="submit"
               className="primary-btn"
-              disabled={uploading || !pdfFile || !version.trim()}
+              disabled={uploading}
             >
-              {uploading ? "מעלה..." : "העלי הגשה"}
+              {uploading ? (
+                <>
+                  <span className="spinner" aria-hidden="true" />
+                  מעלה...
+                </>
+              ) : (
+                "העלי הגשה"
+              )}
             </button>
           </div>
+          {validationErr && (
+            <div className="error upload-validation-err" role="alert">
+              {validationErr}
+            </div>
+          )}
         </form>
       </section>
 

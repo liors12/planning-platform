@@ -365,7 +365,16 @@ code, .path {
   grid-template-columns: 1fr 2fr 2fr;
   gap: 14px;
 }
-.upload-progress { margin-block-start: 8px; }
+.upload-progress {
+  margin-block-start: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 14px;
+}
+.primary-btn .spinner { margin-inline-end: 6px; vertical-align: -2px; }
+.upload-validation-err { margin-block-start: 8px; font-size: 13px; }
 
 .submissions-list { margin-block-start: 18px; }
 .submission-card {
