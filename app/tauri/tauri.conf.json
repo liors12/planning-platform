@@ -47,7 +47,10 @@
       "nsis": {
         "installMode": "currentUser",
         "displayLanguageSelector": false,
-        "languages": ["English"]
+        "languages": ["Hebrew", "English"],
+        "customLanguageFiles": {
+          "Hebrew": "installer-strings-he.nsh"
+        }
       }
     }
   }
