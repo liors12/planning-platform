@@ -310,6 +310,34 @@ jobs:
           echo "Tag:   ${tag}"
           echo "Title: ${title}"
 
+      - name: Delete previous v0.1.0-* pre-releases
+        # Each successful build cuts a new prerelease tagged
+        # v0.1.0-<date>-<sha>. Without cleanup the releases page grows
+        # one entry per build — confusing for Ellen, who only ever wants
+        # the latest installer. Loop through every v0.1.0-* release and
+        # delete it (and its tag) BEFORE softprops creates the new one,
+        # so the page always shows exactly one prerelease at the top.
+        # `|| true` on each delete so a partially-cleaned-up release
+        # (e.g. tag exists but release doesn't) doesn't fail the job.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          tags=$(gh release list --json tagName --jq '.[].tagName' \
+                 | grep "^v0.1.0-" || true)
+          if [ -z "$tags" ]; then
+            echo "No prior v0.1.0-* releases found; nothing to clean."
+            exit 0
+          fi
+          echo "Deleting prior prereleases:"
+          echo "$tags"
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            echo "  - $tag"
+            gh release delete "$tag" --yes --cleanup-tag || true
+          done <<< "$tags"
+
       - name: Create GitHub Release (pre-release)
         # Pre-release while we're still iterating on the pilot — the badge on
         # the releases page reads "Pre-release" so Ellen knows this isn't a
