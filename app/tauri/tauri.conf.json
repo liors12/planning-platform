@@ -50,7 +50,8 @@
         "languages": ["Hebrew", "English"],
         "customLanguageFiles": {
           "Hebrew": "installer-strings-he.nsh"
-        }
+        },
+        "installerHooks": "installer-hooks.nsh"
       }
     }
   }
