@@ -483,12 +483,7 @@ jobs:
               -Uri "http://127.0.0.1:17321/submissions/$subId/report.pdf").Content
             $pdfPath2 = Join-Path $env:RUNNER_TEMP "smoke-report-with-comment.pdf"
             [System.IO.File]::WriteAllBytes($pdfPath2, $pdfBytes2)
-            $extracted = & python -c @"
-import sys
-from pypdf import PdfReader
-r = PdfReader(sys.argv[1])
-print(''.join(p.extract_text() or '' for p in r.pages))
-"@ $pdfPath2
+            $extracted = & python -c "import sys; from pypdf import PdfReader; print(''.join(p.extract_text() or '' for p in PdfReader(sys.argv[1]).pages))" $pdfPath2
             $hasMarker = $extracted -match [regex]::Escape($marker)
             Record "comments: marker '$marker' present in re-rendered PDF" $hasMarker
             if (-not $hasMarker) { Fail "comment text did not appear in re-rendered PDF" }
