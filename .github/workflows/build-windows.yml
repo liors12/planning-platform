@@ -282,6 +282,257 @@ jobs:
           }
           Write-Host "Boot smoke-test PASSED ✓"
 
+      - name: End-to-end smoke test against the installed artifact
+        # The boot smoke-test above exercises the staged sidecar binary
+        # before NSIS bundling. THIS step exercises the actual installer
+        # the user downloads: silent install → launch sidecar → drive the
+        # full user flow (render PDF, export Excel, add comment, re-render)
+        # → uninstall. Would have caught: No module named 'scripts'
+        # (broke render-only in the packaged build), missing seed files,
+        # the SQLCipher cipher_version crash, and any Tauri/NSIS layout
+        # drift between staged and installed binaries.
+        #
+        # Runs against the SAME installer artifact that the release step
+        # would publish — if any assertion here fails, the artifact never
+        # uploads and no release is cut. Ellen never sees a broken build.
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m pip install --quiet pypdf
+
+          # Track every assertion so we can dump a pass/fail list at the
+          # end regardless of which step blew up.
+          $results = New-Object System.Collections.ArrayList
+          function Record($name, $ok, $msg = "") {
+            $null = $results.Add([pscustomobject]@{Step=$name; Pass=$ok; Msg=$msg})
+            if ($ok) { Write-Host "✓ $name" } else { Write-Host "✗ $name :: $msg" }
+          }
+          function Fail($msg) { throw $msg }
+
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          $smokeData  = Join-Path $env:RUNNER_TEMP "e2e-smoke-data"
+          $smokeLog   = Join-Path $env:RUNNER_TEMP "e2e-sidecar.stdout.log"
+          $smokeErr   = Join-Path $env:RUNNER_TEMP "e2e-sidecar.stderr.log"
+          $sidecarProc = $null
+
+          try {
+            # ── 1. INSTALL ────────────────────────────────────────────
+            $installer = Get-ChildItem `
+              "app\tauri\target\release\bundle\nsis\Planning Platform*x64-setup.exe" `
+              | Select-Object -First 1
+            if (-not $installer) { Fail "no NSIS installer found in bundle/nsis/" }
+            Write-Host "Installer: $($installer.FullName)"
+            Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+            Record "install: NSIS /S completed" $true
+
+            Record "install: install dir present" (Test-Path $installDir) $installDir
+            if (-not (Test-Path $installDir)) { Fail "install dir missing" }
+
+            $sidecarExe = Get-ChildItem -Recurse -File -Path $installDir -Filter "sidecar.exe" `
+                          | Select-Object -First 1
+            $weasyExe = Get-ChildItem -Recurse -File -Path $installDir -Filter "weasyprint.exe" `
+                        | Select-Object -First 1
+            $shellExe = Get-ChildItem -File -Path $installDir -Filter "*.exe" `
+                        | Where-Object { $_.Name -notmatch "uninstall|sidecar|weasyprint" } `
+                        | Select-Object -First 1
+            Record "install: sidecar.exe present"    ($null -ne $sidecarExe) $sidecarExe
+            Record "install: weasyprint.exe present" ($null -ne $weasyExe)   $weasyExe
+            Record "install: shell exe present"      ($null -ne $shellExe)   $shellExe
+            if (-not $sidecarExe) { Fail "sidecar.exe not installed" }
+
+            # ── 2. BOOT ───────────────────────────────────────────────
+            # Isolate to a tempdir so cleanup is local; avoids polluting
+            # whatever the installer wrote to %LOCALAPPDATA%.
+            Remove-Item $smokeData -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $smokeData | Out-Null
+            $env:PLATFORM_DATA_DIR = $smokeData
+            Write-Host "PLATFORM_DATA_DIR = $smokeData"
+            $sidecarProc = Start-Process -FilePath $sidecarExe.FullName `
+              -RedirectStandardOutput $smokeLog -RedirectStandardError $smokeErr `
+              -NoNewWindow -PassThru
+            Write-Host "Launched installed sidecar.exe PID=$($sidecarProc.Id)"
+
+            $deadline = (Get-Date).AddSeconds(30)
+            $booted = $false
+            while ((Get-Date) -lt $deadline -and -not $sidecarProc.HasExited) {
+              Start-Sleep -Milliseconds 500
+              try {
+                $h = Invoke-WebRequest -UseBasicParsing `
+                  -Uri http://127.0.0.1:17321/health -TimeoutSec 2
+                if ($h.StatusCode -eq 200) { $booted = $true; break }
+              } catch { }
+            }
+            Record "boot: /health 200" $booted
+            if (-not $booted) { Fail "sidecar did not respond to /health within 30s" }
+
+            $seedDir = Join-Path $smokeData "projects\407-1048248"
+            Record "boot: seed projects/407-1048248 present" (Test-Path $seedDir)
+
+            $projects = Invoke-RestMethod -Uri http://127.0.0.1:17321/projects
+            $projectCount = @($projects).Count
+            Record "boot: /projects >= 1" ($projectCount -ge 1) "count=$projectCount"
+            if ($projectCount -lt 1) { Fail "/projects returned empty" }
+            $project = $projects | Where-Object { $_.tava_number -eq "407-1048248" } `
+                                 | Select-Object -First 1
+            if (-not $project) { Fail "pilot project 407-1048248 missing from /projects" }
+            $projectId = $project.id
+
+            # ── 3. SUBMISSION ─────────────────────────────────────────
+            # Render needs a Submission DB row to look up tava + version.
+            # The seed bundles metadata.json + audit_results on disk but
+            # discovery only creates Project rows, never Submission ones.
+            # Upload a 26-byte dummy PDF — the upload endpoint doesn't
+            # parse PDF structure, just stores the bytes; the render path
+            # never reads the submission PDF (it reads audit_results JSON).
+            $subs = Invoke-RestMethod -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $subForV243 = @($subs) | Where-Object { $_.version_string -eq "v24.3" } | Select-Object -First 1
+            if (-not $subForV243) {
+              $dummyPdf = Join-Path $env:RUNNER_TEMP "smoke-dummy.pdf"
+              [System.IO.File]::WriteAllBytes($dummyPdf, [byte[]](
+                0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34,0x0A,0x25,0x25,0x45,0x4F,0x46,0x0A))
+              $form = @{ version_string = "v24.3"; pdf = Get-Item $dummyPdf }
+              $subForV243 = Invoke-RestMethod -Method Post -Form $form `
+                -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+              Record "submission: POST created v24.3 row" $true "id=$($subForV243.id)"
+            } else {
+              Record "submission: v24.3 already present" $true "id=$($subForV243.id)"
+            }
+            $subId = $subForV243.id
+
+            $subDetail = Invoke-RestMethod -Uri "http://127.0.0.1:17321/submissions/$subId"
+            Record "submission: has_audit_results == true" `
+              ($subDetail.has_audit_results -eq $true) "got=$($subDetail.has_audit_results)"
+            if (-not $subDetail.has_audit_results) { Fail "has_audit_results is false on seeded pilot" }
+
+            # Helper: poll a job until terminal or timeout.
+            function Wait-ForJob($jobId, $timeoutSec) {
+              $deadline = (Get-Date).AddSeconds($timeoutSec)
+              while ((Get-Date) -lt $deadline) {
+                Start-Sleep -Seconds 1
+                $j = Invoke-RestMethod -Uri "http://127.0.0.1:17321/jobs/$jobId"
+                if ($j.status -eq "completed" -or $j.status -eq "failed") { return $j }
+              }
+              throw "job $jobId did not reach terminal state in ${timeoutSec}s"
+            }
+
+            # ── 4. RENDER PDF ─────────────────────────────────────────
+            $renderJob = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/render"
+            Write-Host "Render job queued: $($renderJob.id)"
+            $renderTerminal = Wait-ForJob $renderJob.id 120
+            Record "render: job completed" ($renderTerminal.status -eq "completed") `
+              "status=$($renderTerminal.status) error=$($renderTerminal.error)"
+            if ($renderTerminal.status -ne "completed") { Fail "render job failed" }
+
+            $pdfBytes = (Invoke-WebRequest -UseBasicParsing `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/report.pdf").Content
+            Record "render: report.pdf body > 10KB" ($pdfBytes.Length -gt 10240) `
+              "got=$($pdfBytes.Length) bytes"
+            if ($pdfBytes.Length -le 10240) { Fail "PDF too small to be real" }
+
+            $pdfPath = Join-Path $env:RUNNER_TEMP "smoke-report.pdf"
+            [System.IO.File]::WriteAllBytes($pdfPath, $pdfBytes)
+            $pageCount = & python -c "import sys; from pypdf import PdfReader; print(len(PdfReader(sys.argv[1]).pages))" $pdfPath
+            $pageCount = [int]$pageCount
+            Record "render: PDF page count == 28" ($pageCount -eq 28) "got=$pageCount"
+            if ($pageCount -ne 28) { Fail "PDF page count regression" }
+
+            # ── 5. EXPORT EXCEL ───────────────────────────────────────
+            $xlsxJob = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/export-excel"
+            Write-Host "Excel job queued: $($xlsxJob.id)"
+            $xlsxTerminal = Wait-ForJob $xlsxJob.id 60
+            Record "excel: job completed" ($xlsxTerminal.status -eq "completed") `
+              "status=$($xlsxTerminal.status) error=$($xlsxTerminal.error)"
+            if ($xlsxTerminal.status -ne "completed") { Fail "excel job failed" }
+
+            $xlsxBytes = (Invoke-WebRequest -UseBasicParsing `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/report.xlsx").Content
+            Record "excel: report.xlsx body > 5KB" ($xlsxBytes.Length -gt 5120) `
+              "got=$($xlsxBytes.Length) bytes"
+            if ($xlsxBytes.Length -le 5120) { Fail "XLSX too small to be real" }
+
+            # ── 6. DISCIPLINE COMMENTS ────────────────────────────────
+            # Hebrew marker — pure-Hebrew tokens extract cleanly from
+            # Heebo-rendered PDFs via pypdf; ASCII inside Hebrew context
+            # gets bidi-reordered and is unreliable to grep for.
+            $marker = "בדיקה_עשן_ייחודי"
+            $commentBody = @{
+              discipline_key = "arch"
+              status         = "נדרשת השלמה"
+              topic_he       = $marker
+              action_he      = "$marker — פעולה נדרשת לאימות"
+            } | ConvertTo-Json -Compress
+            $createdComment = Invoke-RestMethod -Method Post `
+              -ContentType "application/json; charset=utf-8" `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/comments" `
+              -Body ([System.Text.Encoding]::UTF8.GetBytes($commentBody))
+            Record "comments: POST created" ($null -ne $createdComment.id) "id=$($createdComment.id)"
+
+            $allComments = Invoke-RestMethod -Uri "http://127.0.0.1:17321/submissions/$subId/comments"
+            Record "comments: GET >= 1" (@($allComments).Count -ge 1) "count=$(@($allComments).Count)"
+
+            $renderJob2 = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/render"
+            $renderTerminal2 = Wait-ForJob $renderJob2.id 120
+            Record "comments: re-render completed" ($renderTerminal2.status -eq "completed") `
+              "status=$($renderTerminal2.status)"
+            if ($renderTerminal2.status -ne "completed") { Fail "post-comment render failed" }
+
+            $pdfBytes2 = (Invoke-WebRequest -UseBasicParsing `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/report.pdf").Content
+            $pdfPath2 = Join-Path $env:RUNNER_TEMP "smoke-report-with-comment.pdf"
+            [System.IO.File]::WriteAllBytes($pdfPath2, $pdfBytes2)
+            $extracted = & python -c @"
+import sys
+from pypdf import PdfReader
+r = PdfReader(sys.argv[1])
+print(''.join(p.extract_text() or '' for p in r.pages))
+"@ $pdfPath2
+            $hasMarker = $extracted -match [regex]::Escape($marker)
+            Record "comments: marker '$marker' present in re-rendered PDF" $hasMarker
+            if (-not $hasMarker) { Fail "comment text did not appear in re-rendered PDF" }
+
+          }
+          catch {
+            Record "FATAL" $false $_.Exception.Message
+          }
+          finally {
+            # ── 7. CLEANUP ────────────────────────────────────────────
+            if ($sidecarProc -and -not $sidecarProc.HasExited) {
+              Write-Host "Killing sidecar PID=$($sidecarProc.Id)"
+              Stop-Process -Id $sidecarProc.Id -Force -ErrorAction SilentlyContinue
+              $sidecarProc.WaitForExit(5000) | Out-Null
+            }
+            $uninstaller = Join-Path $installDir "uninstall.exe"
+            if (Test-Path $uninstaller) {
+              Write-Host "Running uninstall.exe /S"
+              Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
+              Start-Sleep -Seconds 3   # NSIS uninstaller is async on disk-removal
+              $stillThere = Test-Path $installDir
+              Record "cleanup: install dir removed" (-not $stillThere) "$installDir"
+            } else {
+              Record "cleanup: uninstall.exe missing" $false ""
+            }
+
+            # ── 8. REPORT ─────────────────────────────────────────────
+            Write-Host "`n══════════════ E2E SMOKE TEST RESULTS ══════════════"
+            $results | Format-Table -AutoSize -Wrap | Out-Host
+            $passed = ($results | Where-Object { $_.Pass }).Count
+            $failed = ($results | Where-Object { -not $_.Pass }).Count
+            Write-Host "Passed: $passed   Failed: $failed"
+
+            if ($failed -gt 0) {
+              Write-Host "`n──────────────── sidecar.exe stdout ────────────────"
+              if (Test-Path $smokeLog) { Get-Content $smokeLog | Out-Host }
+              Write-Host "`n──────────────── sidecar.exe stderr ────────────────"
+              if (Test-Path $smokeErr) { Get-Content $smokeErr | Out-Host }
+              Write-Error "End-to-end smoke FAILED — $failed of $($results.Count) checks failed. See list + sidecar logs above."
+              exit 1
+            }
+            Write-Host "End-to-end smoke PASSED ✓"
+          }
+
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
