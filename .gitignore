@@ -51,6 +51,17 @@ app/tauri/binaries/
 # IS committed — it lives outside these dirs.
 submissions/
 projects/
+# Sidecar pilot-seed descriptors — small JSONs (≤350 KB total) bundled into
+# the installer + copied to %LOCALAPPDATA% on first run so the app boots
+# with the pilot project visible. Whitelisted explicitly so we don't open
+# the door to accidentally committing 100 MB uploaded PDFs.
+!app/sidecar/seed/projects/
+!app/sidecar/seed/projects/*/
+!app/sidecar/seed/projects/*/_project.json
+!app/sidecar/seed/projects/*/project-schema-*.json
+!app/sidecar/seed/projects/*/submissions/
+!app/sidecar/seed/projects/*/submissions/*/
+!app/sidecar/seed/projects/*/submissions/*/metadata.json
 data/**
 !data/projects/
 !data/projects/*/
