@@ -258,6 +258,7 @@ code, .path {
 }
 .kv dt { color: var(--muted); }
 .kv dd { margin: 0; }
+.kv dd[dir="ltr"] { text-align: right; }
 
 /* ─── Buttons ───────────────────────────────────────────────────────── */
 

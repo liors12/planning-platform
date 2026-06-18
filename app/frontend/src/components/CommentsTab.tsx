@@ -48,7 +48,7 @@ export function CommentsTab({ project, submission }: Props) {
         <span className="placeholder-phase">לא זמין</span>
         <h3>הערות רפרנטים</h3>
         <p className="muted">
-          יש להריץ את המנוע תחילה לפני הכנסת הערות רפרנטים.
+          יש להריץ את התוכנה תחילה לפני הכנסת הערות רפרנטים.
         </p>
       </div>
     );
@@ -108,14 +108,14 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
   // ── Render button handler ─────────────────────────────────────────────
   async function handleRender() {
     setRendering(true);
-    setRenderStage("מכין דו\"ח...");
+    setRenderStage("מכינה דו\"ח...");
     try {
       const job = await renderSubmission(submission.id);
       const terminal = await pollJobUntilDone(
         job.id,
         (j) => {
           if (j.status === "queued") setRenderStage("בתור...");
-          else if (j.status === "running") setRenderStage("מעדכן את הדו\"ח...");
+          else if (j.status === "running") setRenderStage("מעדכנת את הדו\"ח...");
         },
         1000,
         90_000,
@@ -126,12 +126,12 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
       } else {
         setToast({
           kind: "error",
-          text: 'שגיאה בעדכון הדו"ח — נסה שוב',
+          text: 'שגיאה בעדכון הדו"ח — נסי שוב',
         });
       }
     } catch (e) {
       console.error("render failed", e);
-      setToast({ kind: "error", text: 'שגיאה בעדכון הדו"ח — נסה שוב' });
+      setToast({ kind: "error", text: 'שגיאה בעדכון הדו"ח — נסי שוב' });
     } finally {
       setRendering(false);
       setRenderStage("");
@@ -179,10 +179,10 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           {rendering ? (
             <>
               <span className="spinner" aria-hidden="true" />
-              {renderStage || "מעדכן..."}
+              {renderStage || "מעדכנת..."}
             </>
           ) : (
-            'צור דו"ח מעודכן'
+            'צרי דו"ח מעודכן'
           )}
         </button>
         <span className="muted comments-meta">
@@ -254,10 +254,10 @@ function CommentListPanel({
   return (
     <div className="comments-list-panel">
       {loading ? (
-        <p className="muted">טוען הערות...</p>
+        <p className="muted">טוענת הערות...</p>
       ) : grouped.length === 0 ? (
         <p className="muted comments-empty">
-          אין עדיין הערות. הוסף הערה ראשונה בטופס למטה.
+          אין עדיין הערות. הוסיפי הערה ראשונה בטופס למטה.
         </p>
       ) : (
         grouped.map((g) => (
@@ -389,7 +389,7 @@ function CommentRow({
         </div>
         {err && <div className="error">{err}</div>}
         <div className="comment-row-actions">
-          <button className="primary-btn small" onClick={save}>שמור</button>
+          <button className="primary-btn small" onClick={save}>שמרי</button>
           <button className="ghost-btn small" onClick={() => setMode("view")}>
             ביטול
           </button>
@@ -406,16 +406,16 @@ function CommentRow({
         <div className="comment-row-icons">
           <button
             className="icon-btn"
-            title="ערוך"
-            aria-label="ערוך"
+            title="ערכי"
+            aria-label="ערכי"
             onClick={() => setMode("edit")}
           >
             ✎
           </button>
           <button
             className="icon-btn danger"
-            title="מחק"
-            aria-label="מחק"
+            title="מחקי"
+            aria-label="מחקי"
             onClick={() => setMode("confirm-delete")}
           >
             🗑
@@ -430,7 +430,7 @@ function CommentRow({
       </div>
       {!expanded && comment.action_he.length > 120 && (
         <button className="comment-expand" onClick={() => setExpanded(true)}>
-          הצג הכל
+          הציגי הכל
         </button>
       )}
 
@@ -508,7 +508,7 @@ function AddCommentForm({
           onChange={(e) => setDiscipline(e.target.value)}
           aria-label="דיסציפלינה"
         >
-          <option value="">בחר דיסציפלינה ▾</option>
+          <option value="">בחרי דיסציפלינה ▾</option>
           {disciplines.map((d) => (
             <option key={d.key} value={d.key}>{d.label}</option>
           ))}
@@ -518,7 +518,7 @@ function AddCommentForm({
           onChange={(e) => setStatus(e.target.value)}
           aria-label="סטטוס"
         >
-          <option value="">בחר סטטוס ▾</option>
+          <option value="">בחרי סטטוס ▾</option>
           {statuses.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
@@ -549,7 +549,7 @@ function AddCommentForm({
           className="primary-btn"
           disabled={!ready || busy}
         >
-          {busy ? "מוסיף..." : "+ הוסף הערה"}
+          {busy ? "מוסיפה..." : "+ הוסיפי הערה"}
         </button>
       </div>
     </form>

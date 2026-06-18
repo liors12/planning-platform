@@ -88,7 +88,7 @@ export function SplitPane({
         className="split-pane-divider"
         role="separator"
         aria-orientation="vertical"
-        aria-label="התאם רוחב חלוקת המסך"
+        aria-label="התאימי רוחב חלוקת המסך"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

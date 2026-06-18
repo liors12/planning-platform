@@ -17,7 +17,7 @@ function Pill({ kind, children }: { kind: string; children: React.ReactNode }) {
 const SUB_STATUS_LABEL_HE: Record<string, string> = {
   uploaded: "הועלה",
   extracting: "מבצע חילוץ",
-  analyzing: "המנוע רץ",
+  analyzing: "התוכנה רצה",
   complete: "הושלם",
   failed: "נכשל",
 };
@@ -97,7 +97,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
           <div className="warning-block">
             <strong>אזהרה:</strong> לא נמצא קובץ סכמה (project-schema) לתב"ע{" "}
             <code dir="ltr">{project.tava_number}</code>. ניתן להעלות את ה-PDF, אך כפתור
-            "הפעל את המנוע" יהיה מושבת. הוספת סכמות תהיה זמינה בעדכון הבא.
+            "הפעילי את התוכנה" יהיה מושבת. הוספת סכמות תהיה זמינה בעדכון הבא.
           </div>
         )}
         <form onSubmit={onUpload}>
@@ -145,7 +145,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               className="primary-btn"
               disabled={uploading || !pdfFile || !version.trim()}
             >
-              {uploading ? "מעלה..." : "העלה הגשה"}
+              {uploading ? "מעלה..." : "העלי הגשה"}
             </button>
           </div>
         </form>
@@ -156,7 +156,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       {/* ── Submissions list ────────────────────────────────────────── */}
       <section className="submissions-list">
         <h3>הגשות קודמות</h3>
-        {subs === null && <p className="muted">טוען...</p>}
+        {subs === null && <p className="muted">טוענת...</p>}
         {subs !== null && subs.length === 0 && (
           <p className="muted">אין הגשות עדיין.</p>
         )}
@@ -192,7 +192,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                       : ""
                   }
                 >
-                  {sub.status === "complete" ? "הפעל שוב את המנוע" : "הפעל את המנוע"}
+                  {sub.status === "complete" ? "הפעילי שוב את התוכנה" : "הפעילי את התוכנה"}
                 </button>
               </div>
 

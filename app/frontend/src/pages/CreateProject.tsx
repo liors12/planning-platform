@@ -79,10 +79,10 @@ export function CreateProject({ navigate, onCreated }: Props) {
   return (
     <article className="page-create-project">
       <header className="page-header">
-        <a className="back-link" href={buildHash({ kind: "home" })}>← חזור</a>
+        <a className="back-link" href={buildHash({ kind: "home" })}>← חזרי</a>
         <h1>פרויקט חדש</h1>
         <p className="muted">
-          הזן פרטים בסיסיים. ניתן יהיה לערוך אחר כך מהמסך של הפרויקט.
+          הזיני פרטים בסיסיים. ניתן יהיה לערוך אחר כך מהמסך של הפרויקט.
         </p>
       </header>
 
@@ -150,7 +150,7 @@ export function CreateProject({ navigate, onCreated }: Props) {
                 className="primary-btn"
                 href={buildHash({ kind: "project", projectId: dupe.existing_project.id })}
               >
-                פתח את הפרויקט הקיים: {dupe.existing_project.name_he}
+                פתחי את הפרויקט הקיים: {dupe.existing_project.name_he}
               </a>
               <span className="muted">
                 ניתן להוסיף לו הגשה חדשה דרך טאב "הגשות".
@@ -162,7 +162,7 @@ export function CreateProject({ navigate, onCreated }: Props) {
         <div className="form-actions">
           <a className="ghost-btn" href={buildHash({ kind: "home" })}>ביטול</a>
           <button type="submit" className="primary-btn" disabled={!canSubmit}>
-            {submitting ? "שומר..." : "צור פרויקט"}
+            {submitting ? "שומרת..." : "צרי פרויקט"}
           </button>
         </div>
       </form>

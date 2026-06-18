@@ -57,16 +57,16 @@ function Home({ refreshKey }: { refreshKey: number }) {
       </header>
 
       <p className="home-cta-hint muted">
-        בחר/י פרויקט קיים מהסרגל בצד, או צור/י פרויקט חדש בעזרת הכפתור
+        בחרי פרויקט קיים מהסרגל בצד, או צרי פרויקט חדש בעזרת הכפתור
         "+ פרויקט חדש" בראש הסרגל.
       </p>
 
       <section className="card home-recent">
         <h2 className="card-title">פרויקטים אחרונים</h2>
         {err && <div className="error">{err}</div>}
-        {!recent && !err && <p className="muted">טוען...</p>}
+        {!recent && !err && <p className="muted">טוענת...</p>}
         {recent && recent.length === 0 && (
-          <p className="muted">אין עדיין פרויקטים. פתח/י פרויקט ראשון כדי להתחיל.</p>
+          <p className="muted">אין עדיין פרויקטים. פתחי פרויקט ראשון כדי להתחיל.</p>
         )}
         {recent && recent.length > 0 && (
           <ul className="home-recent-list">

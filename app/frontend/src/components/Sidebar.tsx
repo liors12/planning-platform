@@ -96,7 +96,7 @@ export function Sidebar({ currentRoute, refreshKey }: Props) {
             checked={showArchived}
             onChange={(e) => setShowArchived(e.target.checked)}
           />
-          הצג פרויקטים בארכיון
+          הציגי פרויקטים בארכיון
         </label>
       </footer>
     </aside>

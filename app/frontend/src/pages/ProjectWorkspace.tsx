@@ -90,13 +90,13 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
   }
 
   if (err) return <div className="error error-block">{err}</div>;
-  if (!project) return <div className="muted">טוען...</div>;
+  if (!project) return <div className="muted">טוענת...</div>;
 
   return (
     <article className="page-project">
       <header className="page-header project-header">
         <div>
-          <a className="back-link" href={buildHash({ kind: "home" })}>← חזור</a>
+          <a className="back-link" href={buildHash({ kind: "home" })}>← חזרי</a>
           <h1>{project.name_he}</h1>
           <div className="project-meta">
             <span><strong>תב"ע:</strong> <span dir="ltr">{project.tava_number}</span></span>
@@ -107,7 +107,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
         <div className="project-actions">
           {project.status !== "archived" && (
             <button className="ghost-btn danger" onClick={onArchive}>
-              העבר לארכיון
+              העבירי לארכיון
             </button>
           )}
         </div>
@@ -146,7 +146,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
         {tab === "comments" && (
           <CommentsTab project={project} submission={latestCompleteSub} />
         )}
-        {tab === "guidelines" && <Placeholder badge="בקרוב" title="עורך הנחיות" desc="עריכת ערכי הסף של בדיקות המנוע + יצירת גרסת מסמך דרישות מעודכן לאדריכל. יתווסף בעדכון הבא." />}
+        {tab === "guidelines" && <Placeholder badge="בקרוב" title="עורך הנחיות" desc="עריכת ערכי הסף של בדיקות התוכנה + יצירת גרסת מסמך דרישות מעודכן לאדריכל. יתווסף בעדכון הבא." />}
         {tab === "history" && <Placeholder badge="בקרוב" title="היסטוריה" desc="ציר זמן של כל הפעולות בפרויקט — יצירה, הגשות, ריצות בדיקה, עריכת הנחיות, החלטות מנהלי דיסציפלינה." />}
         {tab === "final" && <Placeholder badge="בקרוב" title="חוות דעת" desc="הפקת חוות הדעת הסופית עם שילוב משוב מנהלי הדיסציפלינות וחתימת מהנדס/ת המינהלת." />}
       </section>
@@ -226,13 +226,13 @@ function FindingsTabContent({
     return (
       <div className="card">
         <p className="muted">
-          עדיין אין הגשה שהמנוע סיים עבורה ניתוח. עבור לטאב "הגשות", העלה תכנית עיצוב,
-          ולחץ על "הפעל את המנוע".
+          עדיין אין הגשה שהתוכנה סיימה עבורה ניתוח. עברי לטאב "הגשות", העלי תכנית עיצוב,
+          ולחצי על "הפעילי את התוכנה".
         </p>
       </div>
     );
   }
-  if (findings === null) return <p className="muted">טוען ממצאים...</p>;
+  if (findings === null) return <p className="muted">טוענת ממצאים...</p>;
   // Side-by-side: findings on visual RIGHT (start, ~55%), tasrit on the LEFT
   // (end, ~45%). Splitter position persisted per-project to localStorage.
   const pdfUrl = sub ? `${SIDECAR_BASE}/submissions/${sub.id}/pdf` : null;

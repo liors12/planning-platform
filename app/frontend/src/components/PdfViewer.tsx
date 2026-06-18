@@ -139,7 +139,7 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
         <button onClick={goPrev} disabled={atFirst} title="עמוד קודם" aria-label="עמוד קודם">›</button>
         <button onClick={goNext} disabled={atLast} title="עמוד הבא" aria-label="עמוד הבא">‹</button>
         <span className="pdf-page-indicator">
-          {numPages ? <>עמוד <strong>{pageNumber}</strong> מתוך <strong>{numPages}</strong></> : "טוען..."}
+          {numPages ? <>עמוד <strong>{pageNumber}</strong> מתוך <strong>{numPages}</strong></> : "טוענת..."}
         </span>
         <form className="pdf-jump-form" onSubmit={onJumpSubmit}>
           <label className="muted">קפיצה:</label>
@@ -152,20 +152,20 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
             placeholder="#"
             dir="ltr"
           />
-          <button type="submit" disabled={!jumpInput.trim()}>קפוץ</button>
+          <button type="submit" disabled={!jumpInput.trim()}>קפצי</button>
         </form>
         <div className="pdf-zoom-controls">
-          <button onClick={zoomOut} title="הקטן" aria-label="הקטן">−</button>
+          <button onClick={zoomOut} title="הקטיני" aria-label="הקטיני">−</button>
           <span className="pdf-zoom-pct">{zoomPct}%</span>
-          <button onClick={zoomIn} title="הגדל" aria-label="הגדל">+</button>
+          <button onClick={zoomIn} title="הגדילי" aria-label="הגדילי">+</button>
           <button
             onClick={() => setMode("fit-page")}
-            title="התאם לחלון"
+            title="התאימי לחלון"
             className={mode === "fit-page" ? "active" : ""}
-          >התאם לחלון</button>
+          >התאימי לחלון</button>
           <button
             onClick={() => setMode("fit-width")}
-            title="התאם לרוחב"
+            title="התאימי לרוחב"
             className={mode === "fit-width" ? "active" : ""}
           >רוחב</button>
         </div>
@@ -175,14 +175,14 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
         {loadError && (
           <div className="error error-block">
             <strong>שגיאת טעינת תכנית העיצוב:</strong> {loadError}
-            <p className="muted">ודא ששירותי הרקע פעילים ושההגשה לא נמחקה מהדיסק.</p>
+            <p className="muted">ודאי ששירותי הרקע פעילים ושההגשה לא נמחקה מהדיסק.</p>
           </div>
         )}
         <Document
           file={documentFile}
           onLoadSuccess={onDocumentLoadSuccess}
           onLoadError={onDocumentLoadError}
-          loading={<div className="muted pdf-loading">טוען תכנית עיצוב...</div>}
+          loading={<div className="muted pdf-loading">טוענת תכנית עיצוב...</div>}
           error={null}
         >
           {numPages && containerSize && (
@@ -192,7 +192,7 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
               renderTextLayer={true}
               renderAnnotationLayer={true}
               onLoadSuccess={onPageLoadSuccess}
-              loading={<div className="muted pdf-loading">טוען עמוד...</div>}
+              loading={<div className="muted pdf-loading">טוענת עמוד...</div>}
             />
           )}
         </Document>
