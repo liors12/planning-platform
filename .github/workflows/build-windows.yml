@@ -87,7 +87,7 @@ jobs:
               print("\nLikely cause: a .gitignore rule is eating them. See commit 3e3b48b.",
                     file=sys.stderr)
               sys.exit(1)
-          print(f"✓ all {len(REQUIRED_SEED_FILES)} required seed files present")
+          print(f"OK: all {len(REQUIRED_SEED_FILES)} required seed files present")
           PY
 
       - name: Build sidecar with PyInstaller (--onedir)
