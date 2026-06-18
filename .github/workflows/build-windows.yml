@@ -200,6 +200,30 @@ jobs:
             }
           }
 
+          # Seed discovery probe — catches the class of bug where seed
+          # _project.json files are silently absent from the installer (e.g.
+          # the .gitignore `projects/` rule that dropped them before commit
+          # 3e3b48b). /health passes either way; only /projects exposes
+          # whether the pilot was actually seeded into the DB.
+          $seeded = $false
+          $seedErr = ""
+          if ($passed) {
+            try {
+              $projResp = Invoke-WebRequest -UseBasicParsing `
+                -Uri http://127.0.0.1:17321/projects -TimeoutSec 5
+              $projects = $projResp.Content | ConvertFrom-Json
+              $count = @($projects).Count
+              Write-Host "✓ /projects returned $count row(s)"
+              if ($count -ge 1) {
+                $seeded = $true
+              } else {
+                $seedErr = "/projects returned an empty list — seed _project.json files likely missing from the installer (regression of the .gitignore bug fixed in 3e3b48b)."
+              }
+            } catch {
+              $seedErr = "/projects probe FAILED: $($_.Exception.Message)"
+            }
+          }
+
           Write-Host "`n─── sidecar.exe stdout ───"
           if (Test-Path $log) { Get-Content $log } else { Write-Host "(no stdout captured)" }
           Write-Host "`n─── sidecar.exe stderr ───"
@@ -211,6 +235,10 @@ jobs:
 
           if (-not $passed) {
             Write-Error "Boot smoke-test FAILED — sidecar did not respond to /health within 30s. See stdout/stderr above for the crash."
+            exit 1
+          }
+          if (-not $seeded) {
+            Write-Error "Boot smoke-test FAILED — $seedErr"
             exit 1
           }
           Write-Host "Boot smoke-test PASSED ✓"
