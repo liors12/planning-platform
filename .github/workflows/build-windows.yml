@@ -152,6 +152,69 @@ jobs:
           ls -la app/tauri/target/release/bundle/ || true
           ls -la app/tauri/target/release/bundle/nsis/ || true
 
+      - name: Boot smoke-test (sidecar on windows-latest — no SQLCipher)
+        # Exercises the EXACT failure surface that broke Ellen's first install
+        # (a SQLCipher-only PRAGMA crashed boot under the stdlib sqlite3
+        # fallback). windows-latest has no SQLCipher wheel available, so this
+        # is the same environment as a fresh user install. A green "build
+        # succeeded" only proves bundling — this proves the app actually boots.
+        # If the sidecar fails to respond on /health within 30s the release
+        # step never runs (no broken installer ever reaches users).
+        shell: pwsh
+        run: |
+          $exe = "app\tauri\binaries\sidecar\sidecar.exe"
+          if (-not (Test-Path $exe)) {
+            Write-Error "FAIL: sidecar.exe not found at $exe"
+            exit 1
+          }
+
+          $log = "sidecar-smoke.stdout.log"
+          $err = "sidecar-smoke.stderr.log"
+          # Isolate to a tempdir so the smoke test doesn't leave state under
+          # the runner's %LOCALAPPDATA% (matters if anyone caches builds).
+          $env:PLATFORM_DATA_DIR = Join-Path $env:RUNNER_TEMP "sidecar-smoke-data"
+          New-Item -ItemType Directory -Force -Path $env:PLATFORM_DATA_DIR | Out-Null
+          Write-Host "PLATFORM_DATA_DIR = $env:PLATFORM_DATA_DIR"
+
+          $proc = Start-Process -FilePath $exe `
+            -RedirectStandardOutput $log -RedirectStandardError $err `
+            -NoNewWindow -PassThru
+          Write-Host "Started sidecar.exe PID=$($proc.Id); polling /health for ≤30s"
+
+          $deadline = (Get-Date).AddSeconds(30)
+          $passed = $false
+          while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Milliseconds 500
+            if ($proc.HasExited) {
+              Write-Host "Sidecar exited early — code $($proc.ExitCode)"
+              break
+            }
+            try {
+              $resp = Invoke-WebRequest -UseBasicParsing `
+                -Uri http://127.0.0.1:17321/health -TimeoutSec 2
+              Write-Host "✓ /health responded $($resp.StatusCode) after $([int]((Get-Date) - $deadline.AddSeconds(-30)).TotalSeconds)s"
+              $passed = $true
+              break
+            } catch {
+              # Connection refused / not yet listening — loop and retry
+            }
+          }
+
+          Write-Host "`n─── sidecar.exe stdout ───"
+          if (Test-Path $log) { Get-Content $log } else { Write-Host "(no stdout captured)" }
+          Write-Host "`n─── sidecar.exe stderr ───"
+          if (Test-Path $err) { Get-Content $err } else { Write-Host "(no stderr captured)" }
+
+          if (-not $proc.HasExited) {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          }
+
+          if (-not $passed) {
+            Write-Error "Boot smoke-test FAILED — sidecar did not respond to /health within 30s. See stdout/stderr above for the crash."
+            exit 1
+          }
+          Write-Host "Boot smoke-test PASSED ✓"
+
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
