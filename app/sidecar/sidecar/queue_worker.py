@@ -430,10 +430,9 @@ class EngineQueue:
                 # base_dir kwarg routes every user-data lookup through
                 # cfg.data_dir (= %LOCALAPPDATA%\\Planning Platform\\) so we
                 # never read or write into _MEIPASS.
-                sys.path.insert(0, str(_RUN_AUDIT_PATH.parent.parent))
-                from scripts.run_audit import _run_render_only  # type: ignore
+                from compliance_engine.render import run_render_only
                 try:
-                    rc = _run_render_only(
+                    rc = run_render_only(
                         project_key=project_tava_number,
                         submission_version=normalized_version,
                         output_subdir="audit_outputs",
@@ -450,7 +449,7 @@ class EngineQueue:
                 if error_payload is None and rc != 0:
                     error_payload = {
                         "error_type": "RenderNonZeroExit",
-                        "error_message": f"in-process _run_render_only returned {rc}",
+                        "error_message": f"in-process run_render_only returned {rc}",
                     }
             else:
                 cmd = [
@@ -536,9 +535,8 @@ class EngineQueue:
         try:
             normalized_version = _normalize_submission_version(submission_version_string)
             # Local import to keep cold-start light (same pattern as render).
-            sys.path.insert(0, str(_RUN_AUDIT_PATH.parent.parent))
-            from scripts.run_audit import _run_export_excel  # type: ignore
-            rc = _run_export_excel(
+            from compliance_engine.render import run_export_excel
+            rc = run_export_excel(
                 project_key=project_tava_number,
                 submission_version=normalized_version,
                 output_subdir="audit_outputs",
@@ -547,7 +545,7 @@ class EngineQueue:
             if rc != 0:
                 error_payload = {
                     "error_type": "ExcelNonZeroExit",
-                    "error_message": f"_run_export_excel returned {rc}",
+                    "error_message": f"run_export_excel returned {rc}",
                 }
             else:
                 xlsx_path = (

@@ -310,125 +310,15 @@ def _run_from_html(html_path: Path, output_pdf: Path | None) -> int:
     return 0
 
 
-def _run_render_only(project_key: str, submission_version: str,
-                     output_subdir: str,
-                     comments_file: Path | None = None,
-                     base_dir: Path = ROOT) -> int:
-    """M7.7 --render-only: skip the engine, render straight from existing
-    audit_results.m4.json + project schema + submission metadata.
-
-    Use when only the report_generator templates or m4 JSON content has
-    changed and the analysis (engine compliance run, M1-M4 pipeline)
-    doesn't need to re-execute.
-
-    Phase 2b: with --comments-file PATH, merge discipline_comments rows
-    into §3 subsections at render time. Comments live only in the platform
-    DB and the snapshot file; audit_results.m4.json is never touched.
-
-    `base_dir` is the root under which `projects/` and `<output_subdir>/`
-    live. Defaults to ROOT for backward-compat with the dev repo + the
-    macOS subprocess path. The Windows in-process render branch (see
-    queue_worker._process_render_pdf) passes `cfg.data_dir` so user data
-    resolves under %LOCALAPPDATA%\\Planning Platform\\ instead of inside
-    the PyInstaller bundle.
-    """
-    from compliance_engine.report_generator import generate_audit_pdf
-
-    submission_dir = base_dir / "projects" / project_key / "submissions" / f"v{submission_version}"
-    metadata_path = submission_dir / "metadata.json"
-    if not metadata_path.exists():
-        print(f"ERROR: metadata not found at {metadata_path}", file=sys.stderr)
-        return 1
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
-
-    schema_path = base_dir / "projects" / project_key / f"project-schema-{project_key}-v2.json"
-    if not schema_path.exists():
-        schema_path = base_dir / f"project-schema-{project_key}-v2.json"
-    if not schema_path.exists():
-        print(f"ERROR: schema not found for {project_key}", file=sys.stderr)
-        return 1
-
-    output_dir = base_dir / output_subdir / project_key / f"v{submission_version}"
-    m4_path = output_dir / "audit_results.m4.json"
-    # Prefer the post-M4 sanitized JSON when present — it carries the same
-    # rows/verdicts as m4.json but with auditor-voice scrubbed out of §3
-    # discipline cells (see vision_scanner/m4/sanitizer_hebrew.py).
-    sanitized_path = output_dir / "audit_results.m4.sanitized.json"
-    if sanitized_path.exists():
-        source_path = sanitized_path
-    elif m4_path.exists():
-        source_path = m4_path
-    else:
-        print(f"ERROR: --render-only needs an existing {m4_path} "
-              f"(or {sanitized_path})", file=sys.stderr)
-        print(f"       Run a full audit first, then iterate with --render-only.", file=sys.stderr)
-        return 1
-
-    project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
-    results_for_pdf = json.loads(source_path.read_text(encoding="utf-8"))
-    pdf_out = output_dir / f"audit_report_{submission_version}.pdf"
-
-    discipline_comments = None
-    if comments_file is not None:
-        if not comments_file.exists():
-            print(f"ERROR: --comments-file not found: {comments_file}", file=sys.stderr)
-            return 1
-        discipline_comments = json.loads(comments_file.read_text(encoding="utf-8"))
-        print(f"--render-only: merging {len(discipline_comments)} comment(s) from {comments_file}")
-
-    print(f"--render-only: using {source_path}")
-    generate_audit_pdf(
-        audit_results=results_for_pdf,
-        project_schema=project_schema,
-        submission_metadata=metadata,
-        output_path=pdf_out,
-        discipline_comments=discipline_comments,
-    )
-    print(f"PDF report: {pdf_out}")
-    return 0
-
-
-def _run_export_excel(project_key: str, submission_version: str,
-                      output_subdir: str,
-                      base_dir: Path = ROOT) -> int:
-    """Export findings to an architect-response Excel workbook.
-
-    Uses the same source-preference rule as --render-only: prefer the
-    sanitized JSON (which the approved PDF was rendered from) and fall back
-    to the raw M4 JSON. Output filename includes the version suffix so
-    multiple submission versions can coexist in the same directory.
-
-    `base_dir` mirrors _run_render_only — pass cfg.data_dir for the
-    Windows-packaged sidecar so reads/writes land in
-    %LOCALAPPDATA%\\Planning Platform\\ instead of _MEIPASS.
-    """
-    from compliance_engine.excel_export import export_findings_to_excel
-
-    output_dir = base_dir / output_subdir / project_key / f"v{submission_version}"
-    sanitized_path = output_dir / "audit_results.m4.sanitized.json"
-    m4_path = output_dir / "audit_results.m4.json"
-    if sanitized_path.exists():
-        source_path = sanitized_path
-    elif m4_path.exists():
-        source_path = m4_path
-    else:
-        print(f"ERROR: --export-excel needs an existing {sanitized_path} "
-              f"(or {m4_path})", file=sys.stderr)
-        print(f"       Run a full audit first, then iterate with --export-excel.",
-              file=sys.stderr)
-        return 1
-
-    audit_results = json.loads(source_path.read_text(encoding="utf-8"))
-    xlsx_path = output_dir / f"הערות_סקירה_v{submission_version}.xlsx"
-
-    print(f"--export-excel: using {source_path}")
-    export_findings_to_excel(
-        audit_results=audit_results,
-        output_path=xlsx_path,
-        report_version=submission_version,
-    )
-    print(f"Excel export: {xlsx_path}")
-    return 0
+# Library-level entry points used to live here. They now live in
+# compliance_engine/render.py — a properly bundled module — so the sidecar's
+# in-process render path works under PyInstaller without the `scripts/`
+# import hack. CLI dispatch below re-uses them under their original names
+# so legacy `--render-only` and `--export-excel` invocations keep working.
+from compliance_engine.render import (
+    run_render_only as _run_render_only,
+    run_export_excel as _run_export_excel,
+)
 
 
 def main(argv: list[str] | None = None) -> int:
