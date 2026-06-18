@@ -108,19 +108,22 @@ def _seed_data_dir(cfg: Config) -> dict:
 def _discover_projects(cfg: Config, engine: Engine) -> dict:
     """Reconcile DB project rows with `<data_dir>/projects/*/_project.json`.
 
-    For each `_project.json` found on disk, insert a Project row if one
-    with that tava_number doesn't already exist. Never overwrites existing
-    rows — user edits via the UI win. The seed-copy step writes the JSON
-    files; this step turns them into queryable DB rows so GET /projects
-    surfaces them on first boot.
+    For each `_project.json` found on disk:
+      - If no row exists with that tava_number → INSERT a fresh row.
+      - If a row exists → UPDATE name_he / name_en / status in-place
+        whenever the JSON provides a non-empty value that differs from
+        the DB. This "heals" a manually-created project to match the
+        canonical descriptor once the seed lands next to it, without
+        ever clobbering UI edits with empty JSON fields.
 
-    Returns {"discovered": N, "inserted": M, "skipped_existing": K}.
+    Returns {"discovered": N, "inserted": M, "updated": U, "skipped_unchanged": S}.
     """
     projects_root = cfg.data_dir / "projects"
     if not projects_root.exists():
-        return {"discovered": 0, "inserted": 0, "skipped_existing": 0}
+        return {"discovered": 0, "inserted": 0, "updated": 0,
+                "skipped_unchanged": 0}
 
-    discovered = inserted = skipped = 0
+    discovered = inserted = updated = skipped = 0
     with Session(engine) as sess:
         for proj_dir in sorted(projects_root.iterdir()):
             if not proj_dir.is_dir():
@@ -141,27 +144,40 @@ def _discover_projects(cfg: Config, engine: Engine) -> dict:
                 log.warning("skip %s: _project.json missing tava_number or name_he",
                             descriptor)
                 continue
-            # Idempotent: skip if a non-archived row already exists for this
-            # tava. (Matches the partial-unique index in db.py.)
             existing = (sess.query(Project)
                             .filter(Project.tava_number == tava,
                                     Project.status != "archived")
                             .first())
-            if existing is not None:
-                skipped += 1
+            if existing is None:
+                sess.add(Project(
+                    tava_number=tava,
+                    name_he=name_he,
+                    name_en=payload.get("name_en"),
+                    address=payload.get("address"),
+                    status=payload.get("status") or "active",
+                ))
+                inserted += 1
                 continue
-            sess.add(Project(
-                tava_number=tava,
-                name_he=name_he,
-                name_en=payload.get("name_en"),
-                address=payload.get("address"),
-                status=payload.get("status") or "active",
-            ))
-            inserted += 1
-        if inserted:
+            # Heal: overwrite only when JSON provides a non-empty value
+            # that differs from the DB. Empty/missing JSON fields never
+            # clobber values the user typed in the UI.
+            changed = False
+            for field, json_val in (
+                ("name_he", name_he),
+                ("name_en", payload.get("name_en")),
+                ("status", payload.get("status")),
+            ):
+                if json_val and getattr(existing, field) != json_val:
+                    setattr(existing, field, json_val)
+                    changed = True
+            if changed:
+                updated += 1
+            else:
+                skipped += 1
+        if inserted or updated:
             sess.commit()
     return {"discovered": discovered, "inserted": inserted,
-            "skipped_existing": skipped}
+            "updated": updated, "skipped_unchanged": skipped}
 
 
 @asynccontextmanager
