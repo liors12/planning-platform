@@ -18,6 +18,7 @@ NOT in scope here (Phase 2b+):
 """
 from __future__ import annotations
 
+import json
 import logging
 import os
 import shutil
@@ -29,12 +30,15 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import text
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session
 
 from .comments import make_routers as make_comment_routers
 from .config import VERSION, Config, load
 from .db import build_engine, initialize
 from .jobs.dispatch import JobError, run_job
 from .jobs_routes import make_router as make_jobs_router
+from .models import Project
 from .projects import make_router as make_projects_router
 from .queue_worker import EngineQueue
 from .submissions import make_routers as make_submission_routers
@@ -101,13 +105,75 @@ def _seed_data_dir(cfg: Config) -> dict:
             "skipped_existing": skipped}
 
 
+def _discover_projects(cfg: Config, engine: Engine) -> dict:
+    """Reconcile DB project rows with `<data_dir>/projects/*/_project.json`.
+
+    For each `_project.json` found on disk, insert a Project row if one
+    with that tava_number doesn't already exist. Never overwrites existing
+    rows — user edits via the UI win. The seed-copy step writes the JSON
+    files; this step turns them into queryable DB rows so GET /projects
+    surfaces them on first boot.
+
+    Returns {"discovered": N, "inserted": M, "skipped_existing": K}.
+    """
+    projects_root = cfg.data_dir / "projects"
+    if not projects_root.exists():
+        return {"discovered": 0, "inserted": 0, "skipped_existing": 0}
+
+    discovered = inserted = skipped = 0
+    with Session(engine) as sess:
+        for proj_dir in sorted(projects_root.iterdir()):
+            if not proj_dir.is_dir():
+                continue
+            descriptor = proj_dir / "_project.json"
+            if not descriptor.exists():
+                continue
+            discovered += 1
+            try:
+                payload = json.loads(descriptor.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError) as exc:
+                log.warning("skip %s: unreadable _project.json (%s)",
+                            descriptor, exc)
+                continue
+            tava = payload.get("tava_number")
+            name_he = payload.get("name_he")
+            if not tava or not name_he:
+                log.warning("skip %s: _project.json missing tava_number or name_he",
+                            descriptor)
+                continue
+            # Idempotent: skip if a non-archived row already exists for this
+            # tava. (Matches the partial-unique index in db.py.)
+            existing = (sess.query(Project)
+                            .filter(Project.tava_number == tava,
+                                    Project.status != "archived")
+                            .first())
+            if existing is not None:
+                skipped += 1
+                continue
+            sess.add(Project(
+                tava_number=tava,
+                name_he=name_he,
+                name_en=payload.get("name_en"),
+                address=payload.get("address"),
+                status=payload.get("status") or "active",
+            ))
+            inserted += 1
+        if inserted:
+            sess.commit()
+    return {"discovered": discovered, "inserted": inserted,
+            "skipped_existing": skipped}
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global DB_STATUS
     DB_STATUS = initialize(ENGINE)
     seed_report = _seed_data_dir(CFG)
-    log.info("sidecar starting on http://%s:%d (data_dir=%s, db=%s, seed=%s)",
-             CFG.bind_host, CFG.bind_port, CFG.data_dir, DB_STATUS, seed_report)
+    discovery_report = _discover_projects(CFG, ENGINE)
+    log.info("sidecar starting on http://%s:%d "
+             "(data_dir=%s, db=%s, seed=%s, projects=%s)",
+             CFG.bind_host, CFG.bind_port, CFG.data_dir,
+             DB_STATUS, seed_report, discovery_report)
     await QUEUE.start()
     yield
     await QUEUE.stop()
