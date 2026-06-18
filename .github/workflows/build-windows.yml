@@ -62,6 +62,34 @@ jobs:
           ls weasyprint_bundle | head -20
           rm -rf weasyprint-zip weasyprint-windows.zip
 
+      - name: Verify required seed files are present before bundling
+        # Catches the .gitignore-eats-seed-files class of bug (fixed in
+        # 3e3b48b) BEFORE PyInstaller runs, not 20 minutes later in the
+        # boot smoke-test. Cheap, explicit, hard to trick — if any of
+        # these are missing from the checkout, the build aborts here
+        # with a clear message instead of producing a silently-broken
+        # installer.
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          REQUIRED_SEED_FILES = [
+              "app/sidecar/seed/projects/407-1048248/_project.json",
+              "app/sidecar/seed/projects/407-1048248/project-schema-407-1048248-v2.json",
+              "app/sidecar/seed/projects/407-1048248/submissions/v24.3/metadata.json",
+          ]
+          missing = [f for f in REQUIRED_SEED_FILES if not Path(f).exists()]
+          if missing:
+              print("FAIL: required seed files missing from checkout:", file=sys.stderr)
+              for f in missing:
+                  print(f"  - {f}", file=sys.stderr)
+              print("\nLikely cause: a .gitignore rule is eating them. See commit 3e3b48b.",
+                    file=sys.stderr)
+              sys.exit(1)
+          print(f"✓ all {len(REQUIRED_SEED_FILES)} required seed files present")
+          PY
+
       - name: Build sidecar with PyInstaller (--onedir)
         # Uses the existing backend.spec which already has the right
         # hidden-imports + binary collection set up. Output lands at
@@ -214,10 +242,21 @@ jobs:
               $projects = $projResp.Content | ConvertFrom-Json
               $count = @($projects).Count
               Write-Host "✓ /projects returned $count row(s)"
-              if ($count -ge 1) {
-                $seeded = $true
-              } else {
+              if ($count -lt 1) {
                 $seedErr = "/projects returned an empty list — seed _project.json files likely missing from the installer (regression of the .gitignore bug fixed in 3e3b48b)."
+              } else {
+                # /projects ≥1 proves _project.json was bundled + discovered.
+                # Also assert project-schema-*.json landed on disk, since the
+                # engine needs it to run — a missing schema would let the app
+                # boot looking healthy but blow up on the first engine run.
+                $schemaPath = Join-Path $env:PLATFORM_DATA_DIR `
+                  "projects\407-1048248\project-schema-407-1048248-v2.json"
+                if (Test-Path $schemaPath) {
+                  Write-Host "✓ project-schema present at $schemaPath"
+                  $seeded = $true
+                } else {
+                  $seedErr = "project-schema file missing on disk at $schemaPath — seed copy bundled _project.json but not the schema."
+                }
               }
             } catch {
               $seedErr = "/projects probe FAILED: $($_.Exception.Message)"
