@@ -392,17 +392,6 @@ export async function renderSubmission(submissionId: number): Promise<JobOut> {
   );
 }
 
-/** Render-only PDF that does NOT require comments (vs. /render above,
- * which is the comments-aware path used by CommentsTab). */
-export async function renderReport(submissionId: number): Promise<JobOut> {
-  return jsonOrThrow<JobOut>(
-    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/render-report`, {
-      method: "POST",
-    }),
-    `POST /submissions/${submissionId}/render-report`,
-  );
-}
-
 export async function exportExcel(submissionId: number): Promise<JobOut> {
   return jsonOrThrow<JobOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/export-excel`, {

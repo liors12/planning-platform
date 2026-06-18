@@ -230,31 +230,10 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 raise HTTPException(404, f"submission {submission_id} not found")
             return _hydrate(sub)
 
-    # ── POST /submissions/{id}/render-report ───────────────────────────
-    # Re-render the PDF from existing audit_results, WITHOUT requiring
-    # comments (unlike /submissions/{id}/render in comments.py). Gated on
-    # the on-disk audit_results probe — not findings_json_path — so seeded
-    # pilot submissions with no DB findings record still work.
-
-    @_subs_router.post(
-        "/{submission_id}/render-report",
-        response_model=JobOut,
-        status_code=202,
-    )
-    def render_report(submission_id: int) -> JobOut:
-        with _session() as sess:
-            sub = sess.get(Submission, submission_id)
-            if sub is None:
-                raise HTTPException(404, f"submission {submission_id} not found")
-            tava = sub.project.tava_number
-            if _audit_results_path(cfg, tava, sub.version_string) is None:
-                raise HTTPException(
-                    409,
-                    f"submission {submission_id} has no audit_results.m4.json on disk; "
-                    "run the engine first.",
-                )
-        job = queue.enqueue_render(submission_id)
-        return JobOut(**job.to_dict())
+    # NOTE: PDF re-render goes through comments.py's POST /submissions/{id}/render
+    # — single source of truth, comments-aware by default. That endpoint
+    # also probes audit_results on disk (not the DB findings flag), so it
+    # works for seeded pilots without a per-install engine run.
 
     # ── POST /submissions/{id}/export-excel ────────────────────────────
 

@@ -88,7 +88,7 @@ def _validate_status(status: str) -> None:
 
 # ─── Router factory ──────────────────────────────────────────────────────────
 
-def make_routers(engine: Engine, queue: EngineQueue) -> tuple[APIRouter, APIRouter]:
+def make_routers(engine: Engine, queue: EngineQueue, cfg) -> tuple[APIRouter, APIRouter]:
     """Returns (comments_router, disciplines_router).
 
     comments_router mounts at /submissions and owns POST/GET/PATCH/DELETE
@@ -222,15 +222,26 @@ def make_routers(engine: Engine, queue: EngineQueue) -> tuple[APIRouter, APIRout
     def render_submission(submission_id: int) -> JobOut:
         """Trigger a --render-only re-render of the PDF, with the current
         comments merged in. Returns 202 + job_id; poll /jobs/{id} for status.
+
+        Precondition probes the FILE on disk (audit_results.m4.sanitized.json
+        or .m4.json fallback) rather than sub.findings_json_path — that DB
+        field is only set when the engine ran inside this install, but
+        seeded pilots arrive with results-on-disk and a NULL findings_json_path.
+        Logic mirrors submissions._audit_results_path so the gate matches
+        the frontend's "has_audit_results" badge.
         """
         with _session() as sess:
             sub = _require_submission(sess, submission_id)
-            if sub.findings_json_path is None:
-                raise HTTPException(
-                    409,
-                    f"submission {submission_id} has no engine output yet "
-                    f"(status={sub.status!r}). Run /run-engine first.",
-                )
+            tava = sub.project.tava_number
+            version = sub.version_string
+        # Local import to avoid an import cycle with submissions.py.
+        from .submissions import _audit_results_path
+        if _audit_results_path(cfg, tava, version) is None:
+            raise HTTPException(
+                409,
+                f"submission {submission_id} has no audit_results.m4.json on disk; "
+                "run the engine first.",
+            )
         job = queue.enqueue_render(submission_id)
         return JobOut(**job.to_dict())
 

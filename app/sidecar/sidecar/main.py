@@ -312,7 +312,7 @@ app.include_router(_subs_router)
 app.include_router(make_jobs_router(QUEUE))
 
 # Phase 2b Module D — discipline comments + render trigger.
-_comments_router, _disciplines_router = make_comment_routers(ENGINE, QUEUE)
+_comments_router, _disciplines_router = make_comment_routers(ENGINE, QUEUE, CFG)
 app.include_router(_comments_router)
 app.include_router(_disciplines_router)
 

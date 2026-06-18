@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  exportExcel, listSubmissions, pollJobUntilDone, renderReport,
+  exportExcel, listSubmissions, pollJobUntilDone, renderSubmission,
   reportPdfUrl, reportXlsxUrl, runEngine, uploadSubmission,
   type ProjectOut, type SubmissionOut,
 } from "../api";
@@ -116,7 +116,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     setOutputErr((prev) => ({ ...prev, [submissionId]: "" }));
     try {
       const job = kind === "pdf"
-        ? await renderReport(submissionId)
+        ? await renderSubmission(submissionId)
         : await exportExcel(submissionId);
       const terminal = await pollJobUntilDone(job.id, () => {}, 1000, 120_000);
       if (terminal.status !== "completed") {
