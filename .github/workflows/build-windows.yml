@@ -6,6 +6,9 @@ on:
     tags:
       - 'v*'                   # also triggers on version tags
 
+permissions:
+  contents: write          # softprops/action-gh-release needs write to create tags + releases
+
 jobs:
   build-windows:
     runs-on: windows-latest
@@ -156,3 +159,39 @@ jobs:
           path: app/tauri/target/release/bundle/nsis/*.exe
           retention-days: 30
           if-no-files-found: error
+
+      - name: Compute release tag + title
+        # Tag form: v<version>-<UTC-date>-<short-sha>, e.g.
+        # v0.1.0-20260612-4dee986. We pull <version> from tauri.conf.json so
+        # bumping the app version in one place flows through to the tag.
+        # Outputs go to $GITHUB_ENV so the next step can read them.
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(grep -oE '"version": *"[^"]+"' app/tauri/tauri.conf.json \
+                    | head -1 | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+          short=$(git rev-parse --short HEAD)
+          date_utc=$(date -u +%Y%m%d)
+          date_display=$(date -u +%Y-%m-%d)
+          tag="v${version}-${date_utc}-${short}"
+          title="Planning Platform — Build ${date_display}"
+          echo "RELEASE_TAG=${tag}"     >> "$GITHUB_ENV"
+          echo "RELEASE_TITLE=${title}" >> "$GITHUB_ENV"
+          echo "Tag:   ${tag}"
+          echo "Title: ${title}"
+
+      - name: Create GitHub Release (pre-release)
+        # Pre-release while we're still iterating on the pilot — the badge on
+        # the releases page reads "Pre-release" so Ellen knows this isn't a
+        # stamped 1.0. softprops/action-gh-release creates the git tag for
+        # us; needs `contents: write` on the job (set at workflow root).
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TITLE }}
+          # Hebrew body — short install line for Ellen:
+          # "Download the installer, run it, no admin permissions required."
+          body: "הורד את קובץ ההתקנה, הפעל אותו, ואין צורך בהרשאות מנהל."
+          files: app/tauri/target/release/bundle/nsis/*.exe
+          prerelease: true
+          fail_on_unmatched_files: true
