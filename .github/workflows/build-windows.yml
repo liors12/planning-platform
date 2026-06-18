@@ -347,9 +347,14 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_TAG }}
           name: ${{ env.RELEASE_TITLE }}
-          # Hebrew body — short install line for Ellen:
-          # "Download the installer, run it, no admin permissions required."
-          body: "הורד את קובץ ההתקנה, הפעל אותו, ואין צורך בהרשאות מנהל."
+          # Hebrew install instructions for Ellen. Three lines: where to
+          # click, what to expect, and what to do when SmartScreen
+          # flags the unsigned binary on first launch.
+          body: |
+            📥 להורדת קובץ ההתקנה, לחצי על הקובץ למטה.
+            הפעילי את הקובץ שירד — אין צורך בהרשאות מנהל.
+
+            אם מופיעה הודעת "Windows protected your PC" — לחצי על "More info" ואז "Run anyway".
           files: app/tauri/target/release/bundle/nsis/*.exe
           prerelease: true
           fail_on_unmatched_files: true
