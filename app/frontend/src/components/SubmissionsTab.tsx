@@ -81,7 +81,18 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       refresh();
       onSubmissionsChanged();
     } catch (e) {
-      setErr(String(e));
+      // 409 = duplicate version — show as an inline validation message
+      // (red text under the button), not as a top-level error banner.
+      // Real failures (500, network, …) still go to the error banner so
+      // they don't look like user mistakes.
+      const raw = String(e);
+      if (/HTTP 409/.test(raw)) {
+        setValidationErr(
+          `גרסה ${version.trim()} כבר הועלתה. לעדכון, מחקי את הגרסה הקיימת תחילה.`
+        );
+      } else {
+        setErr(raw);
+      }
     } finally {
       setUploading(false);
       setUploadProgress("");
