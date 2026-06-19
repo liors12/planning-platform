@@ -778,6 +778,69 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+      # ── UI SMOKE GATE (warn-only) ──────────────────────────────────────
+      # Phase 1 of the Real-WebView2 UI gate. Reinstalls from the NSIS
+      # installer (the previous step uninstalled in finally), wipes data,
+      # launches the .exe with WebView2 CDP open, and drives flows 1–4
+      # via Playwright over CDP. Warn-only for the first 1–2 weeks per the
+      # rollout plan — failures here surface but don't block publishing.
+      # Promoted to a hard gate once it's stayed green across several
+      # builds with no flaky failures. See tests/e2e-ui/README.md.
+      - name: UI smoke gate (real WebView2, warn-only)
+        id: ui_smoke
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+
+          # Re-install (the e2e smoke step uninstalled in finally).
+          $installer = Get-ChildItem `
+            "app\tauri\target\release\bundle\nsis\Planning Platform*x64-setup.exe" `
+            | Select-Object -First 1
+          if (-not $installer) { throw "no NSIS installer found in bundle/nsis/" }
+          Write-Host "Installer: $($installer.FullName)"
+          Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+          if (-not (Test-Path $installDir)) {
+            throw "install dir missing after NSIS /S: $installDir"
+          }
+
+          # Install Playwright test deps. We DON'T `playwright install`
+          # browsers — connectOverCDP attaches to WebView2, no bundled
+          # Chromium needed.
+          Push-Location tests\e2e-ui
+          npm ci --no-audit --no-fund
+          npx playwright test --reporter=list
+          $exit = $LASTEXITCODE
+          Pop-Location
+          if ($exit -ne 0) {
+            Write-Host "::warning::UI smoke gate FAILED (warn-only) — see Playwright report artifact"
+            exit $exit
+          }
+          Write-Host "UI smoke gate PASSED ✓"
+
+      - name: UI smoke — uninstall app after test
+        if: always()
+        shell: pwsh
+        run: |
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          $uninstaller = Join-Path $installDir "uninstall.exe"
+          if (Test-Path $uninstaller) {
+            Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
+            Start-Sleep -Seconds 3
+          }
+
+      - name: UI smoke — upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-report
+          path: |
+            tests/e2e-ui/playwright-report/**
+            tests/e2e-ui/test-results/**
+          if-no-files-found: ignore
+          retention-days: 14
+
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:

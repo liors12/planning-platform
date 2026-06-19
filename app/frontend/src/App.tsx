@@ -100,6 +100,7 @@ function Home({ refreshKey, onOpenDiagnostics }: { refreshKey: number; onOpenDia
             {recent.map((p) => (
               <li key={p.id}>
                 <a className="home-recent-link"
+                   data-testid={`home-project-link-${p.tava_number}`}
                    href={buildHash({ kind: "project", projectId: p.id })}>
                   <div className="home-recent-name">{p.name_he}</div>
                   <div className="home-recent-meta">

@@ -343,7 +343,8 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
             && project.has_schema
             && (sub.status === "uploaded" || sub.status === "failed" || sub.status === "complete");
           return (
-            <article key={sub.id} className="submission-card">
+            <article key={sub.id} className="submission-card"
+              data-testid={`submission-card-${sub.version_string}`}>
               <header className="submission-header">
                 <div>
                   <h4>
@@ -401,6 +402,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                     <>
                       <button
                         className="ghost-btn"
+                        data-testid={`generate-report-pdf-${sub.version_string}`}
                         onClick={() => onGenerateOutput(sub.id, "pdf")}
                         disabled={busy}
                       >
@@ -410,6 +412,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                       </button>
                       <button
                         className="ghost-btn"
+                        data-testid={`generate-report-xlsx-${sub.version_string}`}
                         onClick={() => onGenerateOutput(sub.id, "xlsx")}
                         disabled={busy}
                       >
@@ -475,7 +478,8 @@ function OutputBanner({
 
   if (status.kind === "working") {
     return (
-      <div className="output-banner output-working" role="status" aria-live="polite">
+      <div className="output-banner output-working" role="status" aria-live="polite"
+           data-testid={`output-banner-working-${status.what}`}>
         <span className="spinner" aria-hidden="true" />
         <span>{labelFor(status.what, "working")}</span>
       </div>
@@ -484,10 +488,13 @@ function OutputBanner({
 
   if (status.kind === "success") {
     return (
-      <div className="output-banner output-success" role="status" aria-live="polite">
+      <div className="output-banner output-success" role="status" aria-live="polite"
+           data-testid={`output-banner-success-${status.what}`}>
         <span className="output-icon" aria-hidden="true">✓</span>
         <span className="output-msg">{labelFor(status.what, "success")}</span>
-        <button className="ghost-btn small" type="button" onClick={() => onOpen(status.what)}>
+        <button className="ghost-btn small" type="button"
+                data-testid={`open-output-${status.what}`}
+                onClick={() => onOpen(status.what)}>
           {status.what === "pdf" ? "פתחי דו״ח" : "פתחי אקסל"}
         </button>
         <button className="ghost-btn small" type="button" onClick={() => onReveal(status.what)}>
@@ -500,7 +507,8 @@ function OutputBanner({
 
   // error
   return (
-    <div className="output-banner output-error" role="alert">
+    <div className="output-banner output-error" role="alert"
+         data-testid={`output-banner-error-${status.what}`}>
       <span className="output-icon" aria-hidden="true">✗</span>
       <span className="output-msg">{status.friendly}</span>
       <button className="output-dismiss" type="button" aria-label="סגרי" onClick={onDismiss}>✕</button>
