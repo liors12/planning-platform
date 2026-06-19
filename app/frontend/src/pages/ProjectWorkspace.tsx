@@ -68,10 +68,16 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
     setLatestCompleteSub(null);
     listSubmissions(project.id)
       .then((subs) => {
-        const completed = subs.find((s) => s.status === "complete");
-        if (!completed) return;
-        setLatestCompleteSub(completed);
-        if (tab === "findings") return getFindings(completed.id);
+        // Comments tab: pick the newest submission that has analyzed
+        // data on disk, regardless of stuck status labels. Findings tab
+        // keeps the stricter rule — needs the engine's "complete"
+        // verdict before showing the structured findings UI.
+        const picked = tab === "comments"
+          ? subs.find((s) => s.has_audit_results)
+          : subs.find((s) => s.status === "complete");
+        if (!picked) return;
+        setLatestCompleteSub(picked);
+        if (tab === "findings") return getFindings(picked.id);
       })
       .then((data) => { if (tab === "findings" && data !== undefined) setFindings(data); })
       .catch((e) => setFindingsErr(String(e)));

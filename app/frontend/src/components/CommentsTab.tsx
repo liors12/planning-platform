@@ -42,7 +42,14 @@ interface Toast {
 
 export function CommentsTab({ project, submission }: Props) {
   // ── Gate ──────────────────────────────────────────────────────────────
-  if (!submission || submission.status !== "complete") {
+  // Gate on has_audit_results, not status === "complete". A stuck status
+  // label (e.g. left "failed" by an earlier render error) used to lock
+  // the tab even though all downstream data — audit_results.m4.json,
+  // PDF, Excel — was present and the comments render path was healthy.
+  // Today Ellen hit exactly that on v24.3: status="failed",
+  // has_audit_results=true. The presence of analyzed data is the real
+  // precondition for adding referent comments.
+  if (!submission || !submission.has_audit_results) {
     return (
       <div className="card placeholder-card">
         <span className="placeholder-phase">לא זמין</span>
