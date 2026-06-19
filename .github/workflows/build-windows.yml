@@ -525,6 +525,35 @@ jobs:
               $sizeGrew "before=$sizeBefore after=$sizeAfter delta=$($sizeAfter - $sizeBefore)"
             if (-not $sizeGrew) { Fail "comment text did not appear in re-rendered PDF" }
 
+            # ── 6.5. PERSISTENT ERROR LOG ─────────────────────────────
+            # Force the exact failure Ellen hit (missing metadata.json)
+            # and assert the new rotating file handler captured the
+            # traceback to %LOCALAPPDATA%\Planning Platform\logs\errors.log.
+            # Catches a regression where the handler silently detaches
+            # in the frozen build — we'd never know until the next bug.
+            $metaPath = Join-Path $smokeData "projects\407-1048248\submissions\v24.3\metadata.json"
+            $logPath  = Join-Path $smokeData "logs\errors.log"
+            Record "errlog: errors.log exists" (Test-Path $logPath) "$logPath"
+            if (-not (Test-Path $logPath)) {
+              Fail "no errors.log written under data_dir/logs/"
+            }
+            Remove-Item $metaPath -Force
+            $failJob = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/render"
+            $failTerminal = Wait-ForJob $failJob.id 60
+            Record "errlog: render failed (expected)" `
+              ($failTerminal.status -eq "failed") "status=$($failTerminal.status)"
+            # Give the rotating handler a moment to flush.
+            Start-Sleep -Seconds 1
+            $logContent = Get-Content $logPath -Raw -ErrorAction SilentlyContinue
+            $captured = $logContent -match "metadata not found"
+            Record "errlog: captured 'metadata not found' error" `
+              $captured ("log size=" + ($logContent.Length) + " bytes")
+            if (-not $captured) {
+              Write-Host "── errors.log contents ──"
+              Write-Host $logContent
+              Fail "errors.log did not capture the render failure"
+            }
           }
           catch {
             Record "FATAL" $false $_.Exception.Message
@@ -576,6 +605,7 @@ jobs:
           $logs = @(
             (Join-Path $env:RUNNER_TEMP "e2e-sidecar.stderr.log"),
             (Join-Path $env:RUNNER_TEMP "e2e-sidecar.stdout.log"),
+            (Join-Path $env:RUNNER_TEMP "e2e-smoke-data\logs\errors.log"),
             "sidecar-smoke.stderr.log",
             "sidecar-smoke.stdout.log"
           )
@@ -597,6 +627,7 @@ jobs:
           path: |
             ${{ runner.temp }}/e2e-sidecar.stdout.log
             ${{ runner.temp }}/e2e-sidecar.stderr.log
+            ${{ runner.temp }}/e2e-smoke-data/logs/errors.log
             sidecar-smoke.stdout.log
             sidecar-smoke.stderr.log
           if-no-files-found: ignore
