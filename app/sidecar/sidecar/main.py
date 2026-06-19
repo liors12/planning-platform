@@ -23,6 +23,7 @@ import logging
 import os
 import shutil
 import sys
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -54,6 +55,7 @@ CFG = load()
 ENGINE = build_engine(CFG.db_path, CFG.db_key)
 DB_STATUS: dict = {}
 QUEUE = EngineQueue(cfg=CFG, engine=ENGINE)
+_STARTED_AT_MONOTONIC = time.monotonic()
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -259,6 +261,172 @@ def health() -> HealthResponse:
         data_dir=str(CFG.data_dir),
         max_concurrent_jobs=CFG.max_concurrent_jobs,
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# /diagnostics — single-call health report
+# Returns a structured snapshot of every check the UI's "system status" panel
+# needs: sidecar up, DB connected, seed files on disk, weasyprint present,
+# render+excel readiness. Aggregates per-project file checks so a missing seed
+# file surfaces as a specific error string instead of a silent "render failed
+# at run time" later. No auth — local 127.0.0.1 binding (spec § 8).
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def _check_file(path: Path) -> dict:
+    return {"path": str(path), "exists": path.exists()}
+
+
+def _resolve_weasyprint_path() -> dict:
+    """Reproduces compliance_engine.report_generator._resolve_weasyprint_exe
+    without importing it (avoids loading the engine for a healthcheck).
+    Same lookup order: env var → exe_dir/weasyprint → exe_dir.parent/weasyprint.
+    """
+    env_path = os.environ.get("WEASYPRINT_EXE_PATH")
+    if env_path:
+        p = Path(env_path)
+        if p.is_file():
+            return {"path": str(p), "exists": True}
+    exe_dir = Path(sys.executable).resolve().parent
+    candidates = [
+        exe_dir / "weasyprint" / "weasyprint.exe",
+        exe_dir.parent / "weasyprint" / "weasyprint.exe",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return {"path": str(c), "exists": True}
+    # Report the most-likely Tauri-layout path so the error is actionable.
+    return {"path": str(candidates[1]), "exists": False}
+
+
+def _audit_results_for(tava: str, version: str) -> Path | None:
+    out_dir = CFG.data_dir / "audit_outputs" / tava / f"v{version}"
+    for leaf in ("audit_results.m4.sanitized.json", "audit_results.m4.json"):
+        p = out_dir / leaf
+        if p.exists():
+            return p
+    return None
+
+
+@app.get("/diagnostics")
+def diagnostics() -> dict:
+    errors: list[str] = []
+
+    # ── sidecar ──────────────────────────────────────────────────────────
+    sidecar_block = {
+        "running": True,
+        "uptime_seconds": int(time.monotonic() - _STARTED_AT_MONOTONIC),
+        "port": CFG.bind_port,
+    }
+
+    # ── db ───────────────────────────────────────────────────────────────
+    db_connected = False
+    # `backend` is derived from db.py's _BACKEND_NAME at import time
+    # ("sqlcipher" or "sqlite3"); DB_STATUS only captures runtime PRAGMA
+    # output, so check the SQLAlchemy URL dialect for a stable read.
+    backend_name = ENGINE.dialect.name  # "sqlite" for both backends
+    db_block = {
+        "connected": False,
+        "backend": backend_name,
+        "encrypted": bool(DB_STATUS.get("cipher_version")),
+        "path": str(CFG.db_path),
+    }
+    try:
+        with ENGINE.begin() as conn:
+            conn.execute(text("SELECT 1"))
+        db_connected = True
+        db_block["connected"] = True
+    except Exception as exc:
+        errors.append(f"DB connection failed: {exc}")
+
+    # ── projects ─────────────────────────────────────────────────────────
+    project_count = 0
+    project_names: list[str] = []
+    project_rows: list = []
+    if db_connected:
+        try:
+            with Session(ENGINE) as sess:
+                project_rows = (
+                    sess.query(Project)
+                        .filter(Project.status != "archived")
+                        .all()
+                )
+                project_count = len(project_rows)
+                project_names = [p.name_he for p in project_rows]
+        except Exception as exc:
+            errors.append(f"failed to read projects: {exc}")
+
+    # ── seed files (for the first project, if any) ───────────────────────
+    # Aggregated readiness over ALL projects is computed below; this block
+    # gives the UI concrete paths to display.
+    seed_block: dict = {
+        "schema_file":        {"path": None, "exists": False},
+        "metadata_file":      {"path": None, "exists": False},
+        "audit_results_file": {"path": None, "exists": False},
+    }
+    if project_rows:
+        first = project_rows[0]
+        tava = first.tava_number
+        proj_dir = CFG.data_dir / "projects" / tava
+        schema_p = proj_dir / f"project-schema-{tava}-v2.json"
+        seed_block["schema_file"] = _check_file(schema_p)
+        if not schema_p.exists():
+            errors.append(f"schema missing for {tava} at {schema_p}")
+        # Pick whichever submission version has metadata.json on disk; the
+        # seed ships v24.3, but new uploads create their own dirs.
+        subs_root = proj_dir / "submissions"
+        if subs_root.exists():
+            for sub_dir in sorted(subs_root.iterdir()):
+                meta = sub_dir / "metadata.json"
+                if meta.exists():
+                    seed_block["metadata_file"] = _check_file(meta)
+                    audit = _audit_results_for(tava, sub_dir.name.lstrip("v"))
+                    if audit:
+                        seed_block["audit_results_file"] = _check_file(audit)
+                    break
+        if not seed_block["metadata_file"]["exists"]:
+            errors.append(f"no submission metadata.json found under {subs_root}")
+        if not seed_block["audit_results_file"]["exists"]:
+            errors.append(f"no audit_results found for {tava}")
+
+    # ── weasyprint ───────────────────────────────────────────────────────
+    weasy_block = _resolve_weasyprint_path()
+    if not weasy_block["exists"]:
+        errors.append(f"weasyprint.exe not found at {weasy_block['path']}")
+
+    # ── readiness ────────────────────────────────────────────────────────
+    any_audit_results = False
+    if project_rows:
+        for p in project_rows:
+            for sub_dir in (CFG.data_dir / "projects" / p.tava_number
+                            / "submissions").glob("v*"):
+                if _audit_results_for(p.tava_number, sub_dir.name.lstrip("v")):
+                    any_audit_results = True
+                    break
+            if any_audit_results:
+                break
+    excel_ready = any_audit_results
+    render_ready = any_audit_results and weasy_block["exists"]
+
+    # ── overall status ───────────────────────────────────────────────────
+    if not db_connected:
+        status = "error"
+    elif errors:
+        status = "degraded"
+    else:
+        status = "healthy"
+
+    return {
+        "status": status,
+        "sidecar": sidecar_block,
+        "db": db_block,
+        "seed": seed_block,
+        "projects": {"count": project_count, "names": project_names},
+        "weasyprint": weasy_block,
+        "render_ready": render_ready,
+        "excel_ready": excel_ready,
+        "errors": errors,
+    }
 
 
 # ─────────────────────────────────────────────────────────────────────────────
