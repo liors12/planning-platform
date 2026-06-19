@@ -292,6 +292,28 @@ jobs:
         # the SQLCipher cipher_version crash, and any Tauri/NSIS layout
         # drift between staged and installed binaries.
         #
+        # COVERAGE MAP — each user-flow stage maps to specific Record() calls:
+        #   1. Install → boot → seed → discovery
+        #        install: NSIS /S, install dir, sidecar.exe, weasyprint.exe,
+        #        shell exe, boot: /health 200, boot: seed projects/...,
+        #        boot: /projects >= 1
+        #   2. Upload submission
+        #        submission: POST created v24.3 row,
+        #        submission: has_audit_results == true
+        #   3. Render PDF → download → verify
+        #        render: job completed, render: report.pdf body > 10KB,
+        #        render: PDF page count >= 25
+        #   4. Export Excel → download → verify
+        #        excel: job completed, excel: report.xlsx body > 5KB
+        #   5. Post a comment → re-render → verify comment appears
+        #        comments: POST created, comments: GET >= 1,
+        #        comments: re-render completed,
+        #        comments: re-rendered PDF is larger than initial
+        # Every Record() call that fails prints one line
+        # `✗ <stage>: <name> :: <reason>` to the step output (with concrete
+        # values like got=27 or status=failed); the final results table at
+        # the end summarizes pass/fail for all assertions.
+        #
         # Runs against the SAME installer artifact that the release step
         # would publish — if any assertion here fails, the artifact never
         # uploads and no release is cut. Ellen never sees a broken build.
