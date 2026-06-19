@@ -149,6 +149,47 @@ export async function getHealth(): Promise<HealthResponse> {
   );
 }
 
+// ── Diagnostics ───────────────────────────────────────────────────────────
+
+export type DiagnosticsStatus = "healthy" | "degraded" | "error";
+
+export interface FileCheck {
+  path: string;
+  exists: boolean;
+}
+
+export interface DiagnosticsResponse {
+  status: DiagnosticsStatus;
+  sidecar: { running: boolean; uptime_seconds: number; port: number };
+  db: { connected: boolean; backend: string; encrypted: boolean; path: string };
+  seed: {
+    schema_file: FileCheck;
+    metadata_file: FileCheck;
+    audit_results_file: FileCheck;
+  };
+  projects: { count: number; names: string[] };
+  weasyprint: FileCheck;
+  render_ready: boolean;
+  excel_ready: boolean;
+  errors: string[];
+}
+
+export async function getDiagnostics(): Promise<DiagnosticsResponse> {
+  return jsonOrThrow<DiagnosticsResponse>(
+    await fetchOrThrow(`${SIDECAR_BASE}/diagnostics`),
+    "/diagnostics",
+  );
+}
+
+/** True iff the error looks like the sidecar is unreachable (network
+ * failure, ECONNREFUSED, etc.) rather than a 4xx/5xx HTTP response.
+ * Used by routes to swap the generic "TypeError: Failed to fetch" for
+ * a Hebrew message pointing the user at the diagnostics panel. */
+export function isSidecarUnreachable(err: unknown): boolean {
+  const msg = String(err ?? "");
+  return /Failed to fetch|NetworkError|ECONNREFUSED|fetch failed/i.test(msg);
+}
+
 // ── Projects ──────────────────────────────────────────────────────────────
 
 export async function listProjects(includeArchived = false): Promise<ProjectOut[]> {
