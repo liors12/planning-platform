@@ -410,6 +410,7 @@ code, .path {
   font-size: 16px;
 }
 .submission-meta { font-size: 12.5px; margin-block-start: 3px; }
+.submission-header-right { display: flex; align-items: center; gap: 8px; }
 .submission-actions {
   margin-block-start: 12px;
   display: flex;

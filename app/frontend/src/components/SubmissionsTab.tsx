@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  exportExcel, listSubmissions, openOutput, pollJobUntilDone,
-  renderSubmission, revealOutput, runEngine, uploadSubmission,
-  type ProjectOut, type SubmissionOut,
+  deleteSubmission, exportExcel, listSubmissions, openOutput,
+  pollJobUntilDone, renderSubmission, revealOutput, runEngine,
+  uploadSubmission, type ProjectOut, type SubmissionOut,
 } from "../api";
 import { EngineStatus } from "./EngineStatus";
 
@@ -204,6 +204,26 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     }
   }
 
+  async function onDeleteSubmission(sub: SubmissionOut) {
+    const bareVer = sub.version_string.replace(/^v/, "");
+    if (!window.confirm(
+      `האם למחוק לצמיתות את גרסה ${bareVer} וכל הקבצים שנוצרו עבורה?`
+    )) return;
+    setErr(null);
+    try {
+      await deleteSubmission(sub.id);
+      // Drop any per-submission UI state for this row before the list
+      // refresh so stale OutputStatus banners don't render in a row
+      // that's about to disappear.
+      setOutputStatus((p) => { const n = { ...p }; delete n[sub.id]; return n; });
+      refresh();
+      onSubmissionsChanged();
+    } catch (e) {
+      setErr(friendlyError(String(e)) ||
+             "אירעה תקלה במחיקת הגרסה. הפרטים נשמרו לקובץ יומן.");
+    }
+  }
+
   async function onRunEngine(submissionId: number) {
     setErr(null);
     try {
@@ -334,9 +354,25 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                     {" · "}גודל PDF: {pdfNameOf(sub.pdf_path)}
                   </div>
                 </div>
-                <Pill kind={SUB_STATUS_KIND[sub.status] ?? "queued"}>
-                  {SUB_STATUS_LABEL_HE[sub.status] ?? sub.status}
-                </Pill>
+                <div className="submission-header-right">
+                  <Pill kind={SUB_STATUS_KIND[sub.status] ?? "queued"}>
+                    {SUB_STATUS_LABEL_HE[sub.status] ?? sub.status}
+                  </Pill>
+                  {/* Trash button: lets Ellen self-recover from a bad
+                      upload without needing dev SQL surgery. Disabled
+                      mid-analysis so we don't delete a row whose job
+                      is mid-flight. */}
+                  <button
+                    type="button"
+                    className="icon-btn danger"
+                    onClick={() => onDeleteSubmission(sub)}
+                    disabled={!!activeJobId || sub.status === "analyzing"}
+                    title="מחקי גרסה זו"
+                    aria-label={`מחקי גרסה ${sub.version_string}`}
+                  >
+                    🗑
+                  </button>
+                </div>
               </header>
 
               <div className="submission-actions">

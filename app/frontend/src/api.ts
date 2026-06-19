@@ -457,6 +457,15 @@ export function reportXlsxUrl(submissionId: number, nonce?: number): string {
   return `${SIDECAR_BASE}/submissions/${submissionId}/report.xlsx${v}`;
 }
 
+/** Permanently delete a submission (DB row + dependent rows + on-disk
+ * folder + derived audit_outputs). After delete, the same version_string
+ * can be uploaded fresh. */
+export async function deleteSubmission(submissionId: number): Promise<void> {
+  await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}`, {
+    method: "DELETE",
+  });
+}
+
 /** Open the generated report in the OS default app via the sidecar.
  * Works inside the Tauri webview, where `target="_blank"` does nothing. */
 export async function openOutput(submissionId: number, kind: "pdf" | "xlsx"): Promise<void> {

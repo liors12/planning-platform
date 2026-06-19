@@ -271,6 +271,66 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 raise HTTPException(404, f"submission {submission_id} not found")
             return _hydrate(sub)
 
+    # ── DELETE /submissions/{id} ───────────────────────────────────────
+    # Removes the submission row + every file it produced. After delete,
+    # the same version_string can be uploaded fresh — Priority 3's whole
+    # point: today's manual sqlite3-CLI surgery becomes a button click.
+    #
+    # FK cascades (db.py:64 sets PRAGMA foreign_keys = ON):
+    #   discipline_comments.submission_id  ON DELETE CASCADE
+    #   jobs.submission_id                  ON DELETE SET NULL
+    # so deleting the parent row cleans dependent comments automatically
+    # and leaves job history intact (with NULL submission_id).
+    #
+    # On-disk: best-effort. File-delete failures (locked files, race
+    # with a running render) log a warning but DON'T abort — the DB
+    # delete is the source of truth. Re-upload of the same version
+    # works because the unique constraint is keyed on (project_id,
+    # version_string), not on disk paths.
+
+    @_subs_router.delete("/{submission_id}", status_code=204)
+    def delete_submission(submission_id: int):
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            version = sub.version_string
+            try:
+                sess.delete(sub)
+                sess.commit()
+            except Exception as exc:
+                sess.rollback()
+                log.exception("delete-submission DB step failed for %s", submission_id)
+                raise HTTPException(
+                    500,
+                    detail={
+                        "error_type": "DeleteFailed",
+                        "error_message": (
+                            "Database delete failed. Please close any open "
+                            "report/Excel files for this version and try again."
+                        ),
+                    },
+                ) from exc
+
+        # Best-effort file cleanup, logged but never fatal.
+        deleted: list[str] = []
+        warnings: list[str] = []
+        for target in (
+            submission_dir(cfg, tava, version),                      # upload folder
+            _audit_outputs_dir(cfg, tava, version),                  # derived outputs
+        ):
+            try:
+                if target.exists():
+                    shutil.rmtree(target)
+                    deleted.append(str(target))
+            except OSError as exc:
+                warnings.append(f"{target}: {exc}")
+                log.warning("delete-submission could not remove %s: %s", target, exc)
+        log.info("deleted submission %s (tava=%s ver=%s); folders removed: %s; warnings: %s",
+                 submission_id, tava, version, deleted, warnings or "none")
+        return Response(status_code=204)
+
     # NOTE: PDF re-render goes through comments.py's POST /submissions/{id}/render
     # — single source of truth, comments-aware by default. That endpoint
     # also probes audit_results on disk (not the DB findings flag), so it

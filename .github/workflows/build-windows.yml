@@ -651,6 +651,54 @@ jobs:
               Write-Host $logContent
               Fail "errors.log did not capture the missing-metadata warning"
             }
+
+            # ── 6.7. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
+            # Ellen's flow today: bad upload → ask Lior → manual sqlite3
+            # surgery. P3 replaces that with a button. Three invariants:
+            #   (a) DELETE returns 204
+            #   (b) GET on deleted id returns 404
+            #   (c) on-disk folder is gone
+            #   (d) re-upload of the same version_string succeeds
+            $delVer = "v77.0"
+            $delUp = Invoke-RestMethod -Method Post -Form @{
+              version_string = $delVer; pdf = Get-Item $dummyPdf
+            } -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $delSubId = $delUp.id
+            $delFolder = Join-Path $smokeData "projects\407-1048248\submissions\$delVer"
+            Record "P3: pre-delete folder present" (Test-Path $delFolder) $delFolder
+
+            $delResp = Invoke-WebRequest -UseBasicParsing -Method Delete `
+              -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/submissions/$delSubId"
+            Record "P3: DELETE returns 204" `
+              ($delResp.StatusCode -eq 204) "status=$($delResp.StatusCode)"
+            if ($delResp.StatusCode -ne 204) {
+              Fail "DELETE /submissions/$delSubId returned $($delResp.StatusCode)"
+            }
+
+            $getResp = Invoke-WebRequest -UseBasicParsing `
+              -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/submissions/$delSubId"
+            Record "P3: GET deleted submission returns 404" `
+              ($getResp.StatusCode -eq 404) "status=$($getResp.StatusCode)"
+
+            $folderGone = -not (Test-Path $delFolder)
+            Record "P3: on-disk folder removed" $folderGone $delFolder
+            if (-not $folderGone) {
+              Fail "P3 regression: $delFolder still present after DELETE"
+            }
+
+            # (d) Re-upload must succeed — proves the unique constraint
+            # is cleared, not just shadowed.
+            $reUp = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Form @{ version_string = $delVer; pdf = Get-Item $dummyPdf } `
+              -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            Record "P3: re-upload of deleted version returns 201" `
+              ($reUp.StatusCode -eq 201) "status=$($reUp.StatusCode)"
+            if ($reUp.StatusCode -ne 201) {
+              Fail "P3 regression: re-upload of $delVer after delete returned $($reUp.StatusCode)"
+            }
           }
           catch {
             Record "FATAL" $false $_.Exception.Message
