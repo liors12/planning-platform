@@ -16,6 +16,7 @@ import os
 import shutil
 import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
 
@@ -190,6 +191,29 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             if dwg is not None and dwg_path is not None:
                 _stream_upload_to_disk(dwg, dwg_path)
 
+            # P2-A: write metadata.json so the render path always has it.
+            # Originally this file was synthesized by the Phase 2a "Approach
+            # B" code (deleted in Phase 2b — see engine_bridge.py history)
+            # and never replaced. The render reads two fields from it
+            # (submission_version, submission_date); both have empty-string
+            # fallbacks, but the file's EXISTENCE used to be a fail-fast
+            # gate. Skip writing if a seed/prior version already put one
+            # there — never clobber existing metadata.
+            metadata_path = target_dir / "metadata.json"
+            if not metadata_path.exists():
+                bare_version = (version_string[1:] if version_string.startswith("v")
+                                else version_string)
+                metadata_path.write_text(
+                    json.dumps({
+                        "plan_number": project.tava_number,
+                        "submission_version": bare_version,
+                        "submission_date": datetime.now(timezone.utc).date().isoformat(),
+                        "file_name": pdf_leaf,
+                        "_source": "platform-sidecar",
+                    }, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+
             submission = Submission(
                 project_id=project_id,
                 version_string=version_string,
@@ -202,11 +226,15 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 sess.commit()
             except IntegrityError:
                 sess.rollback()
-                # Roll back the disk write so a re-POST works without leftover files.
-                try:
-                    shutil.rmtree(target_dir)
-                except OSError:
-                    pass
+                # P2-B: NO file cleanup. We used to shutil.rmtree(target_dir)
+                # here, which wiped seeded metadata.json + any prior successful
+                # upload's PDF whenever a user accidentally re-uploaded the
+                # same version (Ellen's exact failure on Friday). The bytes
+                # we just streamed either overwrite the prior PDF with
+                # identical content (same file) or coexist alongside a
+                # different one — both cases are recoverable. The DB row
+                # already exists; the user can re-upload after deleting the
+                # version via the delete-version action (Priority 3).
                 raise HTTPException(
                     409,
                     f"submission {version_string!r} already exists for project {project_id}",

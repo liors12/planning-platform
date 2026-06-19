@@ -516,23 +516,21 @@ jobs:
             if ($subDetail.engine_run_available -ne $false) {
               Fail "engine_run_available should be false on Windows-frozen"
             }
-            $blocked503 = $false
+            # PS 7's Invoke-WebRequest returns HttpResponseMessage on error
+            # (no GetResponseStream); -SkipHttpErrorCheck lets the call
+            # return successfully with the 503 + body intact instead of
+            # throwing. Same body parsing either way.
+            $resp503 = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/run-engine"
             $detailType = ""
             try {
-              Invoke-WebRequest -UseBasicParsing -Method Post `
-                -Uri "http://127.0.0.1:17321/submissions/$subId/run-engine" | Out-Null
-            } catch {
-              $resp = $_.Exception.Response
-              if ($resp -and $resp.StatusCode.value__ -eq 503) {
-                $body = (New-Object System.IO.StreamReader($resp.GetResponseStream())).ReadToEnd()
-                try {
-                  $detailType = ($body | ConvertFrom-Json).detail.error_type
-                  $blocked503 = ($detailType -eq "EngineNotAvailable")
-                } catch { $blocked503 = $false }
-              }
-            }
+              $detailType = ($resp503.Content | ConvertFrom-Json).detail.error_type
+            } catch { }
+            $blocked503 = ($resp503.StatusCode -eq 503) `
+                         -and ($detailType -eq "EngineNotAvailable")
             Record "engine: /run-engine returns 503 EngineNotAvailable" `
-              $blocked503 "error_type=$detailType"
+              $blocked503 "status=$($resp503.StatusCode) error_type=$detailType"
             if (-not $blocked503) {
               Fail "/run-engine should pre-flight-reject with 503 EngineNotAvailable on frozen Windows"
             }
@@ -584,34 +582,74 @@ jobs:
               $sizeGrew "before=$sizeBefore after=$sizeAfter delta=$($sizeAfter - $sizeBefore)"
             if (-not $sizeGrew) { Fail "comment text did not appear in re-rendered PDF" }
 
-            # ── 6.5. PERSISTENT ERROR LOG ─────────────────────────────
-            # Force the exact failure Ellen hit (missing metadata.json)
-            # and assert the new rotating file handler captured the
-            # traceback to %LOCALAPPDATA%\Planning Platform\logs\errors.log.
-            # Catches a regression where the handler silently detaches
-            # in the frozen build — we'd never know until the next bug.
+            # ── 6.5. PRIORITY 2 — UPLOAD WRITES METADATA + 409 SURVIVAL ──
+            # Job 2 root-cause fixes. Three checks against the live frozen
+            # sidecar. Run BEFORE the destructive metadata-delete block so
+            # files survive for the survival check.
             $metaPath = Join-Path $smokeData "projects\407-1048248\submissions\v24.3\metadata.json"
-            $logPath  = Join-Path $smokeData "logs\errors.log"
+            $pdfDir = Join-Path $smokeData "projects\407-1048248\submissions\v24.3"
+
+            # P2-A: upload of a NEW version writes metadata.json (the
+            # seeded v24.3 wouldn't prove this; the seed already wrote
+            # the file. Use v99.0 — guaranteed no seed data — so the
+            # only way metadata.json appears is via the upload handler.)
+            $newVer = "v99.0"
+            $newSub = Invoke-RestMethod -Method Post -Form @{
+              version_string = $newVer; pdf = Get-Item $dummyPdf
+            } -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $newMeta = Join-Path $smokeData "projects\407-1048248\submissions\$newVer\metadata.json"
+            $newMetaOk = Test-Path $newMeta
+            Record "P2-A: upload writes metadata.json for new version" $newMetaOk $newMeta
+            if (-not $newMetaOk) { Fail "upload did not write metadata.json for new version" }
+
+            # P2-B: duplicate upload of v24.3 returns 409 AND the existing
+            # files survive (no more shutil.rmtree(target_dir) wiping seed).
+            $metaSizeBefore = (Get-Item $metaPath).Length
+            $pdfCountBefore = (Get-ChildItem $pdfDir -Filter "*.pdf").Count
+            $resp409 = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Form @{ version_string = "v24.3"; pdf = Get-Item $dummyPdf } `
+              -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $got409 = ($resp409.StatusCode -eq 409)
+            $metaSurvived = (Test-Path $metaPath) -and ((Get-Item $metaPath).Length -eq $metaSizeBefore)
+            $pdfSurvived = (Get-ChildItem $pdfDir -Filter "*.pdf").Count -ge $pdfCountBefore
+            Record "P2-B: duplicate upload returns 409" $got409 "status=$($resp409.StatusCode)"
+            Record "P2-B: metadata.json survives 409 rollback" $metaSurvived
+            Record "P2-B: prior PDF survives 409 rollback" $pdfSurvived
+            if (-not ($got409 -and $metaSurvived -and $pdfSurvived)) {
+              Fail "P2-B regression: 409 rollback corrupted submission folder"
+            }
+
+            # ── 6.6. PERSISTENT ERROR LOG + P2-C RENDER TOLERANCE ────
+            # Now safe to wreck the metadata file. Originally this block
+            # asserted "render FAILED with metadata missing"; P2-C makes
+            # render TOLERATE the missing file (log a WARNING, continue
+            # with empty defaults). New invariants: render succeeds AND
+            # the warning lands in errors.log (proves both the tolerance
+            # patch and the file handler are alive).
+            $logPath = Join-Path $smokeData "logs\errors.log"
             Record "errlog: errors.log exists" (Test-Path $logPath) "$logPath"
             if (-not (Test-Path $logPath)) {
               Fail "no errors.log written under data_dir/logs/"
             }
             Remove-Item $metaPath -Force
-            $failJob = Invoke-RestMethod -Method Post `
+            $tolerantJob = Invoke-RestMethod -Method Post `
               -Uri "http://127.0.0.1:17321/submissions/$subId/render"
-            $failTerminal = Wait-ForJob $failJob.id 60
-            Record "errlog: render failed (expected)" `
-              ($failTerminal.status -eq "failed") "status=$($failTerminal.status)"
-            # Give the rotating handler a moment to flush.
+            $tolerantTerm = Wait-ForJob $tolerantJob.id 60
+            Record "P2-C: render succeeds despite missing metadata" `
+              ($tolerantTerm.status -eq "completed") "status=$($tolerantTerm.status)"
+            if ($tolerantTerm.status -ne "completed") {
+              Fail "P2-C regression: render still fails when metadata.json is missing"
+            }
             Start-Sleep -Seconds 1
             $logContent = Get-Content $logPath -Raw -ErrorAction SilentlyContinue
             $captured = $logContent -match "metadata not found"
-            Record "errlog: captured 'metadata not found' error" `
+            Record "errlog: captured 'metadata not found' warning" `
               $captured ("log size=" + ($logContent.Length) + " bytes")
             if (-not $captured) {
               Write-Host "── errors.log contents ──"
               Write-Host $logContent
-              Fail "errors.log did not capture the render failure"
+              Fail "errors.log did not capture the missing-metadata warning"
             }
           }
           catch {

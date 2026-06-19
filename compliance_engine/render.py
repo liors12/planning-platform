@@ -63,12 +63,20 @@ def run_render_only(
 
     submission_dir = base_dir / "projects" / project_key / "submissions" / f"v{submission_version}"
     metadata_path = submission_dir / "metadata.json"
-    if not metadata_path.exists():
-        msg = f"ERROR: metadata not found at {metadata_path}"
+    # P2-C: tolerate a missing metadata.json instead of failing fast.
+    # The render reads only submission_version + submission_date from
+    # this dict, both with empty-string fallbacks (report_generator.py
+    # line 1675-6). Failing the render over a missing file class of
+    # bug bit Ellen on Friday — losing the file should degrade the
+    # cover (blank version/date) but never crash. The warning still
+    # flows to errors.log so a developer can spot the missing file.
+    if metadata_path.exists():
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    else:
+        msg = f"WARN: metadata not found at {metadata_path}; rendering with empty defaults"
         print(msg, file=sys.stderr)
-        _log.error(msg)
-        return 1
-    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        _log.warning(msg)
+        metadata = {}
 
     schema_path = base_dir / "projects" / project_key / f"project-schema-{project_key}-v2.json"
     if not schema_path.exists():

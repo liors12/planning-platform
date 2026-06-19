@@ -36,7 +36,7 @@ function friendlyError(rawError: string | undefined | null): string {
   } catch { /* not JSON — search rawError as-is */ }
 
   if (/EngineNotAvailable|sidecar_python|WinError 2/i.test(haystack)) {
-    return "פיצ'ר זה אינו זמין בגרסה הנוכחית. " +
+    return "פעולה זו אינה זמינה בגרסה הנוכחית. " +
            "להפקת הדוח עבור גרסה קיימת, השתמשי בכפתור \"הפיקי דו״ח\".";
   }
   if (/metadata not found/i.test(haystack)) {
@@ -346,7 +346,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   disabled={!canRunEngine || !!activeJobId || sub.status === "analyzing"}
                   title={
                     !sub.engine_run_available
-                      ? "פיצ'ר זה אינו זמין בגרסה הנוכחית"
+                      ? "פעולה זו אינה זמינה בגרסה הנוכחית"
                       : !project.has_schema
                       ? `לא ניתן להריץ — אין סכמה לתב"ע ${project.tava_number}`
                       : ""
