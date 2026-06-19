@@ -528,6 +528,43 @@ jobs:
             Write-Host "End-to-end smoke PASSED ✓"
           }
 
+      - name: Show last 50 lines of sidecar logs on failure
+        # Echoes the tail of both smoke-test sidecar logs straight into the
+        # step output so the failure shows up in `gh run view` without
+        # having to download the artifact. The full logs are uploaded in
+        # the next step.
+        if: failure()
+        shell: pwsh
+        run: |
+          $logs = @(
+            (Join-Path $env:RUNNER_TEMP "e2e-sidecar.stderr.log"),
+            (Join-Path $env:RUNNER_TEMP "e2e-sidecar.stdout.log"),
+            "sidecar-smoke.stderr.log",
+            "sidecar-smoke.stdout.log"
+          )
+          foreach ($log in $logs) {
+            if (Test-Path $log) {
+              Write-Host "`n───────── tail -50 $log ─────────"
+              Get-Content $log -Tail 50
+            }
+          }
+
+      - name: Upload failure diagnostics
+        # Smoke-test sidecar logs as a downloadable artifact so a failed
+        # build still has full forensics — not just the stderr tail. Keep
+        # the retention short; these are debug artifacts, not releases.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-failure-log
+          path: |
+            ${{ runner.temp }}/e2e-sidecar.stdout.log
+            ${{ runner.temp }}/e2e-sidecar.stderr.log
+            sidecar-smoke.stdout.log
+            sidecar-smoke.stderr.log
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
