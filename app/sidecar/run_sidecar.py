@@ -13,6 +13,23 @@ import json
 import sys
 
 
+# Force stdout/stderr to UTF-8 so Hebrew filenames + glyphs in engine
+# log output don't crash the sidecar on Windows.
+#
+# Frozen Python on Windows (PyInstaller --onedir) defaults stdout to the
+# console code page (commonly cp1252) which can't encode `הערות_סקירה_…`
+# in compliance_engine/render.py's `print(f"Excel export: {xlsx_path}")`.
+# That kills the in-process Excel-export job mid-run with
+# UnicodeEncodeError. Set encoding at startup so every print() across
+# the sidecar — including engine modules running in-process — uses UTF-8.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+        except Exception:
+            pass
+
+
 def _probe_weasyprint() -> int:
     """Render a minimal HTML to PDF inside the bundle. Verifies that Pango,
     Cairo, GObject, etc. were collected correctly by PyInstaller AND that
