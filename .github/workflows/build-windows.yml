@@ -401,23 +401,32 @@ jobs:
 
             # ── 3. SUBMISSION ─────────────────────────────────────────
             # Render needs a Submission DB row to look up tava + version.
-            # The seed bundles metadata.json + audit_results on disk but
-            # discovery only creates Project rows, never Submission ones.
-            # Upload a 26-byte dummy PDF — the upload endpoint doesn't
-            # parse PDF structure, just stores the bytes; the render path
-            # never reads the submission PDF (it reads audit_results JSON).
+            # After the seed-discovers-submissions fix (commit 5423c31),
+            # the row is INSERTED on first boot from the bundled
+            # metadata.json — so the upload branch is normally skipped.
+            # We keep it as a fallback in case the seed doesn't find the
+            # row (e.g. older sidecar build).
+            #
+            # The dummy PDF is created unconditionally because downstream
+            # assertions (P2-A new-version upload, P2-B duplicate-409,
+            # P3 delete-version) all need a payload file to POST. Hiding
+            # it inside the upload branch left $dummyPdf null when the
+            # seed pre-populated the row, breaking those assertions with
+            # a misleading "Cannot bind argument to parameter 'Path'"
+            # error.
+            $dummyPdf = Join-Path $env:RUNNER_TEMP "smoke-dummy.pdf"
+            [System.IO.File]::WriteAllBytes($dummyPdf, [byte[]](
+              0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34,0x0A,0x25,0x25,0x45,0x4F,0x46,0x0A))
+
             $subs = Invoke-RestMethod -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
             $subForV243 = @($subs) | Where-Object { $_.version_string -eq "v24.3" } | Select-Object -First 1
             if (-not $subForV243) {
-              $dummyPdf = Join-Path $env:RUNNER_TEMP "smoke-dummy.pdf"
-              [System.IO.File]::WriteAllBytes($dummyPdf, [byte[]](
-                0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34,0x0A,0x25,0x25,0x45,0x4F,0x46,0x0A))
               $form = @{ version_string = "v24.3"; pdf = Get-Item $dummyPdf }
               $subForV243 = Invoke-RestMethod -Method Post -Form $form `
                 -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
               Record "submission: POST created v24.3 row" $true "id=$($subForV243.id)"
             } else {
-              Record "submission: v24.3 already present" $true "id=$($subForV243.id)"
+              Record "submission: v24.3 already present (seeded)" $true "id=$($subForV243.id)"
             }
             $subId = $subForV243.id
 
