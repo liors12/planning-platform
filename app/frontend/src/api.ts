@@ -62,6 +62,10 @@ export interface SubmissionOut {
   has_audit_results: boolean;
   has_report_pdf: boolean;
   has_report_xlsx: boolean;
+  /** False on win32+frozen — the subprocess that runs the full audit
+   * can't spawn an external Python in the packaged build. UI disables
+   * the "הפעילי את התוכנה" button when false. */
+  engine_run_available: boolean;
 }
 
 export type JobStatus = "queued" | "running" | "completed" | "failed";

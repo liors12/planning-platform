@@ -31,7 +31,7 @@ from sqlalchemy.orm import Session
 from .config import Config
 from .engine_bridge import has_schema
 from .models import Project, Submission
-from .queue_worker import EngineQueue
+from .queue_worker import EngineQueue, engine_run_available
 from .storage import StorageError, sanitize_upload_filename, submission_dir
 
 
@@ -91,6 +91,12 @@ class SubmissionOut(BaseModel):
     has_audit_results: bool = False
     has_report_pdf: bool = False
     has_report_xlsx: bool = False
+    # False on win32+frozen, where the full-audit subprocess can't
+    # spawn an external Python interpreter (the render-only path is
+    # already in-process). Frontend hides/disables "הפעילי את התוכנה"
+    # when False to avoid the misleading [WinError 2] SchemaNotFound
+    # path. See queue_worker.engine_run_available.
+    engine_run_available: bool = True
 
 
 class JobOut(BaseModel):
@@ -136,6 +142,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             has_audit_results=_audit_results_path(cfg, tava, sub.version_string) is not None,
             has_report_pdf=_report_pdf_path(cfg, tava, sub.version_string).exists(),
             has_report_xlsx=_report_xlsx_path(cfg, tava, sub.version_string).exists(),
+            engine_run_available=engine_run_available(),
         )
 
     # ── POST /projects/{project_id}/submissions ────────────────────────
@@ -387,6 +394,23 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
 
     @_subs_router.post("/{submission_id}/run-engine", response_model=JobOut, status_code=202)
     def run_engine(submission_id: int) -> JobOut:
+        # Pre-flight: never enqueue a job that is 100% guaranteed to
+        # fail. On win32+frozen the worker can't spawn cfg.sidecar_python
+        # (it's an external interpreter path that doesn't exist in the
+        # PyInstaller bundle). Fail fast with a structured 503 so the
+        # frontend can surface a friendly "feature not available" line.
+        if not engine_run_available():
+            raise HTTPException(
+                503,
+                detail={
+                    "error_type": "EngineNotAvailable",
+                    "error_message": (
+                        "Full-audit runs require a Python interpreter, which the "
+                        "current packaged build does not bundle. Use 'הפיקי דו״ח' "
+                        "to regenerate the report from existing audit results."
+                    ),
+                },
+            )
         with _session() as sess:
             sub = sess.get(Submission, submission_id)
             if sub is None:

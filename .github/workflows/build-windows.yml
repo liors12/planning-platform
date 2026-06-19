@@ -502,6 +502,41 @@ jobs:
               Fail "open/reveal endpoints did not all return 204"
             }
 
+            # ── 5.6. ENGINE-RUN AVAILABILITY GATE (Priority 2.5) ──────
+            # On the frozen Windows build the full-audit subprocess path
+            # can't spawn cfg.sidecar_python — see queue_worker.engine_
+            # run_available. SubmissionOut should report this as false
+            # and POST /run-engine should refuse with a structured 503
+            # instead of enqueuing a doomed job (which would surface as
+            # the misleading "SchemaNotFound / [WinError 2]" Ellen hit).
+            $subDetail = Invoke-RestMethod -Uri "http://127.0.0.1:17321/submissions/$subId"
+            Record "engine: SubmissionOut.engine_run_available == false on frozen Windows" `
+              ($subDetail.engine_run_available -eq $false) `
+              "got=$($subDetail.engine_run_available)"
+            if ($subDetail.engine_run_available -ne $false) {
+              Fail "engine_run_available should be false on Windows-frozen"
+            }
+            $blocked503 = $false
+            $detailType = ""
+            try {
+              Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/run-engine" | Out-Null
+            } catch {
+              $resp = $_.Exception.Response
+              if ($resp -and $resp.StatusCode.value__ -eq 503) {
+                $body = (New-Object System.IO.StreamReader($resp.GetResponseStream())).ReadToEnd()
+                try {
+                  $detailType = ($body | ConvertFrom-Json).detail.error_type
+                  $blocked503 = ($detailType -eq "EngineNotAvailable")
+                } catch { $blocked503 = $false }
+              }
+            }
+            Record "engine: /run-engine returns 503 EngineNotAvailable" `
+              $blocked503 "error_type=$detailType"
+            if (-not $blocked503) {
+              Fail "/run-engine should pre-flight-reject with 503 EngineNotAvailable on frozen Windows"
+            }
+
             # ── 6. DISCIPLINE COMMENTS ────────────────────────────────
             # Hebrew marker — written into the comment, but NOT searched
             # for in the PDF text. WeasyPrint stores Hebrew glyphs in

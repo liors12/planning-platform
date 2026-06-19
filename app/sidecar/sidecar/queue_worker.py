@@ -56,6 +56,24 @@ def _normalize_submission_version(version_string: str) -> str:
     return version_string[1:] if version_string.startswith("v") else version_string
 
 
+def engine_run_available() -> bool:
+    """Whether the full-audit subprocess path (_process_one → run_audit.py)
+    can actually execute on this machine.
+
+    The subprocess path spawns `cfg.sidecar_python` — which defaults to
+    `/opt/homebrew/bin/python3.13` (macOS Homebrew) when PLATFORM_PYTHON
+    isn't set. On a PyInstaller-frozen Windows install there's no
+    external Python interpreter, that path doesn't exist, and
+    `subprocess.run` raises FileNotFoundError [WinError 2]. The render-
+    only path already has a win32+frozen in-process branch
+    (_process_render_pdf); _process_one does not. Until it does, the
+    "הפעילי את התוכנה" button cannot succeed in the Windows package.
+
+    Returns False precisely when the subprocess path would 100% fail
+    pre-flight. macOS dev and non-frozen runs are unaffected."""
+    return not (sys.platform == "win32" and getattr(sys, "frozen", False))
+
+
 class EngineQueue:
     """A single-worker FIFO queue. One instance per sidecar process.
 
@@ -344,12 +362,31 @@ class EngineQueue:
                 "error_message": f"run_audit exceeded {RUN_AUDIT_BUDGET_S}s wall-clock budget; killed",
             }
         except FileNotFoundError as exc:
-            # Most commonly: schema missing. Caught here so we can surface a
-            # clean error_type rather than the generic Exception branch.
-            error_payload = {
-                "error_type": "SchemaNotFound",
-                "error_message": str(exc),
-            }
+            # Two distinct sources for FileNotFoundError land here:
+            #   1. resolve_schema() — genuine missing project schema
+            #   2. subprocess.run() — the spawned interpreter doesn't
+            #      exist (the win32+frozen case: cfg.sidecar_python =
+            #      /opt/homebrew/bin/python3.13 which isn't on Windows).
+            # Mislabeling case 2 as "SchemaNotFound" sent Ellen on a
+            # wild goose chase. Disambiguate by checking whether the
+            # missing path matches the sidecar_python config.
+            missing = getattr(exc, "filename", "") or str(exc)
+            if missing and missing == self._cfg.sidecar_python:
+                error_payload = {
+                    "error_type": "EngineNotAvailable",
+                    "error_message": (
+                        "Engine subprocess interpreter not found: "
+                        f"{self._cfg.sidecar_python!r} does not exist on this machine. "
+                        "Full-audit runs require a Python interpreter on PATH or "
+                        "PLATFORM_PYTHON; the win32+frozen build needs an in-process "
+                        "branch (see _process_render_pdf for the pattern)."
+                    ),
+                }
+            else:
+                error_payload = {
+                    "error_type": "SchemaNotFound",
+                    "error_message": str(exc),
+                }
         except Exception as exc:
             log.exception("run_audit job %s crashed", job_id)
             error_payload = {

@@ -35,6 +35,10 @@ function friendlyError(rawError: string | undefined | null): string {
       .filter(Boolean).join("\n");
   } catch { /* not JSON — search rawError as-is */ }
 
+  if (/EngineNotAvailable|sidecar_python|WinError 2/i.test(haystack)) {
+    return "פיצ'ר זה אינו זמין בגרסה הנוכחית. " +
+           "להפקת הדוח עבור גרסה קיימת, השתמשי בכפתור \"הפיקי דו״ח\".";
+  }
   if (/metadata not found/i.test(haystack)) {
     return "לא ניתן ליצור דוח עבור גרסה זו — חסר קובץ מידע על הגרסה. " +
            "נסי למחוק את הגרסה ולהעלות אותה מחדש.";
@@ -207,7 +211,12 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       setActiveJobs((prev) => ({ ...prev, [submissionId]: job.id }));
       refresh();
     } catch (e) {
-      setErr(String(e));
+      // Friendly Hebrew for the 503 EngineNotAvailable response so the
+      // user never sees the raw "HTTP 503: {...}" string. Anything else
+      // still falls through to the generic detail (we route through
+      // friendlyError so the same translation logic the output buttons
+      // use applies here too).
+      setErr(friendlyError(String(e)));
     }
   }
 
@@ -304,8 +313,15 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
         )}
         {subs?.map((sub) => {
           const activeJobId = activeJobs[sub.id];
+          // engine_run_available is False in the Windows-frozen package — the
+          // worker can't spawn cfg.sidecar_python in that environment. Until
+          // _process_one gets an in-process branch (V0.2), the button stays
+          // disabled with a Hebrew "feature not available" tooltip so Ellen
+          // doesn't hit the misleading SchemaNotFound / WinError 2 dead end.
           const canRunEngine =
-            project.has_schema && (sub.status === "uploaded" || sub.status === "failed" || sub.status === "complete");
+            sub.engine_run_available
+            && project.has_schema
+            && (sub.status === "uploaded" || sub.status === "failed" || sub.status === "complete");
           return (
             <article key={sub.id} className="submission-card">
               <header className="submission-header">
@@ -329,7 +345,9 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   onClick={() => onRunEngine(sub.id)}
                   disabled={!canRunEngine || !!activeJobId || sub.status === "analyzing"}
                   title={
-                    !project.has_schema
+                    !sub.engine_run_available
+                      ? "פיצ'ר זה אינו זמין בגרסה הנוכחית"
+                      : !project.has_schema
                       ? `לא ניתן להריץ — אין סכמה לתב"ע ${project.tava_number}`
                       : ""
                   }
