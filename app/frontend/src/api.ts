@@ -453,6 +453,23 @@ export function reportXlsxUrl(submissionId: number, nonce?: number): string {
   return `${SIDECAR_BASE}/submissions/${submissionId}/report.xlsx${v}`;
 }
 
+/** Open the generated report in the OS default app via the sidecar.
+ * Works inside the Tauri webview, where `target="_blank"` does nothing. */
+export async function openOutput(submissionId: number, kind: "pdf" | "xlsx"): Promise<void> {
+  await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/open-output?kind=${kind}`,
+    { method: "POST" },
+  );
+}
+
+/** Open the containing folder in the OS file manager (highlights the file). */
+export async function revealOutput(submissionId: number, kind: "pdf" | "xlsx"): Promise<void> {
+  await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/reveal-output?kind=${kind}`,
+    { method: "POST" },
+  );
+}
+
 
 // ── Phase 1 demo: subprocess-isolation echo ──────────────────────────────
 

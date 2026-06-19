@@ -10,10 +10,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
+import os
 import shutil
+import subprocess
+import sys
 from pathlib import Path
 from typing import Iterator
+
+log = logging.getLogger(__name__)
 
 from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile
 from fastapi.responses import Response, StreamingResponse
@@ -309,6 +315,73 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 "Cache-Control": "private, max-age=0, must-revalidate",
             },
         )
+
+    # ── POST /submissions/{id}/open-output + /reveal-output ────────────
+    # Today Ellen sees "nothing" when she clicks "פתחי דו״ח" because the
+    # PDF link is target=_blank — and the Tauri webview swallows _blank
+    # navigations. These endpoints solve that without adding a Tauri
+    # plugin: the sidecar already has OS access via Python, so it just
+    # spawns Explorer / the default app pointed at the generated file.
+    #
+    # Security: caller picks `kind ∈ {pdf,xlsx}` only. The path is built
+    # server-side from cfg.data_dir + tava + version + the canonical
+    # leaf name. Never accepts a user-supplied path.
+
+    def _resolve_output(submission_id: int, kind: str) -> Path:
+        if kind not in ("pdf", "xlsx"):
+            raise HTTPException(422, f"unknown output kind: {kind!r}")
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            version = sub.version_string
+        path = (_report_pdf_path(cfg, tava, version) if kind == "pdf"
+                else _report_xlsx_path(cfg, tava, version))
+        if not path.exists():
+            raise HTTPException(
+                404,
+                f"{kind} report not generated yet for submission {submission_id}",
+            )
+        return path
+
+    def _spawn(args: list[str]) -> None:
+        """Fire-and-forget. Errors swallowed because the OS file-open
+        call shouldn't block or fail the HTTP response — the worst case
+        is "user clicks button, nothing happens", which the front-end
+        can re-prompt for. Errors do flow to errors.log via the warning."""
+        try:
+            subprocess.Popen(args, stdin=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL,
+                             stderr=subprocess.DEVNULL)
+        except Exception as exc:
+            log.warning("OS open failed for %s: %s", args, exc)
+
+    @_subs_router.post("/{submission_id}/open-output", status_code=204)
+    def open_output(submission_id: int, kind: str):
+        """Open the generated PDF or XLSX in the OS default app."""
+        path = _resolve_output(submission_id, kind)
+        if sys.platform == "win32":
+            os.startfile(str(path))      # type: ignore[attr-defined]
+        elif sys.platform == "darwin":
+            _spawn(["open", str(path)])
+        else:
+            _spawn(["xdg-open", str(path)])
+        return Response(status_code=204)
+
+    @_subs_router.post("/{submission_id}/reveal-output", status_code=204)
+    def reveal_output(submission_id: int, kind: str):
+        """Open the file's containing folder in the OS file manager,
+        with the file selected/highlighted where the OS supports it."""
+        path = _resolve_output(submission_id, kind)
+        if sys.platform == "win32":
+            # explorer /select highlights the file inside its folder.
+            _spawn(["explorer", "/select,", str(path)])
+        elif sys.platform == "darwin":
+            _spawn(["open", "-R", str(path)])
+        else:
+            _spawn(["xdg-open", str(path.parent)])
+        return Response(status_code=204)
 
     # ── POST /submissions/{id}/run-engine ──────────────────────────────
 

@@ -1,10 +1,42 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  exportExcel, listSubmissions, pollJobUntilDone, renderSubmission,
-  reportPdfUrl, reportXlsxUrl, runEngine, uploadSubmission,
+  exportExcel, listSubmissions, openOutput, pollJobUntilDone,
+  renderSubmission, revealOutput, runEngine, uploadSubmission,
   type ProjectOut, type SubmissionOut,
 } from "../api";
 import { EngineStatus } from "./EngineStatus";
+
+// One-of state per submission's output. Drives the WORKING / SUCCESS /
+// FAILURE banner that today is missing — Ellen clicks a button and
+// sees nothing change in the UI, even though the file silently lands
+// on disk. This makes every step of the flow visible.
+type OutputStatus =
+  | null
+  | { kind: "working";  what: "pdf" | "xlsx" }
+  | { kind: "success";  what: "pdf" | "xlsx" }
+  | { kind: "error";    what: "pdf" | "xlsx"; friendly: string };
+
+// Map known engine failure shapes to a plain-Hebrew sentence Ellen can
+// act on. Anything we don't recognize gets a generic message that
+// points at the persistent log (Feature 1 / f610e4c). Never surface
+// English / module names / "סכמה" / "מנוע" in the UI.
+function friendlyError(rawError: string | undefined | null): string {
+  const msg = String(rawError ?? "");
+  if (/metadata not found/i.test(msg)) {
+    return "לא ניתן ליצור דוח עבור גרסה זו — חסר קובץ מידע על הגרסה. " +
+           "נסי למחוק את הגרסה ולהעלות אותה מחדש.";
+  }
+  if (/schema not found/i.test(msg)) {
+    return "לא ניתן ליצור דוח עבור הפרויקט — חסר קובץ הגדרות. " +
+           "פני לתמיכה.";
+  }
+  if (/audit_results.*needs|Run a full audit/i.test(msg)) {
+    return "אין עדיין תוצאות סקירה לגרסה זו. " +
+           "יש להריץ את התוכנה תחילה לפני הפקת דוח.";
+  }
+  // Generic safe fallback — never expose the raw technical text.
+  return "אירעה תקלה ביצירת הדוח. הפרטים נשמרו לקובץ יומן.";
+}
 
 interface Props {
   project: ProjectOut;
@@ -38,13 +70,10 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   // Active engine job per submission. Keyed by submission_id.
   const [activeJobs, setActiveJobs] = useState<Record<number, string>>({});
 
-  // Per-submission state for the two output buttons. `busy` carries
-  // which output is currently generating; `nonce` bumps after a successful
-  // run so the download link's URL changes and dodges browser cache.
-  type OutputBusy = "pdf" | "xlsx" | null;
-  const [outputBusy, setOutputBusy] = useState<Record<number, OutputBusy>>({});
-  const [outputNonces, setOutputNonces] = useState<Record<number, number>>({});
-  const [outputErr, setOutputErr] = useState<Record<number, string>>({});
+  // Per-submission output state — one of: null, working, success, error.
+  // Drives a visible banner under the action buttons so Ellen sees what
+  // the app is doing at every step.
+  const [outputStatus, setOutputStatus] = useState<Record<number, OutputStatus>>({});
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -112,8 +141,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     submissionId: number,
     kind: "pdf" | "xlsx",
   ) {
-    setOutputBusy((prev) => ({ ...prev, [submissionId]: kind }));
-    setOutputErr((prev) => ({ ...prev, [submissionId]: "" }));
+    setOutputStatus((p) => ({ ...p, [submissionId]: { kind: "working", what: kind } }));
     try {
       const job = kind === "pdf"
         ? await renderSubmission(submissionId)
@@ -124,15 +152,38 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
           ? (() => { try { return JSON.parse(terminal.error!).error_message || terminal.error; }
                      catch { return terminal.error; } })()
           : "job failed";
-        setOutputErr((prev) => ({ ...prev, [submissionId]: String(detail) }));
+        setOutputStatus((p) => ({
+          ...p,
+          [submissionId]: { kind: "error", what: kind, friendly: friendlyError(detail) },
+        }));
       } else {
-        setOutputNonces((prev) => ({ ...prev, [submissionId]: (prev[submissionId] ?? 0) + 1 }));
+        setOutputStatus((p) => ({ ...p, [submissionId]: { kind: "success", what: kind } }));
         refresh();
       }
     } catch (e) {
-      setOutputErr((prev) => ({ ...prev, [submissionId]: String(e) }));
-    } finally {
-      setOutputBusy((prev) => ({ ...prev, [submissionId]: null }));
+      setOutputStatus((p) => ({
+        ...p,
+        [submissionId]: { kind: "error", what: kind, friendly: friendlyError(String(e)) },
+      }));
+    }
+  }
+
+  async function onOpenOutput(submissionId: number, kind: "pdf" | "xlsx") {
+    try { await openOutput(submissionId, kind); }
+    catch (e) {
+      setOutputStatus((p) => ({
+        ...p,
+        [submissionId]: { kind: "error", what: kind, friendly: friendlyError(String(e)) },
+      }));
+    }
+  }
+  async function onRevealOutput(submissionId: number, kind: "pdf" | "xlsx") {
+    try { await revealOutput(submissionId, kind); }
+    catch (e) {
+      setOutputStatus((p) => ({
+        ...p,
+        [submissionId]: { kind: "error", what: kind, friendly: friendlyError(String(e)) },
+      }));
     }
   }
 
@@ -273,55 +324,43 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   {sub.status === "complete" ? "הפעילי שוב את התוכנה" : "הפעילי את התוכנה"}
                 </button>
 
-                {sub.has_audit_results && (
-                  <>
-                    <button
-                      className="ghost-btn"
-                      onClick={() => onGenerateOutput(sub.id, "pdf")}
-                      disabled={!!outputBusy[sub.id]}
-                    >
-                      {outputBusy[sub.id] === "pdf" ? (
-                        <><span className="spinner" aria-hidden="true" />מפיקה דו״ח…</>
-                      ) : "הפיקי דו״ח"}
-                    </button>
-                    <button
-                      className="ghost-btn"
-                      onClick={() => onGenerateOutput(sub.id, "xlsx")}
-                      disabled={!!outputBusy[sub.id]}
-                    >
-                      {outputBusy[sub.id] === "xlsx" ? (
-                        <><span className="spinner" aria-hidden="true" />מפיקה אקסל…</>
-                      ) : "הפיקי אקסל"}
-                    </button>
-                  </>
-                )}
+                {sub.has_audit_results && (() => {
+                  const st = outputStatus[sub.id];
+                  // Disable BOTH output buttons while EITHER is working —
+                  // a stray click on the other one during a running job
+                  // queues a second job that can corrupt state.
+                  const busy = st?.kind === "working";
+                  return (
+                    <>
+                      <button
+                        className="ghost-btn"
+                        onClick={() => onGenerateOutput(sub.id, "pdf")}
+                        disabled={busy}
+                      >
+                        {busy && st?.what === "pdf" ? (
+                          <><span className="spinner" aria-hidden="true" />מפיקה דו״ח…</>
+                        ) : "הפיקי דו״ח"}
+                      </button>
+                      <button
+                        className="ghost-btn"
+                        onClick={() => onGenerateOutput(sub.id, "xlsx")}
+                        disabled={busy}
+                      >
+                        {busy && st?.what === "xlsx" ? (
+                          <><span className="spinner" aria-hidden="true" />מפיקה אקסל…</>
+                        ) : "הפיקי אקסל"}
+                      </button>
+                    </>
+                  );
+                })()}
               </div>
 
-              {(sub.has_report_pdf || sub.has_report_xlsx || outputErr[sub.id]) && (
-                <div className="submission-downloads muted">
-                  {sub.has_report_pdf && (
-                    <a
-                      className="download-link"
-                      href={reportPdfUrl(sub.id, outputNonces[sub.id])}
-                      target="_blank"
-                      rel="noopener"
-                    >
-                      📄 פתחי דו״ח (PDF)
-                    </a>
-                  )}
-                  {sub.has_report_xlsx && (
-                    <a
-                      className="download-link"
-                      href={reportXlsxUrl(sub.id, outputNonces[sub.id])}
-                    >
-                      📊 הורידי אקסל
-                    </a>
-                  )}
-                  {outputErr[sub.id] && (
-                    <span className="error" role="alert">{outputErr[sub.id]}</span>
-                  )}
-                </div>
-              )}
+              <OutputBanner
+                status={outputStatus[sub.id]}
+                onOpen={(k) => onOpenOutput(sub.id, k)}
+                onReveal={(k) => onRevealOutput(sub.id, k)}
+                onDismiss={() => setOutputStatus((p) => ({ ...p, [sub.id]: null }))}
+              />
 
               {activeJobId && (
                 <EngineStatus
@@ -342,4 +381,60 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 function pdfNameOf(p: string): string {
   const idx = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
   return idx >= 0 ? p.slice(idx + 1) : p;
+}
+
+// ─── Output status banner ────────────────────────────────────────────────
+// Visible feedback for the "הפיקי דו״ח" / "הפיקי אקסל" buttons. Replaces
+// the previous silent state where Ellen clicked, waited, and saw nothing
+// change in the UI even though the file silently saved to disk.
+
+function OutputBanner({
+  status, onOpen, onReveal, onDismiss,
+}: {
+  status: OutputStatus;
+  onOpen: (k: "pdf" | "xlsx") => void;
+  onReveal: (k: "pdf" | "xlsx") => void;
+  onDismiss: () => void;
+}) {
+  if (!status) return null;
+
+  const labelFor = (k: "pdf" | "xlsx", kind: "working" | "success" | "error") => {
+    if (kind === "working") return k === "pdf" ? "יוצרת דו״ח, נא להמתין..." : "יוצרת קובץ אקסל, נא להמתין...";
+    if (kind === "success") return k === "pdf" ? "הדו״ח מוכן ✓"       : "קובץ האקסל מוכן ✓";
+    return ""; // error label comes from status.friendly
+  };
+
+  if (status.kind === "working") {
+    return (
+      <div className="output-banner output-working" role="status" aria-live="polite">
+        <span className="spinner" aria-hidden="true" />
+        <span>{labelFor(status.what, "working")}</span>
+      </div>
+    );
+  }
+
+  if (status.kind === "success") {
+    return (
+      <div className="output-banner output-success" role="status" aria-live="polite">
+        <span className="output-icon" aria-hidden="true">✓</span>
+        <span className="output-msg">{labelFor(status.what, "success")}</span>
+        <button className="ghost-btn small" type="button" onClick={() => onOpen(status.what)}>
+          {status.what === "pdf" ? "פתחי דו״ח" : "פתחי אקסל"}
+        </button>
+        <button className="ghost-btn small" type="button" onClick={() => onReveal(status.what)}>
+          פתחי תיקייה
+        </button>
+        <button className="output-dismiss" type="button" aria-label="סגרי" onClick={onDismiss}>✕</button>
+      </div>
+    );
+  }
+
+  // error
+  return (
+    <div className="output-banner output-error" role="alert">
+      <span className="output-icon" aria-hidden="true">✗</span>
+      <span className="output-msg">{status.friendly}</span>
+      <button className="output-dismiss" type="button" aria-label="סגרי" onClick={onDismiss}>✕</button>
+    </div>
+  );
 }

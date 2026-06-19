@@ -478,6 +478,30 @@ jobs:
               "got=$($xlsxBytes.Length) bytes"
             if ($xlsxBytes.Length -le 5120) { Fail "XLSX too small to be real" }
 
+            # ── 5.5. OPEN-OUTPUT + REVEAL-OUTPUT ──────────────────────
+            # The new sidecar endpoints powering the "פתחי דו״ח" /
+            # "פתחי תיקייה" buttons in the success banner. CI just
+            # checks 204 status — the actual OS open is fire-and-forget
+            # and can't be visually verified headlessly. The 204 proves
+            # path resolution + the OS spawn call succeeded.
+            try {
+              $r1 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/open-output?kind=pdf"
+              $r2 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/open-output?kind=xlsx"
+              $r3 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/reveal-output?kind=pdf"
+              $r4 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/reveal-output?kind=xlsx"
+              $allOk = ($r1.StatusCode -eq 204) -and ($r2.StatusCode -eq 204) `
+                  -and ($r3.StatusCode -eq 204) -and ($r4.StatusCode -eq 204)
+              Record "open: open/reveal endpoints all 204" $allOk `
+                "got=$($r1.StatusCode),$($r2.StatusCode),$($r3.StatusCode),$($r4.StatusCode)"
+            } catch {
+              Record "open: open/reveal endpoints all 204" $false $_.Exception.Message
+              Fail "open/reveal endpoints did not all return 204"
+            }
+
             # ── 6. DISCIPLINE COMMENTS ────────────────────────────────
             # Hebrew marker — written into the comment, but NOT searched
             # for in the PDF text. WeasyPrint stores Hebrew glyphs in

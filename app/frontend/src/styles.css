@@ -1415,3 +1415,44 @@ code, .path {
   color: var(--green); text-decoration: underline;
   font: inherit; cursor: pointer;
 }
+
+/* ─── Output status banner (SubmissionsTab) ────────────────────────── */
+
+.output-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block-start: 10px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+.output-icon {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.output-msg { flex: 1 1 auto; }
+.output-banner .ghost-btn.small { padding: 4px 12px; font-size: 12.5px; }
+.output-dismiss {
+  background: transparent; border: none; color: inherit;
+  font-size: 14px; cursor: pointer; padding: 4px 6px; opacity: 0.65;
+}
+.output-dismiss:hover { opacity: 1; }
+
+.output-working {
+  background: var(--green-soft);
+  color: var(--green);
+  border: 1px solid var(--green-line);
+}
+.output-success {
+  background: #dff3e3;
+  color: #1b5e20;
+  border: 1px solid #b6dfc0;
+}
+.output-error {
+  background: #fdd9d6;
+  color: #b3261e;
+  border: 1px solid #f4b4b0;
+}
