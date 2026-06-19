@@ -365,6 +365,11 @@ class EngineQueue:
             if error_payload is not None:
                 job.status = "failed"
                 job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                # Mirror every job failure into errors.log so the file holds
+                # a complete trail even when the engine signalled failure via
+                # return-code instead of raising (the case that hid Ellen's
+                # "metadata not found" error from the rotating handler).
+                log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
                 if sub is not None:
                     sub.status = "failed"
             else:
@@ -514,6 +519,11 @@ class EngineQueue:
             if error_payload is not None:
                 job.status = "failed"
                 job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                # Mirror every job failure into errors.log so the file holds
+                # a complete trail even when the engine signalled failure via
+                # return-code instead of raising (the case that hid Ellen's
+                # "metadata not found" error from the rotating handler).
+                log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
             else:
                 job.status = "completed"
                 job.output_path = output_path_str
@@ -573,6 +583,11 @@ class EngineQueue:
             if error_payload is not None:
                 job.status = "failed"
                 job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                # Mirror every job failure into errors.log so the file holds
+                # a complete trail even when the engine signalled failure via
+                # return-code instead of raising (the case that hid Ellen's
+                # "metadata not found" error from the rotating handler).
+                log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
             else:
                 job.status = "completed"
                 job.output_path = output_path_str

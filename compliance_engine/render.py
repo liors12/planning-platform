@@ -24,8 +24,15 @@ and writes never touch _MEIPASS.
 from __future__ import annotations
 
 import json
+import logging
 import sys
 from pathlib import Path
+
+# Module-level logger so errors flow through the rotating file handler
+# attached in run_sidecar.py — not just to stderr (which the Tauri
+# console window swallows when it closes). Errors here are the most
+# common diagnostic surface for render failures.
+_log = logging.getLogger(__name__)
 
 
 def run_render_only(
@@ -57,7 +64,9 @@ def run_render_only(
     submission_dir = base_dir / "projects" / project_key / "submissions" / f"v{submission_version}"
     metadata_path = submission_dir / "metadata.json"
     if not metadata_path.exists():
-        print(f"ERROR: metadata not found at {metadata_path}", file=sys.stderr)
+        msg = f"ERROR: metadata not found at {metadata_path}"
+        print(msg, file=sys.stderr)
+        _log.error(msg)
         return 1
     metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
 
@@ -65,7 +74,9 @@ def run_render_only(
     if not schema_path.exists():
         schema_path = base_dir / f"project-schema-{project_key}-v2.json"
     if not schema_path.exists():
-        print(f"ERROR: schema not found for {project_key}", file=sys.stderr)
+        msg = f"ERROR: schema not found for {project_key}"
+        print(msg, file=sys.stderr)
+        _log.error(msg)
         return 1
 
     output_dir = base_dir / output_subdir / project_key / f"v{submission_version}"
@@ -79,9 +90,11 @@ def run_render_only(
     elif m4_path.exists():
         source_path = m4_path
     else:
-        print(f"ERROR: --render-only needs an existing {m4_path} "
-              f"(or {sanitized_path})", file=sys.stderr)
+        msg = (f"ERROR: --render-only needs an existing {m4_path} "
+               f"(or {sanitized_path})")
+        print(msg, file=sys.stderr)
         print(f"       Run a full audit first, then iterate with --render-only.", file=sys.stderr)
+        _log.error(msg)
         return 1
 
     project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
@@ -91,7 +104,9 @@ def run_render_only(
     discipline_comments = None
     if comments_file is not None:
         if not comments_file.exists():
-            print(f"ERROR: --comments-file not found: {comments_file}", file=sys.stderr)
+            msg = f"ERROR: --comments-file not found: {comments_file}"
+            print(msg, file=sys.stderr)
+            _log.error(msg)
             return 1
         discipline_comments = json.loads(comments_file.read_text(encoding="utf-8"))
         print(f"--render-only: merging {len(discipline_comments)} comment(s) from {comments_file}")
@@ -134,10 +149,12 @@ def run_export_excel(
     elif m4_path.exists():
         source_path = m4_path
     else:
-        print(f"ERROR: --export-excel needs an existing {sanitized_path} "
-              f"(or {m4_path})", file=sys.stderr)
+        msg = (f"ERROR: --export-excel needs an existing {sanitized_path} "
+               f"(or {m4_path})")
+        print(msg, file=sys.stderr)
         print(f"       Run a full audit first, then iterate with --export-excel.",
               file=sys.stderr)
+        _log.error(msg)
         return 1
 
     audit_results = json.loads(source_path.read_text(encoding="utf-8"))
