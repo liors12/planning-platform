@@ -20,17 +20,30 @@ type OutputStatus =
 // act on. Anything we don't recognize gets a generic message that
 // points at the persistent log (Feature 1 / f610e4c). Never surface
 // English / module names / "סכמה" / "מנוע" in the UI.
+//
+// `rawError` is the stringified JSON.parse of job.error from the
+// sidecar — usually shaped {error_type, error_message, stderr_tail?}.
+// We grep across the WHOLE string (incl. stderr_tail) because the
+// engine's actual cause sometimes only appears in stderr while
+// error_message is just "returned 1" / "render exit code 1".
 function friendlyError(rawError: string | undefined | null): string {
-  const msg = String(rawError ?? "");
-  if (/metadata not found/i.test(msg)) {
+  // Pull out stderr_tail if present so we search the engine's prints too.
+  let haystack = String(rawError ?? "");
+  try {
+    const parsed = JSON.parse(haystack);
+    haystack = [parsed.error_message, parsed.stderr_tail, parsed.stdout_tail]
+      .filter(Boolean).join("\n");
+  } catch { /* not JSON — search rawError as-is */ }
+
+  if (/metadata not found/i.test(haystack)) {
     return "לא ניתן ליצור דוח עבור גרסה זו — חסר קובץ מידע על הגרסה. " +
            "נסי למחוק את הגרסה ולהעלות אותה מחדש.";
   }
-  if (/schema not found/i.test(msg)) {
+  if (/schema not found/i.test(haystack)) {
     return "לא ניתן ליצור דוח עבור הפרויקט — חסר קובץ הגדרות. " +
            "פני לתמיכה.";
   }
-  if (/audit_results.*needs|Run a full audit/i.test(msg)) {
+  if (/audit_results.*needs|Run a full audit/i.test(haystack)) {
     return "אין עדיין תוצאות סקירה לגרסה זו. " +
            "יש להריץ את התוכנה תחילה לפני הפקת דוח.";
   }
@@ -148,13 +161,13 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
         : await exportExcel(submissionId);
       const terminal = await pollJobUntilDone(job.id, () => {}, 1000, 120_000);
       if (terminal.status !== "completed") {
-        const detail = terminal.error
-          ? (() => { try { return JSON.parse(terminal.error!).error_message || terminal.error; }
-                     catch { return terminal.error; } })()
-          : "job failed";
+        // Pass the WHOLE error JSON (incl. stderr_tail) so friendlyError
+        // can grep across every field for cause strings like
+        // "metadata not found".
         setOutputStatus((p) => ({
           ...p,
-          [submissionId]: { kind: "error", what: kind, friendly: friendlyError(detail) },
+          [submissionId]: { kind: "error", what: kind,
+                            friendly: friendlyError(terminal.error) },
         }));
       } else {
         setOutputStatus((p) => ({ ...p, [submissionId]: { kind: "success", what: kind } }));
@@ -400,7 +413,9 @@ function OutputBanner({
 
   const labelFor = (k: "pdf" | "xlsx", kind: "working" | "success" | "error") => {
     if (kind === "working") return k === "pdf" ? "יוצרת דו״ח, נא להמתין..." : "יוצרת קובץ אקסל, נא להמתין...";
-    if (kind === "success") return k === "pdf" ? "הדו״ח מוכן ✓"       : "קובץ האקסל מוכן ✓";
+    if (kind === "success") return k === "pdf"
+      ? "הדו״ח מוכן ✓  •  שמור בתיקיית התוצאות של הפרויקט"
+      : "קובץ האקסל מוכן ✓  •  שמור בתיקיית התוצאות של הפרויקט";
     return ""; // error label comes from status.friendly
   };
 

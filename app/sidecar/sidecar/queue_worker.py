@@ -436,25 +436,36 @@ class EngineQueue:
                 # cfg.data_dir (= %LOCALAPPDATA%\\Planning Platform\\) so we
                 # never read or write into _MEIPASS.
                 from compliance_engine.render import run_render_only
+                # Capture the engine's stderr while it runs so the
+                # frontend's friendlyError() mapper has the actual cause
+                # ("metadata not found at …", "schema not found …") to
+                # match on. Without this the only thing the UI sees is
+                # "returned 1" — generic-fallback territory.
+                import contextlib
+                import io
+                _stderr_buf = io.StringIO()
                 try:
-                    rc = run_render_only(
-                        project_key=project_tava_number,
-                        submission_version=normalized_version,
-                        output_subdir="audit_outputs",
-                        comments_file=comments_path,
-                        base_dir=self._cfg.data_dir,
-                    )
+                    with contextlib.redirect_stderr(_stderr_buf):
+                        rc = run_render_only(
+                            project_key=project_tava_number,
+                            submission_version=normalized_version,
+                            output_subdir="audit_outputs",
+                            comments_file=comments_path,
+                            base_dir=self._cfg.data_dir,
+                        )
                 except Exception as exc:
                     log.exception("render job %s in-process call raised", job_id)
                     error_payload = {
                         "error_type": type(exc).__name__,
                         "error_message": str(exc),
+                        "stderr_tail": _stderr_buf.getvalue()[-4000:],
                     }
                     rc = -1
                 if error_payload is None and rc != 0:
                     error_payload = {
                         "error_type": "RenderNonZeroExit",
                         "error_message": f"in-process run_render_only returned {rc}",
+                        "stderr_tail": _stderr_buf.getvalue()[-4000:],
                     }
             else:
                 cmd = [
