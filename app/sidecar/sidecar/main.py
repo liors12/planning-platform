@@ -39,7 +39,7 @@ from .config import VERSION, Config, load
 from .db import build_engine, initialize
 from .jobs.dispatch import JobError, run_job
 from .jobs_routes import make_router as make_jobs_router
-from .models import Project
+from .models import Project, Submission
 from .projects import make_router as make_projects_router
 from .queue_worker import EngineQueue
 from .submissions import make_routers as make_submission_routers
@@ -182,16 +182,132 @@ def _discover_projects(cfg: Config, engine: Engine) -> dict:
             "updated": updated, "skipped_unchanged": skipped}
 
 
+def _discover_submissions(cfg: Config, engine: Engine) -> dict:
+    """Reconcile DB submission rows with the seeded submission tree.
+
+    For each `<data_dir>/projects/<tava>/submissions/<ver_dir>/metadata.json`
+    on disk:
+      - Resolve the parent Project by tava_number.
+      - If no Submission row exists for (project_id, version_string) → INSERT.
+      - Otherwise skip (idempotent — never disturbs a row the user touched).
+
+    Why this exists: the seed-copy step (_seed_data_dir) stages the bundled
+    pilot's PDF, metadata.json, and audit_results onto disk, but until now
+    nothing inserted the matching Submission row. So on every fresh install
+    (or any wipe of platform.db) the UI showed an empty submissions list —
+    Ellen's "missing buttons" and "locked comments tab" today were both
+    symptoms of this. After this fix, a fresh wipe + launch gives a working
+    pilot with no manual steps.
+
+    Status policy: seeded submissions are written with status="complete"
+    because their audit_results.m4 / .sanitized.json are already on disk,
+    i.e. the analysis is effectively done. That single value satisfies all
+    three gates at once:
+      - report buttons (`has_audit_results`, computed from disk presence)
+      - comments tab (`has_audit_results`, same)
+      - findings tab (`status === "complete"`)
+    and gives the run-engine button its correct "הפעילי שוב את התוכנה" label.
+
+    The on-disk version directory is canonical (always `v<bare>` after
+    _canonical_version_segment), so we use that exact name as
+    version_string — matches what an interactive upload of the same
+    version would produce.
+    """
+    projects_root = cfg.data_dir / "projects"
+    if not projects_root.exists():
+        return {"discovered": 0, "inserted": 0, "skipped_existing": 0}
+
+    discovered = inserted = skipped = 0
+    with Session(engine) as sess:
+        for proj_dir in sorted(projects_root.iterdir()):
+            if not proj_dir.is_dir():
+                continue
+            subs_root = proj_dir / "submissions"
+            if not subs_root.is_dir():
+                continue
+            tava = proj_dir.name
+            project = (sess.query(Project)
+                           .filter(Project.tava_number == tava,
+                                   Project.status != "archived")
+                           .first())
+            if project is None:
+                # _discover_projects runs first, so a missing Project row
+                # means the project folder has no _project.json or was
+                # archived. Skip silently — the submission tree may be
+                # leftover data we shouldn't surface.
+                continue
+            for ver_dir in sorted(subs_root.iterdir()):
+                if not ver_dir.is_dir():
+                    continue
+                metadata_path = ver_dir / "metadata.json"
+                if not metadata_path.exists():
+                    continue
+                discovered += 1
+                version_string = ver_dir.name
+                try:
+                    meta = json.loads(metadata_path.read_text(encoding="utf-8"))
+                except (OSError, json.JSONDecodeError) as exc:
+                    log.warning("skip %s: unreadable metadata.json (%s)",
+                                metadata_path, exc)
+                    continue
+                # Idempotency check: skip if a row already exists for this
+                # (project, version). Covers both prior seed runs AND a
+                # row the user uploaded interactively with the same version.
+                existing = (sess.query(Submission)
+                                .filter(Submission.project_id == project.id,
+                                        Submission.version_string == version_string)
+                                .first())
+                if existing is not None:
+                    skipped += 1
+                    continue
+                pdf_leaf = meta.get("file_name") or f"{version_string}.pdf"
+                pdf_path = ver_dir / pdf_leaf
+                # The bundled seed intentionally ships metadata.json WITHOUT
+                # the source PDF — the source plans are too large to commit
+                # (see .gitignore "Sidecar pilot-seed descriptors" block).
+                # We still insert the row because:
+                #   - report buttons gate on has_audit_results (audit_outputs
+                #     are seeded), not on pdf_path existing
+                #   - comments tab gates on has_audit_results
+                #   - findings tab gates on status (set below to "complete")
+                # The one degraded surface is the in-app PDF side viewer,
+                # which 404s until the original plan PDF gets onto disk at
+                # this path. The user-side path to repair: delete the
+                # seeded version (P3 trash button) then re-upload the
+                # real PDF — note this also drops the seeded audit_outputs,
+                # so it's a destructive recovery. A non-destructive "supply
+                # the missing PDF for an existing row" flow isn't shipped yet.
+                if not pdf_path.exists():
+                    log.info(
+                        "seed: %s row created with missing pdf_path=%s — "
+                        "report/comments work; PDF viewer will 404 until "
+                        "delete+reupload",
+                        version_string, pdf_path,
+                    )
+                sess.add(Submission(
+                    project_id=project.id,
+                    version_string=version_string,
+                    status="complete",
+                    pdf_path=str(pdf_path),
+                ))
+                inserted += 1
+        if inserted:
+            sess.commit()
+    return {"discovered": discovered, "inserted": inserted,
+            "skipped_existing": skipped}
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global DB_STATUS
     DB_STATUS = initialize(ENGINE)
     seed_report = _seed_data_dir(CFG)
     discovery_report = _discover_projects(CFG, ENGINE)
+    submission_report = _discover_submissions(CFG, ENGINE)
     log.info("sidecar starting on http://%s:%d "
-             "(data_dir=%s, db=%s, seed=%s, projects=%s)",
+             "(data_dir=%s, db=%s, seed=%s, projects=%s, submissions=%s)",
              CFG.bind_host, CFG.bind_port, CFG.data_dir,
-             DB_STATUS, seed_report, discovery_report)
+             DB_STATUS, seed_report, discovery_report, submission_report)
     await QUEUE.start()
     yield
     await QUEUE.stop()
