@@ -28,10 +28,50 @@ function localAppData(): string {
   return p;
 }
 
+// Discover the Tauri shell .exe rather than hardcoding the filename.
+// First run on the runner proved the assumption "<productName>.exe"
+// wrong — the actual binary lives under %LOCALAPPDATA%\Planning Platform\
+// but with a different name. Mirror the existing CI's discovery pattern:
+// scan top-level *.exe and exclude the three known non-shell binaries.
 export function installedExePath(): string {
-  // Tauri's NSIS template names the shell exe identically to productName,
-  // and installMode=currentUser puts it at the top of %LOCALAPPDATA%\<name>\.
-  return join(localAppData(), PRODUCT_DIR, `${PRODUCT_DIR}.exe`);
+  const dir = join(localAppData(), PRODUCT_DIR);
+  if (!existsSync(dir)) {
+    throw new Error(
+      `Install dir not found at ${dir}. Has the NSIS installer run with /S?`
+    );
+  }
+  const excluded = new Set(["uninstall.exe", "sidecar.exe", "weasyprint.exe"]);
+  const candidates = readdirSync(dir).filter(
+    (n) => n.toLowerCase().endsWith(".exe") && !excluded.has(n.toLowerCase())
+  );
+  if (candidates.length === 0) {
+    throw new Error(
+      `No shell .exe found in ${dir}. Listing: ${readdirSync(dir).join(", ")}`
+    );
+  }
+  if (candidates.length > 1) {
+    // Not fatal — pick the first deterministically (alphabetical) and log.
+    process.stderr.write(
+      `[helpers] Multiple shell .exe candidates in ${dir}: ${candidates.join(", ")}. ` +
+      `Picking ${candidates[0]}.\n`
+    );
+  }
+  return join(dir, candidates[0]);
+}
+
+// Diagnostic listing of the install dir — print before any assertion so a
+// failure artifact shows what was actually on disk, not just the
+// assertion that tripped.
+export function logInstallDirContents(): void {
+  const dir = join(localAppData(), PRODUCT_DIR);
+  if (!existsSync(dir)) {
+    process.stdout.write(`[helpers] Install dir does NOT exist: ${dir}\n`);
+    return;
+  }
+  process.stdout.write(`[helpers] Install dir contents (${dir}):\n`);
+  for (const entry of readdirSync(dir)) {
+    process.stdout.write(`[helpers]   ${entry}\n`);
+  }
 }
 
 export function dataDir(): string {

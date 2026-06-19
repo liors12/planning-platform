@@ -21,6 +21,7 @@ import {
   installedExePath,
   killApp,
   launchApp,
+  logInstallDirContents,
   waitForCdp,
   waitForSidecar,
   wipeData,
@@ -45,12 +46,10 @@ test.beforeAll(async () => {
   if (process.platform !== "win32") {
     test.skip(true, "UI smoke gate only runs on Windows (real WebView2)");
   }
-  if (!existsSync(installedExePath())) {
-    throw new Error(
-      `Installed app not found at ${installedExePath()}. ` +
-      `Run the NSIS installer with /S before this suite.`
-    );
-  }
+  // Diagnostic listing first — proves what's actually on disk, regardless
+  // of whether the exe-discovery below succeeds.
+  logInstallDirContents();
+  installedExePath(); // throws with a useful listing if no shell exe found
 });
 
 test.afterAll(async () => {

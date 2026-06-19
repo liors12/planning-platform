@@ -804,6 +804,13 @@ jobs:
           if (-not (Test-Path $installDir)) {
             throw "install dir missing after NSIS /S: $installDir"
           }
+          # Diagnostic: dump the install dir so we can see exactly what NSIS
+          # wrote — needed because the shell .exe filename isn't guaranteed
+          # to match productName under all bundler configs.
+          Write-Host "── install dir contents ──"
+          Get-ChildItem -Recurse -File $installDir |
+            Select-Object FullName, Length |
+            Format-Table -AutoSize | Out-Host
 
           # Install Playwright test deps. We DON'T `playwright install`
           # browsers — connectOverCDP attaches to WebView2, no bundled
