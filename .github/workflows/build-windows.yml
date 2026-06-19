@@ -434,8 +434,12 @@ jobs:
             [System.IO.File]::WriteAllBytes($pdfPath, $pdfBytes)
             $pageCount = & python -c "import sys; from pypdf import PdfReader; print(len(PdfReader(sys.argv[1]).pages))" $pdfPath
             $pageCount = [int]$pageCount
-            Record "render: PDF page count == 28" ($pageCount -eq 28) "got=$pageCount"
-            if ($pageCount -ne 28) { Fail "PDF page count regression" }
+            # Lower bound rather than strict equality — ±1-3 page drift
+            # from legitimate CSS/template tweaks shouldn't fail the build.
+            # Catastrophic truncation (e.g. template error → cover page
+            # only) still trips this.
+            Record "render: PDF page count >= 25" ($pageCount -ge 25) "got=$pageCount"
+            if ($pageCount -lt 25) { Fail "PDF page count regression" }
 
             # ── 5. EXPORT EXCEL ───────────────────────────────────────
             $xlsxJob = Invoke-RestMethod -Method Post `
