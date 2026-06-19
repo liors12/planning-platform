@@ -462,7 +462,7 @@ jobs:
             # gets bidi-reordered and is unreliable to grep for.
             $marker = "בדיקה_עשן_ייחודי"
             $commentBody = @{
-              discipline_key = "arch"
+              discipline_key = "sec-3-7"
               status         = "נדרשת השלמה"
               topic_he       = $marker
               action_he      = "$marker — פעולה נדרשת לאימות"
