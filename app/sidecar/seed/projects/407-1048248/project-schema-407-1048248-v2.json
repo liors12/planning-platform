@@ -1,0 +1,569 @@
+{
+  "_schema_version": "1.0.0",
+  "_published_date": "2026-05-17",
+  "_source": "Built from v8a handoff verification checklist (Lior, 2026-05-17) — the authoritative source. Approval date 23/06/2025 confirmed against 407-1048248 decision document (session 2025021). Gazette date (06/08/2025) and developer/architect names from handoff; full תקנון PDF was not present in the attachment set under the expected filename — flagged in v8a report.",
+  "project": {
+    "meta": {
+      "plan_number": "407-1048248",
+      "plan_name": "התחדשות עירונית במתחם ההסתדרות-הטייסים, נס ציונה",
+      "plan_name_en": "Urban Renewal — Histadrut-Tayasim Complex, Ness Ziona",
+      "municipality": "ness_ziona",
+      "status": "approved",
+      "approval_committee": "ועדת המשנה להתחדשות עירונית, מחוז המרכז",
+      "approval_decision_date": "2025-06-23",
+      "approval_decision_session": "2025021",
+      "approval_gazette_date": "2025-08-06",
+      "approval_gazette_verification_note": "Gazette date 06/08/2025 per handoff — pending direct verification against ילקוט פרסומים.",
+      "regulatory_mode": "split",
+      "_regulatory_mode_allowed": ["split", "total_area"],
+      "total_site_area_dunam": 22.432,
+      "total_site_area_sqm": 22432,
+      "total_units": 700,
+      "total_residential_buildings": 14,
+      "max_height_absolute_m": 91,
+      "max_height_relief_permitted": false,
+      "max_height_source": "תקנון §6.7 — מעל הגובה הזה תידרש הסכמת רשות התעופה ולא תינתן הקלה (מתחת לתוואי טיסה).",
+      "takkanon_source_file": "407-1048248-takanon.pdf",
+      "takkanon_pages": null,
+      "developer": "אאורה אם.אן.ג'י בטייסים (2018) בע\"מ",
+      "architect_of_record": "קיקה ברא\"ז אדריכלים ומתכנני ערים בע\"מ"
+    },
+    "parcels": [
+      {
+        "parcel_id": "plot_1",
+        "display_label": "מגרש 1",
+        "land_use": "מגורים ד' עם זיקת הנאה לבנייני ציבור בקומת קרקע וקומה א'",
+        "land_use_en": "Residential D + mixed-use public/commercial on ground+1st floor",
+        "uses": ["residential", "public_facility_mixed"],
+        "plot_area_sqm": 5197,
+        "building_rights": {
+          "primary_sqm": 20616,
+          "primary_notes": "שטח עיקרי למגורים",
+          "service_above_sqm": 9278,
+          "service_below_sqm": 17660,
+          "total_sqm": 47554,
+          "mixed_use_public": {
+            "primary_sqm": 600,
+            "service_above_sqm": 900,
+            "service_below_sqm": null,
+            "total_sqm": 1500,
+            "floors_above": 1,
+            "use_description": "מבני ציבור משולבים בקומת קרקע וקומה א'"
+          }
+        },
+        "units": {
+          "max_units": 232,
+          "small_apartment_min_pct_le_55sqm": 5,
+          "small_apartment_min_pct_56_to_75sqm": 15,
+          "avg_unit_size_min_sqm": 100,
+          "storage_max_sqm_per_unit": 6
+        },
+        "height": {
+          "max_height_m": 49,
+          "max_floors_above_entry": 14,
+          "max_basement_floors": 5,
+          "height_notes": "≤10 קומות בחזית להסתדרות + קומה טכנית. פנים המגרש עד 14 קומות. סה\"כ 49 מ' מעל מפלס כניסה קובע, ≤91 מ' מעל פני הים (סעיף 6.7 — אין אפשרות הקלה)."
+        },
+        "setbacks": {
+          "source": "per_tashrit_and_takanon",
+          "front_min_m": null,
+          "side_min_m": null,
+          "rear_min_m": null,
+          "histadrut_facade_setback_m": 1.0,
+          "histadrut_facade_point_exception_to_zero": true,
+          "top_floor_nesigah_min_m": 3.0,
+          "balcony_setback_from_plot_boundary_m": 1.0,
+          "setback_notes": "קווי בניין לרוב לפי תשריט (DWG — טרם נפרק). חזית להסתדרות ≥1 מ' עם חריגי-נקודה ל-0 מ'. נסיגת קומה עליונה ≥3 מ' מחזיתות חזית ושצ\"פ. מרפסות ≥1 מ' מקו המגרש."
+        },
+        "stormwater": {
+          "share_of_plan_total_m3": null,
+          "notes": "ראה global_rules.stormwater_total — סה\"כ 450 מ\"ק לכל התכנית."
+        },
+        "geometry": {
+          "centroid_lon": null,
+          "centroid_lat": null,
+          "kml_boundary": []
+        }
+      },
+      {
+        "parcel_id": "plot_2",
+        "display_label": "מגרש 2",
+        "land_use": "מגורים ד'",
+        "land_use_en": "Residential D",
+        "uses": ["residential"],
+        "plot_area_sqm": 1078,
+        "building_rights": {
+          "primary_sqm": 3922,
+          "service_above_sqm": 1765,
+          "service_below_sqm": 3670,
+          "total_sqm": 9357
+        },
+        "units": {"max_units": 44},
+        "height": {
+          "max_height_m": 37,
+          "max_floors_above_entry": 10,
+          "max_basement_floors": 5
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "top_floor_nesigah_min_m": 3.0,
+          "balcony_setback_from_plot_boundary_m": 1.0
+        },
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_3",
+        "display_label": "מגרש 3",
+        "land_use": "מגורים ד'",
+        "land_use_en": "Residential D",
+        "uses": ["residential"],
+        "plot_area_sqm": 3585,
+        "building_rights": {
+          "primary_sqm": 11590,
+          "service_above_sqm": 5216,
+          "service_below_sqm": 9142,
+          "total_sqm": 25948
+        },
+        "units": {"max_units": 130},
+        "height": {
+          "max_height_m": 37,
+          "max_floors_above_entry": 10,
+          "max_basement_floors": 4
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "top_floor_nesigah_min_m": 3.0,
+          "balcony_setback_from_plot_boundary_m": 1.0
+        },
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_4",
+        "display_label": "מגרש 4",
+        "land_use": "מגורים ד'",
+        "land_use_en": "Residential D",
+        "uses": ["residential"],
+        "plot_area_sqm": 2269,
+        "building_rights": {
+          "primary_sqm": 8724,
+          "service_above_sqm": 3926,
+          "service_below_sqm": 7715,
+          "total_sqm": 20365
+        },
+        "units": {"max_units": 98},
+        "height": {
+          "max_height_m": 45,
+          "max_floors_above_entry": 13,
+          "max_basement_floors": 5,
+          "height_notes": "≤9 קומות בחזית הטייסים + קומה טכנית. פנים המגרש עד 13 קומות."
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "tayasim_facade_floors_max": 9,
+          "top_floor_nesigah_min_m": 3.0,
+          "balcony_setback_from_plot_boundary_m": 1.0
+        },
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_5",
+        "display_label": "מגרש 5",
+        "land_use": "מגורים ד'",
+        "land_use_en": "Residential D",
+        "uses": ["residential"],
+        "plot_area_sqm": 4396,
+        "building_rights": {
+          "primary_sqm": 17448,
+          "service_above_sqm": 7852,
+          "service_below_sqm": 11210,
+          "total_sqm": 36510
+        },
+        "units": {"max_units": 196},
+        "height": {
+          "max_height_m": 45,
+          "max_floors_above_entry": 13,
+          "max_basement_floors": 4,
+          "height_notes": "≤9 קומות בחזית הטייסים + קומה טכנית. פנים המגרש עד 13 קומות."
+        },
+        "setbacks": {
+          "source": "per_tashrit",
+          "tayasim_facade_floors_max": 9,
+          "top_floor_nesigah_min_m": 3.0,
+          "balcony_setback_from_plot_boundary_m": 1.0
+        },
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_6",
+        "display_label": "מגרש 6 (שצ\"פ)",
+        "land_use": "שצ\"פ",
+        "land_use_en": "Public open space",
+        "uses": ["public_open_space"],
+        "plot_area_sqm": null,
+        "building_rights": {"primary_sqm": null, "service_above_sqm": null, "service_below_sqm": null, "total_sqm": null},
+        "units": {"max_units": null},
+        "height": {"max_height_m": null, "max_floors_above_entry": null, "max_basement_floors": null},
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_7",
+        "display_label": "מגרש 7 (שצ\"פ)",
+        "land_use": "שצ\"פ",
+        "land_use_en": "Public open space",
+        "uses": ["public_open_space"],
+        "plot_area_sqm": null,
+        "building_rights": {"primary_sqm": null, "service_above_sqm": null, "service_below_sqm": null, "total_sqm": null},
+        "units": {"max_units": null},
+        "height": {"max_height_m": null, "max_floors_above_entry": null, "max_basement_floors": null},
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_8",
+        "display_label": "מגרש 8 (שצ\"פ)",
+        "land_use": "שצ\"פ",
+        "land_use_en": "Public open space",
+        "uses": ["public_open_space"],
+        "plot_area_sqm": null,
+        "building_rights": {"primary_sqm": null, "service_above_sqm": null, "service_below_sqm": null, "total_sqm": null},
+        "units": {"max_units": null},
+        "height": {"max_height_m": null, "max_floors_above_entry": null, "max_basement_floors": null},
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_9",
+        "display_label": "מגרש 9 (מבני ציבור + 150 מ\"ר מסחר)",
+        "land_use": "מבני ציבור + מסחר משולב",
+        "land_use_en": "Public buildings + 150 m² commercial",
+        "uses": ["public_facility", "commercial"],
+        "plot_area_sqm": 1202,
+        "building_rights": {
+          "primary_sqm": 1020,
+          "primary_commercial_sqm": 100,
+          "service_above_sqm": 250,
+          "service_above_commercial_sqm": 50,
+          "service_below_sqm": null,
+          "total_sqm": 1420
+        },
+        "units": {"max_units": null},
+        "height": {
+          "max_height_m": 12,
+          "max_floors_above_entry": 3,
+          "max_basement_floors": null
+        },
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_10",
+        "display_label": "מגרש 10 (דרך / שימוש מעורב)",
+        "land_use": "דרך (שימוש מעורב)",
+        "land_use_en": "Road (mixed-use)",
+        "uses": ["road"],
+        "plot_area_sqm": 1655,
+        "building_rights": {"primary_sqm": null, "service_above_sqm": null, "service_below_sqm": null, "total_sqm": null},
+        "units": {"max_units": null},
+        "height": {"max_height_m": null, "max_floors_above_entry": null, "max_basement_floors": null},
+        "geometry": {"kml_boundary": []}
+      },
+      {
+        "parcel_id": "plot_20",
+        "display_label": "מגרש 20 (שביל)",
+        "land_use": "שביל",
+        "land_use_en": "Path",
+        "uses": ["path"],
+        "plot_area_sqm": 86,
+        "building_rights": {"primary_sqm": null, "service_above_sqm": null, "service_below_sqm": null, "total_sqm": null},
+        "units": {"max_units": null},
+        "height": {"max_height_m": null, "max_floors_above_entry": null, "max_basement_floors": null},
+        "geometry": {"kml_boundary": []}
+      }
+    ],
+    "compliance_rules": [
+      {
+        "rule_code": "UNIT_COUNT_PLAN_TOTAL",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "sum_units_across_plots",
+        "operator": "<=",
+        "threshold": 700,
+        "unit": "units",
+        "description": "סך יחידות הדיור בכל התכנית לא יעלה על 700.",
+        "source_quote": "סך הכל 700 יח\"ד ב-14 בניינים",
+        "source_section": "§5",
+        "source_page": null,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "HEIGHT_ABSOLUTE_AGL_MAX",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "absolute_height_above_sea_m",
+        "operator": "<=",
+        "threshold": 91,
+        "unit": "m",
+        "description": "גובה מקסימלי מוחלט 91 מ' מעל פני הים — אין אפשרות הקלה (מתחת לתוואי טיסה).",
+        "source_quote": "§6.7 — 91 m absolute, no relief permitted",
+        "source_section": "§6.7",
+        "source_page": null,
+        "severity_if_violated": "critical",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "STORMWATER_RETENTION_TOTAL",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "stormwater_retention_total_m3",
+        "operator": ">=",
+        "threshold": 450,
+        "unit": "m3",
+        "description": "סה\"כ נפח השהיית מי נגר בתחום התכנית: 450 מ\"ק. ≥75% משטח הגינון יושפל ב-~10 ס\"מ ליצירת ~345 מ\"ק על-ידי שקיעה; היתרה — גגות ירוקים/כחולים, השהיה בגג מרתף, וחלחול.",
+        "source_quote": "§6.4 — 450 m³ total retention",
+        "source_section": "§6.4",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "INTER_PLOT_TRANSFER_MAX",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "inter_plot_transfer_pct",
+        "operator": "<=",
+        "threshold": 10,
+        "unit": "pct",
+        "description": "ניוד בין מגרשים ≤10% משטחים/יחידות; לא יתווספו קומות.",
+        "source_quote": "§5 footnotes — inter-plot transfer ≤10% (no extra floors)",
+        "source_section": "§5",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "MIN_DISTANCE_BETWEEN_BUILDINGS",
+        "rule_type": "geometric",
+        "parcel_id": "all",
+        "parameter": "min_distance_between_buildings_m",
+        "operator": ">=",
+        "threshold": 9,
+        "unit": "m",
+        "description": "מרחק מינימלי בין בניינים (כולל מרפסות) ≥9 מ'.",
+        "source_quote": "§5/§6 — ≥9 m including balconies",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "BALCONY_SETBACK_FROM_BOUNDARY",
+        "rule_type": "geometric",
+        "parcel_id": "all",
+        "parameter": "balcony_setback_from_boundary_m",
+        "operator": ">=",
+        "threshold": 1,
+        "unit": "m",
+        "description": "מרפסות במרחק ≥1 מ' מקו המגרש.",
+        "source_quote": "§6 — ≥1 m balcony setback",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "TOP_FLOOR_NESIGAH_MIN",
+        "rule_type": "geometric",
+        "parcel_id": "all",
+        "parameter": "top_floor_nesigah_m",
+        "operator": ">=",
+        "threshold": 3,
+        "unit": "m",
+        "description": "נסיגת קומה עליונה ≥3 מ' מחזית קדמית ומחזיתות הפונות לשצ\"פ.",
+        "source_quote": "§6 — top floor nesigah ≥3 m from front + שצ\"פ-facing",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "PARKING_UNDERGROUND_ALL",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "parking_location",
+        "operator": "=",
+        "threshold": "underground",
+        "unit": null,
+        "description": "כל חניות הדיירים והאורחים — תת-קרקעיות.",
+        "source_quote": "תקנון — כל חניות תת-קרקעיות",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "PARKING_SINGLE_VEHICLE_ENTRANCE",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "parking_entrance_count",
+        "operator": "=",
+        "threshold": 1,
+        "unit": null,
+        "description": "כניסת רכב יחידה למרתף חניה — מרחוב הטייסים בלבד.",
+        "source_quote": "תקנון — single vehicle entrance from Tayasim",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "VISITOR_PARKING_SHARED",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "visitor_parking_assignment",
+        "operator": "=",
+        "threshold": "shared_not_assigned",
+        "unit": null,
+        "description": "חניות אורחים משותפות לכלל הדיירים — לא יוצמדו ליחידות ספציפיות.",
+        "source_quote": "תקנון — visitor parking shared, not assigned",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "minor",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "INFRASTRUCTURE_UNDERGROUND",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "infrastructure_location",
+        "operator": "=",
+        "threshold": "underground",
+        "unit": null,
+        "description": "כל התשתיות (כולל חשמל) — תת-קרקעיות.",
+        "source_quote": "תקנון — all infrastructure underground including electricity",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "major",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "PNEUMATIC_WASTE_VENTS_ROOFTOP",
+        "rule_type": "procedural",
+        "parcel_id": "all",
+        "parameter": "pneumatic_vents_location",
+        "operator": "=",
+        "threshold": "rooftop",
+        "unit": null,
+        "description": "מערכת אשפה פניאומטית מותרת; פתחי איוורור על גגות, לא בגובה הקרקע.",
+        "source_quote": "תקנון — pneumatic vents on roofs not ground level",
+        "source_section": "§6",
+        "source_page": null,
+        "severity_if_violated": "minor",
+        "review_status": "confirmed"
+      },
+      {
+        "rule_code": "STORAGE_ROOM_MAX_PER_UNIT",
+        "rule_type": "numeric",
+        "parcel_id": "all",
+        "parameter": "storage_max_sqm_per_unit",
+        "operator": "<=",
+        "threshold": 6,
+        "unit": "m2",
+        "description": "מחסן דירתי ≤6 מ\"ר לכל יח\"ד.",
+        "source_quote": "§5 footnotes — storage ≤6 m² per unit",
+        "source_section": "§5",
+        "source_page": null,
+        "severity_if_violated": "minor",
+        "review_status": "confirmed"
+      }
+    ],
+    "global_rules": {
+      "small_apartments": {
+        "min_pct_le_55sqm": 5,
+        "min_pct_56_to_75sqm": 15,
+        "avg_unit_size_min_sqm": 100,
+        "avg_unit_size_includes_mamad": true,
+        "scope": "entire_plan",
+        "description": "≥5% מסך היח\"ד עד 55 מ\"ר; ≥15% מסך היח\"ד בטווח 56–75 מ\"ר. גודל דירה ממוצע ≥100 מ\"ר (עיקרי + ממ\"ד)."
+      },
+      "transfer_between_plots": {
+        "max_pct": 10,
+        "scope": "residential_plots_only",
+        "additional_floors_allowed": false,
+        "description": "ניוד ≤10% משטחים ויחידות בין מגרשים; ללא תוספת קומות."
+      },
+      "storage": {
+        "max_sqm_per_unit": 6,
+        "description": "מחסן ≤6 מ\"ר לכל יח\"ד."
+      },
+      "stormwater_total": {
+        "total_required_m3": 450,
+        "redistribution_allowed": true,
+        "garden_lowering_min_pct": 75,
+        "garden_lowering_depth_cm": 10,
+        "garden_lowering_target_m3": 345,
+        "description": "סה\"כ 450 מ\"ק. ≥75% משטח הגינון יושפל ב-~10 ס\"מ ליצירת ~345 מ\"ק. היתרה — גגות ירוקים/כחולים, גג מרתף, וחלחול."
+      },
+      "height_absolute": {
+        "max_m_above_sea": 91,
+        "relief_permitted": false,
+        "reason": "המתחם תחת תוואי טיסה — אין אפשרות הקלה.",
+        "source_section": "§6.7"
+      },
+      "buildings_geometry": {
+        "min_distance_between_buildings_m": 9,
+        "balcony_setback_from_boundary_m": 1,
+        "top_floor_nesigah_min_m": 3,
+        "histadrut_facade_setback_m": 1,
+        "histadrut_facade_point_exception_to_zero": true,
+        "building_lines_other_source": "per תשריט (DWG — currently unparsed)"
+      },
+      "parking": {
+        "location": "underground",
+        "vehicle_entrance_from": "Tayasim_street_only",
+        "vehicle_entrance_count": 1,
+        "visitor_parking_assignment": "shared_not_assigned"
+      },
+      "infrastructure": {
+        "all_underground_including_electricity": true,
+        "pneumatic_waste_permitted": true,
+        "pneumatic_vents_location": "rooftop_not_ground"
+      }
+    },
+    "staging": {
+      "source_section": "§7",
+      "completion_window_years_from_approval": 10,
+      "stages": [
+        {
+          "stage": "A",
+          "label": "דרום",
+          "plots": ["plot_1", "plot_2", "plot_8"],
+          "preconditions": []
+        },
+        {
+          "stage": "B",
+          "label": "צפון",
+          "plots": ["plot_3", "plot_4", "plot_5", "plot_6", "plot_7"],
+          "preconditions": ["plot_10 road construction must start first"]
+        }
+      ]
+    },
+    "geometry": {
+      "coordinate_system": "WGS84",
+      "boundary": {"type": "blue_line", "coordinates": []},
+      "surrounding_buildings_count": null
+    },
+    "digital_files": {
+      "takkanon_pdf": "407-1048248-takanon.pdf (not present in attachment set as of v8a — flagged)",
+      "tashrit_pdf": "407-1048248_תדפיס תשריט מצב מוצע_תשריט מצב מוצע - חתום להפקדה_1.pdf",
+      "kml_plan_boundary": "",
+      "dwg_files": ["407-1048248_קו כחול.dwg", "407-1048248_תאי שטח.dwg"],
+      "shp_file": "407-1048248_קבצי התכנית (SHP)_1.zip"
+    },
+    "submissions": [],
+    "notes": {
+      "context_notes": "Pilot project for the platform. Replaces earlier (incorrect) 407-0977595 schema. Submission v24.3 from Kika Bra'z is the reference architectural plan.",
+      "known_issues": [
+        "תקנון file not under expected name 407-1048248-takanon.pdf in v8a attachment set — schema built from handoff checklist + cross-check of decision PDFs.",
+        "DWG files present but not parsed — building lines remain per תשריט reference until DWG extraction lands."
+      ]
+    }
+  }
+}

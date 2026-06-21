@@ -287,6 +287,161 @@ Re-check after any new batch of corpus PDFs is added.
 
 ---
 
+## Task #26 — Migrate `google-generativeai` → `google-genai` (post-M0)
+
+**Symptom**: `vision_scanner/clause_inventory/extract.py` imports
+`google.generativeai`, which prints a `FutureWarning` on every run:
+
+```
+All support for the `google.generativeai` package has ended. It will no
+longer be receiving updates or bug fixes. Please switch to the
+`google.genai` package as soon as possible.
+```
+
+**Root cause**: Google replaced the SDK. The old package still works for
+`gemini-2.5-pro` calls today, but receives no fixes — any future server
+behavior change or quota / auth tweak could break us with no recourse.
+
+**Workaround in use today**: keep using the deprecated SDK for M0. It
+works correctly with `response_schema=ClausesResponse`, key rotation on
+429, and `usage_metadata`.
+
+**Real fix (deferred)**: swap to `google-genai`. The new API surface
+differs (client object instead of module-level `configure`, different
+generation-config shape, different exception classes) — touching
+`config.py` (rotator) and `extract.py` (call site + 429 handling). Add
+a regression run against `canonical_clauses.json` to confirm the new
+SDK produces a faithfully-comparable output before deleting the old
+import. Not blocking M0 acceptance.
+
+---
+
+## Task #27 — Design-doc to takanon plot-number reconciliation (M2 scope)
+
+**Discovered:** 2026-05-23 during M1 round 2 verification of page 13.
+
+**Issue:** The design document (v24.3) uses a plot-numbering scheme distinct from the takanon's:
+- Takanon plot designations: 1-10 (residential, public, road), 20 (path)
+- Design document labels: "ת.ש 52", "ת.ש 64", and similar — likely cadastral parcels or architect's internal subdivision codes
+
+**Implication for M2:** Unified extraction must reconcile design-doc plot refs with takanon plot designations before compliance checking can proceed. Likely needs a project-level mapping table (manually curated or derived from page-by-page evidence).
+
+**Out of scope for M1.** M1 captures plot refs as visibly printed; M2 does the reconciliation.
+
+**Status (2026-05-24):** Confirmed as M2 scope during PDF design/coverage audit. M1 captures design-doc plot refs as visibly printed (ת.ש 52, 64, etc.); M2's unified extraction will reconcile against takanon plot designations 1-10/20.
+
+---
+
+## Resolved — PDF report design version
+
+**Date:** 2026-05-24
+
+**Context:** Two CSS templates existed in the repo: `v6_design_reference (1).html` (white cover, "בהגשה" column) and `v6_design_reference (2).html` (dark green cover, "בתוכנית עיצוב" column). `report_generator.py:3` was updated to use v2 sometime between May 17 and May 24. Lior reviewed both side-by-side and approved v2 as the canonical design.
+
+**Decision:** v2 is the canonical PDF design. `v6_design_reference (1).html` can be removed or archived. Future PDF iterations build on v2.
+
+**Specifics of approved v2 design:**
+- Cover: dark green full-bleed background
+- Brand color (NZC green #005030) used as accent + background
+- Section 2 table column header: "ממצא בתוכנית עיצוב"
+- Footer format: "מינהלת התחדשות עירונית נס ציונה — סקירת תוכנית עיצוב N / M"
+- Appendix A with title page + content pages
+
+---
+
+## Task #28 — Easements category has 0 implemented rules (M2 scope)
+
+**Discovered:** 2026-05-24 during PDF design/coverage audit
+
+**Issue:** M0 canonical_clauses.json identifies 8 normative clauses in the `easements` category. The current compliance engine has zero rules checking any of these clauses. Submissions with easement-related issues will never be flagged.
+
+**Implication:** M2 must implement rule_code coverage for the 8 easement clauses, OR explicitly document why each is non-checkable (e.g., requires DWG parse, requires manual review).
+
+**Out of scope for M1.**
+
+---
+
+## Task #29 — Phasing category has 0 implemented rules (M2 scope)
+
+**Discovered:** 2026-05-24 during PDF design/coverage audit
+
+**Issue:** M0 identifies 3 normative clauses in `phasing`. Zero corresponding rules. Same pattern as Task #28.
+
+**Out of scope for M1.**
+
+---
+
+## Task #30 — Phantom findings for unsubmitted plots (policy decision)
+
+**Discovered:** 2026-05-24
+
+**Issue:** v24.3 submitted designs for plots 1-5 only. The takanon defines plots 6-10 as well. The current engine flags "missing" plots 6-10 with findings. This is arguably correct (the architect should know they haven't covered the full takanon scope) but could also be noise (those plots may be intentionally deferred).
+
+**Policy decision needed:** Should findings for unsubmitted plots be:
+- (a) Flagged loudly (current behavior)
+- (b) Suppressed unless explicitly requested
+- (c) Shown in a separate "scope gap" section
+
+**Out of scope for M1.** Need Lior + Ellen's input before M2.
+
+---
+
+## Task #31 — Daycare compliance rules not implemented (M2 scope)
+
+**Discovered:** 2026-05-24 during submission coverage audit
+
+**Issue:** v24.3 dedicates 2 pages (27, 28) to detailed מעונות יום (daycare) design — building C1 in plot 1, with explicit areas (שטח מעונות יום קרקע 280 m², שטח חצרות קרקע 195 m², שטח מעונות יום קומה 1 500 m²) and accessibility paths. The compliance engine has **zero rules** for daycare-specific compliance and there is no `daycare` discipline. Daycare content is currently never checked.
+
+**Implication for M2:** Implement rule coverage for daycare requirements per Israeli planning code (תקנות התכנון והבניה — מעונות יום): minimum floor area per child, outdoor space ratio, accessibility, ventilation. Either as a new discipline (`daycare`) or as content rules (`CONTENT_DAYCARE_*`).
+
+**Severity:** Moderate. Reviewers expect daycare compliance to be visible in an automated review for a 700-unit residential submission. Flagged for cover-letter callout on the v24.3 review sent to Ellen.
+
+**Out of scope for M1.**
+
+---
+
+### Task #32 — Engine verdict logic: false "תקין" when verification is partial
+
+**Discovered:** 2026-05-24 during pre-Ellen audit PDF review by Lior
+
+**Issue:** Compliance engine assigns "תקין" verdict whenever a submitted value falls within a plausible range, even when the reasoning text explicitly admits the exact takanon requirement cannot be verified. Example: parking ratio for plot 1 marked "תקין" but the engine's own text says "אימות התאמה מדויקת לתקן... לא קיימת בהגשה זו".
+
+**Affected verdicts:** יחס חניה (all plots), גובה (preliminary checks)
+
+**Root cause:** verdict heuristic checks presence + plausibility, not value-vs-limit conformance.
+
+**Resolution:** addressed by M2/M3 which introduce confidence-graded compliance_indicator with explicit "requires_review" state. Until M4 adapter lands, current engine should be patched to escalate verdict to "דורש בירור" when reasoning contains markers like "ראשונית" / "לא ניתן לאמת" / "דורש טבלת". Patch is pre-M4 work.
+
+**Severity:** High. Affects trust in PDF output. Engineers reading the report would assume "תקין" means verified.
+
+### Task #33 — Engine has zero "לא תקין" verdicts in section 2 for v24.3
+
+**Discovered:** 2026-05-24
+
+**Issue:** Section 2 (תאימות תוכן לתב"ע) of audit_report_24.3.pdf has zero verdicts marked "לא תקין" (actual non-compliance). All defects in the section's 27-count are "לא הוגש" (missing). Submissions of 700 units with detailed tables and dimensions should have at least some genuine non-compliance findings.
+
+**Root cause hypothesis:** rules currently check existence + plausibility, not value-vs-limit. No rule actually compares submitted_value > takanon_limit to fire a violation.
+
+**Resolution:** M2's compliance_indicator includes "non_compliant" state with explicit reasoning. Rules should be reviewed to ensure threshold checks fire when values exceed limits.
+
+**Severity:** High. Engine cannot detect violations, only absence of data.
+
+---
+
+### Task #34 — Critic hallucination risk profile (M3 design constraint, M4 implementation constraint)
+
+**Discovered:** 2026-05-24 during M3 slice 1 verification.
+
+**Issue:** M3 critic (Gemini 2.5 Flash) demonstrated capability for critical-severity hallucinations. Specifically: critic misread "+89.80 m" as "+91.80 m" on page 58 (plot 5 building A5 elevation), flipping M2's correct `compliant` verdict to incorrect `non_compliant`.
+
+**Impact:** If M4 auto-applied critic disagreements as verdict overrides, false violations would propagate to the audit PDF. Engineer trust in the system would erode.
+
+**Resolution (codified in m3_critic_spec.md):** disagree verdicts are flags for human review, not overrides. M4 escalates disagreed findings to requires_review state in engine, never auto-flips M2.
+
+**Additional defenses (m3-v2):** raster DPI bumped 200 → 300 so small floor-ladder labels are clearer; prompt requires exact-text citation of the page label when disagreeing; critical-severity disagreements require an explicit "I re-examined the page at [region]" confirmation or get downgraded.
+
+---
+
 ## Adding entries
 
 When you defer a fix here, follow this template:

@@ -17,6 +17,7 @@ import asyncio
 import json
 import logging
 import subprocess
+import sys
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,14 +29,19 @@ from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import resolve_schema
-from .models import Job, Submission
+from .models import DisciplineComment, Job, Submission
 from .storage import findings_path
+from sqlalchemy import select
 
 log = logging.getLogger(__name__)
 
 
 # Wall-clock budget per docs/architecture/job_types.md `run_audit` row.
 RUN_AUDIT_BUDGET_S = 300.0
+
+# Phase 2b — render-only path skips M1-M4 (~2 sec WeasyPrint pass) but keep a
+# generous budget for cold cache / large reports.
+RENDER_BUDGET_S = 60.0
 
 # Path to the run_audit script. Resolved at module-load so we don't recompute
 # per job. Lives at <REPO_ROOT>/scripts/run_audit.py.
@@ -48,6 +54,24 @@ def _normalize_submission_version(version_string: str) -> str:
     so we strip a leading 'v' here when handing off to the engine.
     Mirror of the deleted engine_bridge._normalize_submission_version."""
     return version_string[1:] if version_string.startswith("v") else version_string
+
+
+def engine_run_available() -> bool:
+    """Whether the full-audit subprocess path (_process_one → run_audit.py)
+    can actually execute on this machine.
+
+    The subprocess path spawns `cfg.sidecar_python` — which defaults to
+    `/opt/homebrew/bin/python3.13` (macOS Homebrew) when PLATFORM_PYTHON
+    isn't set. On a PyInstaller-frozen Windows install there's no
+    external Python interpreter, that path doesn't exist, and
+    `subprocess.run` raises FileNotFoundError [WinError 2]. The render-
+    only path already has a win32+frozen in-process branch
+    (_process_render_pdf); _process_one does not. Until it does, the
+    "הפעילי את התוכנה" button cannot succeed in the Windows package.
+
+    Returns False precisely when the subprocess path would 100% fail
+    pre-flight. macOS dev and non-frozen runs are unaffected."""
+    return not (sys.platform == "win32" and getattr(sys, "frozen", False))
 
 
 class EngineQueue:
@@ -115,6 +139,64 @@ class EngineQueue:
             log.info("enqueued job %s for submission %s", job_id, submission_id)
             return job
 
+    def enqueue_excel(self, submission_id: int) -> Job:
+        """Queue an architect-response Excel export. Fast (~1-2s), no
+        subprocess. Submission status is NOT changed."""
+        with Session(self._engine) as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise ValueError(f"submission {submission_id} not found")
+            job_id = str(uuid.uuid4())
+            job_dir = self._cfg.jobs_dir / job_id
+            job_dir.mkdir(parents=True, exist_ok=True)
+            job = Job(
+                id=job_id,
+                job_type="export_excel",
+                submission_id=submission_id,
+                status="queued",
+                job_dir=str(job_dir),
+            )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            if self._loop is None:
+                raise RuntimeError("EngineQueue.start() was not called")
+            asyncio.run_coroutine_threadsafe(self._queue.put(job_id), self._loop)
+            log.info("enqueued excel job %s for submission %s",
+                     job_id, submission_id)
+            return job
+
+    def enqueue_render(self, submission_id: int) -> Job:
+        """Phase 2b Module D: queue a --render-only re-render that merges
+        the submission's current discipline_comments into the PDF.
+
+        Unlike enqueue_run_audit, the submission status is NOT flipped to
+        'analyzing' — re-rendering does not change the underlying analysis.
+        """
+        with Session(self._engine) as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise ValueError(f"submission {submission_id} not found")
+            job_id = str(uuid.uuid4())
+            job_dir = self._cfg.jobs_dir / job_id
+            job_dir.mkdir(parents=True, exist_ok=True)
+            job = Job(
+                id=job_id,
+                job_type="render_pdf",
+                submission_id=submission_id,
+                status="queued",
+                job_dir=str(job_dir),
+            )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            if self._loop is None:
+                raise RuntimeError("EngineQueue.start() was not called")
+            asyncio.run_coroutine_threadsafe(self._queue.put(job_id), self._loop)
+            log.info("enqueued render job %s for submission %s",
+                     job_id, submission_id)
+            return job
+
     def get_job(self, job_id: str) -> Optional[Job]:
         with Session(self._engine) as sess:
             return sess.get(Job, job_id)
@@ -147,14 +229,40 @@ class EngineQueue:
                 self._fail(sess, job, error_type="MissingSubmission",
                            error_message=f"submission {job.submission_id} not found at job-pickup time")
                 return
+            # Capture EVERY field we'll need after session close. SQLAlchemy's
+            # default expire_on_commit=True blanks all instance attributes at
+            # commit; once the `with` block exits, any access on the detached
+            # `sub` raises DetachedInstanceError. Caught a real-world hang here:
+            # `sub.id` accessed below the commit kept render jobs stuck at
+            # "running" forever because the worker raised before persist.
+            submission_id_local = sub.id
             project_id = sub.project_id
             project_tava_number = sub.project.tava_number
             submission_version_string = sub.version_string
             submission_pdf_path = sub.pdf_path
+            job_type = job.job_type
             job_dir_str = job.job_dir
             job.status = "running"
             job.started_at = datetime.now(timezone.utc)
             sess.commit()
+
+        if job_type == "render_pdf":
+            self._process_render_pdf(
+                job_id=job_id,
+                submission_id=submission_id_local,
+                project_tava_number=project_tava_number,
+                submission_version_string=submission_version_string,
+                job_dir_str=job_dir_str,
+            )
+            return
+
+        if job_type == "export_excel":
+            self._process_export_excel(
+                job_id=job_id,
+                project_tava_number=project_tava_number,
+                submission_version_string=submission_version_string,
+            )
+            return
 
         # Heavy work happens outside the session (subprocess.run blocks).
         # Phase 2b: write job_input.json with platform paths and spawn
@@ -254,12 +362,31 @@ class EngineQueue:
                 "error_message": f"run_audit exceeded {RUN_AUDIT_BUDGET_S}s wall-clock budget; killed",
             }
         except FileNotFoundError as exc:
-            # Most commonly: schema missing. Caught here so we can surface a
-            # clean error_type rather than the generic Exception branch.
-            error_payload = {
-                "error_type": "SchemaNotFound",
-                "error_message": str(exc),
-            }
+            # Two distinct sources for FileNotFoundError land here:
+            #   1. resolve_schema() — genuine missing project schema
+            #   2. subprocess.run() — the spawned interpreter doesn't
+            #      exist (the win32+frozen case: cfg.sidecar_python =
+            #      /opt/homebrew/bin/python3.13 which isn't on Windows).
+            # Mislabeling case 2 as "SchemaNotFound" sent Ellen on a
+            # wild goose chase. Disambiguate by checking whether the
+            # missing path matches the sidecar_python config.
+            missing = getattr(exc, "filename", "") or str(exc)
+            if missing and missing == self._cfg.sidecar_python:
+                error_payload = {
+                    "error_type": "EngineNotAvailable",
+                    "error_message": (
+                        "Engine subprocess interpreter not found: "
+                        f"{self._cfg.sidecar_python!r} does not exist on this machine. "
+                        "Full-audit runs require a Python interpreter on PATH or "
+                        "PLATFORM_PYTHON; the win32+frozen build needs an in-process "
+                        "branch (see _process_render_pdf for the pattern)."
+                    ),
+                }
+            else:
+                error_payload = {
+                    "error_type": "SchemaNotFound",
+                    "error_message": str(exc),
+                }
         except Exception as exc:
             log.exception("run_audit job %s crashed", job_id)
             error_payload = {
@@ -275,6 +402,11 @@ class EngineQueue:
             if error_payload is not None:
                 job.status = "failed"
                 job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                # Mirror every job failure into errors.log so the file holds
+                # a complete trail even when the engine signalled failure via
+                # return-code instead of raising (the case that hid Ellen's
+                # "metadata not found" error from the rotating handler).
+                log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
                 if sub is not None:
                     sub.status = "failed"
             else:
@@ -287,6 +419,229 @@ class EngineQueue:
             job.completed_at = now
             sess.commit()
             log.info("job %s finished: status=%s", job_id, job.status)
+
+    def _process_render_pdf(
+        self,
+        *,
+        job_id: str,
+        submission_id: int,
+        project_tava_number: str,
+        submission_version_string: str,
+        job_dir_str: str,
+    ) -> None:
+        """Phase 2b Module D: spawn `run_audit.py --render-only --comments-file ...`.
+
+        Writes the submission's current discipline_comments to job_dir/comments.json,
+        invokes the render path, and persists job status. No job_output.json is
+        produced — success = PDF exists at the canonical path.
+        """
+        error_payload = None
+        try:
+            job_dir = Path(job_dir_str)
+            normalized_version = _normalize_submission_version(submission_version_string)
+
+            # Snapshot comments to disk for the engine to read.
+            with Session(self._engine) as sess:
+                rows = sess.execute(
+                    select(DisciplineComment)
+                    .where(DisciplineComment.submission_id == submission_id)
+                    .order_by(DisciplineComment.discipline_key,
+                              DisciplineComment.created_at)
+                ).scalars().all()
+                comments_payload = [r.to_dict() for r in rows]
+            comments_path = job_dir / "comments.json"
+            comments_path.write_text(
+                json.dumps(comments_payload, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+            # Branch by platform-frozen state. The frozen Windows build has no
+            # external Python interpreter to spawn (sidecar.exe IS the runtime
+            # and cfg.sidecar_python defaults to /opt/homebrew/bin/python3.13
+            # which doesn't exist on Windows). Falling through the subprocess
+            # path on macOS/dev keeps that flow byte-identical.
+            use_inproc = sys.platform == "win32" and getattr(sys, "frozen", False)
+
+            if use_inproc:
+                log.info(
+                    "render job %s: in-process path (win32+frozen) tava=%s ver=%s",
+                    job_id, project_tava_number, normalized_version,
+                )
+                # Local import: defers the engine import until a render job
+                # actually arrives, keeps sidecar cold-start light. The
+                # base_dir kwarg routes every user-data lookup through
+                # cfg.data_dir (= %LOCALAPPDATA%\\Planning Platform\\) so we
+                # never read or write into _MEIPASS.
+                from compliance_engine.render import run_render_only
+                # Capture the engine's stderr while it runs so the
+                # frontend's friendlyError() mapper has the actual cause
+                # ("metadata not found at …", "schema not found …") to
+                # match on. Without this the only thing the UI sees is
+                # "returned 1" — generic-fallback territory.
+                import contextlib
+                import io
+                _stderr_buf = io.StringIO()
+                try:
+                    with contextlib.redirect_stderr(_stderr_buf):
+                        rc = run_render_only(
+                            project_key=project_tava_number,
+                            submission_version=normalized_version,
+                            output_subdir="audit_outputs",
+                            comments_file=comments_path,
+                            base_dir=self._cfg.data_dir,
+                        )
+                except Exception as exc:
+                    log.exception("render job %s in-process call raised", job_id)
+                    error_payload = {
+                        "error_type": type(exc).__name__,
+                        "error_message": str(exc),
+                        "stderr_tail": _stderr_buf.getvalue()[-4000:],
+                    }
+                    rc = -1
+                if error_payload is None and rc != 0:
+                    error_payload = {
+                        "error_type": "RenderNonZeroExit",
+                        "error_message": f"in-process run_render_only returned {rc}",
+                        "stderr_tail": _stderr_buf.getvalue()[-4000:],
+                    }
+            else:
+                cmd = [
+                    self._cfg.sidecar_python,
+                    str(_RUN_AUDIT_PATH),
+                    "--render-only",
+                    "--comments-file", str(comments_path),
+                    project_tava_number,
+                    normalized_version,
+                ]
+                log.info("spawning render: %s", cmd)
+                result = subprocess.run(
+                    cmd,
+                    cwd=str(_RUN_AUDIT_PATH.parent.parent),
+                    capture_output=True, text=True,
+                    timeout=RENDER_BUDGET_S,
+                    check=False,
+                )
+                if result.returncode != 0:
+                    error_payload = {
+                        "error_type": "RenderNonZeroExit",
+                        "error_message": f"render exit code {result.returncode}",
+                        "stderr_tail": (result.stderr or "")[-4000:],
+                        "stdout_tail": (result.stdout or "")[-2000:],
+                    }
+
+            # Shared post-check — locate the PDF the render wrote (or should
+            # have written). In-process used cfg.data_dir as base; subprocess
+            # used _RUN_AUDIT_PATH.parent.parent (= repo root in dev).
+            if error_payload is None:
+                base_for_pdf = (
+                    self._cfg.data_dir if use_inproc
+                    else _RUN_AUDIT_PATH.parent.parent
+                )
+                pdf_path = (
+                    base_for_pdf / "audit_outputs"
+                    / project_tava_number / f"v{normalized_version}"
+                    / f"audit_report_{normalized_version}.pdf"
+                )
+                if not pdf_path.exists():
+                    error_payload = {
+                        "error_type": "MissingRenderOutput",
+                        "error_message": f"render exited 0 but no PDF at {pdf_path}",
+                    }
+                else:
+                    output_path_str = str(pdf_path)
+        except subprocess.TimeoutExpired:
+            error_payload = {
+                "error_type": "TimeoutExpired",
+                "error_message": f"render exceeded {RENDER_BUDGET_S}s wall-clock budget; killed",
+            }
+        except Exception as exc:
+            log.exception("render job %s crashed", job_id)
+            error_payload = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            now = datetime.now(timezone.utc)
+            if error_payload is not None:
+                job.status = "failed"
+                job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                # Mirror every job failure into errors.log so the file holds
+                # a complete trail even when the engine signalled failure via
+                # return-code instead of raising (the case that hid Ellen's
+                # "metadata not found" error from the rotating handler).
+                log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
+            else:
+                job.status = "completed"
+                job.output_path = output_path_str
+            job.completed_at = now
+            sess.commit()
+            log.info("render job %s finished: status=%s", job_id, job.status)
+
+    def _process_export_excel(
+        self,
+        *,
+        job_id: str,
+        project_tava_number: str,
+        submission_version_string: str,
+    ) -> None:
+        """Generate the architect-response XLSX via the in-process engine
+        helper. Fast — no subprocess, no timeout budget needed at this size."""
+        error_payload = None
+        output_path_str: Optional[str] = None
+        try:
+            normalized_version = _normalize_submission_version(submission_version_string)
+            # Local import to keep cold-start light (same pattern as render).
+            from compliance_engine.render import run_export_excel
+            rc = run_export_excel(
+                project_key=project_tava_number,
+                submission_version=normalized_version,
+                output_subdir="audit_outputs",
+                base_dir=self._cfg.data_dir,
+            )
+            if rc != 0:
+                error_payload = {
+                    "error_type": "ExcelNonZeroExit",
+                    "error_message": f"run_export_excel returned {rc}",
+                }
+            else:
+                xlsx_path = (
+                    self._cfg.data_dir / "audit_outputs"
+                    / project_tava_number / f"v{normalized_version}"
+                    / f"הערות_סקירה_v{normalized_version}.xlsx"
+                )
+                if not xlsx_path.exists():
+                    error_payload = {
+                        "error_type": "MissingExcelOutput",
+                        "error_message": f"export exited 0 but no XLSX at {xlsx_path}",
+                    }
+                else:
+                    output_path_str = str(xlsx_path)
+        except Exception as exc:
+            log.exception("excel job %s crashed", job_id)
+            error_payload = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            now = datetime.now(timezone.utc)
+            if error_payload is not None:
+                job.status = "failed"
+                job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                # Mirror every job failure into errors.log so the file holds
+                # a complete trail even when the engine signalled failure via
+                # return-code instead of raising (the case that hid Ellen's
+                # "metadata not found" error from the rotating handler).
+                log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
+            else:
+                job.status = "completed"
+                job.output_path = output_path_str
+            job.completed_at = now
+            sess.commit()
+            log.info("excel job %s finished: status=%s", job_id, job.status)
 
     def _fail(self, sess: Session, job: Job, *, error_type: str, error_message: str) -> None:
         job.status = "failed"

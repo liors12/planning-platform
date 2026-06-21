@@ -37,12 +37,12 @@ export function DebugOverlay({ findings }: Props) {
       <div className="debug-overlay-card">
         <header className="debug-header">
           <span className="debug-eyebrow">דיבאג · Cmd+Shift+D לסגירה</span>
-          <button className="debug-close" onClick={() => setOpen(false)} aria-label="סגור">✕</button>
+          <button className="debug-close" onClick={() => setOpen(false)} aria-label="סגרי">✕</button>
         </header>
         <div className="debug-body">
           <h3>findings.json</h3>
           {findings === null ? (
-            <p className="muted">אין findings טעונים כעת. פתח פרויקט עם הגשה שהמנוע סיים להריץ.</p>
+            <p className="muted">אין findings טעונים כעת. פתחי פרויקט עם הגשה שהתוכנה סיימה להריץ.</p>
           ) : (
             <pre dir="ltr" className="debug-json">
               {JSON.stringify(findings, null, 2)}

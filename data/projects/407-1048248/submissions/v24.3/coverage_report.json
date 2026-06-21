@@ -1,0 +1,762 @@
+{
+  "generated_at": "2026-05-25T09:35:41Z",
+  "m4_version": "m4-v1",
+  "summary": {
+    "total_normative_clauses": 93,
+    "engine_content_rules": 9,
+    "page_count": 63,
+    "page_coverage": {
+      "FULL": 55,
+      "PARTIAL": 7,
+      "UNADDRESSED": 1
+    }
+  },
+  "section_5_1_full": [
+    {
+      "category": "building_geometry",
+      "category_he": "גאומטריית בינוי וקווי בניין",
+      "normative_clauses": 11,
+      "verdict_counts": {
+        "requires_review": 15,
+        "not_applicable": 5,
+        "not_submitted": 1,
+        "pass": 1
+      }
+    },
+    {
+      "category": "building_height_safety",
+      "category_he": "בטיחות גובה בנייה",
+      "normative_clauses": 5,
+      "verdict_counts": {}
+    },
+    {
+      "category": "building_rights",
+      "category_he": "זכויות בנייה (טבלת זכויות)",
+      "normative_clauses": 1,
+      "verdict_counts": {
+        "not_submitted": 19,
+        "not_applicable": 20,
+        "pass": 5
+      }
+    },
+    {
+      "category": "building_use",
+      "category_he": "תכליות בנייה",
+      "normative_clauses": 12,
+      "verdict_counts": {
+        "requires_review": 1
+      }
+    },
+    {
+      "category": "identification",
+      "category_he": "זיהוי וסיווג",
+      "normative_clauses": 1,
+      "verdict_counts": {}
+    },
+    {
+      "category": "parking",
+      "category_he": "חניה",
+      "normative_clauses": 4,
+      "verdict_counts": {
+        "requires_review": 5,
+        "pass": 6
+      }
+    },
+    {
+      "category": "procedural",
+      "category_he": "הוראות פרוצדורליות",
+      "normative_clauses": 13,
+      "verdict_counts": {}
+    }
+  ],
+  "section_5_2_partial": [
+    {
+      "category": "infrastructure",
+      "category_he": "תשתיות",
+      "normative_clauses": 15,
+      "verdict_counts": {}
+    },
+    {
+      "category": "public_areas",
+      "category_he": "שטחי ציבור",
+      "normative_clauses": 2,
+      "verdict_counts": {}
+    },
+    {
+      "category": "stormwater",
+      "category_he": "ניקוז ונגר",
+      "normative_clauses": 11,
+      "verdict_counts": {
+        "requires_review": 1
+      }
+    },
+    {
+      "category": "tree_preservation",
+      "category_he": "שימור עצים בוגרים",
+      "normative_clauses": 7,
+      "verdict_counts": {}
+    }
+  ],
+  "section_5_3_none": [
+    {
+      "category": "easements",
+      "category_he": "זיקות הנאה",
+      "normative_clauses": 8,
+      "verdict_counts": {}
+    },
+    {
+      "category": "phasing",
+      "category_he": "שלביות ביצוע",
+      "normative_clauses": 3,
+      "verdict_counts": {}
+    }
+  ],
+  "section_5_3_highlighted_gaps": [
+    {
+      "title": "מעונות יום",
+      "detail": "ההגשה מציגה מעונות יום בתא שטח 1 (עמודים 27-28) אך אין במנוע התאימות כלל ייעודי לבדיקת תקנות מעונות יום (שטח לכל ילד, חצרות, נגישות).",
+      "task_ref": "Task #31"
+    },
+    {
+      "title": "זיקות הנאה (פינוי תת-קרקעי)",
+      "detail": "תקנון מכיל 8 סעיפים נורמטיביים בקטגוריית זיקות הנאה — אף אחד מהם אינו מקבל בדיקה אוטומטית. ממצא חמור: זיקת הנאה מתא שטח 2 לחלקה 12 (סעיף 6.6.4) לא ממוצגת בהגשה.",
+      "task_ref": "Task #28"
+    },
+    {
+      "title": "שלביות ביצוע",
+      "detail": "תקנון מציין תוכנית שלביות (שלב א/ב) בסעיף 7.1.1; אין שלביות בהגשה ואין במנוע כלל לבדיקה.",
+      "task_ref": "Task #29"
+    },
+    {
+      "title": "שטחי בנייה (עיקרי / שירות מעל / שירות מתחת)",
+      "detail": "ההגשה אינה כוללת טבלת שטחים מפורטת. כל 33 שורות הבדיקה בקטגוריות אלו מציגות 'לא הוגש' (11 תאי שטח × 3 שדות). יש לצרף בהגשה הבאה טבלת שטחים מפורטת (שטח עיקרי / שטחי שירות מעל / שטחי שירות מתחת) פר תא שטח.",
+      "task_ref": null
+    },
+    {
+      "title": "תאי שטח 6, 7, 8, 9, 10 ו-20",
+      "detail": "תוכנית עיצוב v24.3 מתייחסת רק לתאי שטח 1-5. תאי השטח 6-10 (מבני ציבור, דרכים, שצ\"פ) ותא שטח 20 (דרך) מקבלים סטטוס 'לא הוגש' בכל הבדיקות. נדרשת הגשה משלימה או הצדקה לאי-הכללתם.",
+      "task_ref": "Task #30"
+    },
+    {
+      "title": "פירוט תמהיל דירות (קטנות / בינוניות / גדולות)",
+      "detail": "ההגשה מציגה התפלגות לפי מספר חדרים, אך טבלת הזכויות וההוראות בתקנון התב\"ע (סעיף 5) מצריכה פילוח לפי שטח (≤55 מ\"ר / 56-75 / 76-99 / ≥100). בחלק מתאי השטח לא ניתן לפצל ללא שטח לכל יחידת דיור.",
+      "task_ref": null
+    }
+  ],
+  "section_5_4_page_rows": [
+    {
+      "page_number": 1,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 2,
+      "page_type": "table_of_contents",
+      "page_type_he": "תוכן עניינים",
+      "ta_shetach_refs": [
+        2,
+        4,
+        3,
+        5,
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 3,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 4,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 5,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 6,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [],
+      "coverage": "PARTIAL"
+    },
+    {
+      "page_number": 7,
+      "page_type": "summary",
+      "page_type_he": "סיכום",
+      "ta_shetach_refs": [],
+      "coverage": "PARTIAL"
+    },
+    {
+      "page_number": 8,
+      "page_type": "summary",
+      "page_type_he": "סיכום",
+      "ta_shetach_refs": [
+        52,
+        64,
+        20
+      ],
+      "coverage": "PARTIAL"
+    },
+    {
+      "page_number": 9,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 10,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 11,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 12,
+      "page_type": "other",
+      "page_type_he": "אחר",
+      "ta_shetach_refs": [],
+      "coverage": "UNADDRESSED"
+    },
+    {
+      "page_number": 13,
+      "page_type": "public_open_space",
+      "page_type_he": "שצ\"פ",
+      "ta_shetach_refs": [
+        52,
+        54
+      ],
+      "coverage": "PARTIAL"
+    },
+    {
+      "page_number": 14,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [
+        52,
+        54
+      ],
+      "coverage": "PARTIAL"
+    },
+    {
+      "page_number": 15,
+      "page_type": "public_open_space",
+      "page_type_he": "שצ\"פ",
+      "ta_shetach_refs": [],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 16,
+      "page_type": "public_open_space",
+      "page_type_he": "שצ\"פ",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 17,
+      "page_type": "public_open_space",
+      "page_type_he": "שצ\"פ",
+      "ta_shetach_refs": [
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 18,
+      "page_type": "public_open_space",
+      "page_type_he": "שצ\"פ",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 19,
+      "page_type": "public_open_space",
+      "page_type_he": "שצ\"פ",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 20,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 21,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        1,
+        2
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 22,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        5,
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 23,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 24,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 25,
+      "page_type": "waste_diagram",
+      "page_type_he": "דיאגרמת אשפה",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 26,
+      "page_type": "functions_diagram",
+      "page_type_he": "דיאגרמת פונקציות",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 27,
+      "page_type": "daycare",
+      "page_type_he": "מעונות יום",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "PARTIAL"
+    },
+    {
+      "page_number": 28,
+      "page_type": "daycare",
+      "page_type_he": "מעונות יום",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "PARTIAL"
+    },
+    {
+      "page_number": 29,
+      "page_type": "basement_with_parking_table",
+      "page_type_he": "מרתף עם טבלת חניה",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 30,
+      "page_type": "typical_floor",
+      "page_type_he": "קומה טיפוסית",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 31,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 32,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 33,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 34,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 35,
+      "page_type": "waste_diagram",
+      "page_type_he": "דיאגרמת אשפה",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 36,
+      "page_type": "functions_diagram",
+      "page_type_he": "דיאגרמת פונקציות",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 37,
+      "page_type": "basement_with_parking_table",
+      "page_type_he": "מרתף עם טבלת חניה",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 38,
+      "page_type": "typical_floor",
+      "page_type_he": "קומה טיפוסית",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 39,
+      "page_type": "site_plan_per_ta_shetach",
+      "page_type_he": "תוכנית פיתוח פר תא שטח",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 40,
+      "page_type": "waste_diagram",
+      "page_type_he": "דיאגרמת אשפה",
+      "ta_shetach_refs": [
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 41,
+      "page_type": "functions_diagram",
+      "page_type_he": "דיאגרמת פונקציות",
+      "ta_shetach_refs": [
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 42,
+      "page_type": "basement_with_parking_table",
+      "page_type_he": "מרתף עם טבלת חניה",
+      "ta_shetach_refs": [
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 43,
+      "page_type": "typical_floor",
+      "page_type_he": "קומה טיפוסית",
+      "ta_shetach_refs": [
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 44,
+      "page_type": "waste_diagram",
+      "page_type_he": "דיאגרמת אשפה",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 45,
+      "page_type": "functions_diagram",
+      "page_type_he": "דיאגרמת פונקציות",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 46,
+      "page_type": "basement_with_parking_table",
+      "page_type_he": "מרתף עם טבלת חניה",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 47,
+      "page_type": "typical_floor",
+      "page_type_he": "קומה טיפוסית",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 48,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 49,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        1,
+        4,
+        5,
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 50,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 51,
+      "page_type": "cross_section",
+      "page_type_he": "חתך",
+      "ta_shetach_refs": [
+        1,
+        3,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 52,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        3,
+        2,
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 53,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        1,
+        2,
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 54,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        5,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 55,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        4,
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 56,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        2,
+        4
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 57,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        4,
+        2
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 58,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        3,
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 59,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        5
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 60,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        3
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 61,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 62,
+      "page_type": "elevation",
+      "page_type_he": "חזית",
+      "ta_shetach_refs": [
+        1
+      ],
+      "coverage": "FULL"
+    },
+    {
+      "page_number": 63,
+      "page_type": "rendering",
+      "page_type_he": "הדמיה",
+      "ta_shetach_refs": [],
+      "coverage": "FULL"
+    }
+  ],
+  "section_5_5_disclaimer_he": "סקירה אוטומטית זו אינה תחליף לבדיקה ידנית של מהנדס/ת המינהלת. הקטגוריות בסעיף 5.3 דורשות בדיקה אישית. סעיף זה נועד להבטיח שקיפות מלאה על היקף הבדיקה — מה נבדק אוטומטית, מה נבדק חלקית, ומה לא נבדק כלל.",
+  "known_tasks": {
+    "Task #10": "`curl … -sS` readiness checks missing `--fail`",
+    "Task #12": "`prep_cowork_session.sh` wedges on exit",
+    "Task #13": "Dev wrapper dies on screen lock / sleep",
+    "Task #14": "Startup race: WebView fetch before sidecar binds 17321",
+    "Task #17": "`screencapture` Screen Recording perm gap",
+    "Task #18": "React key collision: `rule_code=CONTENT_UNIT_COUNT`",
+    "Task #19": "Dev-mode console 404",
+    "Task #21": "Stale orphan directory at `/Users/liorlevin/Desktop/:planning-platform:`",
+    "Task #22": "Source documents in data/ not version-controlled",
+    "Task #24": "Monitor src/corpus/ size; evaluate Git LFS at 200 MB",
+    "Task #26": "Migrate `google-generativeai` → `google-genai`",
+    "Task #27": "Design-doc to takanon plot-number reconciliation",
+    "Task #28": "Easements category has 0 implemented rules",
+    "Task #29": "Phasing category has 0 implemented rules",
+    "Task #30": "Phantom findings for unsubmitted plots",
+    "Task #31": "Daycare compliance rules not implemented",
+    "Task #32": "Engine verdict logic: false \"תקין\" when verification is partial",
+    "Task #33": "Engine has zero \"לא תקין\" verdicts in section 2 for v24.3",
+    "Task #34": "Critic hallucination risk profile"
+  }
+}

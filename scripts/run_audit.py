@@ -240,8 +240,18 @@ def _run_legacy_positional(project_key: str, submission_version: str,
     if generate_pdf:
         project_schema = json.loads(schema_path.read_text(encoding="utf-8"))
         pdf_out = output_dir / f"audit_report_{submission_version}.pdf"
+        # M4: if an M4-enriched audit_results.m4.json exists alongside the
+        # engine output, prefer it for PDF rendering. The .m4 file extends the
+        # engine schema with override + sidecar info; report_generator falls
+        # back to engine behavior when M4-specific keys are absent.
+        m4_path = output_dir / "audit_results.m4.json"
+        if m4_path.exists():
+            print(f"M4 enriched results detected at {m4_path} — using for PDF render")
+            results_for_pdf = json.loads(m4_path.read_text(encoding="utf-8"))
+        else:
+            results_for_pdf = results
         generate_audit_pdf(
-            audit_results=results,
+            audit_results=results_for_pdf,
             project_schema=project_schema,
             submission_metadata=metadata,
             output_path=pdf_out,
@@ -267,10 +277,55 @@ def _print_verdict_summary(label: str, rules: list[dict], include_total: bool = 
 # CLI dispatch
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _run_from_html(html_path: Path, output_pdf: Path | None) -> int:
+    """M7.7 --from-html: skip everything; pipe `html_path` straight to WeasyPrint.
+
+    Cheapest possible loop for HTML-editing iteration. Embeds the report
+    generator's CSS so the dumped HTML is self-rendering. Output defaults
+    to the same stem as the input.
+    """
+    from compliance_engine.report_generator import _CSS, FONT_DIR
+    from weasyprint import HTML, CSS as WeasyCSS
+    from weasyprint.text.fonts import FontConfiguration
+
+    html_path = Path(html_path)
+    if not html_path.exists():
+        print(f"ERROR: HTML not found at {html_path}", file=sys.stderr)
+        return 1
+    if output_pdf is None:
+        output_pdf = html_path.with_suffix(".pdf")
+    else:
+        output_pdf = Path(output_pdf)
+        output_pdf.parent.mkdir(parents=True, exist_ok=True)
+
+    html_str = html_path.read_text(encoding="utf-8")
+    font_config = FontConfiguration()
+    base = str(FONT_DIR) + "/"
+    HTML(string=html_str, base_url=base).write_pdf(
+        str(output_pdf),
+        stylesheets=[WeasyCSS(string=_CSS, base_url=base, font_config=font_config)],
+        font_config=font_config,
+    )
+    print(f"PDF rendered: {output_pdf}")
+    return 0
+
+
+# Library-level entry points used to live here. They now live in
+# compliance_engine/render.py — a properly bundled module — so the sidecar's
+# in-process render path works under PyInstaller without the `scripts/`
+# import hack. CLI dispatch below re-uses them under their original names
+# so legacy `--render-only` and `--export-excel` invocations keep working.
+from compliance_engine.render import (
+    run_render_only as _run_render_only,
+    run_export_excel as _run_export_excel,
+)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Run a full compliance audit on a submission.",
-        epilog="Either --job-dir DIR or positional PROJECT_KEY + SUBMISSION_VERSION required.",
+        epilog="Either --job-dir DIR or positional PROJECT_KEY + SUBMISSION_VERSION required. "
+               "Use --from-html for a WeasyPrint-only pass; --render-only to skip the engine.",
     )
     parser.add_argument("project_key", nargs="?",
                         help="(legacy) e.g., 407-1048248")
@@ -283,7 +338,37 @@ def main(argv: list[str] | None = None) -> int:
                         help="(legacy) override the audit_outputs root.")
     parser.add_argument("--no-pdf", action="store_true",
                         help="(legacy) skip PDF report generation.")
+    parser.add_argument("--from-html", type=Path, default=None,
+                        help="M7.7: render PDF directly from this HTML file. "
+                             "Skips ALL analysis — no engine, no pipeline. "
+                             "Pairs with the HTML dump that report_generator "
+                             "writes alongside every PDF.")
+    parser.add_argument("--from-html-output", type=Path, default=None,
+                        help="With --from-html: output PDF path. "
+                             "Default: same stem as input HTML.")
+    parser.add_argument("--render-only", action="store_true",
+                        help="M7.7: skip the engine + analysis; render PDF "
+                             "from the existing audit_results.m4.json. "
+                             "Requires a prior full run for this submission.")
+    parser.add_argument("--export-excel", action="store_true",
+                        help="Skip PDF rendering; instead export the "
+                             "audit_results.m4.sanitized.json (preferred) "
+                             "or audit_results.m4.json (fallback) as a "
+                             "single-sheet RTL Excel workbook for the "
+                             "architect-response workflow. Requires a prior "
+                             "full run for this submission.")
+    parser.add_argument("--comments-file", type=Path, default=None,
+                        help="Phase 2b: with --render-only, merge "
+                             "discipline_comments JSON rows into §3 at render "
+                             "time. Each entry: {discipline_key, status, "
+                             "topic_he, action_he}. Does NOT modify "
+                             "audit_results.m4.json.")
     args = parser.parse_args(argv)
+
+    # M7.7: --from-html is the lightest path — pure WeasyPrint pass, no
+    # project schema, no submission metadata.
+    if args.from_html is not None:
+        return _run_from_html(args.from_html, args.from_html_output)
 
     if args.job_dir is not None:
         return _run_with_job_dir(args.job_dir)
@@ -291,6 +376,24 @@ def main(argv: list[str] | None = None) -> int:
     if not args.project_key or not args.submission_version:
         parser.error(
             "either --job-dir DIR or positional PROJECT_KEY SUBMISSION_VERSION required"
+        )
+
+    # M7.7: --render-only skips the engine + pipeline; re-renders only.
+    if args.render_only:
+        return _run_render_only(
+            project_key=args.project_key,
+            submission_version=args.submission_version,
+            output_subdir=args.output_dir,
+            comments_file=args.comments_file,
+        )
+
+    # Architect-response workflow: skip PDF, emit XLSX from the same
+    # sanitized JSON the render path reads.
+    if args.export_excel:
+        return _run_export_excel(
+            project_key=args.project_key,
+            submission_version=args.submission_version,
+            output_subdir=args.output_dir,
         )
 
     return _run_legacy_positional(

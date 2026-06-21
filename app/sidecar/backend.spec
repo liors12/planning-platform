@@ -18,7 +18,14 @@
 #     doesn't work for a frozen build. Phase 4 will produce per-worker binaries
 #     OR a multi-mode binary that dispatches by --worker-name CLI arg.
 
+import os
 from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
+
+# Repo root — needed in pathex so PyInstaller's Analysis pass can resolve
+# `compliance_engine.*` imports that originate from inside the sidecar
+# package (queue_worker → compliance_engine.render). SPECPATH = the
+# directory containing this spec file = app/sidecar/.
+ROOT_FROM_SPEC = os.path.abspath(os.path.join(SPECPATH, "..", ".."))
 
 block_cipher = None
 
@@ -26,6 +33,24 @@ hidden_imports = [
     # SQLAlchemy needs explicit dialect imports under PyInstaller because the
     # entry-point introspection doesn't carry through.
     *collect_submodules("sqlalchemy.dialects.sqlite"),
+    # ── compliance_engine: render + Excel-export path only ───────────────
+    # Listed by name (rather than collect_submodules("compliance_engine"))
+    # because the package also contains heavy submodules — format_rules_
+    # checker imports fitz, cad_ingest imports ezdxf, etc. — that are
+    # explicitly excluded below. A blanket collect_submodules would sweep
+    # those in and break Analysis. The four modules below are what
+    # queue_worker._process_render_pdf and _process_export_excel actually
+    # reach for at runtime; verified: none of them import any other
+    # compliance_engine.* module, so this whitelist is closed.
+    "compliance_engine",
+    "compliance_engine.render",
+    "compliance_engine.report_generator",
+    "compliance_engine.report_surgery",
+    "compliance_engine.excel_export",
+    # openpyxl is excel_export's hard dependency. Lazy-imported inside
+    # excel_export's body — PyInstaller's static analysis doesn't follow
+    # transitively into deferred imports, so make it explicit.
+    *collect_submodules("openpyxl"),
     # uvicorn's [standard] extras: httptools, websockets, watchfiles, etc.
     "uvicorn.logging",
     "uvicorn.loops",
@@ -43,23 +68,44 @@ hidden_imports = [
     "fastapi",
     "pydantic",
     "pydantic_core",
-    # SQLCipher native + binding
-    "sqlcipher3",
 ]
 
-binaries = []
-# Collect the libsqlcipher dylib that sqlcipher3 links against. On macOS this
-# resolves the /opt/homebrew/opt/sqlcipher/lib reference at runtime.
-binaries += collect_dynamic_libs("sqlcipher3")
+# SQLCipher is optional — only collect it if installed (macOS dev build has
+# it; Windows pilot build falls back to stdlib sqlite3 via db.py's
+# try/except import). Conditional avoids "package not found" errors at
+# PyInstaller analysis time on Windows.
+try:
+    import sqlcipher3  # noqa: F401  # presence-only test
+    hidden_imports.append("sqlcipher3")
+    binaries = collect_dynamic_libs("sqlcipher3")
+except ImportError:
+    binaries = []
 
 a = Analysis(
     # Use the launcher shim (run_sidecar.py) so `sidecar.main` is imported as
     # a package member; otherwise its relative imports break (see pain point
     # #1 in app/sidecar/PYINSTALLER_NOTES.md).
     ["run_sidecar.py"],
-    pathex=[],
+    # Repo root on pathex so `compliance_engine.*` imports resolve from
+    # inside the sidecar package's queue_worker module. Without this,
+    # PyInstaller's import-graph walker can't see compliance_engine and
+    # the frozen bundle crashes with ModuleNotFoundError at render time.
+    pathex=[ROOT_FROM_SPEC],
     binaries=binaries,
-    datas=[],
+    # Stage the static assets + first-run seed inside the bundle.
+    # All source paths are relative to this spec file: app/sidecar/backend.spec.
+    #
+    # The render pipeline + main.py resolve these via sys._MEIPASS at runtime:
+    #   compliance_engine._resolve_font_dir            → assets/fonts/
+    #   compliance_engine._resolve_logo_path           → assets/nessziona_logo.png
+    #   compliance_engine._resolve_format_rules_path   → submission_format_rules.json
+    #   sidecar.main._seed_data_dir                    → seed/  (~370 KB pilot data)
+    datas=[
+        ("../../assets/fonts", "assets/fonts"),
+        ("../../assets/nessziona_logo.png", "assets"),
+        ("../../submission_format_rules.json", "."),
+        ("seed", "seed"),
+    ],
     hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},

@@ -1,0 +1,420 @@
+{
+  "project_id": "407-1048248",
+  "generated_at": "2026-05-25T10:44:54Z",
+  "source_pages": [
+    26,
+    36,
+    41,
+    45
+  ],
+  "residential_plots": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "amenities": [
+    {
+      "key": "bike_room",
+      "hebrew": "חדר אופניים",
+      "regulatory_anchor": "סעיף 4.1.2.12 לתקנון התב\"ע — הוראה רכה",
+      "audit_note": "נבדק כתקין במסגרת מנוע הציות (סעיף 4.1.2.12).",
+      "per_plot": {
+        "1": {
+          "detected": true,
+          "source_page": 26,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "2": {
+          "detected": true,
+          "source_page": 36,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "3": {
+          "detected": true,
+          "source_page": 41,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "4": {
+          "detected": true,
+          "source_page": 36,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "5": {
+          "detected": true,
+          "source_page": 45,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "6": {
+          "detected": false,
+          "non_residential": true
+        },
+        "7": {
+          "detected": false,
+          "non_residential": true
+        },
+        "8": {
+          "detected": false,
+          "non_residential": true
+        },
+        "9": {
+          "detected": false,
+          "non_residential": true
+        },
+        "10": {
+          "detected": false,
+          "non_residential": true
+        },
+        "20": {
+          "detected": false,
+          "non_residential": true
+        }
+      },
+      "detection_rate": 5,
+      "detected_anywhere": true
+    },
+    {
+      "key": "private_storage",
+      "hebrew": "מחסן (ברמת מבנה)",
+      "regulatory_anchor": "סעיף 5 הערת שוליים בתקנון — ≤6 מ\"ר ליח\"ד (מחסן פרטי, לא ברמת מבנה)",
+      "audit_note": "מצוין בנפרד מנושא שטחי הבנייה.",
+      "per_plot": {
+        "1": {
+          "detected": false
+        },
+        "2": {
+          "detected": false
+        },
+        "3": {
+          "detected": false
+        },
+        "4": {
+          "detected": false
+        },
+        "5": {
+          "detected": true,
+          "source_page": 45,
+          "raw_label": "מחסן"
+        },
+        "6": {
+          "detected": false,
+          "non_residential": true
+        },
+        "7": {
+          "detected": false,
+          "non_residential": true
+        },
+        "8": {
+          "detected": false,
+          "non_residential": true
+        },
+        "9": {
+          "detected": false,
+          "non_residential": true
+        },
+        "10": {
+          "detected": false,
+          "non_residential": true
+        },
+        "20": {
+          "detected": false,
+          "non_residential": true
+        }
+      },
+      "detection_rate": 1,
+      "detected_anywhere": true
+    },
+    {
+      "key": "stroller_room",
+      "hebrew": "חדר עגלות",
+      "regulatory_anchor": null,
+      "audit_note": null,
+      "per_plot": {
+        "1": {
+          "detected": true,
+          "source_page": 26,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "2": {
+          "detected": true,
+          "source_page": 36,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "3": {
+          "detected": true,
+          "source_page": 41,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "4": {
+          "detected": true,
+          "source_page": 36,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "5": {
+          "detected": true,
+          "source_page": 45,
+          "raw_label": "חדרי אופניים ועגלות"
+        },
+        "6": {
+          "detected": false,
+          "non_residential": true
+        },
+        "7": {
+          "detected": false,
+          "non_residential": true
+        },
+        "8": {
+          "detected": false,
+          "non_residential": true
+        },
+        "9": {
+          "detected": false,
+          "non_residential": true
+        },
+        "10": {
+          "detected": false,
+          "non_residential": true
+        },
+        "20": {
+          "detected": false,
+          "non_residential": true
+        }
+      },
+      "detection_rate": 5,
+      "detected_anywhere": true
+    },
+    {
+      "key": "clubhouse",
+      "hebrew": "מועדון דיירים",
+      "regulatory_anchor": null,
+      "audit_note": null,
+      "per_plot": {
+        "1": {
+          "detected": true,
+          "source_page": 26,
+          "raw_label": "מועדון דיירים"
+        },
+        "2": {
+          "detected": true,
+          "source_page": 36,
+          "raw_label": "מועדון דיירים"
+        },
+        "3": {
+          "detected": true,
+          "source_page": 41,
+          "raw_label": "מועדון דיירים"
+        },
+        "4": {
+          "detected": true,
+          "source_page": 36,
+          "raw_label": "מועדון דיירים"
+        },
+        "5": {
+          "detected": true,
+          "source_page": 45,
+          "raw_label": "מועדון דיירים"
+        },
+        "6": {
+          "detected": false,
+          "non_residential": true
+        },
+        "7": {
+          "detected": false,
+          "non_residential": true
+        },
+        "8": {
+          "detected": false,
+          "non_residential": true
+        },
+        "9": {
+          "detected": false,
+          "non_residential": true
+        },
+        "10": {
+          "detected": false,
+          "non_residential": true
+        },
+        "20": {
+          "detected": false,
+          "non_residential": true
+        }
+      },
+      "detection_rate": 5,
+      "detected_anywhere": true
+    },
+    {
+      "key": "gym",
+      "hebrew": "חדר כושר / מתקני כושר",
+      "regulatory_anchor": null,
+      "audit_note": null,
+      "per_plot": {
+        "1": {
+          "detected": true,
+          "source_page": 26,
+          "raw_label": "חדר כושר"
+        },
+        "2": {
+          "detected": false
+        },
+        "3": {
+          "detected": true,
+          "source_page": 41,
+          "raw_label": "מתקני כושר"
+        },
+        "4": {
+          "detected": false
+        },
+        "5": {
+          "detected": false
+        },
+        "6": {
+          "detected": false,
+          "non_residential": true
+        },
+        "7": {
+          "detected": false,
+          "non_residential": true
+        },
+        "8": {
+          "detected": false,
+          "non_residential": true
+        },
+        "9": {
+          "detected": false,
+          "non_residential": true
+        },
+        "10": {
+          "detected": false,
+          "non_residential": true
+        },
+        "20": {
+          "detected": false,
+          "non_residential": true
+        }
+      },
+      "detection_rate": 2,
+      "detected_anywhere": true
+    },
+    {
+      "key": "hoa_room",
+      "hebrew": "חדר ועד בית",
+      "regulatory_anchor": null,
+      "audit_note": null,
+      "per_plot": {
+        "1": {
+          "detected": false
+        },
+        "2": {
+          "detected": false
+        },
+        "3": {
+          "detected": false
+        },
+        "4": {
+          "detected": false
+        },
+        "5": {
+          "detected": false
+        },
+        "6": {
+          "detected": false,
+          "non_residential": true
+        },
+        "7": {
+          "detected": false,
+          "non_residential": true
+        },
+        "8": {
+          "detected": false,
+          "non_residential": true
+        },
+        "9": {
+          "detected": false,
+          "non_residential": true
+        },
+        "10": {
+          "detected": false,
+          "non_residential": true
+        },
+        "20": {
+          "detected": false,
+          "non_residential": true
+        }
+      },
+      "detection_rate": 0,
+      "detected_anywhere": false
+    },
+    {
+      "key": "mailbox_room",
+      "hebrew": "חדר תאי דואר",
+      "regulatory_anchor": null,
+      "audit_note": null,
+      "per_plot": {
+        "1": {
+          "detected": false
+        },
+        "2": {
+          "detected": false
+        },
+        "3": {
+          "detected": false
+        },
+        "4": {
+          "detected": false
+        },
+        "5": {
+          "detected": false
+        },
+        "6": {
+          "detected": false,
+          "non_residential": true
+        },
+        "7": {
+          "detected": false,
+          "non_residential": true
+        },
+        "8": {
+          "detected": false,
+          "non_residential": true
+        },
+        "9": {
+          "detected": false,
+          "non_residential": true
+        },
+        "10": {
+          "detected": false,
+          "non_residential": true
+        },
+        "20": {
+          "detected": false,
+          "non_residential": true
+        }
+      },
+      "detection_rate": 0,
+      "detected_anywhere": false
+    }
+  ],
+  "gaps_summary": {
+    "always_detected": [
+      "bike_room",
+      "stroller_room",
+      "clubhouse"
+    ],
+    "partial": [
+      "private_storage",
+      "gym"
+    ],
+    "never_detected": [
+      "hoa_room",
+      "mailbox_room"
+    ]
+  },
+  "clarification_needed": {
+    "missing_categories": [
+      "חדר ועד בית",
+      "חדר תאי דואר"
+    ],
+    "hebrew": "דרישה לעיון: לא זוהו בדיאגרמות הפונקציות בעמודי 26, 36, 41, 45 הקטגוריות הבאות:\n- חדר ועד בית\n- חדר תאי דואר\n\nייתכן שמדובר באלמנטים נדרשים שאינם מתוארים בדיאגרמות הקיימות. יש להבהיר האם:\nא. אלמנטים אלה קיימים בהגשה ומתוארים בעמודים אחרים;\nב. אלמנטים אלה אינם נדרשים על-פי הנחיות נס ציונה;\nג. אלמנטים אלה חסרים ויש להוסיפם בהגשה הבאה."
+  }
+}

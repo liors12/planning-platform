@@ -1,0 +1,965 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:           # manual trigger
+  push:
+    tags:
+      - 'v*'                   # version-tag releases
+    branches:
+      - main
+    paths:                     # skip build on doc/test-only changes
+      - 'app/**'
+      - '.github/workflows/build-windows.yml'
+      - '.github/workflows/ui-smoke.yml'
+
+permissions:
+  contents: write          # softprops/action-gh-release needs write to create tags + releases
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    # 30 min was tight even with caches warm — `cargo install tauri-cli`
+    # alone compiled for 15-20 min on cold caches and we hit the wall
+    # during NSIS build on run 27398687926. With cargo-binstall pulling
+    # a prebuilt tauri-cli in seconds (see "Install Tauri CLI" step
+    # below), 60 min is generous headroom for the Tauri NSIS build
+    # itself.
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install sidecar dependencies (Windows-compatible)
+        # sqlcipher3 has no Windows wheels on PyPI. Skip it for the pilot —
+        # db.py falls back to stdlib sqlite3 (no at-rest encryption) when the
+        # import fails. Phase 4 (Ellen-PIN-derived keys) will need a real
+        # Windows SQLCipher story (vcpkg / bundled DLL).
+        shell: bash
+        run: |
+          cd app/sidecar
+          # Don't `pip install --upgrade pip` — Windows runner errors out
+          # demanding `python -m pip` form. Existing pip is fine.
+          grep -v "^sqlcipher3" requirements.txt > requirements-no-sqlcipher.txt
+          pip install -r requirements-no-sqlcipher.txt
+          pip install pyinstaller
+
+      - name: Download WeasyPrint Windows release (v68.1)
+        # WeasyPrint has no usable Windows wheel — its native GTK/Pango/Cairo
+        # deps aren't shippable through pip. Kozea publishes a standalone CLI
+        # zip with the full dependency stack bundled. We download it, unpack,
+        # and ship it next to the sidecar as a sibling Tauri resource. The
+        # engine spawns it as a subprocess from
+        # compliance_engine/report_generator.py:_render_to_pdf_via_subprocess.
+        shell: bash
+        run: |
+          cd app/sidecar
+          curl -L --fail -o weasyprint-windows.zip \
+            https://github.com/Kozea/WeasyPrint/releases/download/v68.1/weasyprint-windows.zip
+          unzip -q weasyprint-windows.zip -d weasyprint-zip
+          mkdir -p weasyprint_bundle
+          # The release zip contains a top-level dist/ folder with
+          # weasyprint.exe and its native DLLs. Copy its contents verbatim.
+          cp -r weasyprint-zip/dist/* weasyprint_bundle/
+          ls weasyprint_bundle | head -20
+          rm -rf weasyprint-zip weasyprint-windows.zip
+
+      - name: Verify required seed files are present before bundling
+        # Catches the .gitignore-eats-seed-files class of bug (fixed in
+        # 3e3b48b) BEFORE PyInstaller runs, not 20 minutes later in the
+        # boot smoke-test. Cheap, explicit, hard to trick — if any of
+        # these are missing from the checkout, the build aborts here
+        # with a clear message instead of producing a silently-broken
+        # installer.
+        shell: bash
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          REQUIRED_SEED_FILES = [
+              "app/sidecar/seed/projects/407-1048248/_project.json",
+              "app/sidecar/seed/projects/407-1048248/project-schema-407-1048248-v2.json",
+              "app/sidecar/seed/projects/407-1048248/submissions/v24.3/metadata.json",
+          ]
+          missing = [f for f in REQUIRED_SEED_FILES if not Path(f).exists()]
+          if missing:
+              print("FAIL: required seed files missing from checkout:", file=sys.stderr)
+              for f in missing:
+                  print(f"  - {f}", file=sys.stderr)
+              print("\nLikely cause: a .gitignore rule is eating them. See commit 3e3b48b.",
+                    file=sys.stderr)
+              sys.exit(1)
+          print(f"OK: all {len(REQUIRED_SEED_FILES)} required seed files present")
+          PY
+
+      - name: Build sidecar with PyInstaller (--onedir)
+        # Uses the existing backend.spec which already has the right
+        # hidden-imports + binary collection set up. Output lands at
+        # app/sidecar/dist/sidecar/sidecar.exe (+ supporting DLLs).
+        shell: bash
+        run: |
+          cd app/sidecar
+          pyinstaller backend.spec --noconfirm
+          ls dist/sidecar | head -20
+
+      - name: Stage sidecar + WeasyPrint bundles for Tauri
+        # Tauri's bundle.resources expects binaries under
+        # app/tauri/binaries/sidecar/**. lib.rs spawns binaries/sidecar/sidecar
+        # via BaseDirectory::Resource at runtime.
+        #
+        # WeasyPrint ships as a sibling at binaries/weasyprint/weasyprint.exe
+        # — the engine's _resolve_weasyprint_exe() looks for it relative to
+        # the sidecar's location at runtime.
+        shell: bash
+        run: |
+          mkdir -p app/tauri/binaries/sidecar
+          cp -r app/sidecar/dist/sidecar/* app/tauri/binaries/sidecar/
+          ls app/tauri/binaries/sidecar | head -20
+
+          mkdir -p app/tauri/binaries/weasyprint
+          cp -r app/sidecar/weasyprint_bundle/* app/tauri/binaries/weasyprint/
+          echo "─── binaries/weasyprint/ contents ───"
+          ls app/tauri/binaries/weasyprint | head -20
+          test -f app/tauri/binaries/weasyprint/weasyprint.exe \
+            || { echo "FAIL: weasyprint.exe not staged"; exit 1; }
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install frontend dependencies
+        shell: bash
+        run: |
+          cd app/frontend
+          npm ci
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + Tauri build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            app/tauri/target
+          # ~/.cargo/bin covers cargo-binstall itself + the tauri-cli prebuilt
+          # binary, saving the ~30s re-download on cache hits.
+          key: ${{ runner.os }}-cargo-${{ hashFiles('app/tauri/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install cargo-binstall
+        # cargo-binstall pulls prebuilt binaries from upstream GitHub releases
+        # instead of compiling from source. The setup action below downloads
+        # binstall itself in seconds.
+        uses: cargo-bins/cargo-binstall@main
+
+      - name: Install Tauri CLI (prebuilt binary)
+        # Previous "cargo install tauri-cli --locked" compiled from source —
+        # 15-20 min on cold caches, the dominant cost in run 27398687926
+        # which then ran out the 30-min job clock during the NSIS build.
+        # `cargo binstall` fetches the official Tauri release binary from
+        # https://github.com/tauri-apps/tauri/releases and finishes in <30s.
+        # --no-confirm is required in CI (no interactive prompt available);
+        # --locked tracks the same SemVer constraint we had before.
+        #
+        # Cache note: ~/.cargo/bin is now cached (see cargo cache step). When
+        # the cache is warm, cargo-tauri.exe already exists and binstall would
+        # error "binary already exists — add --force to overwrite". Skip the
+        # install entirely if the binary is already on PATH from the cache.
+        shell: bash
+        run: |
+          if cargo tauri --version > /dev/null 2>&1; then
+            echo "cargo-tauri already installed from cache: $(cargo tauri --version)"
+          else
+            cargo binstall --no-confirm --locked tauri-cli@^2
+          fi
+
+      - name: Build Tauri app (NSIS installer)
+        # Unsigned for the pilot. NSIS installer config:
+        #   - installMode "currentUser" → per-user install to %LOCALAPPDATA%,
+        #     no UAC prompt (asInvoker semantics).
+        #   - webviewInstallMode "skip" → Ellen is on Windows 11; WebView2 is
+        #     pre-installed, no bootstrapper download needed.
+        # Both are set in app/tauri/tauri.conf.json under bundle.windows.
+        shell: bash
+        run: |
+          cd app/tauri
+          cargo tauri build --bundles nsis
+
+      - name: List build output
+        shell: bash
+        run: |
+          ls -la app/tauri/target/release/bundle/ || true
+          ls -la app/tauri/target/release/bundle/nsis/ || true
+
+      - name: Boot smoke-test (sidecar on windows-latest — no SQLCipher)
+        # Exercises the EXACT failure surface that broke Ellen's first install
+        # (a SQLCipher-only PRAGMA crashed boot under the stdlib sqlite3
+        # fallback). windows-latest has no SQLCipher wheel available, so this
+        # is the same environment as a fresh user install. A green "build
+        # succeeded" only proves bundling — this proves the app actually boots.
+        # If the sidecar fails to respond on /health within 30s the release
+        # step never runs (no broken installer ever reaches users).
+        shell: pwsh
+        run: |
+          $exe = "app\tauri\binaries\sidecar\sidecar.exe"
+          if (-not (Test-Path $exe)) {
+            Write-Error "FAIL: sidecar.exe not found at $exe"
+            exit 1
+          }
+
+          $log = "sidecar-smoke.stdout.log"
+          $err = "sidecar-smoke.stderr.log"
+          # Isolate to a tempdir so the smoke test doesn't leave state under
+          # the runner's %LOCALAPPDATA% (matters if anyone caches builds).
+          $env:PLATFORM_DATA_DIR = Join-Path $env:RUNNER_TEMP "sidecar-smoke-data"
+          New-Item -ItemType Directory -Force -Path $env:PLATFORM_DATA_DIR | Out-Null
+          Write-Host "PLATFORM_DATA_DIR = $env:PLATFORM_DATA_DIR"
+
+          $proc = Start-Process -FilePath $exe `
+            -RedirectStandardOutput $log -RedirectStandardError $err `
+            -NoNewWindow -PassThru
+          Write-Host "Started sidecar.exe PID=$($proc.Id); polling /health for ≤30s"
+
+          $deadline = (Get-Date).AddSeconds(30)
+          $passed = $false
+          while ((Get-Date) -lt $deadline) {
+            Start-Sleep -Milliseconds 500
+            if ($proc.HasExited) {
+              Write-Host "Sidecar exited early — code $($proc.ExitCode)"
+              break
+            }
+            try {
+              $resp = Invoke-WebRequest -UseBasicParsing `
+                -Uri http://127.0.0.1:17321/health -TimeoutSec 2
+              Write-Host "✓ /health responded $($resp.StatusCode) after $([int]((Get-Date) - $deadline.AddSeconds(-30)).TotalSeconds)s"
+              $passed = $true
+              break
+            } catch {
+              # Connection refused / not yet listening — loop and retry
+            }
+          }
+
+          # Seed discovery probe — catches the class of bug where seed
+          # _project.json files are silently absent from the installer (e.g.
+          # the .gitignore `projects/` rule that dropped them before commit
+          # 3e3b48b). /health passes either way; only /projects exposes
+          # whether the pilot was actually seeded into the DB.
+          $seeded = $false
+          $seedErr = ""
+          if ($passed) {
+            try {
+              $projResp = Invoke-WebRequest -UseBasicParsing `
+                -Uri http://127.0.0.1:17321/projects -TimeoutSec 5
+              $projects = $projResp.Content | ConvertFrom-Json
+              $count = @($projects).Count
+              Write-Host "✓ /projects returned $count row(s)"
+              if ($count -lt 1) {
+                $seedErr = "/projects returned an empty list — seed _project.json files likely missing from the installer (regression of the .gitignore bug fixed in 3e3b48b)."
+              } else {
+                # /projects ≥1 proves _project.json was bundled + discovered.
+                # Also assert project-schema-*.json landed on disk, since the
+                # engine needs it to run — a missing schema would let the app
+                # boot looking healthy but blow up on the first engine run.
+                $schemaPath = Join-Path $env:PLATFORM_DATA_DIR `
+                  "projects\407-1048248\project-schema-407-1048248-v2.json"
+                if (Test-Path $schemaPath) {
+                  Write-Host "✓ project-schema present at $schemaPath"
+                  $seeded = $true
+                } else {
+                  $seedErr = "project-schema file missing on disk at $schemaPath — seed copy bundled _project.json but not the schema."
+                }
+              }
+            } catch {
+              $seedErr = "/projects probe FAILED: $($_.Exception.Message)"
+            }
+          }
+
+          Write-Host "`n─── sidecar.exe stdout ───"
+          if (Test-Path $log) { Get-Content $log } else { Write-Host "(no stdout captured)" }
+          Write-Host "`n─── sidecar.exe stderr ───"
+          if (Test-Path $err) { Get-Content $err } else { Write-Host "(no stderr captured)" }
+
+          if (-not $proc.HasExited) {
+            Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+          }
+
+          if (-not $passed) {
+            Write-Error "Boot smoke-test FAILED — sidecar did not respond to /health within 30s. See stdout/stderr above for the crash."
+            exit 1
+          }
+          if (-not $seeded) {
+            Write-Error "Boot smoke-test FAILED — $seedErr"
+            exit 1
+          }
+          Write-Host "Boot smoke-test PASSED ✓"
+
+      - name: End-to-end smoke test against the installed artifact
+        # The boot smoke-test above exercises the staged sidecar binary
+        # before NSIS bundling. THIS step exercises the actual installer
+        # the user downloads: silent install → launch sidecar → drive the
+        # full user flow (render PDF, export Excel, add comment, re-render)
+        # → uninstall. Would have caught: No module named 'scripts'
+        # (broke render-only in the packaged build), missing seed files,
+        # the SQLCipher cipher_version crash, and any Tauri/NSIS layout
+        # drift between staged and installed binaries.
+        #
+        # COVERAGE MAP — each user-flow stage maps to specific Record() calls:
+        #   1. Install → boot → seed → discovery
+        #        install: NSIS /S, install dir, sidecar.exe, weasyprint.exe,
+        #        shell exe, boot: /health 200, boot: seed projects/...,
+        #        boot: /projects >= 1
+        #   2. Upload submission
+        #        submission: POST created v24.3 row,
+        #        submission: has_audit_results == true
+        #   3. Render PDF → download → verify
+        #        render: job completed, render: report.pdf body > 10KB,
+        #        render: PDF page count >= 25
+        #   4. Export Excel → download → verify
+        #        excel: job completed, excel: report.xlsx body > 5KB
+        #   5. Post a comment → re-render → verify comment appears
+        #        comments: POST created, comments: GET >= 1,
+        #        comments: re-render completed,
+        #        comments: re-rendered PDF is larger than initial
+        # Every Record() call that fails prints one line
+        # `✗ <stage>: <name> :: <reason>` to the step output (with concrete
+        # values like got=27 or status=failed); the final results table at
+        # the end summarizes pass/fail for all assertions.
+        #
+        # Runs against the SAME installer artifact that the release step
+        # would publish — if any assertion here fails, the artifact never
+        # uploads and no release is cut. Ellen never sees a broken build.
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python -m pip install --quiet pypdf
+
+          # Track every assertion so we can dump a pass/fail list at the
+          # end regardless of which step blew up.
+          $results = New-Object System.Collections.ArrayList
+          function Record($name, $ok, $msg = "") {
+            $null = $results.Add([pscustomobject]@{Step=$name; Pass=$ok; Msg=$msg})
+            if ($ok) { Write-Host "✓ $name" } else { Write-Host "✗ $name :: $msg" }
+          }
+          function Fail($msg) { throw $msg }
+
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          $smokeData  = Join-Path $env:RUNNER_TEMP "e2e-smoke-data"
+          $smokeLog   = Join-Path $env:RUNNER_TEMP "e2e-sidecar.stdout.log"
+          $smokeErr   = Join-Path $env:RUNNER_TEMP "e2e-sidecar.stderr.log"
+          $sidecarProc = $null
+
+          try {
+            # ── 1. INSTALL ────────────────────────────────────────────
+            $installer = Get-ChildItem `
+              "app\tauri\target\release\bundle\nsis\Planning Platform*x64-setup.exe" `
+              | Select-Object -First 1
+            if (-not $installer) { Fail "no NSIS installer found in bundle/nsis/" }
+            Write-Host "Installer: $($installer.FullName)"
+            Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+            Record "install: NSIS /S completed" $true
+
+            Record "install: install dir present" (Test-Path $installDir) $installDir
+            if (-not (Test-Path $installDir)) { Fail "install dir missing" }
+
+            $sidecarExe = Get-ChildItem -Recurse -File -Path $installDir -Filter "sidecar.exe" `
+                          | Select-Object -First 1
+            $weasyExe = Get-ChildItem -Recurse -File -Path $installDir -Filter "weasyprint.exe" `
+                        | Select-Object -First 1
+            $shellExe = Get-ChildItem -File -Path $installDir -Filter "*.exe" `
+                        | Where-Object { $_.Name -notmatch "uninstall|sidecar|weasyprint" } `
+                        | Select-Object -First 1
+            Record "install: sidecar.exe present"    ($null -ne $sidecarExe) $sidecarExe
+            Record "install: weasyprint.exe present" ($null -ne $weasyExe)   $weasyExe
+            Record "install: shell exe present"      ($null -ne $shellExe)   $shellExe
+            if (-not $sidecarExe) { Fail "sidecar.exe not installed" }
+
+            # ── 2. BOOT ───────────────────────────────────────────────
+            # Isolate to a tempdir so cleanup is local; avoids polluting
+            # whatever the installer wrote to %LOCALAPPDATA%.
+            Remove-Item $smokeData -Recurse -Force -ErrorAction SilentlyContinue
+            New-Item -ItemType Directory -Force -Path $smokeData | Out-Null
+            $env:PLATFORM_DATA_DIR = $smokeData
+            Write-Host "PLATFORM_DATA_DIR = $smokeData"
+            $sidecarProc = Start-Process -FilePath $sidecarExe.FullName `
+              -RedirectStandardOutput $smokeLog -RedirectStandardError $smokeErr `
+              -NoNewWindow -PassThru
+            Write-Host "Launched installed sidecar.exe PID=$($sidecarProc.Id)"
+
+            $deadline = (Get-Date).AddSeconds(30)
+            $booted = $false
+            while ((Get-Date) -lt $deadline -and -not $sidecarProc.HasExited) {
+              Start-Sleep -Milliseconds 500
+              try {
+                $h = Invoke-WebRequest -UseBasicParsing `
+                  -Uri http://127.0.0.1:17321/health -TimeoutSec 2
+                if ($h.StatusCode -eq 200) { $booted = $true; break }
+              } catch { }
+            }
+            Record "boot: /health 200" $booted
+            if (-not $booted) { Fail "sidecar did not respond to /health within 30s" }
+
+            $seedDir = Join-Path $smokeData "projects\407-1048248"
+            Record "boot: seed projects/407-1048248 present" (Test-Path $seedDir)
+
+            $projects = Invoke-RestMethod -Uri http://127.0.0.1:17321/projects
+            $projectCount = @($projects).Count
+            Record "boot: /projects >= 1" ($projectCount -ge 1) "count=$projectCount"
+            if ($projectCount -lt 1) { Fail "/projects returned empty" }
+            $project = $projects | Where-Object { $_.tava_number -eq "407-1048248" } `
+                                 | Select-Object -First 1
+            if (-not $project) { Fail "pilot project 407-1048248 missing from /projects" }
+            $projectId = $project.id
+
+            # ── 3. SUBMISSION ─────────────────────────────────────────
+            # Render needs a Submission DB row to look up tava + version.
+            # After the seed-discovers-submissions fix (commit 5423c31),
+            # the row is INSERTED on first boot from the bundled
+            # metadata.json — so the upload branch is normally skipped.
+            # We keep it as a fallback in case the seed doesn't find the
+            # row (e.g. older sidecar build).
+            #
+            # The dummy PDF is created unconditionally because downstream
+            # assertions (P2-A new-version upload, P2-B duplicate-409,
+            # P3 delete-version) all need a payload file to POST. Hiding
+            # it inside the upload branch left $dummyPdf null when the
+            # seed pre-populated the row, breaking those assertions with
+            # a misleading "Cannot bind argument to parameter 'Path'"
+            # error.
+            $dummyPdf = Join-Path $env:RUNNER_TEMP "smoke-dummy.pdf"
+            [System.IO.File]::WriteAllBytes($dummyPdf, [byte[]](
+              0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34,0x0A,0x25,0x25,0x45,0x4F,0x46,0x0A))
+
+            $subs = Invoke-RestMethod -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $subForV243 = @($subs) | Where-Object { $_.version_string -eq "v24.3" } | Select-Object -First 1
+            if (-not $subForV243) {
+              $form = @{ version_string = "v24.3"; pdf = Get-Item $dummyPdf }
+              $subForV243 = Invoke-RestMethod -Method Post -Form $form `
+                -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+              Record "submission: POST created v24.3 row" $true "id=$($subForV243.id)"
+            } else {
+              Record "submission: v24.3 already present (seeded)" $true "id=$($subForV243.id)"
+            }
+            $subId = $subForV243.id
+
+            $subDetail = Invoke-RestMethod -Uri "http://127.0.0.1:17321/submissions/$subId"
+            Record "submission: has_audit_results == true" `
+              ($subDetail.has_audit_results -eq $true) "got=$($subDetail.has_audit_results)"
+            if (-not $subDetail.has_audit_results) { Fail "has_audit_results is false on seeded pilot" }
+
+            # Helper: poll a job until terminal or timeout.
+            function Wait-ForJob($jobId, $timeoutSec) {
+              $deadline = (Get-Date).AddSeconds($timeoutSec)
+              while ((Get-Date) -lt $deadline) {
+                Start-Sleep -Seconds 1
+                $j = Invoke-RestMethod -Uri "http://127.0.0.1:17321/jobs/$jobId"
+                if ($j.status -eq "completed" -or $j.status -eq "failed") { return $j }
+              }
+              throw "job $jobId did not reach terminal state in ${timeoutSec}s"
+            }
+
+            # ── 4. RENDER PDF ─────────────────────────────────────────
+            $renderJob = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/render"
+            Write-Host "Render job queued: $($renderJob.id)"
+            $renderTerminal = Wait-ForJob $renderJob.id 120
+            Record "render: job completed" ($renderTerminal.status -eq "completed") `
+              "status=$($renderTerminal.status) error=$($renderTerminal.error)"
+            if ($renderTerminal.status -ne "completed") { Fail "render job failed" }
+
+            $pdfBytes = (Invoke-WebRequest -UseBasicParsing `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/report.pdf").Content
+            Record "render: report.pdf body > 10KB" ($pdfBytes.Length -gt 10240) `
+              "got=$($pdfBytes.Length) bytes"
+            if ($pdfBytes.Length -le 10240) { Fail "PDF too small to be real" }
+
+            $pdfPath = Join-Path $env:RUNNER_TEMP "smoke-report.pdf"
+            [System.IO.File]::WriteAllBytes($pdfPath, $pdfBytes)
+            $pageCount = & python -c "import sys; from pypdf import PdfReader; print(len(PdfReader(sys.argv[1]).pages))" $pdfPath
+            $pageCount = [int]$pageCount
+            # Lower bound rather than strict equality — ±1-3 page drift
+            # from legitimate CSS/template tweaks shouldn't fail the build.
+            # Catastrophic truncation (e.g. template error → cover page
+            # only) still trips this.
+            Record "render: PDF page count >= 25" ($pageCount -ge 25) "got=$pageCount"
+            if ($pageCount -lt 25) { Fail "PDF page count regression" }
+
+            # ── 5. EXPORT EXCEL ───────────────────────────────────────
+            $xlsxJob = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/export-excel"
+            Write-Host "Excel job queued: $($xlsxJob.id)"
+            $xlsxTerminal = Wait-ForJob $xlsxJob.id 60
+            Record "excel: job completed" ($xlsxTerminal.status -eq "completed") `
+              "status=$($xlsxTerminal.status) error=$($xlsxTerminal.error)"
+            if ($xlsxTerminal.status -ne "completed") { Fail "excel job failed" }
+
+            $xlsxBytes = (Invoke-WebRequest -UseBasicParsing `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/report.xlsx").Content
+            Record "excel: report.xlsx body > 5KB" ($xlsxBytes.Length -gt 5120) `
+              "got=$($xlsxBytes.Length) bytes"
+            if ($xlsxBytes.Length -le 5120) { Fail "XLSX too small to be real" }
+
+            # ── 5.5. OPEN-OUTPUT + REVEAL-OUTPUT ──────────────────────
+            # The new sidecar endpoints powering the "פתחי דו״ח" /
+            # "פתחי תיקייה" buttons in the success banner. CI just
+            # checks 204 status — the actual OS open is fire-and-forget
+            # and can't be visually verified headlessly. The 204 proves
+            # path resolution + the OS spawn call succeeded.
+            try {
+              $r1 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/open-output?kind=pdf"
+              $r2 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/open-output?kind=xlsx"
+              $r3 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/reveal-output?kind=pdf"
+              $r4 = Invoke-WebRequest -UseBasicParsing -Method Post `
+                -Uri "http://127.0.0.1:17321/submissions/$subId/reveal-output?kind=xlsx"
+              $allOk = ($r1.StatusCode -eq 204) -and ($r2.StatusCode -eq 204) `
+                  -and ($r3.StatusCode -eq 204) -and ($r4.StatusCode -eq 204)
+              Record "open: open/reveal endpoints all 204" $allOk `
+                "got=$($r1.StatusCode),$($r2.StatusCode),$($r3.StatusCode),$($r4.StatusCode)"
+            } catch {
+              Record "open: open/reveal endpoints all 204" $false $_.Exception.Message
+              Fail "open/reveal endpoints did not all return 204"
+            }
+
+            # ── 5.6. ENGINE-RUN AVAILABILITY GATE (Priority 2.5) ──────
+            # On the frozen Windows build the full-audit subprocess path
+            # can't spawn cfg.sidecar_python — see queue_worker.engine_
+            # run_available. SubmissionOut should report this as false
+            # and POST /run-engine should refuse with a structured 503
+            # instead of enqueuing a doomed job (which would surface as
+            # the misleading "SchemaNotFound / [WinError 2]" Ellen hit).
+            $subDetail = Invoke-RestMethod -Uri "http://127.0.0.1:17321/submissions/$subId"
+            Record "engine: SubmissionOut.engine_run_available == false on frozen Windows" `
+              ($subDetail.engine_run_available -eq $false) `
+              "got=$($subDetail.engine_run_available)"
+            if ($subDetail.engine_run_available -ne $false) {
+              Fail "engine_run_available should be false on Windows-frozen"
+            }
+            # PS 7's Invoke-WebRequest returns HttpResponseMessage on error
+            # (no GetResponseStream); -SkipHttpErrorCheck lets the call
+            # return successfully with the 503 + body intact instead of
+            # throwing. Same body parsing either way.
+            $resp503 = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/run-engine"
+            $detailType = ""
+            try {
+              $detailType = ($resp503.Content | ConvertFrom-Json).detail.error_type
+            } catch { }
+            $blocked503 = ($resp503.StatusCode -eq 503) `
+                         -and ($detailType -eq "EngineNotAvailable")
+            Record "engine: /run-engine returns 503 EngineNotAvailable" `
+              $blocked503 "status=$($resp503.StatusCode) error_type=$detailType"
+            if (-not $blocked503) {
+              Fail "/run-engine should pre-flight-reject with 503 EngineNotAvailable on frozen Windows"
+            }
+
+            # ── 6. DISCIPLINE COMMENTS ────────────────────────────────
+            # Hebrew marker — written into the comment, but NOT searched
+            # for in the PDF text. WeasyPrint stores Hebrew glyphs in
+            # visual (RTL-reordered) order in the PDF content stream, and
+            # pypdf's extractor returns that visual order verbatim — so a
+            # logical-order substring match never finds it. The merge is
+            # instead verified below by comparing PDF byte sizes.
+            $marker = "בדיקה_עשן_ייחודי"
+            $commentBody = @{
+              discipline_key = "sec-3-7"
+              status         = "נדרשת השלמה"
+              topic_he       = $marker
+              action_he      = "$marker — פעולה נדרשת לאימות"
+            } | ConvertTo-Json -Compress
+            $createdComment = Invoke-RestMethod -Method Post `
+              -ContentType "application/json; charset=utf-8" `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/comments" `
+              -Body ([System.Text.Encoding]::UTF8.GetBytes($commentBody))
+            Record "comments: POST created" ($null -ne $createdComment.id) "id=$($createdComment.id)"
+
+            $allComments = Invoke-RestMethod -Uri "http://127.0.0.1:17321/submissions/$subId/comments"
+            Record "comments: GET >= 1" (@($allComments).Count -ge 1) "count=$(@($allComments).Count)"
+
+            $renderJob2 = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/render"
+            $renderTerminal2 = Wait-ForJob $renderJob2.id 120
+            Record "comments: re-render completed" ($renderTerminal2.status -eq "completed") `
+              "status=$($renderTerminal2.status)"
+            if ($renderTerminal2.status -ne "completed") { Fail "post-comment render failed" }
+
+            $pdfBytes2 = (Invoke-WebRequest -UseBasicParsing `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/report.pdf").Content
+            $pdfPath2 = Join-Path $env:RUNNER_TEMP "smoke-report-with-comment.pdf"
+            [System.IO.File]::WriteAllBytes($pdfPath2, $pdfBytes2)
+            # Proxy for "the comment was actually merged": the re-rendered
+            # PDF must be larger than the original by a meaningful margin.
+            # A new §3 row adds hundreds of bytes of HTML + table cells +
+            # rendered Heebo glyphs; WeasyPrint is deterministic, so the
+            # only way size doesn't grow is if the engine silently dropped
+            # the comments — exactly the regression we want to catch.
+            $sizeBefore = $pdfBytes.Length
+            $sizeAfter  = $pdfBytes2.Length
+            $sizeGrew = $sizeAfter -gt ($sizeBefore + 200)
+            Record "comments: re-rendered PDF is larger than initial" `
+              $sizeGrew "before=$sizeBefore after=$sizeAfter delta=$($sizeAfter - $sizeBefore)"
+            if (-not $sizeGrew) { Fail "comment text did not appear in re-rendered PDF" }
+
+            # ── 6.5. PRIORITY 2 — UPLOAD WRITES METADATA + 409 SURVIVAL ──
+            # Job 2 root-cause fixes. Three checks against the live frozen
+            # sidecar. Run BEFORE the destructive metadata-delete block so
+            # files survive for the survival check.
+            $metaPath = Join-Path $smokeData "projects\407-1048248\submissions\v24.3\metadata.json"
+            $pdfDir = Join-Path $smokeData "projects\407-1048248\submissions\v24.3"
+
+            # P2-A: upload of a NEW version writes metadata.json (the
+            # seeded v24.3 wouldn't prove this; the seed already wrote
+            # the file. Use v99.0 — guaranteed no seed data — so the
+            # only way metadata.json appears is via the upload handler.)
+            $newVer = "v99.0"
+            $newSub = Invoke-RestMethod -Method Post -Form @{
+              version_string = $newVer; pdf = Get-Item $dummyPdf
+            } -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $newMeta = Join-Path $smokeData "projects\407-1048248\submissions\$newVer\metadata.json"
+            $newMetaOk = Test-Path $newMeta
+            Record "P2-A: upload writes metadata.json for new version" $newMetaOk $newMeta
+            if (-not $newMetaOk) { Fail "upload did not write metadata.json for new version" }
+
+            # P2-B: duplicate upload of v24.3 returns 409 AND the existing
+            # files survive (no more shutil.rmtree(target_dir) wiping seed).
+            $metaSizeBefore = (Get-Item $metaPath).Length
+            $pdfCountBefore = (Get-ChildItem $pdfDir -Filter "*.pdf").Count
+            $resp409 = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Form @{ version_string = "v24.3"; pdf = Get-Item $dummyPdf } `
+              -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $got409 = ($resp409.StatusCode -eq 409)
+            $metaSurvived = (Test-Path $metaPath) -and ((Get-Item $metaPath).Length -eq $metaSizeBefore)
+            $pdfSurvived = (Get-ChildItem $pdfDir -Filter "*.pdf").Count -ge $pdfCountBefore
+            Record "P2-B: duplicate upload returns 409" $got409 "status=$($resp409.StatusCode)"
+            Record "P2-B: metadata.json survives 409 rollback" $metaSurvived
+            Record "P2-B: prior PDF survives 409 rollback" $pdfSurvived
+            if (-not ($got409 -and $metaSurvived -and $pdfSurvived)) {
+              Fail "P2-B regression: 409 rollback corrupted submission folder"
+            }
+
+            # ── 6.6. PERSISTENT ERROR LOG + P2-C RENDER TOLERANCE ────
+            # Now safe to wreck the metadata file. Originally this block
+            # asserted "render FAILED with metadata missing"; P2-C makes
+            # render TOLERATE the missing file (log a WARNING, continue
+            # with empty defaults). New invariants: render succeeds AND
+            # the warning lands in errors.log (proves both the tolerance
+            # patch and the file handler are alive).
+            $logPath = Join-Path $smokeData "logs\errors.log"
+            Record "errlog: errors.log exists" (Test-Path $logPath) "$logPath"
+            if (-not (Test-Path $logPath)) {
+              Fail "no errors.log written under data_dir/logs/"
+            }
+            Remove-Item $metaPath -Force
+            $tolerantJob = Invoke-RestMethod -Method Post `
+              -Uri "http://127.0.0.1:17321/submissions/$subId/render"
+            $tolerantTerm = Wait-ForJob $tolerantJob.id 60
+            Record "P2-C: render succeeds despite missing metadata" `
+              ($tolerantTerm.status -eq "completed") "status=$($tolerantTerm.status)"
+            if ($tolerantTerm.status -ne "completed") {
+              Fail "P2-C regression: render still fails when metadata.json is missing"
+            }
+            Start-Sleep -Seconds 1
+            $logContent = Get-Content $logPath -Raw -ErrorAction SilentlyContinue
+            $captured = $logContent -match "metadata not found"
+            Record "errlog: captured 'metadata not found' warning" `
+              $captured ("log size=" + ($logContent.Length) + " bytes")
+            if (-not $captured) {
+              Write-Host "── errors.log contents ──"
+              Write-Host $logContent
+              Fail "errors.log did not capture the missing-metadata warning"
+            }
+
+            # ── 6.7. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
+            # Ellen's flow today: bad upload → ask Lior → manual sqlite3
+            # surgery. P3 replaces that with a button. Three invariants:
+            #   (a) DELETE returns 204
+            #   (b) GET on deleted id returns 404
+            #   (c) on-disk folder is gone
+            #   (d) re-upload of the same version_string succeeds
+            $delVer = "v77.0"
+            $delUp = Invoke-RestMethod -Method Post -Form @{
+              version_string = $delVer; pdf = Get-Item $dummyPdf
+            } -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            $delSubId = $delUp.id
+            $delFolder = Join-Path $smokeData "projects\407-1048248\submissions\$delVer"
+            Record "P3: pre-delete folder present" (Test-Path $delFolder) $delFolder
+
+            $delResp = Invoke-WebRequest -UseBasicParsing -Method Delete `
+              -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/submissions/$delSubId"
+            Record "P3: DELETE returns 204" `
+              ($delResp.StatusCode -eq 204) "status=$($delResp.StatusCode)"
+            if ($delResp.StatusCode -ne 204) {
+              Fail "DELETE /submissions/$delSubId returned $($delResp.StatusCode)"
+            }
+
+            $getResp = Invoke-WebRequest -UseBasicParsing `
+              -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/submissions/$delSubId"
+            Record "P3: GET deleted submission returns 404" `
+              ($getResp.StatusCode -eq 404) "status=$($getResp.StatusCode)"
+
+            $folderGone = -not (Test-Path $delFolder)
+            Record "P3: on-disk folder removed" $folderGone $delFolder
+            if (-not $folderGone) {
+              Fail "P3 regression: $delFolder still present after DELETE"
+            }
+
+            # (d) Re-upload must succeed — proves the unique constraint
+            # is cleared, not just shadowed.
+            $reUp = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Form @{ version_string = $delVer; pdf = Get-Item $dummyPdf } `
+              -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
+            Record "P3: re-upload of deleted version returns 201" `
+              ($reUp.StatusCode -eq 201) "status=$($reUp.StatusCode)"
+            if ($reUp.StatusCode -ne 201) {
+              Fail "P3 regression: re-upload of $delVer after delete returned $($reUp.StatusCode)"
+            }
+          }
+          catch {
+            Record "FATAL" $false $_.Exception.Message
+          }
+          finally {
+            # ── 7. CLEANUP ────────────────────────────────────────────
+            if ($sidecarProc -and -not $sidecarProc.HasExited) {
+              Write-Host "Killing sidecar PID=$($sidecarProc.Id)"
+              Stop-Process -Id $sidecarProc.Id -Force -ErrorAction SilentlyContinue
+              $sidecarProc.WaitForExit(5000) | Out-Null
+            }
+            $uninstaller = Join-Path $installDir "uninstall.exe"
+            if (Test-Path $uninstaller) {
+              Write-Host "Running uninstall.exe /S"
+              Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
+              Start-Sleep -Seconds 3   # NSIS uninstaller is async on disk-removal
+              $stillThere = Test-Path $installDir
+              Record "cleanup: install dir removed" (-not $stillThere) "$installDir"
+            } else {
+              Record "cleanup: uninstall.exe missing" $false ""
+            }
+
+            # ── 8. REPORT ─────────────────────────────────────────────
+            Write-Host "`n══════════════ E2E SMOKE TEST RESULTS ══════════════"
+            $results | Format-Table -AutoSize -Wrap | Out-Host
+            $passed = ($results | Where-Object { $_.Pass }).Count
+            $failed = ($results | Where-Object { -not $_.Pass }).Count
+            Write-Host "Passed: $passed   Failed: $failed"
+
+            if ($failed -gt 0) {
+              Write-Host "`n──────────────── sidecar.exe stdout ────────────────"
+              if (Test-Path $smokeLog) { Get-Content $smokeLog | Out-Host }
+              Write-Host "`n──────────────── sidecar.exe stderr ────────────────"
+              if (Test-Path $smokeErr) { Get-Content $smokeErr | Out-Host }
+              Write-Error "End-to-end smoke FAILED — $failed of $($results.Count) checks failed. See list + sidecar logs above."
+              exit 1
+            }
+            Write-Host "End-to-end smoke PASSED ✓"
+          }
+
+      - name: Show last 50 lines of sidecar logs on failure
+        # Echoes the tail of both smoke-test sidecar logs straight into the
+        # step output so the failure shows up in `gh run view` without
+        # having to download the artifact. The full logs are uploaded in
+        # the next step.
+        if: failure()
+        shell: pwsh
+        run: |
+          $logs = @(
+            (Join-Path $env:RUNNER_TEMP "e2e-sidecar.stderr.log"),
+            (Join-Path $env:RUNNER_TEMP "e2e-sidecar.stdout.log"),
+            (Join-Path $env:RUNNER_TEMP "e2e-smoke-data\logs\errors.log"),
+            "sidecar-smoke.stderr.log",
+            "sidecar-smoke.stdout.log"
+          )
+          foreach ($log in $logs) {
+            if (Test-Path $log) {
+              Write-Host "`n───────── tail -50 $log ─────────"
+              Get-Content $log -Tail 50
+            }
+          }
+
+      - name: Upload failure diagnostics
+        # Smoke-test sidecar logs as a downloadable artifact so a failed
+        # build still has full forensics — not just the stderr tail. Keep
+        # the retention short; these are debug artifacts, not releases.
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-failure-log
+          path: |
+            ${{ runner.temp }}/e2e-sidecar.stdout.log
+            ${{ runner.temp }}/e2e-sidecar.stderr.log
+            ${{ runner.temp }}/e2e-smoke-data/logs/errors.log
+            sidecar-smoke.stdout.log
+            sidecar-smoke.stderr.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # ── UI SMOKE GATE (warn-only) ──────────────────────────────────────
+      # Phase 1 of the Real-WebView2 UI gate. Reinstalls from the NSIS
+      # installer (the previous step uninstalled in finally), wipes data,
+      # launches the .exe with WebView2 CDP open, and drives flows 1–4
+      # via Playwright over CDP. Warn-only for the first 1–2 weeks per the
+      # rollout plan — failures here surface but don't block publishing.
+      # Promoted to a hard gate once it's stayed green across several
+      # builds with no flaky failures. See tests/e2e-ui/README.md.
+      - name: UI smoke gate (real WebView2)
+        id: ui_smoke
+        # Promoted to hard gate after 12+ green runs across P1→P5 with
+        # zero flakes. The single transient red was a real test-
+        # scaffolding bug (flow 6 missing UI refetch), not a flake —
+        # caught + fixed in the same iteration. Same gating semantics
+        # as the e2e backend smoke now: a UI regression blocks the
+        # installer from publishing.
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+
+          # Re-install (the e2e smoke step uninstalled in finally).
+          $installer = Get-ChildItem `
+            "app\tauri\target\release\bundle\nsis\Planning Platform*x64-setup.exe" `
+            | Select-Object -First 1
+          if (-not $installer) { throw "no NSIS installer found in bundle/nsis/" }
+          Write-Host "Installer: $($installer.FullName)"
+          Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+          if (-not (Test-Path $installDir)) {
+            throw "install dir missing after NSIS /S: $installDir"
+          }
+          # Diagnostic: dump the install dir so we can see exactly what NSIS
+          # wrote — needed because the shell .exe filename isn't guaranteed
+          # to match productName under all bundler configs.
+          Write-Host "── install dir contents ──"
+          Get-ChildItem -Recurse -File $installDir |
+            Select-Object FullName, Length |
+            Format-Table -AutoSize | Out-Host
+
+          # Install Playwright test deps. We DON'T `playwright install`
+          # browsers — connectOverCDP attaches to WebView2, no bundled
+          # Chromium needed.
+          # pypdf is for P5's RTL-safe PDF health check (test shells out
+          # to python -c). Idempotent — already installed for e2e smoke
+          # at workflow line 323, but install explicitly so this step
+          # is self-sufficient if the e2e step is ever moved.
+          python -m pip install --quiet pypdf
+          Push-Location tests\e2e-ui
+          npm ci --no-audit --no-fund
+          npx playwright test --reporter=list
+          $exit = $LASTEXITCODE
+          Pop-Location
+          if ($exit -ne 0) {
+            Write-Host "::error::UI smoke gate FAILED — installer will not publish. See Playwright report artifact."
+            exit $exit
+          }
+          Write-Host "UI smoke gate PASSED ✓"
+
+      - name: UI smoke — uninstall app after test
+        if: always()
+        shell: pwsh
+        run: |
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          $uninstaller = Join-Path $installDir "uninstall.exe"
+          if (Test-Path $uninstaller) {
+            Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
+            Start-Sleep -Seconds 3
+          }
+
+      - name: UI smoke — upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-report
+          path: |
+            tests/e2e-ui/playwright-report/**
+            tests/e2e-ui/test-results/**
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ness-ziona-installer-windows
+          path: app/tauri/target/release/bundle/nsis/*.exe
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Compute release tag + title
+        # Tag form: v<version>-<UTC-date>-<short-sha>, e.g.
+        # v0.1.0-20260612-4dee986. We pull <version> from tauri.conf.json so
+        # bumping the app version in one place flows through to the tag.
+        # Outputs go to $GITHUB_ENV so the next step can read them.
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(grep -oE '"version": *"[^"]+"' app/tauri/tauri.conf.json \
+                    | head -1 | sed -E 's/.*"version": *"([^"]+)".*/\1/')
+          short=$(git rev-parse --short HEAD)
+          date_utc=$(date -u +%Y%m%d)
+          date_display=$(date -u +%Y-%m-%d)
+          tag="v${version}-${date_utc}-${short}"
+          title="Planning Platform — Build ${date_display}"
+          echo "RELEASE_TAG=${tag}"     >> "$GITHUB_ENV"
+          echo "RELEASE_TITLE=${title}" >> "$GITHUB_ENV"
+          echo "Tag:   ${tag}"
+          echo "Title: ${title}"
+
+      - name: Delete previous v0.1.0-* pre-releases
+        # Each successful build cuts a new prerelease tagged
+        # v0.1.0-<date>-<sha>. Without cleanup the releases page grows
+        # one entry per build — confusing for Ellen, who only ever wants
+        # the latest installer. Loop through every v0.1.0-* release and
+        # delete it (and its tag) BEFORE softprops creates the new one,
+        # so the page always shows exactly one prerelease at the top.
+        # `|| true` on each delete so a partially-cleaned-up release
+        # (e.g. tag exists but release doesn't) doesn't fail the job.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          tags=$(gh release list --json tagName --jq '.[].tagName' \
+                 | grep "^v0.1.0-" || true)
+          if [ -z "$tags" ]; then
+            echo "No prior v0.1.0-* releases found; nothing to clean."
+            exit 0
+          fi
+          echo "Deleting prior prereleases:"
+          echo "$tags"
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            echo "  - $tag"
+            gh release delete "$tag" --yes --cleanup-tag || true
+          done <<< "$tags"
+
+      - name: Create GitHub Release (pre-release)
+        # Pre-release while we're still iterating on the pilot — the badge on
+        # the releases page reads "Pre-release" so Ellen knows this isn't a
+        # stamped 1.0. softprops/action-gh-release creates the git tag for
+        # us; needs `contents: write` on the job (set at workflow root).
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TITLE }}
+          # Hebrew install instructions for Ellen. Three lines: where to
+          # click, what to expect, and what to do when SmartScreen
+          # flags the unsigned binary on first launch.
+          body: |
+            📥 להורדת קובץ ההתקנה, לחצי על הקובץ למטה.
+            הפעילי את הקובץ שירד — אין צורך בהרשאות מנהל.
+
+            אם מופיעה הודעת "Windows protected your PC" — לחצי על "More info" ואז "Run anyway".
+          files: app/tauri/target/release/bundle/nsis/*.exe
+          prerelease: true
+          fail_on_unmatched_files: true

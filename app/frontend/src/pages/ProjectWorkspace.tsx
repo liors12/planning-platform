@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { archiveProject, getProject, getFindings, listSubmissions, type ProjectOut, type SubmissionOut } from "../api";
+import { CommentsTab } from "../components/CommentsTab";
 import { DebugOverlay } from "../components/DebugOverlay";
 import { SubmissionsTab } from "../components/SubmissionsTab";
 import { FindingsView } from "../components/FindingsView";
@@ -15,18 +16,19 @@ interface Props {
   onProjectChanged: () => void;
 }
 
-type TabKey = "overview" | "submissions" | "findings" | "guidelines" | "history" | "final";
+type TabKey = "overview" | "submissions" | "findings" | "comments" | "guidelines" | "history" | "final";
 
 const TAB_LABELS: Record<TabKey, string> = {
   overview: "סקירה",
   submissions: "הגשות",
   findings: "ממצאים",
+  comments: "הערות רפרנטים",
   guidelines: "הנחיות",
   history: "היסטוריה",
   final: "חוות דעת",
 };
 
-const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "guidelines", "history", "final"];
+const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "guidelines", "history", "final"];
 
 export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Props) {
   const [project, setProject] = useState<ProjectOut | null>(null);
@@ -54,20 +56,30 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
 
   useEffect(() => { refresh(); setTab("overview"); setFindings(null); setLatestCompleteSub(null); /* eslint-disable-next-line */ }, [projectId]);
 
-  // Lazy-load findings when the user switches to the Findings tab
+  // Lazy-load findings when the user switches to the Findings or Comments
+  // tab. Comments tab only needs latestCompleteSub (not the findings JSON).
   useEffect(() => {
-    if (tab !== "findings" || !project) return;
-    setFindings(null);
-    setFindingsErr(null);
+    if (!project) return;
+    if (tab !== "findings" && tab !== "comments") return;
+    if (tab === "findings") {
+      setFindings(null);
+      setFindingsErr(null);
+    }
     setLatestCompleteSub(null);
     listSubmissions(project.id)
       .then((subs) => {
-        const completed = subs.find((s) => s.status === "complete");
-        if (!completed) return;
-        setLatestCompleteSub(completed);
-        return getFindings(completed.id);
+        // Comments tab: pick the newest submission that has analyzed
+        // data on disk, regardless of stuck status labels. Findings tab
+        // keeps the stricter rule — needs the engine's "complete"
+        // verdict before showing the structured findings UI.
+        const picked = tab === "comments"
+          ? subs.find((s) => s.has_audit_results)
+          : subs.find((s) => s.status === "complete");
+        if (!picked) return;
+        setLatestCompleteSub(picked);
+        if (tab === "findings") return getFindings(picked.id);
       })
-      .then((data) => { if (data !== undefined) setFindings(data); })
+      .then((data) => { if (tab === "findings" && data !== undefined) setFindings(data); })
       .catch((e) => setFindingsErr(String(e)));
   }, [tab, project]);
 
@@ -84,13 +96,13 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
   }
 
   if (err) return <div className="error error-block">{err}</div>;
-  if (!project) return <div className="muted">טוען...</div>;
+  if (!project) return <div className="muted">טוענת...</div>;
 
   return (
     <article className="page-project">
       <header className="page-header project-header">
         <div>
-          <a className="back-link" href={buildHash({ kind: "home" })}>← חזור</a>
+          <a className="back-link" href={buildHash({ kind: "home" })}>← חזרי</a>
           <h1>{project.name_he}</h1>
           <div className="project-meta">
             <span><strong>תב"ע:</strong> <span dir="ltr">{project.tava_number}</span></span>
@@ -101,7 +113,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
         <div className="project-actions">
           {project.status !== "archived" && (
             <button className="ghost-btn danger" onClick={onArchive}>
-              העבר לארכיון
+              העבירי לארכיון
             </button>
           )}
         </div>
@@ -137,7 +149,10 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
             onJumpToPdfPage={jumpToPdfPage}
           />
         )}
-        {tab === "guidelines" && <Placeholder badge="בקרוב" title="עורך הנחיות" desc="עריכת ערכי הסף של בדיקות המנוע + יצירת גרסת מסמך דרישות מעודכן לאדריכל. יתווסף בעדכון הבא." />}
+        {tab === "comments" && (
+          <CommentsTab project={project} submission={latestCompleteSub} />
+        )}
+        {tab === "guidelines" && <Placeholder badge="בקרוב" title="עורך הנחיות" desc="עריכת ערכי הסף של בדיקות התוכנה + יצירת גרסת מסמך דרישות מעודכן לאדריכל. יתווסף בעדכון הבא." />}
         {tab === "history" && <Placeholder badge="בקרוב" title="היסטוריה" desc="ציר זמן של כל הפעולות בפרויקט — יצירה, הגשות, ריצות בדיקה, עריכת הנחיות, החלטות מנהלי דיסציפלינה." />}
         {tab === "final" && <Placeholder badge="בקרוב" title="חוות דעת" desc="הפקת חוות הדעת הסופית עם שילוב משוב מנהלי הדיסציפלינות וחתימת מהנדס/ת המינהלת." />}
       </section>
@@ -217,13 +232,13 @@ function FindingsTabContent({
     return (
       <div className="card">
         <p className="muted">
-          עדיין אין הגשה שהמנוע סיים עבורה ניתוח. עבור לטאב "הגשות", העלה תכנית עיצוב,
-          ולחץ על "הפעל את המנוע".
+          עדיין אין הגשה שהתוכנה סיימה עבורה ניתוח. עברי לטאב "הגשות", העלי תכנית עיצוב,
+          ולחצי על "הפעילי את התוכנה".
         </p>
       </div>
     );
   }
-  if (findings === null) return <p className="muted">טוען ממצאים...</p>;
+  if (findings === null) return <p className="muted">טוענת ממצאים...</p>;
   // Side-by-side: findings on visual RIGHT (start, ~55%), tasrit on the LEFT
   // (end, ~45%). Splitter position persisted per-project to localStorage.
   const pdfUrl = sub ? `${SIDECAR_BASE}/submissions/${sub.id}/pdf` : null;

@@ -59,6 +59,13 @@ export interface SubmissionOut {
   dwg_path: string | null;
   findings_json_path: string | null;
   uploaded_at: string;
+  has_audit_results: boolean;
+  has_report_pdf: boolean;
+  has_report_xlsx: boolean;
+  /** False on win32+frozen — the subprocess that runs the full audit
+   * can't spawn an external Python in the packaged build. UI disables
+   * the "הפעילי את התוכנה" button when false. */
+  engine_run_available: boolean;
 }
 
 export type JobStatus = "queued" | "running" | "completed" | "failed";
@@ -146,6 +153,47 @@ export async function getHealth(): Promise<HealthResponse> {
   );
 }
 
+// ── Diagnostics ───────────────────────────────────────────────────────────
+
+export type DiagnosticsStatus = "healthy" | "degraded" | "error";
+
+export interface FileCheck {
+  path: string;
+  exists: boolean;
+}
+
+export interface DiagnosticsResponse {
+  status: DiagnosticsStatus;
+  sidecar: { running: boolean; uptime_seconds: number; port: number };
+  db: { connected: boolean; backend: string; encrypted: boolean; path: string };
+  seed: {
+    schema_file: FileCheck;
+    metadata_file: FileCheck;
+    audit_results_file: FileCheck;
+  };
+  projects: { count: number; names: string[] };
+  weasyprint: FileCheck;
+  render_ready: boolean;
+  excel_ready: boolean;
+  errors: string[];
+}
+
+export async function getDiagnostics(): Promise<DiagnosticsResponse> {
+  return jsonOrThrow<DiagnosticsResponse>(
+    await fetchOrThrow(`${SIDECAR_BASE}/diagnostics`),
+    "/diagnostics",
+  );
+}
+
+/** True iff the error looks like the sidecar is unreachable (network
+ * failure, ECONNREFUSED, etc.) rather than a 4xx/5xx HTTP response.
+ * Used by routes to swap the generic "TypeError: Failed to fetch" for
+ * a Hebrew message pointing the user at the diagnostics panel. */
+export function isSidecarUnreachable(err: unknown): boolean {
+  const msg = String(err ?? "");
+  return /Failed to fetch|NetworkError|ECONNREFUSED|fetch failed/i.test(msg);
+}
+
 // ── Projects ──────────────────────────────────────────────────────────────
 
 export async function listProjects(includeArchived = false): Promise<ProjectOut[]> {
@@ -192,6 +240,18 @@ export async function patchProject(
       body: JSON.stringify(patch),
     }),
     `PATCH /projects/${id}`,
+  );
+}
+
+export async function importSchema(schemaFile: File): Promise<ProjectOut> {
+  const form = new FormData();
+  form.append("schema_file", schemaFile, schemaFile.name);
+  return jsonOrThrow<ProjectOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/import-schema`, {
+      method: "POST",
+      body: form,
+    }),
+    "POST /projects/import-schema",
   );
 }
 
@@ -284,6 +344,184 @@ export async function pollJobUntilDone(
     await new Promise((r) => setTimeout(r, intervalMs));
   }
   throw new Error(`job ${id} did not reach terminal status within ${timeoutMs}ms`);
+}
+
+// ── Phase 2b Module D: discipline comments + render ──────────────────────
+
+export interface DisciplineDef {
+  key: string;
+  label: string;
+}
+
+export interface DisciplinesResponse {
+  disciplines: DisciplineDef[];
+  statuses: string[];
+}
+
+export interface CommentOut {
+  id: string;
+  submission_id: number;
+  discipline_key: string;
+  status: string;
+  topic_he: string;
+  action_he: string;
+  author: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface CommentCreatePayload {
+  discipline_key: string;
+  status: string;
+  topic_he: string;
+  action_he: string;
+}
+
+export type CommentPatchPayload = Partial<CommentCreatePayload>;
+
+export async function listDisciplines(): Promise<DisciplinesResponse> {
+  return jsonOrThrow<DisciplinesResponse>(
+    await fetchOrThrow(`${SIDECAR_BASE}/disciplines`),
+    "GET /disciplines",
+  );
+}
+
+export async function listComments(submissionId: number): Promise<CommentOut[]> {
+  return jsonOrThrow<CommentOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/comments`),
+    `GET /submissions/${submissionId}/comments`,
+  );
+}
+
+export async function createComment(
+  submissionId: number,
+  payload: CommentCreatePayload,
+): Promise<CommentOut> {
+  return jsonOrThrow<CommentOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/comments`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+    `POST /submissions/${submissionId}/comments`,
+  );
+}
+
+export async function patchComment(
+  submissionId: number,
+  commentId: string,
+  patch: CommentPatchPayload,
+): Promise<CommentOut> {
+  return jsonOrThrow<CommentOut>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/comments/${commentId}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      },
+    ),
+    `PATCH /submissions/${submissionId}/comments/${commentId}`,
+  );
+}
+
+export async function deleteComment(
+  submissionId: number,
+  commentId: string,
+): Promise<void> {
+  const res = await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/comments/${commentId}`,
+    { method: "DELETE" },
+  );
+  if (!res.ok) {
+    throw new Error(
+      `DELETE /submissions/${submissionId}/comments/${commentId} → HTTP ${res.status}`,
+    );
+  }
+}
+
+export async function renderSubmission(submissionId: number): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/render`, {
+      method: "POST",
+    }),
+    `POST /submissions/${submissionId}/render`,
+  );
+}
+
+export async function exportExcel(submissionId: number): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/export-excel`, {
+      method: "POST",
+    }),
+    `POST /submissions/${submissionId}/export-excel`,
+  );
+}
+
+/** Convenience URLs for <a href> downloads. The browser handles the
+ * file save dialog; we don't need fetch+blob plumbing for this. */
+export function reportPdfUrl(submissionId: number, nonce?: number): string {
+  const v = nonce ? `?v=${nonce}` : "";
+  return `${SIDECAR_BASE}/submissions/${submissionId}/report.pdf${v}`;
+}
+export function reportXlsxUrl(submissionId: number, nonce?: number): string {
+  const v = nonce ? `?v=${nonce}` : "";
+  return `${SIDECAR_BASE}/submissions/${submissionId}/report.xlsx${v}`;
+}
+
+/** Permanently delete a submission (DB row + dependent rows + on-disk
+ * folder + derived audit_outputs). After delete, the same version_string
+ * can be uploaded fresh. */
+export async function deleteSubmission(submissionId: number): Promise<void> {
+  await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}`, {
+    method: "DELETE",
+  });
+}
+
+/** Open the generated report in the OS default app via the sidecar.
+ * Works inside the Tauri webview, where `target="_blank"` does nothing. */
+export async function openOutput(submissionId: number, kind: "pdf" | "xlsx"): Promise<void> {
+  await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/open-output?kind=${kind}`,
+    { method: "POST" },
+  );
+}
+
+/** Open the containing folder in the OS file manager (highlights the file). */
+export async function revealOutput(submissionId: number, kind: "pdf" | "xlsx"): Promise<void> {
+  await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/reveal-output?kind=${kind}`,
+    { method: "POST" },
+  );
+}
+
+
+// ── Settings (Group C2) ───────────────────────────────────────────────────
+
+export interface SettingsOut {
+  anthropic_api_key_set: boolean;
+}
+
+export interface SettingsPutPayload {
+  anthropic_api_key: string;
+}
+
+export async function getSettings(): Promise<SettingsOut> {
+  return jsonOrThrow<SettingsOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/settings`),
+    "GET /settings",
+  );
+}
+
+export async function putSettings(payload: SettingsPutPayload): Promise<SettingsOut> {
+  return jsonOrThrow<SettingsOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+    "PUT /settings",
+  );
 }
 
 // ── Phase 1 demo: subprocess-isolation echo ──────────────────────────────

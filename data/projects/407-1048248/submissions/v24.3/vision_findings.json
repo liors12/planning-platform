@@ -1,0 +1,3098 @@
+{
+  "project_id": "407-1048248",
+  "submission_id": "v24.3",
+  "extractor_version": "m2-v4",
+  "extracted_at": "2026-05-24T07:11:38Z",
+  "model": "gemini-2.5-pro",
+  "input_refs": {
+    "canonical_clauses_sha256": "fb0180795916445cc73eb76cd99ead48254e1bd0b9782871e4d099f7816083e1",
+    "page_manifests_sha256": "438f0857a92ee01c4f6440350e9926d24bda6e5793d3c31e6677f33abbac1b35",
+    "source_pdf_sha256": "92205abf76b56e346dad2d4bd3cb7b325a18c9b42df8c2a5d0c62b94cc01e650"
+  },
+  "plot_reconciliation": {
+    "method": "auto",
+    "mappings": [
+      {
+        "submission_label": "תא שטח 1",
+        "confidence": "high",
+        "rationale": "Direct textual match between submission documents (e.g., page 9, 10, 24) and takanon plot numbering.",
+        "evidence_pages": [
+          9,
+          10,
+          21,
+          23,
+          24,
+          25,
+          26,
+          27,
+          28,
+          29,
+          30,
+          31,
+          32,
+          33,
+          48,
+          49,
+          51,
+          52,
+          53,
+          61,
+          62
+        ],
+        "takanon_plot": "1"
+      },
+      {
+        "submission_label": "תא שטח 2",
+        "confidence": "high",
+        "rationale": "Direct textual match between submission documents (e.g., page 9, 10, 34) and takanon plot numbering.",
+        "evidence_pages": [
+          2,
+          9,
+          10,
+          20,
+          21,
+          34,
+          35,
+          36,
+          37,
+          38,
+          48,
+          52,
+          53,
+          56,
+          57
+        ],
+        "takanon_plot": "2"
+      },
+      {
+        "submission_label": "תא שטח 3",
+        "confidence": "high",
+        "rationale": "Direct textual match between submission documents (e.g., page 9, 10, 39) and takanon plot numbering.",
+        "evidence_pages": [
+          2,
+          9,
+          10,
+          11,
+          17,
+          22,
+          39,
+          40,
+          41,
+          42,
+          43,
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          58,
+          60
+        ],
+        "takanon_plot": "3"
+      },
+      {
+        "submission_label": "ת.ש 3",
+        "confidence": "high",
+        "rationale": "Direct textual match on page 43, clearly referring to the same plot as 'תא שטח 3'.",
+        "evidence_pages": [
+          43
+        ],
+        "takanon_plot": "3"
+      },
+      {
+        "submission_label": "תא שטח 4",
+        "confidence": "high",
+        "rationale": "Direct textual match between submission documents (e.g., page 9, 10, 34) and takanon plot numbering.",
+        "evidence_pages": [
+          2,
+          9,
+          10,
+          20,
+          34,
+          35,
+          36,
+          37,
+          38,
+          49,
+          51,
+          54,
+          55,
+          56,
+          57
+        ],
+        "takanon_plot": "4"
+      },
+      {
+        "submission_label": "תא שטח 5",
+        "confidence": "high",
+        "rationale": "Direct textual match between submission documents (e.g., page 9, 10, 39) and takanon plot numbering.",
+        "evidence_pages": [
+          2,
+          9,
+          10,
+          11,
+          16,
+          18,
+          19,
+          22,
+          39,
+          44,
+          45,
+          46,
+          47,
+          49,
+          50,
+          54,
+          55,
+          58,
+          59
+        ],
+        "takanon_plot": "5"
+      },
+      {
+        "submission_label": "מגרש מסחרי 20",
+        "confidence": "high",
+        "rationale": "Page 8 explicitly lists 'מגרש מסחרי 20' in the general data for the plan, which directly corresponds to takanon plot 20.",
+        "evidence_pages": [
+          8
+        ],
+        "takanon_plot": "20"
+      },
+      {
+        "submission_label": "ת.ש 52",
+        "confidence": "medium",
+        "rationale": "This label appears on pages describing the public open space (שצ\"פ). Takanon clause 6.1.6 identifies takanon plot 6 as the proposed שצ\"פ, creating a strong contextual link.",
+        "evidence_pages": [
+          8,
+          13,
+          14
+        ],
+        "takanon_plot": "6"
+      },
+      {
+        "submission_label": "ת.ש 54",
+        "confidence": "medium",
+        "rationale": "This label appears on pages describing the public open space (שצ\"פ). Takanon clause 6.1.6 identifies takanon plot 6 as the proposed שצ\"פ, creating a strong contextual link.",
+        "evidence_pages": [
+          13,
+          14
+        ],
+        "takanon_plot": "6"
+      },
+      {
+        "submission_label": "ת.ש 64",
+        "confidence": "medium",
+        "rationale": "This label appears on a page describing the public open space (שצ\"פ). Takanon clause 6.1.6 identifies takanon plot 6 as the proposed שצ\"פ, creating a strong contextual link.",
+        "evidence_pages": [
+          8
+        ],
+        "takanon_plot": "6"
+      }
+    ],
+    "unreconciled_submission_labels": [
+      "מתחם 1",
+      "מתחם 2",
+      "מתחם 3",
+      "ת״ש 52",
+      "ת״ש 54"
+    ],
+    "unreconciled_takanon_plots": [
+      "10",
+      "7",
+      "8",
+      "9"
+    ]
+  },
+  "findings": [
+    {
+      "clause_id": "1.4.5",
+      "clause_text_excerpt": "היתרים או הרשאות: תכנית שמכוחה ניתן להוציא היתרים או הרשאות",
+      "extraction": {
+        "value": "Legal directive, not a design constraint",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This clause is a procedural statement about the plan's legal power. The existence of the design submission itself fulfills this procedural context.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "1.5.5.1",
+      "clause_text_excerpt": "הכל על-פי הגבולות המסומנים בתשריט בקו הכחול .",
+      "extraction": {
+        "value": "The submission documents consistently show the project development within the designated plan boundaries.",
+        "raw_text_match": "תכנית פיתוח",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submission's site plans (e.g., page 10) and location maps (e.g., page 3) show development contained within the overall plan boundary, consistent with the 'blue line' requirement.",
+      "evidence_bboxes": [
+        {
+          "page": 10,
+          "bbox": [
+            155,
+            155,
+            815,
+            800
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        3,
+        10
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "1.7.1",
+      "clause_text_excerpt": "כל מסמכי התכנית מהווים חלק בלתי נפרד ממנה ,משלימים זה את זה ויקראו כמקשה אחת .במקרה של סתירה בין המסמכים המחייבים לבין המנחים יגברו המסמכים המחייבים .במקרה של סתירה בין המסמכים המחייבים לבין עצמם תגברנה ההוראות על התשריטים",
+      "extraction": {
+        "value": "Legal directive, not a design constraint",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This clause establishes the hierarchy of documents and is a legal directive, not a verifiable design constraint. The submission is assumed to operate under this principle.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "1.9.1",
+      "clause_text_excerpt": "כל מונח אשר לא הוגדר בתכנית זו ,תהיה נודעת לו המשמעות הנתונה לו בחוק התכנון והבניה התשכ\" – ה1965 ) להלן\"החוק ( \"או בתקנות שהותקנו מכוחו ,וזאת בהיעדר כוונה אחרת משתמעת.",
+      "extraction": {
+        "value": "Legal directive, not a design constraint",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This clause is a standard legal provision regarding definitions and is not a design constraint that can be visually verified in the submission.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.1.1",
+      "clause_text_excerpt": "מגורים.",
+      "extraction": {
+        "value": "Residential use is the primary function shown throughout the submission.",
+        "raw_text_match": "ריכוז תמהיל דירות",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submission consistently details residential buildings, including apartment mix tables (e.g., page 30, 38, 43, 47) and residential floor plans, confirming the primary use is 'Residential'.",
+      "evidence_bboxes": [
+        {
+          "page": 30,
+          "bbox": [
+            128,
+            418,
+            400,
+            440
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        30,
+        38,
+        43,
+        47
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.1.2",
+      "clause_text_excerpt": "בתא שטח 1 בקומת הקרקע ו/או בקומה 1, יותרו שימושים עבור מבני ציבור לרבות חינוך, דת, רווחה, בריאות, ספריות.",
+      "extraction": {
+        "value": "Daycare centers (מעונות יום) are planned for the ground and first floors.",
+        "raw_text_match": "שטח מעונות יום קרקע - 280 מ'",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause permits public uses in plot 1. The submission shows 'מעונות יום' (daycare centers) on the ground floor (page 27) and first floor (page 28) of building C1, which is a permitted public educational use.",
+      "evidence_bboxes": [
+        {
+          "page": 27,
+          "bbox": [
+            178,
+            290,
+            478,
+            312
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 28,
+          "bbox": [
+            178,
+            490,
+            478,
+            512
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        27,
+        28
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.1.2.1",
+      "clause_text_excerpt": "תתאפשר הקמת מספר מבנים במגרש. הבינוי לאורך רחוב הטייסים לא יעלה על 9 קומות + סה\"כ קומה טכנית. הבינוי לאורך רחובות ההסתדרות וששת הימים לא יעלה על 10 קומות + סה\"כ קומה טכנית. בעורף המגרשים תותר בניה גבוהה יותר בהתאם למופיע בטבלת הזכויות.",
+      "extraction": {
+        "value": "Buildings along HaTayasim street are shown with 8 floors (compliant) and 12 floors (in the rear).",
+        "raw_text_match": "ק+08",
+        "unit": "floors"
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "Clause limits buildings on HaTayasim St to 9 floors. Elevation on page 55 shows buildings B4, C5, B5 at 8 floors (compliant), but buildings A4 and A5 in the rear at 12 floors. This is permissible only if allowed by the rights table (clause 5.table), thus requiring review.",
+      "evidence_bboxes": [
+        {
+          "page": 55,
+          "bbox": [
+            290,
+            820,
+            330,
+            840
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 55,
+          "bbox": [
+            440,
+            450,
+            480,
+            470
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        55
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.1",
+      "clause_text_excerpt": "תתאפשר הקמת מספר מבנים במגרש. הבינוי לאורך רחוב הטייסים לא יעלה על 9 קומות + סה\"כ קומה טכנית. הבינוי לאורך רחובות ההסתדרות וששת הימים לא יעלה על 10 קומות + סה\"כ קומה טכנית. בעורף המגרשים תותר בניה גבוהה יותר בהתאם למופיע בטבלת הזכויות.",
+      "extraction": {
+        "value": "Buildings along HaHistadrut street are shown with 9 floors (compliant) and 13 floors (in the rear).",
+        "raw_text_match": "ק+09",
+        "unit": "floors"
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "Clause limits buildings on HaHistadrut St to 10 floors. Elevation on page 52 shows buildings A1, D1, A2, A3, B3, C3 at 9 floors (compliant), but buildings B1 and C1 in the rear at 13 floors. This is permissible only if allowed by the rights table (clause 5.table), thus requiring review.",
+      "evidence_bboxes": [
+        {
+          "page": 52,
+          "bbox": [
+            290,
+            820,
+            330,
+            840
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 52,
+          "bbox": [
+            290,
+            580,
+            330,
+            600
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        52
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.10",
+      "clause_text_excerpt": "תהייה הפרדה בין שימוש המגורים לשימוש הציבורי- בכניסות, במערכות המבנה, בתשתיות ובהסדרי התנועה והחנייה.",
+      "extraction": {
+        "value": "Separate entrances and parking are designated for the public daycare use in plot 1.",
+        "raw_text_match": "חניה מעונות יום",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submission provides evidence of separation for the public use (daycare) in plot 1. Page 30 shows a dedicated entrance, and the parking plan on page 29 allocates specific parking spots for the daycare, separate from residential parking.",
+      "evidence_bboxes": [
+        {
+          "page": 29,
+          "bbox": [
+            590,
+            780,
+            680,
+            800
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 30,
+          "bbox": [
+            700,
+            480,
+            820,
+            520
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        29,
+        30
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.1.2.11",
+      "clause_text_excerpt": "מבני תשתית, ארונות וחדרים טכניים יהוו חלק אינטגרלי מאדריכלות הבניין והפיתוח.",
+      "extraction": {
+        "value": "Technical rooms (waste, generator, water meters) are shown integrated into the main building footprints and basements.",
+        "raw_text_match": "חדר אשפה",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The design integrates technical infrastructure. For example, waste rooms are shown within the building envelope on site plans (e.g., page 24), and other technical rooms are located within the basement levels (e.g., page 29), satisfying the requirement for architectural integration.",
+      "evidence_bboxes": [
+        {
+          "page": 24,
+          "bbox": [
+            700,
+            580,
+            760,
+            600
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 29,
+          "bbox": [
+            590,
+            480,
+            680,
+            500
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        24,
+        29
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.12",
+      "clause_text_excerpt": "הבינוי יאפשר פתרון לחניות אופניים. חניות אופניים ימוקמו בחללים ייעודיים בקומת הקרקע ו/או בקומות המרתף. ככל וימוקמו בקומות המרתף, תתאפשר אליהם גישה במעלית ככל הניתן.",
+      "extraction": {
+        "value": "Dedicated bicycle and stroller rooms are provided on the ground floor of buildings in all plots.",
+        "raw_text_match": "חדרי אופניים ועגלות",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submission shows dedicated 'חדרי אופניים ועגלות' (Bicycle and stroller rooms) on the ground floor function diagrams for all residential plots (e.g., page 26 for plot 1, page 36 for plots 2+4), fulfilling the requirement.",
+      "evidence_bboxes": [
+        {
+          "page": 26,
+          "bbox": [
+            700,
+            500,
+            820,
+            520
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        26,
+        36,
+        41,
+        45
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.13",
+      "clause_text_excerpt": "גובה קומת הכניסה (לובי) לא יפחת מ-4.5 מ', במבני המגורים הגבוהים מ-10 קומות, ולא יפחת מ-4 מ' בבינוי המרקמי.",
+      "extraction": {
+        "value": "5.35",
+        "raw_text_match": "ק.00 / +45.45",
+        "unit": "m"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "For buildings over 10 floors, the lobby height must be >= 4.5m. In building B1 (13 floors), the height is 5.35m (+50.80 - +45.45), which is compliant.",
+      "evidence_bboxes": [
+        {
+          "page": 61,
+          "bbox": [
+            880,
+            450,
+            960,
+            490
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 61,
+          "bbox": [
+            880,
+            490,
+            960,
+            530
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        61
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.13",
+      "clause_text_excerpt": "גובה קומת הכניסה (לובי) לא יפחת מ-4.5 מ', במבני המגורים הגבוהים מ-10 קומות, ולא יפחת מ-4 מ' בבינוי המרקמי.",
+      "extraction": {
+        "value": "4.1",
+        "raw_text_match": "ק.00 / +32.85",
+        "unit": "m"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "For buildings up to 10 floors, the lobby height must be >= 4.0m. In building A1 (9 floors), the height is 4.1m (+36.95 - +32.85), which is compliant.",
+      "evidence_bboxes": [
+        {
+          "page": 61,
+          "bbox": [
+            880,
+            700,
+            960,
+            740
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 61,
+          "bbox": [
+            880,
+            740,
+            960,
+            780
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        61
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.2",
+      "clause_text_excerpt": "הקומה האחרונה תהיה בנסיגה של 3 מטר לפחות כלפי החזית הקדמית וכלפי השצ\"פים שבתאי שטח 6,8.",
+      "extraction": {
+        "value": "Top floors are shown with a visual setback on all elevations.",
+        "raw_text_match": "Visual setback on top floor",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause requires a >=3m setback for the top floor. All building elevations (e.g., page 52, 55) show a clear visual setback for the top floor. However, the drawings do not provide a dimension for this setback, so compliance with the 3-meter minimum cannot be confirmed from the PDF. A DWG file would be needed for precise measurement.",
+      "evidence_bboxes": [
+        {
+          "page": 52,
+          "bbox": [
+            280,
+            580,
+            380,
+            620
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        52,
+        55,
+        56,
+        58
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.3",
+      "clause_text_excerpt": "תותר בניית דירות גן במפלס הקרקע. לא תינתן אפשרות להפנות את הגינות לחזית רחובות הטייסים, ההסתדרות, ששת-הימים והדרך המוצעת בתא שטח 10.",
+      "extraction": {
+        "value": "Garden apartments are included and are oriented away from the main streets (HaTayasim, HaHistadrut).",
+        "raw_text_match": "דירת גן",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submission includes 'דירת גן' (garden apartments) on the ground floors of all plots (e.g., page 24, 34, 39). The site plans show these gardens are oriented inwards towards the central public space or to the sides of the plots, not facing the main streets of HaTayasim or HaHistadrut, as required.",
+      "evidence_bboxes": [
+        {
+          "page": 39,
+          "bbox": [
+            600,
+            600,
+            650,
+            620
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        24,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.4",
+      "clause_text_excerpt": "מרחק מינימלי בין מבנים לא יפחת מ-9 מ' כולל מרפסות.",
+      "extraction": {
+        "value": "9",
+        "raw_text_match": "900",
+        "unit": "m"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause requires a minimum distance of 9m between buildings. The site plans explicitly dimension this distance as 9.00 meters in multiple locations across the plots (e.g., between buildings A and D in plot 1 on page 24).",
+      "evidence_bboxes": [
+        {
+          "page": 24,
+          "bbox": [
+            480,
+            480,
+            520,
+            520
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        24,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.5",
+      "clause_text_excerpt": "ישמר מרחק מינימלי של 1 מטר לפחות מגבול המגרש לבינוי המרפסות.",
+      "extraction": {
+        "value": "Balconies are shown on plans, but their distance to the plot boundary is not dimensioned.",
+        "raw_text_match": "Visual representation of balconies on site plans",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The clause requires a minimum 1m distance from balconies to the plot boundary. The site plans (e.g., page 24) show the location of balconies, but do not provide a specific dimension to the plot line. Precise measurement from a DWG file is required to verify compliance.",
+      "evidence_bboxes": [
+        {
+          "page": 24,
+          "bbox": [
+            250,
+            250,
+            300,
+            300
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        24,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.6",
+      "clause_text_excerpt": "קו הבנין לרחוב ההסתדרות: לא יפחת מ-1 מטר , יותרו חריגות נקודתית בהן יותר קו בנין קדמי אפס.",
+      "extraction": {
+        "value": "Precise setback dimensions from Histadrut street are not legible on the provided plans.",
+        "raw_text_match": "no legible value found"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The site plans show building lines for plots facing Histadrut street, but the specific dimensions are not provided or are illegible. Verification requires measurement from a DWG file.",
+      "source_pages": [
+        24,
+        52
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.1.2.6",
+      "clause_text_excerpt": "קו הבנין לרחוב ההסתדרות: לא יפחת מ-1 מטר , יותרו חריגות נקודתית בהן יותר קו בנין קדמי אפס.",
+      "extraction": {
+        "value": "Precise setback dimensions from Histadrut street are not legible on the provided plans.",
+        "raw_text_match": "no legible value found"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The site plans show building lines for plots facing Histadrut street, but the specific dimensions are not provided or are illegible. Verification requires measurement from a DWG file.",
+      "source_pages": [
+        34,
+        52
+      ],
+      "ta_shetach_submission": "תא שטח 2",
+      "ta_shetach_takanon": "2"
+    },
+    {
+      "clause_id": "4.1.2.6",
+      "clause_text_excerpt": "קו הבנין לרחוב ההסתדרות: לא יפחת מ-1 מטר , יותרו חריגות נקודתית בהן יותר קו בנין קדמי אפס.",
+      "extraction": {
+        "value": "Precise setback dimensions from Histadrut street are not legible on the provided plans.",
+        "raw_text_match": "no legible value found"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The site plans show building lines for plots facing Histadrut street, but the specific dimensions are not provided or are illegible. Verification requires measurement from a DWG file.",
+      "source_pages": [
+        39,
+        52
+      ],
+      "ta_shetach_submission": "תא שטח 3",
+      "ta_shetach_takanon": "3"
+    },
+    {
+      "clause_id": "4.1.2.7",
+      "clause_text_excerpt": "יותרו מחסנים בקומת הקרקע, בקומת המרתף ובקומת הגלריה.",
+      "extraction": {
+        "value": "Warehouses are shown in basement levels.",
+        "raw_text_match": "מחסנים",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause permits warehouses in basements. The basement plans for all plots explicitly show areas designated as 'מחסנים' (warehouses).",
+      "evidence_bboxes": [
+        {
+          "page": 29,
+          "bbox": [
+            188,
+            835,
+            220,
+            865
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 37,
+          "bbox": [
+            188,
+            835,
+            220,
+            865
+          ],
+          "tag": "supporting"
+        },
+        {
+          "page": 42,
+          "bbox": [
+            188,
+            835,
+            220,
+            865
+          ],
+          "tag": "supporting"
+        },
+        {
+          "page": 46,
+          "bbox": [
+            188,
+            835,
+            220,
+            865
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.8",
+      "clause_text_excerpt": "נטיעות מעל שימוש בתת הקרקע יבוצע בבתי גידול בנפחים אשר יבטיחו גדילת עצים בוגרים ויכללו פתרונות לניקוז, איטום והשקיה.",
+      "extraction": {
+        "value": "Technical details for planting beds over underground structures are not specified.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The clause requires specific technical solutions for plantings over basements (soil volume, drainage, etc.). These details are typically found in detailed landscape or construction drawings (DWG), not in this design submission.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.9",
+      "clause_text_excerpt": "מוסדות ציבור ושטחי החצר הצמודים בתא שטח 1 יתוכננו כחלק בלתי נפרד ממבנה המגורים וירשמו על שם הרשות המקומית. לכל כיתת גן תוצמד חצר.",
+      "extraction": {
+        "value": "Daycare centers with attached yards are shown integrated into building C1.",
+        "raw_text_match": "מעונות יום",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The plans for plot 1 show daycare centers ('מעונות יום') integrated into building C1, with dedicated ground-floor yards ('שטח חצרות קרקע'), fulfilling the clause's design requirements.",
+      "evidence_bboxes": [
+        {
+          "page": 27,
+          "bbox": [
+            785,
+            177,
+            917,
+            226
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 27,
+          "bbox": [
+            443,
+            270,
+            691,
+            318
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        27,
+        28
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.1.2.א.1",
+      "clause_text_excerpt": "תותר בניית מרתפים עד לגבול מגרש.",
+      "extraction": {
+        "value": "Basement plans show construction extending towards the plot boundaries.",
+        "raw_text_match": "מרתף",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This is a permissive clause. The basement plans for all plots show large basement footprints that extend close to the plot boundaries, taking advantage of this permission.",
+      "evidence_bboxes": [
+        {
+          "page": 29,
+          "bbox": [
+            250,
+            177,
+            488,
+            205
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.א.2",
+      "clause_text_excerpt": "תכסית המרתף לא תעלה על 85% משטח המגרש. תותר תכסית של למעלה מכך בכפוף לעמידה באמור בסעיף ניהול מי נגר.",
+      "extraction": {
+        "value": "Basement and plot area values are not provided to calculate coverage percentage.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "Verification of the basement coverage percentage requires area figures for both the basement and the plot. These figures are not available in the submission, requiring measurement from a DWG file.",
+      "source_pages": [],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.1.2.א.2",
+      "clause_text_excerpt": "תכסית המרתף לא תעלה על 85% משטח המגרש. תותר תכסית של למעלה מכך בכפוף לעמידה באמור בסעיף ניהול מי נגר.",
+      "extraction": {
+        "value": "Basement and plot area values are not provided to calculate coverage percentage.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "Verification of the basement coverage percentage requires area figures for both the basement and the plot. These figures are not available in the submission, requiring measurement from a DWG file.",
+      "source_pages": [],
+      "ta_shetach_submission": "תא שטח 2",
+      "ta_shetach_takanon": "2"
+    },
+    {
+      "clause_id": "4.1.2.א.2",
+      "clause_text_excerpt": "תכסית המרתף לא תעלה על 85% משטח המגרש. תותר תכסית של למעלה מכך בכפוף לעמידה באמור בסעיף ניהול מי נגר.",
+      "extraction": {
+        "value": "Basement and plot area values are not provided to calculate coverage percentage.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "Verification of the basement coverage percentage requires area figures for both the basement and the plot. These figures are not available in the submission, requiring measurement from a DWG file.",
+      "source_pages": [],
+      "ta_shetach_submission": "תא שטח 3",
+      "ta_shetach_takanon": "3"
+    },
+    {
+      "clause_id": "4.1.2.א.2",
+      "clause_text_excerpt": "תכסית המרתף לא תעלה על 85% משטח המגרש. תותר תכסית של למעלה מכך בכפוף לעמידה באמור בסעיף ניהול מי נגר.",
+      "extraction": {
+        "value": "Basement and plot area values are not provided to calculate coverage percentage.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "Verification of the basement coverage percentage requires area figures for both the basement and the plot. These figures are not available in the submission, requiring measurement from a DWG file.",
+      "source_pages": [],
+      "ta_shetach_submission": "תא שטח 4",
+      "ta_shetach_takanon": "4"
+    },
+    {
+      "clause_id": "4.1.2.א.2",
+      "clause_text_excerpt": "תכסית המרתף לא תעלה על 85% משטח המגרש. תותר תכסית של למעלה מכך בכפוף לעמידה באמור בסעיף ניהול מי נגר.",
+      "extraction": {
+        "value": "Basement and plot area values are not provided to calculate coverage percentage.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "Verification of the basement coverage percentage requires area figures for both the basement and the plot. These figures are not available in the submission, requiring measurement from a DWG file.",
+      "source_pages": [],
+      "ta_shetach_submission": "תא שטח 5",
+      "ta_shetach_takanon": "5"
+    },
+    {
+      "clause_id": "4.1.2.א.3",
+      "clause_text_excerpt": "ניתן יהיה לבנות מרתף חניה משותף למגרשים סמוכים עם כניסה משותפת.",
+      "extraction": {
+        "value": "A shared basement is shown for plots 2 and 4.",
+        "raw_text_match": "מרתף תא שטח 2+4",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause permits shared basements. The plan on page 37 explicitly shows a shared basement for the adjacent plots 2 and 4.",
+      "evidence_bboxes": [
+        {
+          "page": 37,
+          "bbox": [
+            450,
+            450,
+            650,
+            500
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        37
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.א.4",
+      "clause_text_excerpt": "פתרונות האוורור במרתפים ישולבו במבנים ונקודות הפליטה יהיו בגגות המבנים ככל הניתן ולא יבלטו ממפלס הפיתוח.",
+      "extraction": {
+        "value": "Details of basement ventilation systems and exhaust locations are not shown.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The location and design of mechanical ventilation exhausts are technical details not typically included in architectural design submissions. This would be detailed in MEP drawings.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.ב",
+      "clause_text_excerpt": "בתכנון החניונים תינתן עדיפות לאוורור ותאורה טבעיים ככל הניתן.",
+      "extraction": {
+        "value": "Basement plans show fully subterranean parking with no apparent features for natural light or ventilation.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause gives preference to natural ventilation. The basement plans show enclosed underground structures that would require mechanical ventilation. While this may be unavoidable ('as much as possible'), the design does not demonstrate an attempt to incorporate natural elements.",
+      "evidence_bboxes": [],
+      "source_pages": [
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.ב.1",
+      "clause_text_excerpt": "מיקום פתחי כניסות האוויר המאולץ יעשה באופן שיכניס אויר בעל ריכוז מזהמי אויר נמוך ככל הניתן. פתרונות האוורור לא יהוו מטרד עבור הולכי רגל ככל הניתן.",
+      "extraction": {
+        "value": "Locations for forced air intakes are not shown.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The location and design of mechanical ventilation intakes are technical details not included in this architectural design submission. This would be detailed in MEP drawings.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.ג.1",
+      "clause_text_excerpt": "בשטחים המסומנים כזיקת הנאה להולכי רגל, הזיקה מיועדת לאפשר מעבר חופשי של ציבור. בשטחים אלה תאסר כל בניה וגידור. שטחים אלה ירשמו בלשכת המקרקעין.",
+      "extraction": {
+        "value": "Site plans show open and unfenced pedestrian paths through the project's public spaces.",
+        "raw_text_match": "שביל הולכי רגל",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The site and development plans show a network of pedestrian paths ('שביל הולכי רגל') that are open, unfenced, and free of construction, consistent with the requirements for a public easement.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            490,
+            450,
+            550,
+            550
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 34,
+          "bbox": [
+            490,
+            450,
+            550,
+            550
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        10,
+        11,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.ג.2",
+      "clause_text_excerpt": "בתחום זיקת ההנאה תותר העברת תשתיות ציבוריות תת-קרקעיות.",
+      "extraction": {
+        "value": "This is a permissive clause, not a design constraint.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause is a legal provision that permits underground public infrastructure within easements. It does not impose a design requirement that can be checked on the plans.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.1.2.ג.3",
+      "clause_text_excerpt": "זיקת הנאה במרתפים - תותר זיקת הנאה למעבר בין מרתפים לכלי רכב והולכי רגל.",
+      "extraction": {
+        "value": "The design does not utilize the permission for easements between separate basements.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause is permissive, allowing for connections between basements. The current design shows separate, unconnected basements, which does not violate the permission.",
+      "evidence_bboxes": [],
+      "source_pages": [
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.2.1.1",
+      "clause_text_excerpt": "בנייני ציבור לרבות מבני חינוך, תרבות, דת, שירותים קהילתיים, בריאות ורווחה.",
+      "extraction": {
+        "value": "Daycare centers (מעונות יום) are included in the design.",
+        "raw_text_match": "מעונות יום",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause lists permitted public uses, including education buildings. The design includes daycare centers ('מעונות יום') in plot 1, which falls under this category.",
+      "evidence_bboxes": [
+        {
+          "page": 27,
+          "bbox": [
+            785,
+            177,
+            917,
+            226
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        27,
+        28
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.2.1.2",
+      "clause_text_excerpt": "שטחים לצורכי ציבור לרבות שבילים, שטחים פתוחים, גינון ונטיעות, מתקני ספורט ושעשועים, מגרשי ספורט.",
+      "extraction": {
+        "value": "The public open space (שצ\"פ) includes paths, open green areas, and fitness/play equipment.",
+        "raw_text_match": "מתקני כושר",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause lists permitted uses for public areas. The development plans for the public open space (שצ\"פ) clearly show paths, lawns, plantings, and recreation facilities, in line with the permitted uses.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            490,
+            600,
+            550,
+            650
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 14,
+          "bbox": [
+            490,
+            450,
+            650,
+            550
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        11,
+        14,
+        15
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.2.1.3",
+      "clause_text_excerpt": "יותר שימוש מסחר הנלווה לשימוש הציבורי בתכנית זו בהתאם לטבלת הזכויות.",
+      "extraction": {
+        "value": "No ancillary commercial use is shown in the public buildings (daycare centers).",
+        "raw_text_match": "מעונות יום",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause permits ancillary commercial use in public buildings. The plans for the daycare in plot 1 (pages 27-28) do not show any commercial areas, thus complying with the permissive nature of the clause.",
+      "evidence_bboxes": [
+        {
+          "page": 27,
+          "bbox": [
+            758,
+            168,
+            860,
+            213
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        27,
+        28
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.2.1.4",
+      "clause_text_excerpt": "בתת-הקרקע יותרו חניות, מקלטים ומתקני תשתיות, אחסנה ושטחים טכניים.",
+      "extraction": {
+        "value": "Basement plans show permitted uses: parking, storage, and technical rooms.",
+        "raw_text_match": "מרתף",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause permits specific uses in basements. The basement plans for all plots (e.g., pages 29, 37, 42, 46) show only these permitted uses, including parking, storage (מחסנים), and technical rooms (חדר גנרטור, חדר טרפו, etc.).",
+      "evidence_bboxes": [
+        {
+          "page": 29,
+          "bbox": [
+            758,
+            168,
+            860,
+            213
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 37,
+          "bbox": [
+            758,
+            240,
+            860,
+            265
+          ],
+          "tag": "supporting"
+        },
+        {
+          "page": 42,
+          "bbox": [
+            758,
+            200,
+            860,
+            225
+          ],
+          "tag": "supporting"
+        },
+        {
+          "page": 46,
+          "bbox": [
+            758,
+            168,
+            860,
+            213
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.2.2.1",
+      "clause_text_excerpt": "מתקני מיזוג אויר ואוורור יותקנו באופן שימזער את ההפרעה ויזואלית ו/או אקוסטית למבני המגורים השכנים.",
+      "extraction": {
+        "value": "Location of air conditioning and ventilation units is not explicitly detailed in the elevation drawings.",
+        "raw_text_match": "חזית",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause requires minimal visual/acoustic disturbance from AC/ventilation units. The elevation drawings (pages 52-62) do not show the specific locations of these units, making it impossible to verify compliance. This aspect needs to be reviewed in more detailed plans.",
+      "evidence_bboxes": [
+        {
+          "page": 52,
+          "bbox": [
+            580,
+            168,
+            860,
+            195
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.2.2.2",
+      "clause_text_excerpt": "מבני תשתית, ארונות וחדרים טכניים יהוו חלק אינטגרלי מאדריכלות הבנין והפיתוח.",
+      "extraction": {
+        "value": "Technical rooms are located within building basements and no standalone infrastructure cabinets are shown in the site plans.",
+        "raw_text_match": "חדר גנרטור",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause requires infrastructure to be architecturally integrated. Basement plans (e.g., pages 29, 37, 42, 46) show technical rooms integrated into the building structure. Site development plans (e.g., page 10) do not show separate, non-integrated infrastructure structures.",
+      "evidence_bboxes": [
+        {
+          "page": 29,
+          "bbox": [
+            630,
+            470,
+            700,
+            485
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 10,
+          "bbox": [
+            80,
+            120,
+            860,
+            800
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        10,
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.2.2.3",
+      "clause_text_excerpt": "הקצאת שטחי מסחר לא יתאפשר במבני ציבור המיועדים לגני ילדים ובתי כנסת.",
+      "extraction": {
+        "value": "No commercial areas are allocated in the daycare center plans.",
+        "raw_text_match": "מעונות יום",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause prohibits commercial areas in kindergartens. The plans for the daycare center in plot 1 (pages 27-28) do not include any commercial areas, in compliance with this clause.",
+      "evidence_bboxes": [
+        {
+          "page": 27,
+          "bbox": [
+            758,
+            168,
+            860,
+            213
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        27,
+        28
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "4.2.2.4",
+      "clause_text_excerpt": "בתא שטח 9, יישמר מעבר להולכי רגל בתחום המרווח הצפוני ברוחב של 3 מ', לצורך קישוריות וכהמשך לשביל המוצע בתכנית הסמוכה ממזרח.",
+      "extraction": {
+        "value": "No evidence found in 63-page submission",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The clause pertains to a pedestrian passage in Takanon plot 9. The submission documents do not contain any plans or information for plot 9.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": "9"
+    },
+    {
+      "clause_id": "4.3.1.1",
+      "clause_text_excerpt": "גינון ונטיעות, פינות ישיבה ומצללות, מתקני משחק וכושר, שבילים ומעברים, תשתיות על ותת קרקעיות.",
+      "extraction": {
+        "value": "The public open space (שצ\"פ) plans include landscaping, seating areas, play and fitness facilities, and paths.",
+        "raw_text_match": "מתקני כושר",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This is a permissive clause listing allowed elements in public open spaces. The שצ\"פ development plans (e.g., pages 11, 14, 15) explicitly show and label these elements, including paths, fitness facilities, and green areas.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            490,
+            500,
+            550,
+            515
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        11,
+        14,
+        15
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.3.2.1",
+      "clause_text_excerpt": "שטחי ציבור יבוצעו בד בבד עם ביצוע המתחם.",
+      "extraction": {
+        "value": "Legal directive not a design constraint",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "This clause specifies the construction phasing of public areas relative to the residential complex. This is a legal and project management requirement that cannot be verified from the provided architectural design drawings.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.3.2.2",
+      "clause_text_excerpt": "רוחב השצ\"פ בתא שטח 7 לא יקטן מ-10 מטרים.",
+      "extraction": {
+        "value": "No evidence found in 63-page submission",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The clause specifies a minimum width for the public open space in Takanon plot 7. The submission documents do not contain any plans or information for plot 7.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": "7"
+    },
+    {
+      "clause_id": "4.3.2.3",
+      "clause_text_excerpt": "תשתיות עיליות יותרו בפריסה שלא תעלה על 5% מהשטח.",
+      "extraction": {
+        "value": "Calculation not possible from provided drawings.",
+        "raw_text_match": "שטח השצ\"פ כ 7,150 מ\"ר",
+        "unit": "%"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The clause limits the footprint of above-ground infrastructure in public open spaces to 5%. Verifying this requires precise area calculations of all elements (lighting, benches, equipment), which is not possible from the schematic design drawings. This must be verified with detailed DWG files.",
+      "evidence_bboxes": [
+        {
+          "page": 12,
+          "bbox": [
+            590,
+            200,
+            780,
+            250
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        11,
+        12
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.4.1.1",
+      "clause_text_excerpt": "דרך כמשמעותה בחוק התכנון והבניה התשכ\"ה1965 למעט מסילות ברזל, מעבר תשתיות בתת הקרקע.",
+      "extraction": {
+        "value": "The plans show roads used for vehicle access, consistent with the legal definition.",
+        "raw_text_match": "תכנית פיתוח",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This clause defines the permitted uses for areas designated as 'Road'. The site plans (e.g., page 10) show roads used for their intended purpose of vehicle and pedestrian passage, which is consistent with the clause.",
+      "evidence_bboxes": [
+        {
+          "page": 10,
+          "bbox": [
+            600,
+            168,
+            860,
+            195
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        10
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.4.2.1",
+      "clause_text_excerpt": "רוחב זכות הדרך כמסומן בתשריט.",
+      "extraction": {
+        "value": "Reference document (Tashrit) not provided.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause requires the road right-of-way width to match the one specified in the binding 'Tashrit' (master plan diagram). This design submission does not include that reference document, so compliance cannot be verified.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.4.2.2",
+      "clause_text_excerpt": "כניסות רכב למגרשים יבוצעו במפלס המדרכה באופן שיבטיח את רציפותה.",
+      "extraction": {
+        "value": "Vehicle entrances are shown on site plans; detailed cross-section at sidewalk level is not provided.",
+        "raw_text_match": "כניסה/יציאת רכבים",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause requires vehicle entrances to be at sidewalk level to ensure continuity. While site plans (e.g., pages 24, 34, 39) show the locations of garage ramps, they lack the detailed cross-sections needed to verify the exact interface with the sidewalk. This is a standard detail that should be checked in construction plans.",
+      "evidence_bboxes": [
+        {
+          "page": 39,
+          "bbox": [
+            400,
+            700,
+            500,
+            750
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        24,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.5.1.1",
+      "clause_text_excerpt": "מעבר להולכי רגל ולכלי רכב, תשתיות עיליות ותת קרקעיות, גינון.",
+      "extraction": {
+        "value": "The plans include pedestrian paths, landscaping, and infrastructure, consistent with the uses permitted in an easement.",
+        "raw_text_match": "שביל הולכי רגל",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This clause lists permitted uses for easement areas. The public open space plans (e.g., page 11) show pedestrian paths, bicycle paths, and landscaping, which function as public passages and are consistent with the uses described.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            490,
+            550,
+            570,
+            565
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        11
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "4.5.2.1",
+      "clause_text_excerpt": "תשתיות עיליות יותרו בפריסה שלא תעלה על 5% מהשטח.",
+      "extraction": {
+        "value": "Calculation not possible from provided drawings.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": "%"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The clause limits the footprint of above-ground infrastructure in easement areas to 5%. As with the similar clause for public open spaces (4.3.2.3), verifying this requires precise area calculations not possible from the schematic design drawings. This must be verified with detailed DWG files.",
+      "evidence_bboxes": [],
+      "source_pages": [
+        11
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "232",
+        "raw_text_match": "סה\"כ 232",
+        "unit": "יח\"ד"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 1, column=number of units: Extracted submission value from the apartment mix table. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 30,
+          "bbox": [
+            76,
+            820,
+            138,
+            840
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        30
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "10-14",
+        "raw_text_match": "ק+13 ,ק+09",
+        "unit": "floors"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 1, column=number of floors: Extracted from elevation drawings showing buildings with 9 and 13 stories above ground. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 61,
+          "bbox": [
+            328,
+            884,
+            408,
+            904
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 61,
+          "bbox": [
+            660,
+            884,
+            740,
+            904
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        61,
+        62
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "44",
+        "raw_text_match": "סה\"כ 44",
+        "unit": "יח\"ד"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 2, column=number of units: Extracted submission value from the apartment mix table. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 38,
+          "bbox": [
+            693,
+            820,
+            754,
+            840
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        38
+      ],
+      "ta_shetach_submission": "תא שטח 2",
+      "ta_shetach_takanon": "2"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "10",
+        "raw_text_match": "ק+09",
+        "unit": "floors"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 2, column=number of floors: Extracted from elevation drawing showing building A2 with 9 stories above ground. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 56,
+          "bbox": [
+            290,
+            884,
+            368,
+            904
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        56,
+        57
+      ],
+      "ta_shetach_submission": "תא שטח 2",
+      "ta_shetach_takanon": "2"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "130",
+        "raw_text_match": "סה\"כ 130",
+        "unit": "יח\"ד"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 3, column=number of units: Extracted submission value from the apartment mix table. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 43,
+          "bbox": [
+            693,
+            820,
+            754,
+            840
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        43
+      ],
+      "ta_shetach_submission": "תא שטח 3",
+      "ta_shetach_takanon": "3"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "10",
+        "raw_text_match": "ק+09",
+        "unit": "floors"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 3, column=number of floors: Extracted from elevation drawing showing building A3 with 9 stories above ground. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 60,
+          "bbox": [
+            660,
+            884,
+            739,
+            904
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        58,
+        60
+      ],
+      "ta_shetach_submission": "תא שטח 3",
+      "ta_shetach_takanon": "3"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "98",
+        "raw_text_match": "סה\"כ 98",
+        "unit": "יח\"ד"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 4, column=number of units: Extracted submission value from the apartment mix table. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 38,
+          "bbox": [
+            76,
+            820,
+            138,
+            840
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        38
+      ],
+      "ta_shetach_submission": "תא שטח 4",
+      "ta_shetach_takanon": "4"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "9-13",
+        "raw_text_match": "ק+12 ,ק+08",
+        "unit": "floors"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 4, column=number of floors: Extracted from elevation drawings showing buildings with 8 and 12 stories above ground. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 56,
+          "bbox": [
+            580,
+            884,
+            658,
+            904
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 56,
+          "bbox": [
+            790,
+            884,
+            868,
+            904
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        54,
+        55,
+        56,
+        57
+      ],
+      "ta_shetach_submission": "תא שטח 4",
+      "ta_shetach_takanon": "4"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "196",
+        "raw_text_match": "סה\"כ 196",
+        "unit": "יח\"ד"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 5, column=number of units: Extracted submission value from the apartment mix table. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 47,
+          "bbox": [
+            693,
+            820,
+            754,
+            840
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        47
+      ],
+      "ta_shetach_submission": "תא שטח 5",
+      "ta_shetach_takanon": "5"
+    },
+    {
+      "clause_id": "5.table",
+      "clause_text_excerpt": "מצב מוצע- טבלת זכויות והוראות בניה. האמור בטבלה זו גובר, במקרה של סתירה, על הוראות כלליות אחרות, בין בהוראות התכנית ובין בתשריט המצב המוצע. גם בטבלה עצמה גוברת הוראה מפורטת על הוראה כללית. שטחי הבניה המפורטים בטבלה שלעיל כוללים את כל שטחי הבניה המירביים בתכנית זו. הערכים בטבלה מתייחסים לכל תא שטח בנפרד גם אם הוגדר טווח תאי שטח.",
+      "extraction": {
+        "value": "9-13",
+        "raw_text_match": "ק+12 ,ק+08",
+        "unit": "floors"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "row=plot 5, column=number of floors: Extracted from elevation drawings showing buildings with 8 and 12 stories above ground. Compliance requires comparison with the Takanon's rights table.",
+      "evidence_bboxes": [
+        {
+          "page": 58,
+          "bbox": [
+            580,
+            884,
+            658,
+            904
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 58,
+          "bbox": [
+            790,
+            884,
+            868,
+            904
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        54,
+        55,
+        58,
+        59
+      ],
+      "ta_shetach_submission": "תא שטח 5",
+      "ta_shetach_takanon": "5"
+    },
+    {
+      "clause_id": "6.1.1",
+      "clause_text_excerpt": "תנאי להגשת בקשה להיתר, יהיה הכנת תכנית בינוי ופיתוח לכל המתחם, לאישור הוועדה המקומית. שתהיה בקנ\"מ 1:250 ותכלול בין היתר את הנושאים הבאים:",
+      "extraction": {
+        "value": "1:1250",
+        "raw_text_match": "קנ\"מ 1:1250",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause requires a 1:250 scale development plan for the permit application. The submitted development plan is at a 1:1250 scale. This may be acceptable for the current design stage, but does not meet the literal requirement for the permit stage.",
+      "evidence_bboxes": [
+        {
+          "page": 10,
+          "bbox": [
+            850,
+            884,
+            950,
+            904
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        10
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.1.א",
+      "clause_text_excerpt": "מיקום המבנים, אופן העמדתם, אופן דירוגם ביחס לרחוב וביחס לשצ\"פ, מפלס ה0.00 שלהם, החזית החמישית, המעברים המקורים, החזיתות, גידור, אשפה, גינון ונטיעות.",
+      "extraction": {
+        "value": "The submission includes detailed site plans, elevations, and diagrams showing building locations, orientation, ground levels, facades, waste management, and landscaping.",
+        "raw_text_match": "תכנית פיתוח",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submitted plans (e.g., development plans, elevations, waste diagrams) comprehensively cover the elements required by this clause.",
+      "evidence_bboxes": [
+        {
+          "page": 10,
+          "bbox": [
+            470,
+            150,
+            680,
+            180
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        10,
+        24,
+        25,
+        34,
+        39,
+        52
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.1.ב",
+      "clause_text_excerpt": "קביעת עקרונות הפיתוח: ציון הפרשי מפלסי הפיתוח וגדרות, טיפול במי נגר ושטחי חלחול, לרבות גינות צמודות לשטחים הפתוחים ולשטחי הציבור.",
+      "extraction": {
+        "value": "Site plans show development levels and landscaping, but do not include specific details on stormwater management or infiltration areas.",
+        "raw_text_match": "±00.00=40.50",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The plans specify development levels (e.g., on page 24). However, detailed plans or calculations for stormwater management (מי נגר) and infiltration areas are not found, which is a key requirement of this clause.",
+      "evidence_bboxes": [
+        {
+          "page": 24,
+          "bbox": [
+            600,
+            470,
+            700,
+            490
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        24,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.1.ג",
+      "clause_text_excerpt": "הבטחת רצף תפקודי של תנועת הולכי הרגל ורוכבי האופניים בתחום תכנית פיתוח המגרש.",
+      "extraction": {
+        "value": "Site plans explicitly show a network of pedestrian and bicycle paths throughout the development.",
+        "raw_text_match": "שביל הולכי רגל\nשביל אופניים",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The development plans on pages 11, 34, and 39 clearly label dedicated paths for pedestrians and cyclists, ensuring functional continuity as required.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            80,
+            500,
+            200,
+            550
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        11,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.1.ד",
+      "clause_text_excerpt": "הגדרת מיקומן של כניסות למבנים ולחניונים התת קרקעיים.",
+      "extraction": {
+        "value": "Building entrances and ramps to underground parking are clearly marked on the site and basement plans.",
+        "raw_text_match": "כניסה",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "Site plans (e.g., page 24, 34) label building entrances ('כניסה') and show ramps ('רמפה') to underground parking. Basement plans (e.g., page 29, 37) confirm the location of these ramps.",
+      "evidence_bboxes": [
+        {
+          "page": 24,
+          "bbox": [
+            80,
+            600,
+            150,
+            620
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 34,
+          "bbox": [
+            80,
+            500,
+            150,
+            550
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        24,
+        29,
+        34,
+        37,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.2",
+      "clause_text_excerpt": "בקשה להיתר בניה למגורים תכלול את השטח הציבורי המבונה שבתוך מבנה המגורים.",
+      "extraction": {
+        "value": "The plans include 780 sq.m of daycare facilities in plot 1 and residents' clubs in other plots.",
+        "raw_text_match": "שטח מעונות יום קרקע - 280 מ' ר\nשטח מעונות יום קומה 1 - 500 מ' ר",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submission explicitly details built public spaces within residential buildings, most notably the daycare centers in plot 1 (pages 27-28) and residents' clubs shown in function diagrams (e.g., page 26).",
+      "evidence_bboxes": [
+        {
+          "page": 27,
+          "bbox": [
+            680,
+            280,
+            950,
+            330
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 28,
+          "bbox": [
+            680,
+            400,
+            950,
+            450
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        26,
+        27,
+        28
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.3",
+      "clause_text_excerpt": "תנאי להגשת בקשה להיתר ולהקמת עגורנים יהיה קבלת אישור נציג שר הביטחון ורת\"א לנושא גובה בהתאם לסעיף גובה מבנים ובטיחות טיסה.",
+      "extraction": {
+        "value": "no evidence found in 63-page submission",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause requires an external approval from the Ministry of Defense and the Civil Aviation Authority. Such a document is not expected to be part of an architectural design submission.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.4",
+      "clause_text_excerpt": "בקשה להיתר בניה תבטיח פתרונות לעמידה ביעד נפח הנגר לניהול של לפחות 75% מנפח הנגר היממתי בתחומה לתקופת חזרה של 1:50. ובכפוף לאמור בסעיף ניהול מי נגר.",
+      "extraction": {
+        "value": "no evidence found in 63-page submission",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The submission lacks any calculations, tables, or specific drainage plans to demonstrate how the project will manage 75% of stormwater runoff as required.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.5",
+      "clause_text_excerpt": "תנאי לתחילת עבודות בתא שטח יהיה הריסת כל המבנים המיועדים להריסה באותו תא שטח כולל בשצ\"פ.",
+      "extraction": {
+        "value": "This is a procedural condition for the construction phase, not a design element verifiable in the submission.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause sets a condition for the start of construction (demolition). This is a matter of project phasing and cannot be demonstrated as compliant or non-compliant within a design plan showing the final proposed state.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.1.6",
+      "clause_text_excerpt": "לא יינתנו היתרי בניה בתא שטח מס' 5 (שייעודו הקיים שצ\"פ ובו עוברים קווי מים וביוב קיימים) אלא לאחר הריסת המבנים בתחום השצ\"פ המוצע (תא שטח מס' 6) ובתחום הדרך המוצעת (תא שטח 10) והנחת קווי מים וביוב במקום הקווים הקיימים, או פתרון אחר שיאושר ע\"י הגורם המוסמך מטעם משרד הבריאות.",
+      "extraction": {
+        "value": "This is a procedural condition linking permits and demolition across different plots, not a design element verifiable in the submission.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause sets a procedural dependency for issuing permits for plot 5 based on demolition and infrastructure work in plots 6 and 10. This is a matter of project phasing and cannot be verified from the design plans.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.2.1",
+      "clause_text_excerpt": "החניה עבור מגורים ואורחים תהיה בתת הקרקע.",
+      "extraction": {
+        "value": "All parking for residents and guests is located in underground basements.",
+        "raw_text_match": "מרתף",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The submission includes detailed plans for underground parking ('מרתף') for each plot (e.g., pages 29, 37, 42, 46). The site plans show no surface parking lots, confirming all parking is underground.",
+      "evidence_bboxes": [
+        {
+          "page": 29,
+          "bbox": [
+            470,
+            150,
+            680,
+            180
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 37,
+          "bbox": [
+            470,
+            250,
+            680,
+            280
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.2.2",
+      "clause_text_excerpt": "תותר כניסה אחת לחניון התת קרקעי מרחוב הטייסים.",
+      "extraction": {
+        "value": "0",
+        "raw_text_match": "חזית רח' הטייסים",
+        "unit": "entrances"
+      },
+      "confidence": "medium",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause permits a maximum of one parking entrance from Tayasim Street. Based on the overall site plan (page 10) and the elevation facing Tayasim Street (page 55), there are no vehicle entrances from this street. Therefore, zero entrances is compliant.",
+      "evidence_bboxes": [
+        {
+          "page": 55,
+          "bbox": [
+            470,
+            150,
+            680,
+            180
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        10,
+        55
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.2.3",
+      "clause_text_excerpt": "חניות אורחים ישמשו את כלל דיירי המתחם ולא יוצמדו לדירות.",
+      "extraction": {
+        "value": "Parking tables list guest parking separately from resident parking, but legal assignment cannot be verified from drawings.",
+        "raw_text_match": "אורחים",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The parking tables (e.g., page 29) list parking for 'אורחים' (guests) as a separate category. However, whether these spots are legally unassigned to specific apartments is a legal matter not verifiable from architectural plans.",
+      "evidence_bboxes": [
+        {
+          "page": 29,
+          "bbox": [
+            480,
+            500,
+            550,
+            520
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        29,
+        37,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.3.1.א",
+      "clause_text_excerpt": "קווי ביוב ציבוריים קיימים בתחום התכנית יוחלפו לקווים חדשים.",
+      "extraction": {
+        "value": "no evidence found in 63-page submission",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The submission is a design plan ('תכנית עיצוב') and does not include detailed civil engineering or infrastructure plans showing the replacement of public sewer lines. This level of detail is typically found in later-stage construction documents.",
+      "evidence_bboxes": [],
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.3.2.א",
+      "clause_text_excerpt": "כלל התשתיות בתחום התכנית יהיו ככל הניתן בתת הקרקע לרבות קווי חשמל.",
+      "extraction": {
+        "value": "No above-ground infrastructure is depicted in the plans.",
+        "raw_text_match": "No explicit text match; inferred from visual review of site plans.",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The site development plans (e.g., page 10) and cross-sections do not show any above-ground infrastructure such as power lines, which implies they are intended to be underground per the clause. However, the submission lacks a detailed infrastructure plan to confirm this positively.",
+      "source_pages": [
+        10
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.3.2.ב",
+      "clause_text_excerpt": "פיתוח התשתיות יהיה בד בבד עם ביצוע המתחם.",
+      "extraction": {
+        "value": "Phasing requirement not visually represented in design plans.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause specifies the timing and phasing of construction. Such a requirement is a legal/procedural directive and cannot be verified from the architectural design drawings provided in this submission.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.3.2.ג",
+      "clause_text_excerpt": "מתקנים טכניים ופתחי איוורור לא יפונו לחצרות גני ילדים.",
+      "extraction": {
+        "value": "No technical facilities or ventilation openings are shown directed towards the daycare yards.",
+        "raw_text_match": "חצר מעונות יום",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "Daycare centers ('מעונות יום') are located in building C1 within Ta Shetach 1 (pages 27-28). A review of the site plan (page 24) and building elevations (page 62) does not show any technical facilities or large ventilation openings directed towards the designated daycare yards.",
+      "evidence_bboxes": [
+        {
+          "page": 27,
+          "bbox": [
+            248,
+            500,
+            498,
+            608
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        24,
+        27,
+        62
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "6.3.3.א",
+      "clause_text_excerpt": "יותר הקמת פתרון אשפה באמצעות מערכת פנאומטית. בהתאם לכך ניתן להעביר תשתיות ומערכות פנאומטיות מתחת לדרך בתת הקרקע. בשצ\"פ רק מעברים לצנרת פנאומטית.",
+      "extraction": {
+        "value": "The design uses conventional waste compactor rooms, not a pneumatic system.",
+        "raw_text_match": "חדר דחסנית",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The clause permits, but does not mandate, a pneumatic waste system. The waste management diagrams for all plots (e.g., page 25 for plot 1, page 35 for plots 2+4) show conventional 'חדר דחסנית' (compactor rooms), which is an acceptable implementation.",
+      "evidence_bboxes": [
+        {
+          "page": 25,
+          "bbox": [
+            248,
+            440,
+            348,
+            460
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        25,
+        35,
+        40,
+        44
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.1",
+      "clause_text_excerpt": "התוכנית תידרש לווסת את הנגר בתחומה.",
+      "extraction": {
+        "value": "The project includes design principles for runoff management.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "This is a general directive for runoff regulation. The submission addresses this principle through specific design choices, such as lowered green areas (clause 6.4.10, page 20), even though the overall quantitative calculations are missing.",
+      "source_pages": [
+        20
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.10",
+      "clause_text_excerpt": "ככל הניתן השטחים הירוקים יהיו במפלס נמוך מהשבילים כך שיהוו שטחי השהייה למי הנגר. בשטחים הציבוריים ישולבו אמצעים להשהיית נגר עילי.",
+      "extraction": {
+        "value": "Landscaped areas are shown at lower elevations than adjacent paths in public open space cross-sections.",
+        "raw_text_match": "חתך ב-ב",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The cross-sections of the public open space (שצ\"פ) on page 20 clearly show landscaped areas and grass hills at a lower elevation than the adjacent pedestrian paths (e.g., path at +47.35, adjacent green area lower), which aligns with the requirement to use these areas for runoff retention.",
+      "evidence_bboxes": [
+        {
+          "page": 20,
+          "bbox": [
+            308,
+            478,
+            704,
+            580
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        20,
+        21
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.2",
+      "clause_text_excerpt": "נפח האיגום הנדרש בתחום התוכנית הינו 450 מ\"ק. ניהול ויסות הנגר יהיה לפי תמ\"א 1 ולפי נספח הניקוז.",
+      "extraction": {
+        "value": "Missing",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": "מ\"ק"
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The takanon requires a total retention volume of 450 m³. The 63-page submission does not include a drainage appendix, calculations, or summary table to verify this requirement.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.3",
+      "clause_text_excerpt": "שטח הגינון במגרשי הבינוי בתוכנית הינו כ-4.6 דונם. לפחות 75% משטח הגינון יתוכנן מונמך בכ-10 ס\"מ מסביבתו ליצירת נפח איגום של כ-345 מ\"ק.",
+      "extraction": {
+        "value": "Missing",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": "מ\"ק"
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The clause requires at least 75% of landscaped areas to be lowered by 10 cm to create a retention volume of 345 m³. The submitted plans and cross-sections do not provide the necessary dimensions or calculations to verify this.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.4",
+      "clause_text_excerpt": "ניתן להמיר את אוגר ההשהייה בסל פתרונות הכולל גגות כחולים/ירוקים, איגום מעל תקרת המרתף, בורות חלחול או כל פתרון אחר.",
+      "extraction": {
+        "value": "No alternative runoff solutions are specified in the plans.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause permits alternative runoff solutions like green roofs. As the overall drainage plan and calculations are missing, it is impossible to determine if any primary or alternative solution was chosen and if it is compliant.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.5",
+      "clause_text_excerpt": "בתוכנית בינוי ופיתוח 1:500 ניתן יהיה לנייד את נפחי ניהול הנגר בכל מתחם ובתנאי שישמר הנפח הכללי הנדרש לניהול על פי הנחיות מנהל התכנון ויובטח פתרון הבאת הנגר לאזורי הוויסות והחלחול מהשטחים האטומים.",
+      "extraction": {
+        "value": "Clause provides guidance for future detailed plans.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "This clause provides procedural flexibility for future, more detailed 1:500 scale plans. It is not a design constraint that can be verified as compliant or non-compliant in the current design submission.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.6",
+      "clause_text_excerpt": "כניסה לחניונים תתוכנן מוגבהת כך שמי נגר מהכביש לא יכנסו לתוך החניון התת קרקעי. מפתן הכניסה לחניון יהיה לפחות 30 ס\"מ מעל גובה פני הכביש.",
+      "extraction": {
+        "value": "30",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": "ס\"מ"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The clause requires parking garage entrance sills to be at least 30 cm above the road. The provided site plans, basement plans, and cross-sections are not at a sufficient scale or detail to verify this dimension. This would be specified in detailed construction drawings (DWG).",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.7",
+      "clause_text_excerpt": "חיבור הצמג\"ים יהיו לאזורי ניהול הנגר והקידוחים.",
+      "extraction": {
+        "value": "Connection of downspouts not shown.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The submission lacks a drainage plan. Therefore, the connection points for rainwater downspouts ('צמג\"ים') to the runoff management areas cannot be verified.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.4.8",
+      "clause_text_excerpt": "נדרשת העתקת התעלה לתוכנית סמוכה ממזרח בטרם פיתוח תא שטח 1 וביטול התעלה.",
+      "extraction": {
+        "value": "The development plan for Ta Shetach 1 does not show the ditch.",
+        "raw_text_match": "תא שטח 1",
+        "unit": null
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The clause requires relocating and cancelling a ditch before developing plot 1. The site plan for plot 1 (page 24) does not show a ditch, which is consistent with its required cancellation. However, this submission provides no evidence of the required relocation of the ditch to an adjacent plan.",
+      "evidence_bboxes": [
+        {
+          "page": 24,
+          "bbox": [
+            240,
+            240,
+            680,
+            300
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        24
+      ],
+      "ta_shetach_submission": "תא שטח 1",
+      "ta_shetach_takanon": "1"
+    },
+    {
+      "clause_id": "6.4.9",
+      "clause_text_excerpt": "עודפי ניקוז בלבד יופנו ככל הניתן לשצ\"פ סמוך או למערכת התיעול העירונית.",
+      "extraction": {
+        "value": "Overflow drainage destination not specified.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The submission lacks a drainage plan. Therefore, the destination for drainage overflow cannot be verified.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.1",
+      "clause_text_excerpt": "לתכנית זו מצורף \"נספח עצים בוגרים\" הכולל הסברים והנחיות בנוגע לטיפול בעצים הבוגרים הקיימים בתחום התכנית.",
+      "extraction": {
+        "value": "The 'Mature Trees Appendix' is not included in the submission.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "non_compliant",
+      "compliance_reasoning": "The clause explicitly states that a 'Mature Trees Appendix' (נספח עצים בוגרים) is attached to the plan. A review of the 63-page submission, including the table of contents on page 2, confirms that this appendix is missing.",
+      "source_pages": [
+        2
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.2.א",
+      "clause_text_excerpt": "עץ המסומן לשימור ישולב בתכנון ולא תותר כריתתו או פגיעה בו.",
+      "extraction": {
+        "value": "Trees are shown integrated into the site plans and public open spaces, but specific trees marked for preservation are not identified.",
+        "raw_text_match": "no direct text match, based on visual review of plans"
+      },
+      "confidence": "medium",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "The site plans (e.g., page 10) and public open space plans (e.g., page 11) show numerous trees integrated into the design. However, without a corresponding tree survey identifying which specific trees are marked for preservation, it is not possible to confirm that all such trees have been incorporated.",
+      "source_pages": [
+        10,
+        11,
+        24,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.2.ב",
+      "clause_text_excerpt": "הבינוי יתרחק מהעצים לשימור בהתאם לרדיוס השורשים לכל גובה הבינוי.",
+      "extraction": {
+        "value": "Measurement of building setback from tree root zones requires DWG files.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The plans show building footprints and tree locations, but verifying compliance with required distances from root zones requires precise measurements that are only possible using DWG files, not this PDF submission.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.2.ג",
+      "clause_text_excerpt": "עץ המסומן לשימור יגודר בגידור קשיח. הגדר תשולט וגזעו יוגן.",
+      "extraction": {
+        "value": "This is a construction-phase requirement not shown in design plans.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The requirement to fence and protect trees during construction is a condition for the building permit and construction phase. Such details are not expected to be shown on architectural design plans.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.2.ד",
+      "clause_text_excerpt": "במסגרת היתר הבניה תשולב ככל הניתן נטיעת עצים חדשים במקום העצים שנכרתו.",
+      "extraction": {
+        "value": "Extensive new tree planting is shown on landscape and site plans.",
+        "raw_text_match": "no direct text match, based on visual review of plans"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The development plans for the entire site, and specifically the public open space (שצ\"פ) plans, show a significant number of new trees being planted, fulfilling the requirement to add new trees.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            166,
+            168,
+            858,
+            708
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        10,
+        11,
+        16,
+        17,
+        18,
+        19
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.3.א",
+      "clause_text_excerpt": "נטיעת עצים במדרכות ורחבות ושטחים מרוצפים תתבצע תוך מתן פתרון מלא לבית הגידול התת קרקעי לשורשי העץ.",
+      "extraction": {
+        "value": "Technical details for subterranean root habitats are not provided.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "deferred_to_dwg",
+      "compliance_reasoning": "The plans show trees in paved areas, but the technical details for their subterranean root habitats are construction-level details not included in this design submission. This would be specified in detailed landscape or construction plans.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.4.א",
+      "clause_text_excerpt": "שטח השצ\"פ יתוכנן כך שלפחות מחצית משטחו יהיה בלתי מרוצף ככל הניתן.",
+      "extraction": {
+        "value": "Visual estimation indicates more than 50% of the public open space is unpaved.",
+        "raw_text_match": "no direct text match, based on visual review of plans"
+      },
+      "confidence": "medium",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "Based on the public open space plans (e.g., page 11), the areas dedicated to lawns ('גבעת דשא') and planting appear to substantially exceed the paved areas for paths and facilities. While no specific calculation is provided, visual inspection suggests compliance with the >50% unpaved requirement.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            166,
+            168,
+            858,
+            708
+          ],
+          "tag": "primary"
+        },
+        {
+          "page": 12,
+          "bbox": [
+            595,
+            260,
+            853,
+            300
+          ],
+          "tag": "supporting"
+        }
+      ],
+      "source_pages": [
+        11,
+        12,
+        16,
+        17,
+        18,
+        19
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.5.5",
+      "clause_text_excerpt": "שינוי סטטוס עצים שאינו בגדר שינוי ניכר לתכנית במקרים מיוחדים בלבד, בהם נדרש שינוי-סיווג עץ בוגר שסומן כעץ לשימור לסיווג אחר, לעת הגשת בקשה להיתר בנייה (ולא יותר מ-10% מכמות העצים הבוגרים שסווגו בתכנית לשימור), יוגש עדכון לנספח עצים בוגרים לאישור ועדה מקומית, לאחר תאום וקבלת חוו\"ד בכתב מפקיד היערות.",
+      "extraction": {
+        "value": "This is a procedural clause for future modifications at the permit stage.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause defines the legal procedure for changing the status of a preserved tree during the building permit phase. It is not a design constraint and has no corresponding evidence in the design submission.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.6.1",
+      "clause_text_excerpt": "תירשם בלשכת רישום המקרקעין זיקת הנאה לכלל הציבור לטובת מעבר הולכי רגל ורוכבי אופנים.",
+      "extraction": {
+        "value": "The design includes public pedestrian and bicycle paths through the site.",
+        "raw_text_match": "שביל הולכי רגל"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The site plans clearly show dedicated pedestrian paths ('שביל הולכי רגל') and bicycle paths ('שביל אופניים') that provide public passage, particularly through the main public open space. The design provides the basis for the required legal easement.",
+      "evidence_bboxes": [
+        {
+          "page": 11,
+          "bbox": [
+            478,
+            310,
+            530,
+            580
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        10,
+        11,
+        34,
+        39
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.6.2",
+      "clause_text_excerpt": "תתאפשר זכות מעבר לתשתיות עירוניות בתת הקרקע.",
+      "extraction": {
+        "value": "This is a legal requirement for underground easements.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause is a legal provision that enables the city to run infrastructure underground. It is not a physical design element that would be depicted in the architectural plans.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.6.3",
+      "clause_text_excerpt": "תרשם זיקת הנאה למעבר בין מרתפים לכלי רכב.",
+      "extraction": {
+        "value": "The design does not show any vehicle passages connecting the basements of different plots.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "A review of the basement plans for all plots (pages 29, 37, 42, 46) shows that each plot or pair of plots has a self-contained basement with no connections to the basements of other plots. Therefore, the condition to register an easement for such a passage is not applicable to the current design.",
+      "source_pages": [
+        29,
+        37,
+        42,
+        46
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.6.4",
+      "clause_text_excerpt": "תרשם זיקת הנאה תת הקרקע למעבר ברכב ולחניה, מתא שטח 2 לחלקה 12, הצמודה מצפון וממזרח.",
+      "extraction": {
+        "value": "No provision for an underground vehicle connection from plot 2 to an adjacent plot 12 is shown.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "non_compliant",
+      "compliance_reasoning": "The clause specifically requires an underground easement for vehicle passage from plot 2 to the adjacent plot 12. The basement plan for plot 2 (page 37) and the corresponding site plan (page 34) do not show any ramp, tunnel, or other provision for such a connection.",
+      "source_pages": [
+        34,
+        37
+      ],
+      "ta_shetach_submission": "תא שטח 2",
+      "ta_shetach_takanon": "2"
+    },
+    {
+      "clause_id": "6.7.1",
+      "clause_text_excerpt": "תנאי בהיתר למבנה שגובהו הכולל 40 מ' מעל פני השטח ומעלה הינו תיאום עם רשות התעופה האזרחית ולשם מתן הנחיות לסימון ותאורה לאזהרה מפני מכשולי טיסה.",
+      "extraction": {
+        "value": "Multiple buildings exceed 40m in height, triggering this procedural requirement.",
+        "raw_text_match": "+45.45"
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "Several buildings in the project exceed 40m in height above ground level (e.g., building B1 in plot 1 is +45.45m on page 61). This triggers the clause, which is a procedural condition for the building permit (coordination with the CAA) and not a design element to be shown on the plans.",
+      "evidence_bboxes": [
+        {
+          "page": 61,
+          "bbox": [
+            448,
+            859,
+            560,
+            881
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        56,
+        58,
+        61,
+        62
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.7.2",
+      "clause_text_excerpt": "הקמת מתקני עזר לבניה לגובה העולה על 40 מטר מעל פני הקרקע ומעלה בתחום התכנית מותנית באישור רת\"א לגובה המתקן ולשם מתן הנחיות לסימון ותאורה לאזהרה מפני מכשולי טיסה.",
+      "extraction": {
+        "value": "This clause pertains to temporary construction equipment.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause regulates temporary construction equipment (like cranes) and is not applicable to the permanent architectural design submission. It is a condition for the construction phase.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.7.3",
+      "clause_text_excerpt": "תחום התכנית מצוי תחת נתיב טיסה נמוך. בהתאם לכך, אין לתת הקלות לגובה הבניה בתכנית זו.",
+      "extraction": {
+        "value": "This is a directive for the planning authority regarding height relaxations.",
+        "raw_text_match": "no evidence found in 63-page submission"
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause is a legal directive to the planning authority, prohibiting them from granting relaxations on building height. It is not a design constraint for the architect to address in the plans.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.7.4",
+      "clause_text_excerpt": "הגובה המבנים המקסימלי בתכנית לא יחרוג מגובה 91 מ' מעפ\"י.",
+      "extraction": {
+        "value": "89.80",
+        "raw_text_match": "+42.30/ +89.80",
+        "unit": "m"
+      },
+      "confidence": "high",
+      "compliance_indicator": "compliant",
+      "compliance_reasoning": "The takanon sets a maximum absolute height of 91m above sea level. The highest point shown in the submission is the top of building A5 at +89.80m, which is below the maximum allowed height.",
+      "evidence_bboxes": [
+        {
+          "page": 58,
+          "bbox": [
+            500,
+            858,
+            610,
+            881
+          ],
+          "tag": "primary"
+        }
+      ],
+      "source_pages": [
+        58
+      ],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "6.7.5",
+      "clause_text_excerpt": "הגובה המבוקש בתכנית זו, הינו הגובה המירבי לבניה וכולל מתקני עזר טכניים על המבנה ועזרי בנייה ולא תתאפשר סטיה ממנו.",
+      "extraction": {
+        "value": "The requested height is the maximum and includes technical auxiliary facilities and construction aids, and no deviation will be permitted.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "requires_review",
+      "compliance_reasoning": "This is a legal directive stating that the proposed heights are the absolute maximum. The submission provides height data on elevation and cross-section drawings, but does not explicitly confirm adherence to this specific definition of maximum height. Compliance is assumed but not explicitly stated.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "7.1.1",
+      "clause_text_excerpt": "התכנית תבנה בהינף אחד או בשני שלבים: שלב א' - החלק הדרומי הכולל את תאי שטח 1 ו-2 והשצ\"פ בתא שטח 8. שלב ב' - תנאי למימוש המתחם הצפוני הכולל את תאי שטח 3, 4, 5, השצ\"פ בתאי שטח 6, 7, יהיה תחילת סלילת הדרך בתא שטח 10.",
+      "extraction": {
+        "value": "No phasing plan provided in the submission.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "The submission is a design plan and does not include a construction phasing plan as described in the takanon. While pages 12 and 14 mention phasing for the public open space (שצ\"פ), it does not cover the full scope of the takanon's phasing requirements for all plots.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    },
+    {
+      "clause_id": "7.2.1",
+      "clause_text_excerpt": "תוך 10 שנים מיום כניסתה של התכנית לתוקף.",
+      "extraction": {
+        "value": "No implementation timeline provided in the submission.",
+        "raw_text_match": "no evidence found in 63-page submission",
+        "unit": null
+      },
+      "confidence": "high",
+      "compliance_indicator": "missing",
+      "compliance_reasoning": "This clause sets a 10-year deadline for implementation. Such a timeline is a procedural requirement and is not expected to be found within a design submission document.",
+      "source_pages": [],
+      "ta_shetach_submission": null,
+      "ta_shetach_takanon": null
+    }
+  ],
+  "validation_summary": {
+    "1. schema_valid": {
+      "passed": true,
+      "detail": "110 findings OK"
+    },
+    "2. clause_ids_resolve": {
+      "passed": true,
+      "detail": "all 110 clause_ids resolve"
+    },
+    "3. source_pages_in_range": {
+      "passed": true,
+      "detail": "all source_pages in [1, 63]"
+    },
+    "4. bboxes_in_page_dims": {
+      "passed": true,
+      "detail": "all 83 bboxes OK"
+    },
+    "5. confidence_enum_valid": {
+      "passed": true,
+      "detail": "all in {high, medium, low}"
+    },
+    "6. compliance_enum_valid": {
+      "passed": true,
+      "detail": "all in {compliant, non_compliant, requires_review, missing, deferred_to_dwg}"
+    },
+    "7. plot_reconciliation_consistent": {
+      "passed": true,
+      "detail": "10 mappings + 5 unreconciled + 0 self-evident takanon labels cover all citations"
+    },
+    "8. all_requested_clauses_present": {
+      "passed": true,
+      "detail": "all 93 requested clauses have ≥1 finding"
+    }
+  }
+}

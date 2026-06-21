@@ -84,7 +84,7 @@ const VERDICT_LABEL_HE: Record<string, string> = {
   fail: "נדרש תיקון",
   fail_borderline: "נדרש תיקון",
   not_submitted: "לא הוגש",
-  requires_review: "דורש בירור",
+  requires_review: "נדרשת השלמה",
   unevaluable: "לא ניתן לבדיקה",
   not_applicable: "לא רלוונטי",
 };
@@ -246,7 +246,7 @@ function FindingsSection({
                 }
                 aria-pressed={on}
                 data-verdict={verdict}
-                title={(on ? "סנן החוצה: " : "הצג: ") + (VERDICT_LABEL_HE[verdict] ?? verdict)}
+                title={(on ? "סנני החוצה: " : "הציגי: ") + (VERDICT_LABEL_HE[verdict] ?? verdict)}
                 onClick={(e) => {
                   // Critical: pill click must NOT bubble to the header
                   // which toggles collapse.
@@ -266,7 +266,7 @@ function FindingsSection({
           {noRulesAtAll && <li className="muted findings-empty">אין סעיפים</li>}
           {allFiltered && (
             <li className="muted findings-empty findings-empty-filtered">
-              אין סעיפים להצגה. הפעל מסננים בכותרת.
+              אין סעיפים להצגה. הפעילי מסננים בכותרת.
             </li>
           )}
           {/*
@@ -373,7 +373,7 @@ function FindingRow({
         <button
           className="row-expand-btn"
           onClick={(e) => { e.stopPropagation(); setExpanded((x) => !x); }}
-          aria-label={expanded ? "סגור פרטים" : "פתח פרטים"}
+          aria-label={expanded ? "סגרי פרטים" : "פתחי פרטים"}
           aria-expanded={expanded}
         >
           {expanded ? "⌄" : "›"}
@@ -389,7 +389,7 @@ function FindingRow({
           )}
           {note && note !== brief && (
             <div className="drawer-block">
-              <div className="drawer-label">הערת המנוע</div>
+              <div className="drawer-label">הערת התוכנה</div>
               <div className="drawer-body">{note}</div>
             </div>
           )}

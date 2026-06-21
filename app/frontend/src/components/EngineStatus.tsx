@@ -5,12 +5,13 @@ import { FindingsView } from "./FindingsView";
 interface Props {
   jobId: string;
   submissionId: number;
+  projectId: number;
   onTerminal: (j: JobOut) => void;
 }
 
 const STATUS_LABEL_HE: Record<JobStatus, string> = {
-  queued: "ממתין בתור",
-  running: "רץ כעת",
+  queued: "ממתינה בתור",
+  running: "רצה כעת",
   completed: "הסתיים בהצלחה",
   failed: "נכשל",
 };
@@ -22,7 +23,7 @@ const STATUS_CLASS: Record<JobStatus, string> = {
   failed: "s-failed",
 };
 
-export function EngineStatus({ jobId, submissionId, onTerminal }: Props) {
+export function EngineStatus({ jobId, submissionId, projectId, onTerminal }: Props) {
   const [job, setJob] = useState<JobOut | null>(null);
   const [findings, setFindings] = useState<unknown | null>(null);
   const [findingsErr, setFindingsErr] = useState<string | null>(null);
@@ -58,7 +59,7 @@ export function EngineStatus({ jobId, submissionId, onTerminal }: Props) {
     return () => { cancelled = true; };
   }, [jobId, submissionId]);
 
-  if (!job) return <div className="muted">טוען סטטוס...</div>;
+  if (!job) return <div className="muted">טוענת סטטוס...</div>;
 
   // Parse error JSON for friendlier display
   let parsedError: any = null;
@@ -86,11 +87,11 @@ export function EngineStatus({ jobId, submissionId, onTerminal }: Props) {
       </header>
 
       {job.status === "queued" && (
-        <p className="muted">המנוע יתחיל ברגע ש-worker יתפנה (MAX_CONCURRENT_JOBS=1).</p>
+        <p className="muted">התוכנה תתחיל ברגע ש-worker יתפנה (MAX_CONCURRENT_JOBS=1).</p>
       )}
       {job.status === "running" && (
         <p className="muted">
-          המנוע רץ ב-subprocess מבודד לפי ADR-001 — לוקח כ-60-90 שניות לתב"ע 407-1048248.
+          התוכנה רצה ב-subprocess מבודד לפי ADR-001 — לוקח כ-60-90 שניות לתב"ע 407-1048248.
         </p>
       )}
 
@@ -101,7 +102,7 @@ export function EngineStatus({ jobId, submissionId, onTerminal }: Props) {
           <div className="error-message">{parsedError.error_message}</div>
           {parsedError.stderr_tail && (
             <details>
-              <summary>stderr (פלט שגיאה של המנוע)</summary>
+              <summary>stderr (פלט שגיאה של התוכנה)</summary>
               <pre dir="ltr">{parsedError.stderr_tail}</pre>
             </details>
           )}
@@ -110,7 +111,7 @@ export function EngineStatus({ jobId, submissionId, onTerminal }: Props) {
 
       {findingsErr && <div className="error">{findingsErr}</div>}
 
-      {findings !== null && <FindingsView findings={findings} />}
+      {findings !== null && <FindingsView findings={findings} projectId={projectId} />}
     </div>
   );
 }

@@ -1,0 +1,287 @@
+{
+  "project_id": "407-1048248",
+  "submission_id": "v24.3",
+  "critic_version": "m3-v2",
+  "critic_model": "gemini-2.5-flash",
+  "extracted_at": "2026-05-24T08:20:46Z",
+  "input_refs": {
+    "vision_findings_sha256": "0e82d30f7743be13b22be8b04bc144f308c8d369580f063a21b2a98619b997a1",
+    "source_pdf_sha256": "92205abf76b56e346dad2d4bd3cb7b325a18c9b42df8c2a5d0c62b94cc01e650",
+    "canonical_clauses_sha256": "fb0180795916445cc73eb76cd99ead48254e1bd0b9782871e4d099f7816083e1"
+  },
+  "critic_findings": [
+    {
+      "clause_id": "4.1.2.10",
+      "m2_extraction_value": "Separate entrances and parking are designated for the public daycare use in plot 1.",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        29,
+        30
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "The 'מרתף עליון' (Upper Basement) plan on page 29 shows a 'גן ילדים' (daycare) area with a dedicated entrance labeled 'כניסה לגן ילדים'. Parking areas are also present in the basement.",
+      "critic_compliance_indicator": "compliant",
+      "critic_reasoning": "The 'מרתף עליון' (Upper Basement) plan on page 29 clearly depicts a 'גן ילדים' (daycare) area. Adjacent to this area, a distinct entrance is labeled 'כניסה לגן ילדים' (Entrance to Daycare), confirming a separate entrance for the public use. While parking spots are not individually labeled for the daycare, the presence of a dedicated entrance contributes to separate traffic and parking arrangements as required by the takanon clause.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "4.1.2.13",
+      "m2_extraction_value": "5.35",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        61
+      ],
+      "critic_verdict": "disagree",
+      "critic_extraction_value": "4.50",
+      "critic_compliance_indicator": "compliant",
+      "critic_reasoning": "The elevation drawing clearly indicates the ground level \"00\" at \"+0.00 // +40.00\" and the first floor level \"01\" at \"+4.50 // +44.50\". The height of the entrance floor (lobby) is calculated as the difference between these two levels, resulting in 4.50m. Building B1 is shown as \"13 + ק\" (14 floors), which is taller than 10 floors. The takanon clause specifies that the entrance floor height for residential buildings taller than 10 floors shall not be less than 4.5m, which 4.50m meets.",
+      "disagreement_severity": "major"
+    },
+    {
+      "clause_id": "4.1.2.13",
+      "m2_extraction_value": "4.1",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        61
+      ],
+      "critic_verdict": "disagree",
+      "critic_extraction_value": "4.50",
+      "critic_compliance_indicator": "compliant",
+      "critic_reasoning": "The elevation for building B1 shows the ground floor (label \"00\") at \"+0.00\" and the first floor (label \"01\") at \"+4.50\". The height of the entrance floor (lobby) is the difference between these two levels, which is 4.50m. Building B1 has \"13 + ק\" floors, meaning it is taller than 10 floors, requiring a minimum lobby height of 4.5m. Since 4.50m meets this requirement, the building is compliant.",
+      "disagreement_severity": "major"
+    },
+    {
+      "clause_id": "4.1.2.4",
+      "m2_extraction_value": "9",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        24,
+        34,
+        39
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "9",
+      "critic_compliance_indicator": "compliant",
+      "critic_reasoning": "Across all provided pages (24, 34, 39), the plans for Plots 1, 2, 3, 4, and 5 consistently show dimension lines indicating the distance between adjacent buildings. These dimension lines are marked with \"900\", signifying a distance of 9.00 meters. For example, on page 24, the distance between building A and B is marked \"900\". The takanon clause requires a minimum distance of 9m, and since all observed distances are exactly 9m, the condition is met.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "4.1.2.9",
+      "m2_extraction_value": "Daycare centers with attached yards are shown integrated into building C1.",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        27,
+        28
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "Daycare centers with attached yards are shown integrated into building C1.",
+      "critic_compliance_indicator": "compliant",
+      "critic_reasoning": "On page 27, the site plan for \"תא שטח 1\" (Plot 1) clearly shows \"מבנה C1\" (Building C1). Within this building, the areas designated as \"מעונות יום\" (daycare centers, shaded purple) and \"חצר מעונות יום\" (daycare centers yard, shaded green) are depicted as physically integrated into the building's structure, alongside residential units. The legend on the right side of the page confirms these labels. This visual evidence confirms that the daycare centers and their attached yards are designed as an integral part of Building C1, fulfilling the clause's requirement.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "4.1.2.א.3",
+      "m2_extraction_value": "A shared basement is shown for plots 2 and 4.",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        37
+      ],
+      "critic_verdict": "disagree",
+      "critic_extraction_value": "Separate basements are shown for plots 2 and 4.",
+      "critic_compliance_indicator": "compliant",
+      "critic_reasoning": "The plans on the right side of the page, under the general heading \"מרתף\" (Basement) and specific labels \"תא שטח 2\" (Plot Area 2) and \"תא שטח 4\" (Plot Area 4), depict two distinct basement layouts. The \"מרתף עליון\" (Upper Basement) for Plot 2 and the \"מרתף טיפוסי\" (Typical Basement) for Plot 4 are shown as separate entities, each with its own access ramps, and no shared connection is visible between them.",
+      "disagreement_severity": "major"
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "232",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        30
+      ],
+      "critic_verdict": "disagree",
+      "critic_extraction_value": "232",
+      "critic_compliance_indicator": null,
+      "critic_reasoning": "The table titled \"ריכוז תמהיל דירות\" (Apartment Mix Concentration) on the right side of the page shows a total of \"232\" in the \"סה\"כ דירות\" (Total Apartments) column. However, the takanon clause specifically refers to \"שטחי הבניה\" (building areas) detailed in the table. The value \"232\" represents the total number of apartments, not a building area, which means the extracted value does not align with the type of information the clause describes.",
+      "disagreement_severity": "major"
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "10-14",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        61,
+        62
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "10-14",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The provided images, showing the \"חזית צפונית תא שטח 1\" (North Elevation Plot 1) and \"חזית דרומית תא שטח 1\" (South Elevation Plot 1), clearly depict building levels numbered from \"00\" to \"14\". The extracted value \"10-14\" accurately reflects the range of levels from 10 to 14 as presented on these elevation drawings. The Takanon clause describes the general interpretation rules for a \"table of rights and building instructions\" and how values within it apply to individual plots. However, it does not provide specific numerical thresholds or criteria to evaluate the compliance of a level range like \"10-14\". Thus, a definitive compliance verdict cannot be made based solely on the clause and the extracted value.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "44",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        38
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "44",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The value \"44\" is clearly visible in the summary table on the bottom left of the page, under the column \"סה\"כ דירות\" (Total Apartments), representing the grand total of apartments. The takanon clause describes the general authority and content of the \"table of rights and building instructions\", stating it includes \"maximum building areas\" and that \"values in the table refer to each plot separately\". However, the clause does not provide any specific numerical threshold or requirement for the total number of apartments, nor does it directly address \"total apartments\" as a \"building area\" or a \"per plot\" value. Therefore, it is not possible to determine compliance based solely on this clause and the extracted value.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "10",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        56,
+        57
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "10",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The Takanon clause describes a \"table of rights and building instructions\" (טבלת זכויות והוראות בניה) that details \"building areas\" (שטחי הבניה). The provided images are architectural elevation drawings, not a table of rights or building instructions. While the number \"10\" is present on both pages as a floor level indicator (e.g., \"10 - +55.60\" on the first page, right side, and \"10 - +59.70\" on the second page, right side), these elevations do not contain the specific \"table\" or \"building areas\" information required to evaluate compliance with the clause. Therefore, the compliance indicator 'requires_review' is appropriate as the necessary information is not available in the cited pages.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "130",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        43
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "130",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The page displays a table titled \"ריכוז תמהיל דירות\" (Apartment Mix Concentration). In this table, the row labeled \"סה\"כ\" (Total) shows a value of \"130\" under the column \"סה\"כ דירות\" (Total Apartments). The takanon clause describes the importance and content of a \"Rights and Building Instructions Table\" which includes building areas and values. The presence of this table with a clear total number of apartments aligns with the clause's descriptive nature, and without a specific numerical threshold from the clause, the compliance verdict of 'requires_review' is appropriate.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "10",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        58,
+        60
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "10",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The number \"10\" is visible on both elevation drawings provided. On the first image, for building A3 (תא שטח 3), \"10\" is shown next to the level indicator \"+32.85 / +75.85\". For building B5 (תא שטח 5), \"10\" is shown next to \"+39.05 / +86.65\". The second image also shows \"10\" for building A3. However, the takanon clause refers to a \"table of rights and building instructions\" and \"building areas\", not specific floor numbers on elevation drawings. Therefore, while the value \"10\" is present, its direct compliance assessment against this clause is not possible.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "98",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        38
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "98",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The table labeled \"תא שטח 4\" (Plot 4) at the bottom of the page includes a row for totals. In this total row, the value \"98\" is found under the column \"סה\"כ דירות\" (Total Apartments). The takanon clause specifies that the table should detail \"שטחי הבניה המירביים\" (maximum building areas). Since \"98\" represents a count of apartments and not a building area, its compliance with a clause about building areas cannot be directly determined.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "9-13",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        54,
+        55,
+        56,
+        57
+      ],
+      "critic_verdict": "cannot_determine",
+      "critic_extraction_value": null,
+      "critic_compliance_indicator": null,
+      "critic_reasoning": "The Takanon clause refers to a \"table of rights and building instructions\" (טבלת זכויות והוראות בניה) that details maximum building areas. The provided images are architectural elevations showing floor levels and plot numbers, but they do not contain such a table. While floor numbers like \"09\" through \"13\" are visible on the elevation diagrams, this context does not align with the clause's requirement for a table of building rights and areas. Therefore, it is not possible to verify the extracted value \"9-13\" in the context of building rights or areas, nor to assess compliance with the clause.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "196",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        47
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "196",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The table titled \"ריכוז תמהיל דירות\" (Apartment Mix Concentration) on the right side of the page clearly shows \"196\" in the row labeled \"סה\"כ\" (Total) under the column \"סה\"כ דירות\" (Total Apartments). This value matches the claimed extraction. However, the Takanon clause refers to \"שטחי הבניה\" (building areas), while the extracted value \"196\" represents the total number of apartments. This semantic difference between the clause's requirement for \"building areas\" and the table's provision of \"total apartments\" makes a direct compliance assessment ambiguous.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "5.table",
+      "m2_extraction_value": "9-13",
+      "m2_compliance_indicator": "requires_review",
+      "m2_source_pages": [
+        54,
+        55,
+        58,
+        59
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "9-13",
+      "critic_compliance_indicator": "requires_review",
+      "critic_reasoning": "The elevations on pages 54, 55, 58, and 59 clearly depict floor levels. For instance, building A5 on page 54 shows floor levels from \"00\" up to \"13\", and building A4 on page 54 also shows levels up to \"13\". The range \"9-13\" is therefore visible as a sequence of floor numbers on these drawings. However, the Takanon clause primarily establishes the precedence of a \"table of rights and building instructions\" for \"building areas\" and \"values in the table\". The provided images are architectural elevations, not the specific \"table\" referenced in the clause, and the clause does not provide specific criteria or thresholds for evaluating a floor range like \"9-13\" from these elevations. Consequently, a definitive compliance judgment (compliant/non_compliant) cannot be made based solely on this clause and the provided elevation drawings.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "6.1.2",
+      "m2_extraction_value": "The plans include 780 sq.m of daycare facilities in plot 1 and residents' clubs in other plots.",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        26,
+        27,
+        28
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "780 sq.m of daycare facilities in plot 1 and residents' clubs in other plots.",
+      "critic_compliance_indicator": "compliant",
+      "critic_reasoning": "Page 28, on the right side under \"מעונות יום\" (Daycare Facilities), explicitly states \"שטח מעונות יום קרקע - 280 מ'\" (Daycare facilities area ground floor - 280 sq.m) and \"שטח מעונות יום לקומה 1 - 500 מ'\" (Daycare facilities area for floor 1 - 500 sq.m). The sum of these areas is 780 sq.m. Additionally, the legend on page 26 and 27 indicates \"מועדון דיירים\" (Residents' Club) in buildings A and B, which are public areas within the residential buildings. The plans therefore include the built public areas as required by the takanon.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "6.6.4",
+      "m2_extraction_value": "No provision for an underground vehicle connection from plot 2 to an adjacent plot 12 is shown.",
+      "m2_compliance_indicator": "non_compliant",
+      "m2_source_pages": [
+        34,
+        37
+      ],
+      "critic_verdict": "agree",
+      "critic_extraction_value": "No provision for an underground vehicle connection from plot 2 to an adjacent plot 12 is shown.",
+      "critic_compliance_indicator": "non_compliant",
+      "critic_reasoning": "The site plan on page 1 clearly delineates \"תא שטח 2\" on the left and \"תא שטח 4\" (containing \"חלקה 12\") on the right, separated by a public road/path. While both areas show indications of underground parking, there is no visual representation, such as a connecting tunnel or designated easement line, on the site plan or the basement plans on page 2, that depicts an underground vehicle passage or parking easement connecting \"תא שטח 2\" to \"חלקה 12\". The takanon clause explicitly requires such an easement to be registered.",
+      "disagreement_severity": null
+    },
+    {
+      "clause_id": "6.7.4",
+      "m2_extraction_value": "89.80",
+      "m2_compliance_indicator": "compliant",
+      "m2_source_pages": [
+        58
+      ],
+      "critic_verdict": "disagree",
+      "critic_extraction_value": "91.80",
+      "critic_compliance_indicator": "non_compliant",
+      "critic_reasoning": "The highest point for building A5 is indicated by level \"13\" on the right-side elevation ladder. This level shows a height of \"+42.30 // +91.80\". The value \"91.80\" represents the height above sea level, which exceeds the maximum allowed height of 91m. I re-examined the page at the right-side elevation ladder of building A5, specifically at level \"13\", and confirmed the reading \"91.80\".",
+      "disagreement_severity": "critical"
+    }
+  ],
+  "summary": {
+    "critiqued_count": 19,
+    "agree_count": 13,
+    "disagree_count": 5,
+    "cannot_determine_count": 1,
+    "critical_disagreements": [
+      "6.7.4"
+    ],
+    "agreement_rate_pct": 68.42
+  }
+}

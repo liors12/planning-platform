@@ -55,12 +55,15 @@
       "rule_name_he": "רקע לבן",
       "guidelines_section": "6.1",
       "category": "submission_format",
-      "rule_type": "qualitative",
-      "deterministic": false,
-      "check_method": "manual_review",
+      "rule_type": "quantitative",
+      "deterministic": true,
+      "check_method": "pixel_color_sample",
       "check_spec": {
-        "review_instructions_he": "לאמת ויזואלית: רקע כל העמודים לבן. אסור רקעים בצבע, גרדיאנט, או דוגמא חוזרת."
+        "white_tolerance_per_channel": 8,
+        "raster_dpi": 50
       },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
       "verdict_when_indeterminate": "requires_review",
       "severity": "minor",
       "description_he": "רקע העמודים חייב להיות לבן בכל החוברת.",
@@ -695,15 +698,19 @@
       "rule_name_he": "לוגואים בכותרת התחתונה",
       "guidelines_section": "6.7",
       "category": "submission_format",
-      "rule_type": "qualitative",
-      "deterministic": false,
-      "check_method": "manual_review",
+      "rule_type": "quantitative",
+      "deterministic": true,
+      "check_method": "footer_image_count",
       "check_spec": {
-        "review_instructions_he": "לאמת ויזואלית: בצד שמאל של הכותרת התחתונה מופיעים 3-4 לוגואים — לפחות לוגו משרד האדריכלים, לוגו עיריית נס ציונה, ולוגו של חברת ניהול/יזם."
+        "min_logos_per_footer": 2,
+        "footer_band_ratio": 0.15,
+        "note_he": "ספירת תמונות בלבד — אימות זהות הלוגואים מול לוגואים רשמיים יוטמע בעתיד כשייוכלו לכך קבצי ייחוס."
       },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
       "verdict_when_indeterminate": "requires_review",
       "severity": "minor",
-      "description_he": "הכותרת התחתונה של כל עמוד חייבת לכלול לפחות 3 לוגואים בצד שמאל.",
+      "description_he": "הכותרת התחתונה של כל עמוד חייבת לכלול לפחות 2 לוגואים. בדיקה זו סופרת תמונות בלבד; אימות זהות הלוגואים דורש קבצי ייחוס.",
       "remediation_he": "הוספת לוגואים לכותרת התחתונה."
     },
     {
@@ -711,12 +718,14 @@
       "rule_name_he": "מידות מסומנות על תוכניות",
       "guidelines_section": "6.10",
       "category": "submission_format",
-      "rule_type": "qualitative",
-      "deterministic": false,
-      "check_method": "manual_review",
+      "rule_type": "quantitative",
+      "deterministic": true,
+      "check_method": "regex_on_plan_pages",
       "check_spec": {
-        "review_instructions_he": "לאמת ויזואלית: כל תוכנית מקצועית כוללת מידות מסומנות — גובהי בניין, מרחקי קווי בניין, מידות חזית, וכו'."
+        "min_dimensions_per_plan_page": 10
       },
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "fail",
       "verdict_when_indeterminate": "requires_review",
       "severity": "major",
       "description_he": "מידות חייבות להיות מסומנות בכל תוכנית מקצועית.",

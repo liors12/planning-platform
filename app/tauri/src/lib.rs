@@ -81,9 +81,19 @@ fn spawn_bundled_binary(app: &AppHandle) -> std::io::Result<SpawnResult> {
     // Resolve the PyInstaller --onedir bundle that was shipped as a Tauri
     // resource (declared in tauri.conf.json: `bundle.resources`). On macOS
     // this lands under `Contents/Resources/binaries/sidecar/`.
+    // Windows ships `sidecar.exe`; macOS/Linux ship the extensionless binary.
+    // `Path::exists()` requires the EXACT filename — without the .exe suffix
+    // on Windows it returns false, spawn returns Err, and (before the
+    // companion panic! below) the setup() block swallowed it silently.
+    // That's how the auto-spawn died on Ellen's first install.
+    let sidecar_rel = if cfg!(target_os = "windows") {
+        "binaries/sidecar/sidecar.exe"
+    } else {
+        "binaries/sidecar/sidecar"
+    };
     let sidecar_exe = app
         .path()
-        .resolve("binaries/sidecar/sidecar", BaseDirectory::Resource)
+        .resolve(sidecar_rel, BaseDirectory::Resource)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::NotFound, e.to_string()))?;
 
     if !sidecar_exe.exists() {
@@ -98,13 +108,23 @@ fn spawn_bundled_binary(app: &AppHandle) -> std::io::Result<SpawnResult> {
     }
 
     let command = format!("{} (release bundle)", sidecar_exe.display());
-    let child = Command::new(&sidecar_exe)
-        // The PyInstaller --onedir binary's working dir doesn't matter — all
-        // paths in the sidecar are resolved from $HOME/.platform (data_dir)
-        // or computed relative to __file__ at bundle build time.
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .spawn()?;
+    let mut cmd = Command::new(&sidecar_exe);
+    // On Windows the sidecar is a console-subsystem binary. Without
+    // CREATE_NO_WINDOW, the OS opens a visible cmd.exe shell behind the app
+    // window — confusing for Ellen. The flag suppresses it while leaving the
+    // process fully functional. stdout/stderr go to null: the Tauri GUI parent
+    // has no console to receive them, and the sidecar logs to
+    // data_dir/logs/errors.log for diagnostics.
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x0800_0000) // CREATE_NO_WINDOW
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+    }
+    #[cfg(not(target_os = "windows"))]
+    cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+    let child = cmd.spawn()?;
     Ok(SpawnResult {
         child,
         mode: "release (PyInstaller bundle)",
@@ -133,14 +153,23 @@ pub fn run() {
                     *state.0.lock().unwrap() = Some(result.child);
                 }
                 Err(e) => {
-                    eprintln!("[tauri] FAILED to spawn sidecar: {e}");
-                    eprintln!(
-                        "[tauri] hint (dev): set PLATFORM_PYTHON to a python with the \
-                         sidecar deps (fastapi, sqlcipher3, ...)"
-                    );
-                    eprintln!(
-                        "[tauri] hint (prod): ensure `pyinstaller backend.spec` ran and \
-                         `app/tauri/binaries/sidecar/` was populated before `cargo tauri build`"
+                    // PANIC on purpose. A silent eprintln! here means the
+                    // app loads its window, the frontend tries to hit
+                    // /health, fails, and the user sees a "dead" UI with no
+                    // signal as to why. That was the Windows install-day
+                    // failure mode. Crashing here at least surfaces the
+                    // problem in the runner log / Windows Event Viewer.
+                    //
+                    // Diagnostics for the most common causes are included
+                    // in the panic message so a single screenshot is enough
+                    // to triage.
+                    panic!(
+                        "[tauri] FAILED to spawn sidecar: {e}\n\
+                         hint (dev): set PLATFORM_PYTHON to a python with the \
+                         sidecar deps (fastapi, sqlcipher3, ...)\n\
+                         hint (prod): ensure `pyinstaller backend.spec` ran and \
+                         `app/tauri/binaries/sidecar/` was populated before \
+                         `cargo tauri build`"
                     );
                 }
             }

@@ -161,9 +161,11 @@ def _evaluate(rule: dict, full_text: str, text_by_page: dict[int, str], page_cou
             "matched_pages": {},
             "found_any": False,
         })
-        # Override the auto-derived note from notes_he with a transparent visual-review note.
+        # M7.6 Part A — architect-facing fallback. No staff-direction, no
+        # automation framing. Tells the architect what's expected in the
+        # submission, not what the engineer needs to verify.
         r["notes_he"] = (
-            'בדיקה ויזואלית — דורשת אימות ידני של מהנדס/ת המינהלת על תוכניות הפיתוח/חזיתות בהגשה.'
+            'יש להציג את הפריט באופן ברור בתכניות הפיתוח / החזיתות בהגשה הבאה.'
         )
         return r
 

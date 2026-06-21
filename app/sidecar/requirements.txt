@@ -4,3 +4,7 @@ sqlalchemy>=2.0
 pydantic>=2.6
 sqlcipher3>=0.5
 python-multipart
+# openpyxl is used by compliance_engine.excel_export for the
+# "הפיקי אקסל" workbook export. Lazy-imported (function-body), so
+# PyInstaller also needs collect_submodules("openpyxl") in backend.spec.
+openpyxl>=3.1

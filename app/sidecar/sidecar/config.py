@@ -1,7 +1,10 @@
 """Sidecar runtime config — paths, ports, env-driven knobs.
 
 All paths live under the user's app data dir so the same install supports
-multiple OS users on Windows. On dev (Mac) we default to ~/.platform/.
+multiple OS users on Windows. Platform-conventional defaults:
+
+  Windows:        %LOCALAPPDATA%\\Planning Platform\\   (under AppData\\Local)
+  macOS / Linux:  ~/.platform/                          (dotfile under $HOME)
 
 Env knobs:
   PLATFORM_DATA_DIR        — overrides the data dir entirely (tests / CI)
@@ -13,6 +16,7 @@ Env knobs:
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -40,8 +44,28 @@ class Config:
     sidecar_python: str  # the interpreter spawn() uses for workers
 
 
+def _default_data_dir() -> Path:
+    """Return the OS-conventional user-data dir for this app.
+
+    Windows: %LOCALAPPDATA%\\Planning Platform (typically
+    C:\\Users\\<user>\\AppData\\Local\\Planning Platform). Falls back to
+    %USERPROFILE%\\.platform if LOCALAPPDATA is somehow unset (shouldn't
+    happen on Win10+, but defensive).
+
+    macOS / Linux: ~/.platform (preserves the existing dev convention so
+    nobody's local data moves under their feet).
+    """
+    if sys.platform == "win32":
+        appdata = os.environ.get("LOCALAPPDATA")
+        if appdata:
+            return Path(appdata) / "Planning Platform"
+        # Defensive fallback — should never trigger on Win10+
+        return Path.home() / ".platform"
+    return Path.home() / ".platform"
+
+
 def load() -> Config:
-    data_dir = Path(os.environ.get("PLATFORM_DATA_DIR") or (Path.home() / ".platform"))
+    data_dir = Path(os.environ.get("PLATFORM_DATA_DIR") or _default_data_dir())
     data_dir.mkdir(parents=True, exist_ok=True)
     (data_dir / "jobs").mkdir(parents=True, exist_ok=True)
 

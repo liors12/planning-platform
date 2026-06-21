@@ -51,7 +51,42 @@ app/tauri/binaries/
 # IS committed — it lives outside these dirs.
 submissions/
 projects/
-data/
+# Sidecar pilot-seed descriptors — small JSONs (≤350 KB total) bundled into
+# the installer + copied to %LOCALAPPDATA% on first run so the app boots
+# with the pilot project visible. Whitelisted explicitly so we don't open
+# the door to accidentally committing 100 MB uploaded PDFs.
+!app/sidecar/seed/projects/
+!app/sidecar/seed/projects/*/
+!app/sidecar/seed/projects/*/_project.json
+!app/sidecar/seed/projects/*/project-schema-*.json
+!app/sidecar/seed/projects/*/submissions/
+!app/sidecar/seed/projects/*/submissions/*/
+!app/sidecar/seed/projects/*/submissions/*/metadata.json
+data/**
+!data/projects/
+!data/projects/*/
+!data/projects/*/canonical_clauses.json
+!data/projects/*/m0_audit_report.md
+!data/projects/*/submissions/
+!data/projects/*/submissions/*/
+!data/projects/*/submissions/*/page_manifests.json
+!data/projects/*/submissions/*/vision_findings.json
+!data/projects/*/submissions/*/vision_findings.run_log.jsonl
+!data/projects/*/submissions/*/critic_findings.json
+!data/projects/*/submissions/*/critic_findings.run_log.jsonl
+!data/projects/*/submissions/*/audit_results.m4.json
+!data/projects/*/submissions/*/audit_results.m4.run_log.jsonl
+!data/projects/*/submissions/*/coverage_report.json
+!data/projects/*/submissions/*/chatakhim_findings.json
+!data/projects/*/submissions/*/amenity_inventory.json
+!data/projects/*/submissions/*/architect_summary_inventory.json
+!data/projects/*/submissions/*/*.md
+# Phase 7.1 — takanon CAD source files + derived dataset (per-project)
+!data/projects/*/takanon_cad/
+!data/projects/*/takanon_cad/*.dwg
+!data/projects/*/takanon_cad/*.DWG
+!data/projects/*/takanon_cad_dataset.json
+!data/projects/*/cad_attribute_discrepancies.json
 output/
 audit_outputs/*/
 
@@ -65,6 +100,12 @@ audit_outputs/*/
 # ── CAD binaries ──────────────────────────────────────────────────────
 *.dwg
 *.dxf
+# Exception: per-project takanon CAD source files are the system-of-record
+# for plot geometry (Phase 7.1). Whitelist the small canonical DWGs while
+# keeping derived DXFs ignored (they regenerate from the DWGs in ~1.4 s).
+!data/projects/*/takanon_cad/
+!data/projects/*/takanon_cad/*.dwg
+!data/projects/*/takanon_cad/*.DWG
 
 # ── Fonts ─────────────────────────────────────────────────────────────
 # Heebo + NotoSansHebrew are SIL OFL 1.1 — redistribution is permitted, so

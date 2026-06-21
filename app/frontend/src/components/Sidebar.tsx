@@ -5,6 +5,7 @@ import { buildHash, type Route } from "../route";
 interface Props {
   currentRoute: Route;
   refreshKey: number;        // bump to force a re-fetch (after create / archive)
+  onOpenDiagnostics: () => void;
 }
 
 const STATUS_LABEL_HE: Record<ProjectStatus, string> = {
@@ -16,7 +17,7 @@ const STATUS_LABEL_HE: Record<ProjectStatus, string> = {
 
 const STATUS_ORDER: ProjectStatus[] = ["active", "awaiting_review", "signed", "archived"];
 
-export function Sidebar({ currentRoute, refreshKey }: Props) {
+export function Sidebar({ currentRoute, refreshKey, onOpenDiagnostics }: Props) {
   const [projects, setProjects] = useState<ProjectOut[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
@@ -96,8 +97,27 @@ export function Sidebar({ currentRoute, refreshKey }: Props) {
             checked={showArchived}
             onChange={(e) => setShowArchived(e.target.checked)}
           />
-          הצג פרויקטים בארכיון
+          הציגי פרויקטים בארכיון
         </label>
+        <div className="sidebar-footer-actions">
+          <a
+            className="diag-trigger"
+            href={buildHash({ kind: "settings" })}
+            title="הגדרות מערכת"
+            aria-label="הגדרות מערכת"
+          >
+            <span aria-hidden="true">⚙</span> הגדרות
+          </a>
+          <button
+            className="diag-trigger"
+            onClick={onOpenDiagnostics}
+            title="לוח אבחון מערכת"
+            aria-label="לוח אבחון מערכת"
+            type="button"
+          >
+            🔬 אבחון
+          </button>
+        </div>
       </footer>
     </aside>
   );

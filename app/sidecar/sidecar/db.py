@@ -14,7 +14,19 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-import sqlcipher3
+# SQLCipher is preferred for at-rest encryption (spec § 8), but it has no
+# Windows wheels on PyPI. For the pilot Windows installer we fall back to
+# stdlib sqlite3 (no encryption at rest). Phase 4 — when Ellen-PIN-derived
+# keys land — will require a real Windows SQLCipher story (vcpkg / bundled
+# DLL). The Phase 1 dev key "phase1-dev-key-DO-NOT-SHIP" was never real
+# security anyway, so for the pilot installer this is acceptable.
+try:
+    import sqlcipher3 as _sqlite_backend  # type: ignore[import-not-found]
+    _BACKEND_NAME = "sqlcipher3"
+except ImportError:  # pragma: no cover — Windows pilot fallback
+    import sqlite3 as _sqlite_backend
+    _BACKEND_NAME = "sqlite3 (no encryption)"
+
 from sqlalchemy import create_engine, event, text
 from sqlalchemy.engine import Engine
 
@@ -30,14 +42,22 @@ def _quote_key(key: str) -> str:
     return f"'{escaped}'"
 
 
-def _connect(db_path: Path, key: str) -> sqlcipher3.Connection:
-    """Open one SQLCipher connection with key + WAL + sensible pragmas."""
-    conn = sqlcipher3.connect(str(db_path), isolation_level=None)
+def _connect(db_path: Path, key: str):
+    """Open one connection with WAL + sensible pragmas.
+
+    With sqlcipher3: applies PRAGMA key + cipher_compatibility first.
+    With stdlib sqlite3 (Windows fallback): skips encryption pragmas.
+    """
+    conn = _sqlite_backend.connect(str(db_path), isolation_level=None)
     cur = conn.cursor()
-    # Key must be the very first statement on a fresh connection.
-    cur.execute(f"PRAGMA key = {_quote_key(key)};")
-    # cipher_compatibility=4 matches the SQLCipher 4 default (AES-256-CBC + HMAC-SHA512).
-    cur.execute("PRAGMA cipher_compatibility = 4;")
+    if _BACKEND_NAME == "sqlcipher3":
+        # Key must be the very first statement on a fresh connection.
+        cur.execute(f"PRAGMA key = {_quote_key(key)};")
+        # cipher_compatibility=4 matches the SQLCipher 4 default (AES-256-CBC + HMAC-SHA512).
+        cur.execute("PRAGMA cipher_compatibility = 4;")
+    else:
+        log.warning("DB backend: %s — DB at %s will NOT be encrypted at rest",
+                    _BACKEND_NAME, db_path)
     # WAL = better concurrency + crash recovery; required by spec § 5.
     cur.execute("PRAGMA journal_mode = WAL;")
     cur.execute("PRAGMA synchronous = NORMAL;")
@@ -151,7 +171,16 @@ def initialize(engine: Engine) -> dict:
 
         # Verify journal mode actually took (WAL might not stick on some FS).
         journal_mode = conn.execute(text("PRAGMA journal_mode")).scalar()
-        cipher_version = conn.execute(text("PRAGMA cipher_version")).scalar()
+        # PRAGMA cipher_version is SQLCipher-only. Under stdlib sqlite3
+        # (Windows pilot fallback) the statement parses cleanly but returns
+        # zero rows — and .scalar() on a row-less result raises
+        # ResourceClosedError. Gate the probe on the backend we detected at
+        # import time so the encrypted-on-Mac signal stays visible without
+        # crashing the unencrypted-on-Windows boot.
+        if _BACKEND_NAME.startswith("sqlcipher"):
+            cipher_version = conn.execute(text("PRAGMA cipher_version")).scalar()
+        else:
+            cipher_version = None
         # Raw SQLite library version (distinct from SQLCipher's cipher_version
         # and from our app schema_version). Phase 1 § React-UI deliverable.
         sqlite_version = conn.execute(text("SELECT sqlite_version()")).scalar()

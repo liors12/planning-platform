@@ -18,11 +18,63 @@ when possible. WeasyPrint computes pagination + footer + TOC page numbers
 from __future__ import annotations
 
 import datetime as dt
+import json
+import logging
+import os
+import re
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
+log = logging.getLogger(__name__)
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-FONT_DIR = PROJECT_ROOT / "assets" / "fonts"
+
+
+def _resolve_font_dir() -> Path:
+    """Resolve the font directory, PyInstaller-aware.
+
+    Dev / source-tree: walk up to <repo_root>/assets/fonts/.
+    PyInstaller --onedir bundle: sys._MEIPASS is the bundle root; the build
+    spec stages assets/fonts/ inside via `datas=[('../../assets/fonts',
+    'assets/fonts')]`.
+    """
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "assets" / "fonts"
+    return PROJECT_ROOT / "assets" / "fonts"
+
+
+def _resolve_logo_path() -> Path:
+    """Resolve the Ness Ziona brand logo, PyInstaller-aware.
+
+    Same lookup pattern as _resolve_font_dir. The cover img <src> uses the
+    file:// URL of the result; WeasyPrint dereferences it at render time.
+    """
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "assets" / "nessziona_logo.png"
+    return PROJECT_ROOT / "assets" / "nessziona_logo.png"
+
+
+def _resolve_format_rules_path() -> Path:
+    """Resolve submission_format_rules.json — the engine's format-checker
+    ruleset. Bundled at the spec-root level via `datas=[('../../submission
+    _format_rules.json', '.')]` so it sits at _MEIPASS/submission_format
+    _rules.json inside the frozen build.
+    """
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "submission_format_rules.json"
+    return PROJECT_ROOT / "submission_format_rules.json"
+
+
+FONT_DIR = _resolve_font_dir()
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Constants
@@ -34,10 +86,10 @@ DOC_TYPE_LABEL = "טיוטה לסקירה — לא לחתימה"
 VERDICT_TO_VCLASS_AND_LABEL: dict[str, tuple[str, str]] = {
     "pass":            ("v-ok",   "תקין"),
     "pass_with_note":  ("v-ok",   "תקין בהערה"),
-    "fail":            ("v-fail", "נדרש תיקון"),
+    "fail":            ("v-fail", "לא תקין"),
     "fail_borderline": ("v-fail", "נדרש תיקון"),
     "not_submitted":   ("v-miss", "לא הוגש"),
-    "requires_review": ("v-rev",  "דורש בירור"),
+    "requires_review": ("v-rev",  "נדרשת השלמה"),
     "unevaluable":     ("v-na",   "לא ניתן לבדיקה"),
     "not_applicable":  ("v-na",   "לא רלוונטי"),
 }
@@ -126,6 +178,12 @@ body {
   @bottom-left { content: none; }
 }
 @page appendix-divider {
+  @bottom-right { content: none; }
+  @bottom-left { content: none; }
+}
+@page signature {
+  size: A4;
+  margin: 20mm 22mm 22mm 22mm;
   @bottom-right { content: none; }
   @bottom-left { content: none; }
 }
@@ -336,6 +394,11 @@ table.badges td.review .num  { color: var(--amber); }
 table.badges td.unknown .num { color: var(--gray-mid); }
 table.badges td.na .num      { color: #B0B0B0; }
 
+/* M8.1 — count-summary badges removed from the report.  The badge tables
+   are still rendered (so the engine code path stays stable + future
+   reports that want them can override this rule), but hidden by default. */
+table.badges { display: none; }
+
 /* ============================================
    CALLOUT BOX
    ============================================ */
@@ -416,6 +479,147 @@ table.audit thead { display: table-header-group; }
 .v-rev   { color: var(--amber);        font-weight: 600; }
 .v-na    { color: var(--gray-mid); }
 .v-miss  { color: var(--gray-dark); }
+
+/* Phase 2b Module D — referent comment tag in §3 action cells */
+.referent-tag {
+  display: inline-block;
+  margin-inline-start: 4px;
+  padding: 0 5px;
+  font-size: 8.5pt;
+  font-weight: 600;
+  color: var(--violet, #3B2666);
+  background: #F4EFFB;
+  border: 1px solid var(--violet, #3B2666);
+  border-radius: 3px;
+}
+
+/* M4 confidence chip — appears next to verdict when M4 override applied
+   with non-HIGH confidence. HIGH confidence shows nothing (default state). */
+.conf-chip {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  font-size: 8.5pt;
+  font-weight: 500;
+  border-radius: 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+.conf-chip.conf-medium { background: #FFF3E0; color: #B8651A; }
+.conf-chip.conf-low    { background: #FFE0E0; color: #9C2929; }
+
+/* M4 sidecar callout section — between section 2 and section 3 */
+.sidecar-chapter {
+  page-break-before: always;
+}
+.sidecar-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid var(--red);
+  border-radius: 4px;
+  background: #FFFAFA;
+  page-break-inside: avoid;
+}
+.sidecar-card.sidecar-missing {
+  border-right-color: var(--amber);
+  background: #FFF8E1;
+}
+.sidecar-card .sidecar-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--red);
+  margin-bottom: 2mm;
+}
+.sidecar-card.sidecar-missing .sidecar-head {
+  color: #B8651A;
+}
+.sidecar-card .sidecar-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.sidecar-card .sidecar-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.5;
+}
+.sidecar-card .sidecar-pages {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  margin-top: 2mm;
+}
+
+/* M5 — Section 5 coverage transparency */
+.cov-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 8mm 0;
+  font-size: 10pt;
+}
+.cov-table th {
+  text-align: right;
+  background: var(--green-dark);
+  color: #fff;
+  padding: 2mm 3mm;
+  font-weight: 600;
+  font-size: 10pt;
+}
+.cov-table td {
+  text-align: right;
+  padding: 2mm 3mm;
+  border-bottom: 1px solid var(--gray-light);
+  vertical-align: top;
+}
+.cov-table tbody tr:nth-child(even) td { background: #FAFAFA; }
+.cov-help {
+  font-size: 10pt;
+  color: var(--gray-mid);
+  margin-bottom: 2mm;
+}
+.cov-help.cov-warn {
+  color: var(--red);
+  font-weight: 600;
+}
+.cov-full     { color: var(--green-accent); font-weight: 600; }
+.cov-partial  { color: var(--amber);         font-weight: 600; }
+.cov-none     { color: var(--red);           font-weight: 600; }
+.cov-pages td { font-size: 9pt; }
+.cov-gap-list { margin: 4mm 0 8mm 0; }
+.cov-gap-card {
+  padding: 4mm 6mm;
+  margin: 3mm 0;
+  background: #FFF3E0;
+  border-right: 3px solid var(--amber);
+  border-radius: 3px;
+  page-break-inside: avoid;
+}
+.cov-gap-title {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #8A4500;
+  margin-bottom: 2mm;
+}
+.cov-gap-detail {
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.5;
+}
+.cov-gap-task {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  margin-top: 2mm;
+  font-style: italic;
+}
+.cov-disclaimer {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  background: #F5F5F5;
+  border-right: 3px solid var(--green-dark);
+  padding: 5mm 7mm;
+  margin: 4mm 0;
+  line-height: 1.6;
+}
 
 /* ============================================
    VERDICT BANNER (section 4)
@@ -503,12 +707,352 @@ ol.priority-list strong { font-weight: 700; color: #1a1a1a; }
   line-height: 1.8;
 }
 
+/* ============================================
+   SIGNATURE PAGE — cover #2, sits between cover and TOC
+   ============================================ */
+.signature-page {
+  page: signature;
+  page-break-before: always;
+  page-break-after: always;
+  direction: rtl;
+  text-align: right;
+}
+.signature-page .eyebrow {
+  font-size: 10pt;
+  color: var(--gray-mid);
+  margin-bottom: 6mm;
+  letter-spacing: 0.5px;
+}
+.signature-page h1.sig-title {
+  font-size: 22pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 4mm 0;
+}
+.signature-page .sig-subtitle {
+  font-size: 10.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 8mm;
+  line-height: 1.5;
+}
+table.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4mm;
+  table-layout: fixed;
+}
+table.signature-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 3mm 4mm;
+  font-size: 10.5pt;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.signature-table td {
+  border: 1px solid var(--gray-light);
+  padding: 2mm 4mm;
+  font-size: 11pt;
+  color: var(--gray-dark);
+  vertical-align: middle;
+  /* Tall enough for a wet signature (~14 mm) */
+  height: 14mm;
+}
+table.signature-table td.discipline-cell {
+  background: #FAFAFA;
+  font-weight: 600;
+  width: 28%;
+}
+table.signature-table td.name-cell    { width: 22%; }
+table.signature-table td.date-cell    { width: 18%; }
+table.signature-table td.signature-cell { width: 32%; }
+
+.signature-page .sig-footnote {
+  margin-top: 6mm;
+  padding-top: 3mm;
+  border-top: 1px solid var(--gray-light);
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* ============================================
+   SECTION 2ב — CAD-evidence section (Phase 7.1)
+   Visual identity: blue accent (vs red/amber for sidecar). Signals
+   "geometric source of truth from the planning authority's own CAD."
+   ============================================ */
+.cad-chapter { page-break-before: always; }
+.cad-chapter .chapter-intro {
+  margin-bottom: 4mm;
+}
+.cad-chapter .cad-provenance {
+  margin-bottom: 6mm;
+  padding: 4mm 5mm;
+  background: #EFF4FA;
+  border-right: 3px solid #1E5AA8;
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: #294F7D;
+  line-height: 1.55;
+}
+.cad-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid #1E5AA8;  /* CAD-blue */
+  border-radius: 4px;
+  background: #F7FAFD;
+  page-break-inside: avoid;
+}
+.cad-card .cad-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #1E5AA8;
+  margin-bottom: 2mm;
+}
+.cad-card .cad-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.cad-card .cad-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin-bottom: 4mm;
+}
+table.cad-missing-plots {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 3mm;
+  direction: rtl;
+}
+table.cad-missing-plots th {
+  background: #E6EDF6;
+  border: 1px solid #BCCBE0;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #1E5AA8;
+  text-align: right;
+}
+table.cad-missing-plots td {
+  border: 1px solid #D8E1ED;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.cad-missing-plots td.cellno-cell {
+  font-weight: 700;
+  width: 12%;
+}
+table.cad-missing-plots td.code-cell {
+  width: 18%;
+  color: var(--gray-mid);
+  font-variant-numeric: tabular-nums;
+}
+table.cad-missing-plots td.area-cell {
+  width: 24%;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================
+   SECTION 2ג — Chatakhim (cross-section) height-audit findings (Phase 7.2)
+   Visual identity: purple accent (#5D3A9B border + lavender background)
+   distinct from 2א (red/amber sidecars) and 2ב (blue CAD).
+   ============================================ */
+.chat-chapter { page-break-before: always; }
+.chat-chapter .chapter-intro { margin-bottom: 4mm; }
+.chat-chapter .chat-provenance {
+  margin-bottom: 6mm;
+  padding: 4mm 5mm;
+  background: #F3EEFA;
+  border-right: 3px solid #5D3A9B;
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: #3B2666;
+  line-height: 1.55;
+}
+.chat-card {
+  margin: 6mm 0;
+  padding: 6mm 7mm;
+  border: 1px solid var(--gray-light);
+  border-right: 4px solid #5D3A9B;
+  border-radius: 4px;
+  background: #FAF7FE;
+  page-break-inside: avoid;
+}
+.chat-card.chat-ceiling { border-right-color: #B71C1C; background: #FDF5F5; }
+.chat-card.chat-consistency { border-right-color: #B8651A; background: #FFFAF0; }
+.chat-card.chat-clean { border-right-color: #2E7D32; background: #F2FAF4; }
+.chat-card .chat-head {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #3B2666;
+  margin-bottom: 2mm;
+}
+.chat-card.chat-ceiling .chat-head { color: #B71C1C; }
+.chat-card.chat-consistency .chat-head { color: #B8651A; }
+.chat-card.chat-clean .chat-head { color: #2E7D32; }
+.chat-card .chat-meta {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 3mm;
+}
+.chat-card .chat-reasoning {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin-bottom: 4mm;
+}
+table.chat-values {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 3mm;
+  direction: rtl;
+  table-layout: fixed;
+}
+table.chat-values th {
+  background: #ECE3F6;
+  border: 1px solid #C8B6E0;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: #3B2666;
+  text-align: right;
+}
+table.chat-values td {
+  border: 1px solid #DCD0EC;
+  padding: 2mm 3mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  text-align: right;
+}
+table.chat-values td.elev-cell {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  width: 22%;
+}
+table.chat-values td.elev-cell.over-ceiling { color: #B71C1C; }
+table.chat-values td.page-cell { width: 18%; }
+table.chat-values td.context-cell { color: var(--gray-mid); font-size: 9.5pt; }
+
+/* ============================================
+   SECTION 3.N — AMENITY INVENTORY (Phase 7.4, Architecture C)
+   No accent — inherits §3 styling. Soft policy, no verdicts.
+   ============================================ */
+.amen-subsection .amen-provenance,
+.amen-subsection .amen-coverage,
+.amen-subsection .amen-note {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  line-height: 1.6;
+  margin: 0 0 3mm 0;
+}
+.amen-subsection .amen-note {
+  font-style: italic;
+}
+table.amen-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4mm;
+  direction: rtl;
+  font-size: 9pt;
+}
+table.amen-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 2mm 2.5mm;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+  vertical-align: middle;
+}
+table.amen-table td {
+  border: 1px solid var(--gray-light);
+  padding: 2mm 2.5mm;
+  vertical-align: middle;
+  text-align: right;
+}
+table.amen-table td.amen-name-cell { font-weight: 600; width: 18%; }
+table.amen-table th.amen-plot-cell,
+table.amen-table td.amen-plot-cell { width: 8%; text-align: center; }
+table.amen-table td.amen-anchor-cell { width: 18%; font-size: 8.5pt; color: var(--gray-mid); }
+table.amen-table td.amen-note-cell   { width: 18%; font-size: 8.5pt; color: var(--gray-mid); }
+table.amen-table td.amen-yes  { color: var(--green-brand); font-weight: 600; text-align: center; }
+table.amen-table td.amen-no   { color: var(--gray-mid); text-align: center; font-size: 11pt; }
+table.amen-table td.amen-na   { color: var(--gray-light); text-align: center; font-style: italic; }
+table.amen-table .amen-raw {
+  display: block;
+  color: var(--gray-mid);
+  font-size: 8pt;
+  font-weight: 400;
+  margin-top: 0.5mm;
+}
+
+/* §4 amenity-clarification block — soft, not a violation */
+.amen-clarification {
+  margin: 3mm 0;
+  padding: 5mm 6mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--gray-mid);
+  border-radius: 2px;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+/* ============================================
+   APPENDIX A passing-rules summary (M6 Phase 6.D)
+   ============================================ */
+.passing-summary {
+  margin-top: 10mm;
+  padding: 5mm 6mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--green-brand);
+  border-radius: 2px;
+  page-break-inside: avoid;
+}
+.passing-summary-head {
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 3mm 0;
+}
+ul.passing-summary-list {
+  margin: 0;
+  padding-right: 6mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 1.6;
+  column-count: 2;
+  column-gap: 10mm;
+}
+ul.passing-summary-list li {
+  margin-bottom: 1mm;
+  break-inside: avoid;
+}
+
 /* Section-group head inside appendix detail */
 .section-group-head {
   font-size: 11pt;
   font-weight: 700;
   color: var(--green-dark);
   margin: 8mm 0 3mm 0;
+}
+
+/* M7.8 — page references rendered at end of cell, de-emphasized.
+   Light grey, same body font size but lighter weight, so the architect's
+   eye lands on the directive prose first and the reference recedes. */
+.page-ref {
+  color: var(--gray-mid);
+  font-weight: 400;
+  font-size: 9.5pt;
+  white-space: nowrap;
 }
 
 /* Inline discipline feedback callout (when a discipline manager has commented) */
@@ -527,6 +1071,268 @@ ol.priority-list strong { font-weight: 700; color: #1a1a1a; }
   display: block;
   margin-bottom: 1mm;
 }
+
+/* ============================================
+   PHASE 7.5 — INTEGRATED COVER (cover + signatures + structural note)
+   Replaces the old full-bleed dark-green cover + separate signature page.
+   Top band stays dark-green (brand). Lower body is white and holds the
+   meta table, structural note, and the 10-row signature table.
+   ============================================ */
+.cover-v2 {
+  page: cover;
+  width: 210mm;
+  height: 297mm;
+  margin: 0;
+  padding: 0;
+  page-break-after: always;
+  position: relative;
+}
+.cover-v2 .cover-band {
+  background: #005030;
+  color: #fff;
+  padding: 18mm 22mm 12mm 22mm;
+  position: relative;
+}
+.cover-v2 .cover-band .logo {
+  position: absolute;
+  top: 12mm;
+  left: 22mm;
+  height: 18mm;
+  width: auto;
+}
+.cover-v2 .cover-band .brand-eyebrow {
+  font-size: 9.5pt;
+  color: rgba(255,255,255,0.72);
+  margin-bottom: 1mm;
+}
+.cover-v2 .cover-band .brand-name {
+  font-size: 15pt;
+  font-weight: 700;
+  margin: 0 0 7mm 0;
+}
+.cover-v2 .cover-band hr.rule {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.22);
+  margin: 4mm 0 5mm 0;
+}
+.cover-v2 .cover-band .title {
+  font-size: 28pt;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.15;
+  margin: 0 0 3mm 0;
+}
+.cover-v2 .cover-band .subtitle {
+  font-size: 12pt;
+  color: rgba(255,255,255,0.92);
+  line-height: 1.4;
+  margin-bottom: 1mm;
+}
+.cover-v2 .cover-band .pill {
+  display: inline-block;
+  margin-top: 4mm;
+  padding: 1.5mm 6mm;
+  border: 1px solid rgba(255,255,255,0.45);
+  border-radius: 30px;
+  background: rgba(255,255,255,0.06);
+  color: #fff;
+  font-size: 10pt;
+}
+.cover-v2 .cover-body {
+  padding: 8mm 22mm 14mm 22mm;
+  color: #1a1a1a;
+}
+.cover-v2 .cover-meta {
+  font-size: 10.5pt;
+  line-height: 1.7;
+  color: var(--gray-dark);
+  margin-bottom: 5mm;
+}
+.cover-v2 .cover-meta .label {
+  color: var(--gray-mid);
+  display: inline-block;
+  min-width: 36mm;
+  font-weight: 700;
+}
+.cover-v2 .cover-note {
+  padding: 3.5mm 5mm;
+  background: #F4FAF6;
+  border-right: 3px solid var(--green-brand);
+  border-radius: 2px;
+  font-size: 9.5pt;
+  color: var(--gray-dark);
+  line-height: 1.6;
+  margin-bottom: 6mm;
+}
+.cover-v2 .cover-sig-title {
+  font-size: 12pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 2mm 0;
+}
+.cover-v2 .cover-sig-sub {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin: 0 0 3mm 0;
+  line-height: 1.5;
+}
+.cover-v2 table.signature-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.cover-v2 table.signature-table th {
+  background: var(--gray-bg);
+  border: 1px solid var(--gray-light);
+  padding: 1.5mm 4mm;
+  font-size: 10pt;
+  font-weight: 700;
+  color: var(--gray-dark);
+  text-align: right;
+}
+.cover-v2 table.signature-table td {
+  border: 1px solid var(--gray-light);
+  padding: 1mm 4mm;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  vertical-align: middle;
+  height: 8.5mm;
+}
+.cover-v2 table.signature-table td.discipline-cell {
+  background: #FAFAFA;
+  font-weight: 600;
+  width: 28%;
+}
+.cover-v2 table.signature-table td.name-cell      { width: 22%; }
+.cover-v2 table.signature-table td.date-cell      { width: 18%; }
+.cover-v2 table.signature-table td.signature-cell { width: 32%; }
+
+/* ============================================
+   PHASE 7.5 — ARCHITECT SUMMARY FRONT-MATTER (pages 2-N)
+   Three category pages (חסר / תיקונים / הבהרות) + map.
+   Each item links to a detail anchor via <a href="#sec-...">; WeasyPrint
+   converts these into PDF internal navigation. Page-numbers next to each
+   link come from CSS target-counter (same mechanism the TOC uses).
+   ============================================ */
+.summary-page {
+  page-break-before: always;
+  page-break-after: always;
+  direction: rtl;
+  text-align: right;
+}
+.summary-page .summary-eyebrow {
+  font-size: 9.5pt;
+  color: var(--gray-mid);
+  margin-bottom: 4mm;
+  padding-bottom: 2mm;
+  border-bottom: 1px solid var(--gray-light);
+}
+.summary-page h2.summary-title {
+  font-size: 22pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 0 0 3mm 0;
+  line-height: 1.2;
+}
+.summary-page .summary-intro {
+  font-size: 10.5pt;
+  color: var(--gray-dark);
+  margin-bottom: 6mm;
+  line-height: 1.6;
+}
+ol.summary-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+/* M7.5.1: items render as a clean numbered list — no severity colored
+   accents, no sev-tag, no item ID prefix. Severity field still controls
+   within-category sort order (set by the inventory parser, not the CSS). */
+ol.summary-items > li {
+  margin-bottom: 2.5mm;
+  padding: 2.5mm 5mm 2.5mm 5mm;
+  background: var(--bg-callout);
+  border-radius: 2px;
+  page-break-inside: avoid;
+}
+ol.summary-items > li .item-head {
+  margin-bottom: 0.5mm;
+}
+ol.summary-items > li .seq-num {
+  display: inline-block;
+  font-size: 11pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  vertical-align: middle;
+  min-width: 6mm;
+}
+ol.summary-items > li .item-text {
+  font-size: 9.5pt;
+  color: var(--gray-dark);
+  line-height: 1.55;
+  margin: 0 0 1.5mm 0;
+}
+ol.summary-items > li a.item-link {
+  font-size: 9pt;
+  color: var(--gray-mid);
+  text-decoration: underline;
+  font-weight: 400;
+}
+/* Map page */
+.summary-page table.summary-map {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0 8mm 0;
+}
+.summary-page table.summary-map th,
+.summary-page table.summary-map td {
+  padding: 3mm 4mm;
+  border: 1px solid var(--gray-light);
+  font-size: 10pt;
+  text-align: right;
+  vertical-align: middle;
+}
+.summary-page table.summary-map th {
+  background: var(--gray-bg);
+  font-weight: 700;
+  color: var(--gray-dark);
+}
+.summary-page table.summary-map td.cat-cell { width: 65%; }
+.summary-page table.summary-map td.count-cell {
+  text-align: center;
+  font-weight: 700;
+  width: 18mm;
+  font-variant-numeric: tabular-nums;
+}
+.summary-page table.summary-map tr.total-row td {
+  background: #FAFAFA;
+  font-weight: 700;
+}
+.summary-page h3.summary-subhead {
+  font-size: 13pt;
+  font-weight: 700;
+  color: var(--green-dark);
+  margin: 8mm 0 3mm 0;
+}
+.summary-page ul.summary-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 10pt;
+  color: var(--gray-dark);
+  line-height: 2.0;
+}
+.summary-page ul.summary-legend .sev-dot {
+  display: inline-block;
+  width: 4mm;
+  height: 4mm;
+  border-radius: 50%;
+  margin-left: 3mm;
+  vertical-align: middle;
+}
+.summary-page ul.summary-legend .sev-dot.sev-high   { background: var(--red); }
+.summary-page ul.summary-legend .sev-dot.sev-medium { background: var(--amber); }
+.summary-page ul.summary-legend .sev-dot.sev-low    { background: var(--gray-mid); }
 """
 
 NBSP_NUM = "&nbsp;&nbsp;"  # spacing between number and title (per reference)
@@ -541,6 +1347,7 @@ def generate_audit_pdf(
     submission_metadata: dict,
     output_path: Path,
     options: dict | None = None,
+    discipline_comments: list[dict] | None = None,
 ) -> Path:
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -555,16 +1362,23 @@ def generate_audit_pdf(
     discipline_results = audit_results.get("disciplines", []) or []
     format_results = audit_results.get("format", []) or []
 
+    # Determine presence of M4 sidecar + M5 coverage data first, so TOC reflects them.
+    # M8.2 migration 1/4 — generic structural strips. The §1 qualitative
+    # chapter, §2א/2ב/2ג sidecar/CAD/chatakhim chapters, §4 priority list,
+    # §5 coverage block, and נספח א format appendix are no longer rendered
+    # for ANY project. Architect-summary front-matter (Phase 7.5) also
+    # dropped. Project-specific overrides (plot drops, subsection merges,
+    # rule-row tweaks) come in Commit 4 via report_overrides.json.
+    amenity_inventory = (audit_results.get("m4_summary") or {}).get("amenity_inventory")
+
     parts: list[str] = []
-    parts.append(_render_cover(meta, submission_metadata, plan_number))
-    parts.append(_render_toc(plan_number, residential_parcels, discipline_results))
-    parts.append(_render_section_1())
+    parts.append(_render_cover_with_signatures(meta, submission_metadata, plan_number))
+    parts.append(_render_toc(
+        plan_number, residential_parcels, discipline_results,
+        has_amenity_inventory=bool(amenity_inventory),
+    ))
     parts.append(_render_section_2(content_results, residential_parcels, plan_number))
-    parts.append(_render_section_3(discipline_results))
-    parts.append(_render_section_4(content_results, discipline_results, format_results,
-                                    residential_parcels=residential_parcels))
-    parts.append(_render_appendix_divider())
-    parts.append(_render_appendix_detail(format_results))
+    parts.append(_render_section_3(discipline_results, amenity_inventory=amenity_inventory))
 
     html_doc = (
         '<!DOCTYPE html>'
@@ -572,15 +1386,129 @@ def generate_audit_pdf(
         '<head><meta charset="utf-8"><title>סקירת תוכנית עיצוב</title></head>'
         '<body>' + "".join(parts) + '</body></html>'
     )
+    # Phase 2b Module D — merge referent comments at render time. They live
+    # only in the platform DB; never written back into audit_results.
+    if discipline_comments:
+        html_doc = _inject_discipline_comments(html_doc, discipline_comments)
     _render_to_pdf(html_doc, output_path)
     return output_path
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 2b Module D — discipline comment injection
+# ─────────────────────────────────────────────────────────────────────────────
+
+_REFERENT_TAG = "(הערת רפרנט)"
+
+
+def _comment_row_html(comment: dict) -> str:
+    """Render a referent comment as a §3 table row. Status maps to the same
+    badge classes used by engine rows so colors stay consistent."""
+    status = comment.get("status") or ""
+    status_class_map = {
+        "תקין": "v-ok",
+        "לא תקין": "v-fail",
+        "נדרשת השלמה": "v-rev",
+    }
+    cls = status_class_map.get(status, "v-rev")
+    topic = _esc(comment.get("topic_he") or "")
+    action = _esc(comment.get("action_he") or "")
+    status_he = _esc(status)
+    return (
+        '<tr>'
+        f'<td><b>{topic}</b></td>'
+        '<td>—</td>'
+        f'<td><span class="{cls}">{status_he}</span></td>'
+        f'<td>{action} <span class="referent-tag">{_REFERENT_TAG}</span></td>'
+        '</tr>'
+    )
+
+
+def _inject_discipline_comments(html: str, comments: list[dict]) -> str:
+    """Insert each comment as an extra `<tr>` in the `<tbody>` of the
+    matching `<div class="subsection" id="{discipline_key}">` block.
+
+    Comments whose discipline_key has no matching subsection are appended
+    in a fallback `<table>` at the end of `<div class="chapter" id="sec-3">`
+    so they're never dropped silently.
+    """
+    if not comments:
+        return html
+    grouped: dict[str, list[dict]] = {}
+    for c in comments:
+        grouped.setdefault(c.get("discipline_key", ""), []).append(c)
+
+    orphaned: list[dict] = []
+    for key, comment_list in grouped.items():
+        if not key:
+            orphaned.extend(comment_list)
+            continue
+        anchor = f'<div class="subsection" id="{key}">'
+        anchor_idx = html.find(anchor)
+        if anchor_idx < 0:
+            orphaned.extend(comment_list)
+            continue
+        # Find this subsection's </tbody> — it's the first one after anchor_idx.
+        tbody_close_idx = html.find("</tbody>", anchor_idx)
+        if tbody_close_idx < 0:
+            orphaned.extend(comment_list)
+            continue
+        rows_html = "".join(_comment_row_html(c) for c in comment_list)
+        html = html[:tbody_close_idx] + rows_html + html[tbody_close_idx:]
+
+    if orphaned:
+        # Append a fallback block at the very end of §3.
+        chapter_close = '</div>'
+        sec3_idx = html.find('<div class="chapter" id="sec-3">')
+        if sec3_idx >= 0:
+            sec3_end_idx = html.find('<div class="chapter"', sec3_idx + 1)
+            if sec3_end_idx < 0:
+                sec3_end_idx = html.find('</body>', sec3_idx)
+            fallback_rows = "".join(_comment_row_html(c) for c in orphaned)
+            fallback_block = (
+                '<div class="subsection" id="sec-3-orphan-comments">'
+                '<h3 class="subsection-num">3.X הערות רפרנט ללא דיסציפלינה תואמת</h3>'
+                '<table class="audit"><thead><tr>'
+                '<th style="width:28%;">נושא</th>'
+                '<th style="width:24%;">מצב בהגשה</th>'
+                '<th style="width:13%;">ממצא</th>'
+                '<th style="width:35%;">פעולה</th>'
+                f'</tr></thead><tbody>{fallback_rows}</tbody></table>'
+                '</div>'
+            )
+            html = html[:sec3_end_idx] + fallback_block + html[sec3_end_idx:]
+    return html
+
+
 def _render_to_pdf(html_str: str, output_path: Path) -> None:
+    # M7.5.1 — defensive belt-and-braces: rewrite any remaining "§" to "סעיף "
+    # in the assembled HTML before WeasyPrint sees it. Catches stray clause
+    # refs from upstream JSON or future code that forgot the source-level fix.
+    html_str = _normalize_he_text(html_str)
+    # M7.6 — also dump the assembled HTML alongside the PDF so it can be
+    # surgically edited for one-off report restructures (e.g. Ellen handoffs)
+    # and re-rendered with `weasyprint <html> <pdf>` without re-running the
+    # whole pipeline. Embedded CSS so the dumped file is self-rendering.
+    html_full = html_str.replace(
+        "<head>",
+        f'<head><style>{_CSS}</style>',
+        1,
+    )
+    output_path.with_suffix(".html").write_text(html_full, encoding="utf-8")
+    base = str(FONT_DIR) + "/"
+
+    # Phase 4 (Windows pilot) — WeasyPrint has no installable Python wheel
+    # on Windows that brings its native GTK/Pango/Cairo stack. We ship
+    # Kozea's official Windows CLI release (weasyprint.exe v68.1+) inside
+    # the Tauri bundle and spawn it as a subprocess. The macOS path stays
+    # the in-process Python import — unchanged from before this branch.
+    if sys.platform == "win32":
+        _render_to_pdf_via_subprocess(html_str, output_path, base)
+        return
+
     from weasyprint import HTML, CSS as WeasyCSS
     from weasyprint.text.fonts import FontConfiguration
     font_config = FontConfiguration()
-    base = str(FONT_DIR) + "/"
     HTML(string=html_str, base_url=base).write_pdf(
         str(output_path),
         stylesheets=[WeasyCSS(string=_CSS, base_url=base, font_config=font_config)],
@@ -588,45 +1516,104 @@ def _render_to_pdf(html_str: str, output_path: Path) -> None:
     )
 
 
+def _resolve_weasyprint_exe() -> Path:
+    """Locate Kozea's bundled weasyprint.exe on Windows.
+
+    Resolution order:
+      1. WEASYPRINT_EXE_PATH env var (dev / testing override).
+      2. <sys.executable parent>/weasyprint/weasyprint.exe — useful when
+         the build copies WeasyPrint into the sidecar's own dir.
+      3. <sys.executable parent.parent>/weasyprint/weasyprint.exe — the
+         default Tauri bundle layout: binaries/sidecar/sidecar.exe is the
+         sidecar entry; weasyprint sits at the sibling binaries/weasyprint/
+         per `bundle.resources` glob in tauri.conf.json.
+    """
+    env_path = os.environ.get("WEASYPRINT_EXE_PATH")
+    if env_path:
+        p = Path(env_path)
+        if p.is_file():
+            return p
+    # PyInstaller --onedir: sys.executable is the bundle entry. In the Tauri
+    # release layout it lands under <Resources>/binaries/sidecar/sidecar.exe.
+    exe_dir = Path(sys.executable).resolve().parent
+    for candidate in (
+        exe_dir / "weasyprint" / "weasyprint.exe",
+        exe_dir.parent / "weasyprint" / "weasyprint.exe",
+    ):
+        if candidate.is_file():
+            return candidate
+    raise FileNotFoundError(
+        "Windows PDF rendering is not available: weasyprint.exe was not "
+        "found. Set the WEASYPRINT_EXE_PATH environment variable, or "
+        "rebuild the bundle so weasyprint.exe ships at "
+        f"{exe_dir.parent / 'weasyprint' / 'weasyprint.exe'} "
+        f"(or the sibling-dir variant at {exe_dir / 'weasyprint' / 'weasyprint.exe'})."
+    )
+
+
+def _render_to_pdf_via_subprocess(
+    html_str: str, output_path: Path, base_url: str,
+) -> None:
+    """Windows path: write HTML + CSS to temp files and shell out to
+    Kozea's weasyprint.exe CLI. Native deps (Pango / Cairo / GdkPixbuf /
+    fontconfig) ship inside the WeasyPrint Windows release; we don't have
+    to drag the GTK stack through PyInstaller."""
+    exe = _resolve_weasyprint_exe()
+    log.info("rendering PDF via Windows weasyprint.exe: %s", exe)
+    # UTF-8 BOM on the HTML: paranoid safety against codepage misdetection
+    # when the CLI re-opens the file. The CSS is plain UTF-8 (no BOM —
+    # CSS parsers don't all tolerate it as well as HTML parsers).
+    BOM = "﻿"
+    tmp_dir = Path(tempfile.mkdtemp(prefix="wp_render_"))
+    try:
+        html_path = tmp_dir / "input.html"
+        css_path = tmp_dir / "style.css"
+        html_path.write_text(BOM + html_str, encoding="utf-8")
+        css_path.write_text(_CSS, encoding="utf-8")
+        cmd = [
+            str(exe),
+            "--stylesheet", str(css_path),
+            "--base-url", base_url,
+            str(html_path),
+            str(output_path),
+        ]
+        log.info("weasyprint.exe cmd: %s", " ".join(cmd))
+        result = subprocess.run(cmd, capture_output=True, check=False)
+        if result.returncode != 0:
+            stderr = result.stderr.decode("utf-8", errors="replace")
+            raise RuntimeError(
+                f"weasyprint.exe failed (exit={result.returncode}): "
+                f"{stderr[-2000:]}"
+            )
+    finally:
+        # Best-effort cleanup; never let a tempdir failure mask a render error.
+        try:
+            for p in tmp_dir.iterdir():
+                try:
+                    p.unlink()
+                except OSError:
+                    pass
+            tmp_dir.rmdir()
+        except OSError:
+            pass
+
+
+# M7.5.1 — § → סעיף normalize.  Architect can't accept § (regulatory section
+# symbol) in the document; this helper rewrites every occurrence to "סעיף ".
+# Source-level fixes were applied in 5 modules; this is the belt-and-braces.
+_SECTION_SIGN_RE = re.compile(r"§\s*")
+
+
+def _normalize_he_text(text: str) -> str:
+    """Replace every '§' (with optional trailing space) with 'סעיף '."""
+    if not text or "§" not in text:
+        return text
+    return _SECTION_SIGN_RE.sub("סעיף ", text)
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Cover (page: cover)
 # ─────────────────────────────────────────────────────────────────────────────
-
-def _render_cover(meta: dict, submission_metadata: dict, plan_number: str) -> str:
-    version = submission_metadata.get("submission_version", "")
-    sub_date = submission_metadata.get("submission_date", "")
-    sub_month_year = _sub_month_year_he(sub_date)
-    architect_full = (meta.get("architect_of_record") or "").strip()
-    architect_short = _format_architect_short(architect_full)
-    approval_label = _approval_label(meta)
-
-    return f"""
-    <div class="cover">
-      <img class="logo" src="../nessziona_logo.png" alt="">
-      <div class="brand-eyebrow">NZC | מינהלת ההתחדשות העירונית</div>
-      <div class="brand-name">נס ציונה</div>
-      <hr class="rule">
-      <h1 class="title">סקירת תוכנית עיצוב</h1>
-      <div class="subtitle">תכנית בינוי ופיתוח — מתחם הטייסים-ההסתדרות</div>
-      <div class="subtitle">תכנית עיצוב גרסה {_esc(version)} · {_esc(sub_month_year)}</div>
-
-      <div class="data-block">
-        <div><span class="label">תכנית סטטוטורית:</span> {_esc(plan_number)} {_esc(approval_label)}</div>
-        <div><span class="label">עורך התכנית:</span> אדריכלים {_esc(architect_short)}</div>
-        <div><span class="label">תאריך הסקירה:</span> {_today_he()}</div>
-        <div><span class="label">סוג הדוח:</span> סקירה אוטומטית לפני חוות דעת רשמית</div>
-      </div>
-
-      <div class="pill">{_esc(DOC_TYPE_LABEL)}</div>
-      <hr class="rule">
-
-      <p class="abstract">דוח זה מציג בדיקה אוטומטית של הציות התכנוני לתב"ע {_esc(plan_number)}.
-        הוא כולל ארבעה פרקים: ניתוח תכנון עירוני, בדיקת תאימות לתב"ע, בדיקה רב-תחומית לפי חוברת
-        ההנחיות העירונית, ונספח טכני של תאימות פורמט. הדוח מהווה טיוטה מקדימה לחוות דעת מהנדס
-        הוועדה המקומית.</p>
-    </div>
-    """
-
 
 def _format_architect_short(architect_of_record: str) -> str:
     if not architect_of_record:
@@ -653,20 +1640,129 @@ def _approval_label(meta: dict) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# TOC — table-based, target-counter for page numbers
+# Signature page — sits between cover and TOC (Fix 10)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# Ordered list of the 10 disciplines that must sign the חוות דעת.
+# Order is intentional (operational → strategic → executive) and matches what
+# the מינהלת sends for routing.
+_SIGNATURE_DISCIPLINES_HE: list[str] = [
+    'שפ"ע',
+    "כבישים ופיתוח",
+    "תנועה",
+    "ניקוז",
+    "גנים ונוף",
+    "אדריכלות",
+    "תאגיד",
+    "מינהלת ההתחדשות העירונית",
+    "מהנדס העיר",
+    'יו"ר הוועדה',
+]
+
+
+_COVER_STRUCTURAL_NOTE_HE = (
+    "הדוח כולל את טבלת החתימות (להלן), תוכן עניינים, ושני פרקים: "
+    "בדיקת תאימות לתב\"ע ובדיקה רב-תחומית."
+)
+
+
+def _render_cover_with_signatures(
+    meta: dict, submission_metadata: dict, plan_number: str,
+) -> str:
+    """Single-page cover that combines brand band + meta + structural note +
+    signature table. Replaces the old full-bleed cover + separate sig page.
+    """
+    version = submission_metadata.get("submission_version", "")
+    sub_date = submission_metadata.get("submission_date", "")
+    sub_month_year = _sub_month_year_he(sub_date)
+    architect_full = (meta.get("architect_of_record") or "").strip()
+    architect_short = _format_architect_short(architect_full)
+    approval_label = _approval_label(meta)
+
+    sig_rows = "".join(
+        f'<tr>'
+        f'<td class="discipline-cell">{_esc(disc)}</td>'
+        f'<td class="name-cell"></td>'
+        f'<td class="date-cell"></td>'
+        f'<td class="signature-cell"></td>'
+        f'</tr>'
+        for disc in _SIGNATURE_DISCIPLINES_HE
+    )
+
+    # Use the resolved logo path as a file:// URL so WeasyPrint can find it
+    # regardless of where the PDF output lives (dev: ../nessziona_logo.png
+    # worked because the PDF sat at audit_outputs/<key>/v<ver>/; in a
+    # Windows install the output dir is under cfg.data_dir while the logo
+    # lives in _MEIPASS — the relative form would 404). _resolve_logo_path()
+    # picks the right copy on either OS.
+    logo_url = _resolve_logo_path().as_uri()
+
+    return f"""
+    <div class="cover-v2">
+      <div class="cover-band">
+        <img class="logo" src="{logo_url}" alt="">
+        <div class="brand-eyebrow">NZC | מינהלת ההתחדשות העירונית</div>
+        <div class="brand-name">נס ציונה</div>
+        <hr class="rule">
+        <h1 class="title">סקירת תוכנית עיצוב</h1>
+        <div class="subtitle">תכנית בינוי ופיתוח — מתחם הטייסים-ההסתדרות</div>
+        <div class="subtitle">תכנית עיצוב גרסה {_esc(version)} · {_esc(sub_month_year)}</div>
+        <div class="pill">{_esc(DOC_TYPE_LABEL)}</div>
+      </div>
+      <div class="cover-body">
+        <div class="cover-meta">
+          <div><span class="label">תכנית סטטוטורית:</span> {_esc(plan_number)} {_esc(approval_label)}</div>
+          <div><span class="label">עורך התכנית:</span> אדריכלים {_esc(architect_short)}</div>
+          <div><span class="label">תאריך הסקירה:</span> {_today_he()}</div>
+        </div>
+        <div class="cover-note">{_esc(_COVER_STRUCTURAL_NOTE_HE)}</div>
+        <h2 class="cover-sig-title">טבלת חתימות — חוות דעת רב-תחומית</h2>
+        <p class="cover-sig-sub">לאישור הדוח על-ידי בעלי התפקידים במינהלת ההתחדשות העירונית בעיריית נס ציונה.</p>
+        <table class="signature-table">
+          <thead>
+            <tr>
+              <th>דיסציפלינה</th>
+              <th>שם</th>
+              <th>תאריך</th>
+              <th>חתימה</th>
+            </tr>
+          </thead>
+          <tbody>{sig_rows}</tbody>
+        </table>
+      </div>
+    </div>
+    """
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Phase 7.5 Step 1 — ARCHITECT SUMMARY FRONT-MATTER (pages 2-N)
+# Reads inventory JSON written by vision_scanner.parsers.architect_summary_inventory.
+# Each item renders as a card with severity tag + ID + one-line text + link.
+# Links use <a href="#sec-...">; CSS target-counter inserts the page number.
+# ─────────────────────────────────────────────────────────────────────────────
+
+_SEVERITY_LABELS_HE: dict[str, str] = {
+    "high":   "דחיפות גבוהה",
+    "medium": "דחיפות בינונית",
+    "low":    "דחיפות נמוכה",
+}
+
+
 def _render_toc(plan_number: str, residential_parcels: list[dict],
-                discipline_results: list[dict]) -> str:
+                discipline_results: list[dict],
+                *,
+                has_amenity_inventory: bool = False) -> str:
+    # M8.2 migration 1/4 — TOC rows for §1, §2א/2ב/2ג, §4, §5, נספח א removed
+    # at the same time as their renderers. The kwargs that gated them
+    # (has_sidecar / has_cad / has_chatakhim / has_section_5) went with them.
     rows: list[str] = []
-    rows.append(_toc_row("1.", "ניתוח תכנון עירוני", "#sec-1", "main"))
     rows.append(_toc_row("2.", f'בדיקת תאימות תוכן לתב"ע {plan_number}', "#sec-2", "main"))
     for i, p in enumerate(residential_parcels, start=1):
         rows.append(_toc_row(f"2.{i}", _parcel_label_he(p), f"#sec-2-{i}", "sub"))
     pw_idx = len(residential_parcels) + 1
     rows.append(_toc_row(f"2.{pw_idx}", "בדיקות ברמת תכנית", f"#sec-2-{pw_idx}", "sub"))
 
-    rows.append(_toc_row("3.", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", "#sec-3", "main"))
+    rows.append(_toc_row("3.", "בדיקה רב-תחומית", "#sec-3", "main"))
     seen = set()
     disc_i = 0
     for code in DISCIPLINE_ORDER:
@@ -675,9 +1771,11 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
             seen.add(code)
             rows.append(_toc_row(f"3.{disc_i}", DISCIPLINE_NAME_HE[code],
                                   f"#sec-3-{disc_i}", "sub"))
-
-    rows.append(_toc_row("4.", "סיכום וממצאים סופיים", "#sec-4", "main"))
-    rows.append(_toc_row("נספח א", "ליקויי פורמט בחוברת ההגשה", "#sec-appendix-a", "main"))
+    # Phase 7.4: amenity inventory as §3.{N+1} (only when present)
+    if has_amenity_inventory:
+        amenity_idx = disc_i + 1
+        rows.append(_toc_row(f"3.{amenity_idx}", "שירותים לדיירים",
+                              "#sec-3-amenities", "sub"))
 
     return f"""
     <div class="chapter">
@@ -715,48 +1813,11 @@ def _chapter_open(num_label: str, title: str, intro: str) -> str:
     )
 
 
-def _badges_table(items: list[tuple[int, str, str]]) -> str:
-    cells = []
-    for count, label, css_class in items:
-        cells.append(
-            f'<td class="{css_class}">'
-            f'<div class="num">{count}</div>'
-            f'<div class="label">{label}</div>'
-            f'</td>'
-        )
-    return f'<table class="badges"><tr>{"".join(cells)}</tr></table>'
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# §1
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _render_section_1() -> str:
-    intro = ('פרק זה בוחן את האיכות התכנונית של ההצעה — שילוב במרקם, תנועה, מרחב ציבורי, '
-             'חזות. דורש שיפוט מקצועי של מהנדס/ת המינהלת.')
-    return f"""
-    <div class="chapter" id="sec-1">
-      {_chapter_open("1", "ניתוח תכנון עירוני", intro)}
-      <div class="callout">
-        <div class="callout-title">דורש השלמה ידנית של מהנדס/ת המינהלת</div>
-        <p class="callout-body">הניתוח התכנוני האיכותי (שילוב בסביבה, תנועה, שצ"פ, מבני ציבור, חזות,
-          אשפה) דורש שיפוט מקצועי שאינו ניתן לאוטומציה. הוא לב הסקירה ויושלם לפני הפיכת הסקירה
-          לחוות דעת רשמית.</p>
-      </div>
-    </div>
-    """
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# §2 — content compliance
-# ─────────────────────────────────────────────────────────────────────────────
-
 def _render_section_2(content_results, residential_parcels, plan_number) -> str:
     intro = (
         f'פרק זה משווה את ערכי ההגשה (יח"ד, שטחים, גובה, חניה, תמהיל, שטחים מחלחלים) מול '
         f'התקרות והדרישות המוגדרות בתב"ע {plan_number}. בכל סעיף — ההגשה הנוכחית, הדרישה, והפעולה הנדרשת.'
     )
-    badges = _badges_table(_content_badge_counts(content_results))
     sec2_title = f'בדיקת תאימות תוכן לתב"ע {plan_number}'
 
     by_parcel: dict[str, list[dict]] = {}
@@ -778,7 +1839,6 @@ def _render_section_2(content_results, residential_parcels, plan_number) -> str:
     return f"""
     <div class="chapter" id="sec-2">
       {_chapter_open("2", sec2_title, intro)}
-      {badges}
       {''.join(subs)}
     </div>
     """
@@ -846,13 +1906,27 @@ def _content_row(r: dict, parcel: dict) -> dict:
     sub_display, schema_display = _content_value_pair(r, parcel)
     note = r.get("notes_he", "") or r.get("remediation_he", "")
     feedback = _feedback_html(r)
+    # M4: confidence chip — surfaces only when the engine output's confidence
+    # has been overridden to MEDIUM or LOW by M4 (means a Pro vision finding
+    # drove the verdict with less than full certainty).
+    conf_chip = _confidence_chip_html(r.get("confidence"))
     return {
         "label": label,
-        "verdict_html": f'<span class="{vclass}">{vlabel}</span>',
+        "verdict_html": f'<span class="{vclass}">{vlabel}</span>{conf_chip}',
         "submission": sub_display,
         "schema": schema_display,
         "note_html": f'{_esc(note)}{feedback}',
     }
+
+
+def _confidence_chip_html(confidence: str | None) -> str:
+    """Render the M4 confidence chip when needed. HIGH (or missing) → empty."""
+    c = (confidence or "").upper()
+    if c not in ("MEDIUM", "LOW"):
+        return ""
+    cls = "conf-medium" if c == "MEDIUM" else "conf-low"
+    label = "רמת ביטחון: בינונית" if c == "MEDIUM" else "רמת ביטחון: נמוכה"
+    return f'<span class="conf-chip {cls}">{label}</span>'
 
 
 def _content_table_html(rows: list[dict]) -> str:
@@ -928,7 +2002,7 @@ def _schema_value_for(code: str, parcel: dict) -> str:
             return f'{f} קומות'
         return "—"
     if code == "CONTENT_SETBACKS":
-        return "לפי תשריט (DWG)"
+        return "לפי תשריט"
     if code == "CONTENT_PARKING_RATIO":
         return "תקן חניה לאומי"
     return "—"
@@ -994,39 +2068,15 @@ def _plan_wide_subsection(num: str, anchor_id: str, plan_wide: list[dict]) -> st
     """
 
 
-def _content_badge_counts(content_results: list[dict]) -> list[tuple[int, str, str]]:
-    c = {"ok": 0, "fail": 0, "review": 0, "unknown": 0, "na": 0}
-    for r in content_results:
-        v = r.get("verdict")
-        if v in ("pass", "pass_with_note"):
-            c["ok"] += 1
-        elif v in ("fail", "fail_borderline", "not_submitted"):
-            c["fail"] += 1
-        elif v == "requires_review":
-            c["review"] += 1
-        elif v == "unevaluable":
-            c["unknown"] += 1
-        elif v == "not_applicable":
-            c["na"] += 1
-    return [
-        (c["ok"],      "תקינים בתוכן",       "ok"),
-        (c["fail"],    "ליקויים בתוכן",       "fail"),
-        (c["review"],  "דורשים בירור",        "review"),
-        (c["unknown"], "לא ניתנים לבדיקה",    "unknown"),
-        (c["na"],      "לא רלוונטיים",        "na"),
-    ]
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# §3
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _render_section_3(discipline_results: list[dict]) -> str:
+def _render_section_3(
+    discipline_results: list[dict],
+    *,
+    amenity_inventory: dict | None = None,
+) -> str:
     intro = (
         'פרק זה בוחן את ההגשה מול חוברת ההנחיות העירונית של נס ציונה (407-0730606, פברואר 2026). '
         'הבדיקה מאורגנת בעשר דיסציפלינות. במקום בו התקבל פידבק ממנהל הדיסציפלינה — הוא משולב בתא ההערה.'
     )
-    badges = _badges_table(_discipline_badge_counts(discipline_results))
 
     by_disc: dict[str, list[dict]] = {}
     for r in discipline_results:
@@ -1041,11 +2091,103 @@ def _render_section_3(discipline_results: list[dict]) -> str:
         disc_i += 1
         subs.append(_discipline_subsection(f"3.{disc_i}", f"sec-3-{disc_i}", code, rules))
 
+    # Phase 7.4 — append amenity inventory as §3.{disc_i+1}
+    if amenity_inventory:
+        amenity_idx = disc_i + 1
+        subs.append(_render_amenity_inventory_subsection(
+            f"3.{amenity_idx}", "sec-3-amenities", amenity_inventory,
+        ))
+
     return f"""
     <div class="chapter" id="sec-3">
-      {_chapter_open("3", "בדיקה רב-תחומית לפי חוברת הנחיות עירונית", intro)}
-      {badges}
+      {_chapter_open("3", "בדיקה רב-תחומית", intro)}
       {''.join(subs)}
+    </div>
+    """
+
+
+def _render_amenity_inventory_subsection(
+    num: str, anchor_id: str, inventory: dict,
+) -> str:
+    """Phase 7.4 — §3.N "שירותים לדיירים" inventory table (no verdicts).
+
+    Visual identity: inherits §3's standard sub-section styling. NOT a new
+    evidence source (cf. §2א/2ב/2ג which have their own accent colors) — this
+    is a soft-policy inventory whose role is to surface what the architect
+    drew without claiming compliance.
+    """
+    amenities = inventory.get("amenities") or []
+    residential_plots = inventory.get("residential_plots") or [1, 2, 3, 4, 5]
+    source_pages = inventory.get("source_pages") or [26, 36, 41, 45]
+
+    provenance_he = (
+        f"ממצאי מלאי של שירותים לדיירים שזוהו בדיאגרמות הפונקציות "
+        f"(עמ' 26 לתא שטח 1; עמ' 36 לתאי שטח 2+4; עמ' 41 לתא שטח 3; "
+        f"עמ' 45 לתא שטח 5)."
+    )
+    coverage_explainer_he = (
+        'הטבלה שלהלן מציגה את הזיהוי של חדרי שירות ייעודיים לדיירים בכל תא '
+        'שטח. היא מובאת לסקירת האדריכל בלבד.'
+    )
+    table_note_he = (
+        'הטבלה להלן מוצגת לסקירת הצוות, ללא חיווי ציות. עמודת "הערה" '
+        'תאוכלס בעתיד עם דרישות מקודדות.'
+    )
+
+    # Header row
+    plot_headers = "".join(
+        f'<th class="amen-plot-cell">תא שטח {p}</th>' for p in residential_plots
+    )
+    header_html = f"""
+    <thead>
+      <tr>
+        <th class="amen-name-cell">שירות</th>
+        {plot_headers}
+        <th class="amen-anchor-cell">אסמכתא רגולטורית</th>
+        <th class="amen-note-cell">הערה</th>
+      </tr>
+    </thead>
+    """
+
+    def _cell_for(amen, plot_id):
+        cell = amen["per_plot"].get(str(plot_id), {}) or {}
+        if cell.get("non_residential"):
+            return '<td class="amen-na">לא רלוונטי</td>'
+        if cell.get("detected"):
+            page = cell.get("source_page", "—")
+            raw = cell.get("raw_label", "")
+            # If the raw label adds information (e.g. "מתקני כושר" vs the canonical
+            # "חדר כושר"), surface it in parentheses
+            raw_display = ""
+            if raw and raw.strip() not in (amen.get("hebrew") or ""):
+                raw_display = f' <span class="amen-raw">({_esc(raw)})</span>'
+            return f'<td class="amen-yes">✓ עמ\' {page}{raw_display}</td>'
+        return '<td class="amen-no">—</td>'
+
+    body_rows = []
+    for amen in amenities:
+        cells = "".join(_cell_for(amen, p) for p in residential_plots)
+        anchor = _esc(amen.get("regulatory_anchor") or "—")
+        note = _esc(amen.get("audit_note") or "")
+        body_rows.append(f"""
+        <tr>
+          <td class="amen-name-cell">{_esc(amen["hebrew"])}</td>
+          {cells}
+          <td class="amen-anchor-cell">{anchor}</td>
+          <td class="amen-note-cell">{note}</td>
+        </tr>
+        """)
+
+    return f"""
+    <div class="subsection amen-subsection" id="{anchor_id}">
+      <h3 class="subsection-num">{_esc(num)} שירותים לדיירים</h3>
+      <p class="amen-provenance">{_esc(provenance_he)}</p>
+      <p class="amen-coverage">{_esc(coverage_explainer_he)}</p>
+      <p class="amen-note">{_esc(table_note_he)}</p>
+      <table class="amen-table">
+        {header_html}
+        <tbody>{''.join(body_rows)}</tbody>
+      </table>
     </div>
     """
 
@@ -1058,7 +2200,7 @@ def _discipline_subsection(num: str, anchor_id: str, code: str, rules: list[dict
       <h3 class="subsection-num">{_esc(num)} {_esc(name)}</h3>
       <table class="audit">
         <thead><tr>
-          <th style="width:28%;">מדיניות בחוברת ההנחיות</th>
+          <th style="width:28%;">מדיניות</th>
           <th style="width:24%;">מצב בהגשה 24.3</th>
           <th style="width:13%;">ממצא</th>
           <th style="width:35%;">הערה / פעולה נדרשת</th>
@@ -1089,443 +2231,92 @@ def _discipline_row_html(r: dict) -> str:
         policy = r.get("notes_he", "")
 
     submission_state = _submission_state_he(r)
-    note = _action_note_he(r)
+    # M7.8 — _action_note_he now returns (body, page_ref); render page_ref
+    # at the END of the cell in a light-grey de-emphasized span.
+    note_body, note_pages = _action_note_he(r)
+    page_ref_html = (
+        f' <span class="page-ref">{_esc(note_pages)}</span>'
+        if note_pages else ''
+    )
     return f"""
     <tr>
       <td><b>{_esc(title)}</b><br>{_esc(policy)}</td>
       <td>{_esc(submission_state)}</td>
       <td><span class="{vclass}">{vlabel}</span></td>
-      <td>{_esc(note)}{feedback}</td>
+      <td>{_esc(note_body)}{page_ref_html}{feedback}</td>
     </tr>
     """
 
 
 def _submission_state_he(r: dict) -> str:
+    # M7.6 Part A (A2) — "מצב בהגשה" must be terse: ≤1 sentence, no narrative
+    # explanation, no method framing (no "בדיקה ויזואלית"/"אוטומטית"). The
+    # surviving long visual descriptions get trimmed to their first clause.
     ev = r.get("evidence", {}) or {}
-    # v8j: when Cowork's hand-extracted findings supplied the verdict, show
-    # the visual description verbatim — it's the human-verified ground truth.
     if ev.get("source") == "cowork_discipline_findings_v24.3":
         visual = (r.get("evidence_visual") or ev.get("evidence_visual") or "").strip()
         if visual:
-            return visual
+            return _terse_state(visual)
         return "—"
     ct = ev.get("check_type")
     if ct == "text_pattern":
         if ev.get("found_any"):
             pgs = sorted({pg for v in ev.get("matched_pages", {}).values() for pg in v})
-            return f"אותרו אזכורים בעמודים: {pgs[:6]}"
-        # v8i: don't expose the engine's keyword-search failure as a "finding".
-        return "פריט ויזואלי — לא ניתן לבדיקה אוטומטית."
+            return f"אותר בעמ' {', '.join(str(p) for p in pgs[:4])}"
+        return "—"
     if ct == "annex_required":
         if ev.get("annex_found"):
             pgs = sorted({pg for v in ev.get("matched_pages", {}).values() for pg in v})
-            return f"נספח אותר (עמודים: {pgs[:6]})."
-        return "הנספח לא אותר בהגשה."
+            return f"נספח אותר (עמ' {', '.join(str(p) for p in pgs[:4])})"
+        return "לא הוגש"
     if ct == "manual_review":
-        return "בדיקה ויזואלית — לא מבוצעת אוטומטית."
+        return "—"
     return "—"
 
 
-def _action_note_he(r: dict) -> str:
-    """Right-column action note. v8j: prefer Cowork's compliance_note prefixed
-    with `(עמ' N, M)` from evidence_pages when available."""
+def _terse_state(text: str, max_chars: int = 120) -> str:
+    """Reduce a long submission-state cell to a single short factual clause.
+
+    Strips parentheticals, page-number lists, and trailing rationale; keeps
+    only the first sentence-ish segment (split on period, semicolon, or em-dash).
+    Caps total length at max_chars.
+    """
+    if not text:
+        return ""
+    s = text.strip()
+    # Take only the first clause / sentence
+    for sep in (". ", "; ", " — ", " · "):
+        idx = s.find(sep)
+        if 0 < idx < max_chars:
+            s = s[:idx]
+            break
+    s = s.strip().rstrip(".;:,")
+    if len(s) > max_chars:
+        s = s[:max_chars].rsplit(" ", 1)[0] + "…"
+    return s
+
+
+def _action_note_he(r: dict) -> tuple[str, str]:
+    """Right-column action note.  M7.8: returns ``(body, page_ref)`` so the
+    renderer can put the page reference at the END of the cell in a
+    de-emphasized ``<span class="page-ref">`` instead of prepending it.
+
+    For Cowork-sourced findings the page list comes from ``evidence_pages``;
+    for other findings the page reference is empty (page numbers, if any,
+    are baked into ``notes_he`` from the translator output and surfaced via
+    the surrounding cell text).
+    """
     ev = r.get("evidence", {}) or {}
     if ev.get("source") == "cowork_discipline_findings_v24.3":
         pages = r.get("evidence_pages") or ev.get("evidence_pages") or []
         note = (r.get("compliance_note") or ev.get("compliance_note") or "").strip()
-        if pages and note:
-            return f"(עמ' {', '.join(str(p) for p in pages)}) {note}"
-        if pages:
-            return f"(עמ' {', '.join(str(p) for p in pages)})"
-        if note:
-            return note
-        return r.get("remediation_he", "") or "—"
+        page_ref = f"(עמ' {', '.join(str(p) for p in pages)})" if pages else ""
+        body = note or r.get("remediation_he", "") or "—"
+        return body, page_ref
     v = r.get("verdict", "")
-    return r.get("remediation_he", "") if v != "pass" else "ראה ראיות."
+    body = r.get("remediation_he", "") if v != "pass" else "ראה ראיות."
+    return body, ""
 
-
-def _discipline_badge_counts(discipline_results: list[dict]) -> list[tuple[int, str, str]]:
-    c = {"ok": 0, "fail": 0, "review": 0, "unknown": 0}
-    for r in discipline_results:
-        v = r.get("verdict")
-        if v == "pass":
-            c["ok"] += 1
-        elif v in ("fail", "fail_borderline", "not_submitted"):
-            c["fail"] += 1
-        elif v == "requires_review":
-            c["review"] += 1
-        elif v == "unevaluable":
-            c["unknown"] += 1
-    return [
-        (c["ok"],      "תקינים במדיניות",     "ok"),
-        (c["fail"],    "סטיות ממדיניות",      "fail"),
-        (c["review"],  "דורשים בירור",        "review"),
-        (c["unknown"], "לא ניתנים לבדיקה",    "unknown"),
-    ]
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# §4
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _render_section_4(content_results, discipline_results, format_results,
-                       residential_parcels: list[dict] | None = None) -> str:
-    intro = "פרק זה מסכם את ממצאי הסקירה ומדרג את הפעולות הנדרשות מכם לפני הסקירה הבאה."
-    badges = _badges_table(_summary_badge_counts(content_results, discipline_results))
-    banner = _verdict_banner_html(content_results, discipline_results)
-
-    valid_pids = {p["parcel_id"] for p in (residential_parcels or [])}
-    items = _priority_items(content_results, discipline_results, valid_pids=valid_pids)
-    if items:
-        list_html = '<ol class="priority-list">' + "".join(
-            f'<li>{i + 1}. <strong>{_esc(it["title_with_plots"])}.</strong> {_esc(it["body"])}</li>'
-            for i, it in enumerate(items)
-        ) + '</ol>'
-    else:
-        list_html = '<p style="color:#7A7A7A;">אין פעולות נדרשות.</p>'
-
-    disclaimer = (
-        'דוח זה נערך ע"י מנוע הבדיקה האוטומטי של פלטפורמת המינהלת. הדוח דורש סקירה וחתימה של '
-        'מהנדס/ת הוועדה המקומית טרם הפיכתו לחוות דעת רשמית.'
-    )
-
-    return f"""
-    <div class="chapter" id="sec-4">
-      {_chapter_open("4", "סיכום וממצאים סופיים", intro)}
-      {badges}
-      {banner}
-      <h3 class="subsection-num" style="margin-top:8mm">פעולות הנדרשות מכם לפני הסקירה הבאה</h3>
-      {list_html}
-      <p class="closing-paragraph">{_esc(disclaimer)}</p>
-    </div>
-    """
-
-
-def _summary_badge_counts(content_results, discipline_results) -> list[tuple[int, str, str]]:
-    def count(results, predicate) -> int:
-        return sum(1 for r in results if predicate(r.get("verdict")))
-    is_fail = lambda v: v in ("fail", "fail_borderline", "not_submitted")
-    is_review = lambda v: v == "requires_review"
-    is_pass = lambda v: v in ("pass", "pass_with_note")
-    return [
-        (count(content_results, is_pass) + count(discipline_results, is_pass), "תקינים", "ok"),
-        (count(content_results, is_fail) + count(discipline_results, is_fail), "נדרשים תיקונים", "fail"),
-        (count(content_results, is_review) + count(discipline_results, is_review), "דורשים בירור", "review"),
-    ]
-
-
-def _verdict_banner_html(content_results, discipline_results) -> str:
-    any_fail = any(r.get("verdict") in ("fail", "fail_borderline", "not_submitted")
-                   for r in content_results + discipline_results)
-    any_review = any(r.get("verdict") == "requires_review"
-                     for r in content_results + discipline_results)
-    if any_fail:
-        text = 'נדרשים תיקונים מהותיים — ההגשה אינה מוכנה לחתימה'
-        cls = ""
-    elif any_review:
-        text = 'נדרשים הבהרות לפני חתימה'
-        cls = "amber"
-    else:
-        text = 'ההגשה מוכנה לחתימה — אין ליקויים מהותיים'
-        cls = "green"
-    return f'<div class="verdict-banner {cls}"><p class="verdict-text">{_esc(text)}</p></div>'
-
-
-def _priority_items(content_results, discipline_results,
-                     *, valid_pids: set[str] | None = None) -> list[dict]:
-    """Build the §4 priority list.
-
-    - Skip results for plot IDs outside the project's valid set (residential +
-      mixed-use; excludes שצ"פ, road, path). Plan-wide rules are always kept.
-    - Bug 6 consolidation: CONTENT_SETBACKS gets ONE row with a DWG-deferral
-      body — no per-plot enumeration — since the blocker is the same for all
-      plots (DWG parsing not yet implemented).
-    """
-    valid_pids = valid_pids if valid_pids is not None else set()
-    grouped: dict[str, dict] = {}
-
-    def bucket(rule_code, severity, title, body, plot_label, override_plots: str | None = None,
-               sort_rank: int = 5):
-        slot = grouped.setdefault(rule_code, {
-            "severity": severity, "title": title, "body": body, "plots": [],
-            "override_plots_label": override_plots, "sort_rank": sort_rank,
-        })
-        if override_plots:
-            slot["override_plots_label"] = override_plots
-        if plot_label and plot_label not in slot["plots"]:
-            slot["plots"].append(plot_label)
-
-    for r in content_results:
-        v = r.get("verdict")
-        if v not in ("fail", "fail_borderline", "not_submitted", "requires_review"):
-            continue
-        pid = r.get("ta_shetach_id")
-        if pid and valid_pids and pid not in valid_pids:
-            continue  # silently drop שצ"פ/road/path entries
-
-        code = r["rule_code"]
-
-        # Bug 6 consolidation — single setbacks entry with DWG-deferral note
-        if code == "CONTENT_SETBACKS":
-            bucket(
-                code, "major", "קווי בניין",
-                'בדיקה זו דורשת פירוק קובץ DWG (תכונה דחויה ל-v8a-3). עד אז — אימות ידני.',
-                None,
-                override_plots="כל תאי השטח",
-            )
-            continue
-
-        if code == "CONTENT_APARTMENT_MIX_SMALL":
-            sev = "critical"   # the single most important extraction-derived finding
-        elif code in ("CONTENT_UNIT_COUNT", "CONTENT_BUILDING_AREA_MAIN"):
-            sev = "critical"
-        else:
-            sev = "major"
-
-        title = _content_rule_label(code)
-        # For ambiguous (requires_review) rules — use the rule's own notes_he
-        # which contains the per-rule explanation (e.g., architect-vs-strict gap).
-        body = r.get("notes_he") if v == "requires_review" else r.get("remediation_he", "")
-        plot_lbl = _plot_label_he(pid) if pid else "ברמת תכנית"
-        bucket(code, sev, title, body or "", plot_lbl)
-
-    # v8j: Cowork JSON emits missing-annex situations as `fail` (not
-    # `not_submitted`). Collect every discipline fail/not_submitted, then peel
-    # off the annex-pattern ones into a single critical-severity row at the
-    # top — same consolidation pattern as DWG-deferred setbacks.
-    annex_fails: list[dict] = []
-    for r in discipline_results:
-        if r.get("verdict") not in ("fail", "not_submitted"):
-            continue
-        name = r.get("rule_name_he", "")
-        is_annex = ("נספח" in name) or ("רשימת צמחייה" in name) or ("5281" in name)
-        if is_annex:
-            annex_fails.append(r)
-            continue
-        sev = r.get("severity", "minor")
-        disc = DISCIPLINE_NAME_HE.get(r.get("discipline", ""), r.get("discipline", ""))
-        title = f"{disc} — {r.get('rule_name_he', r['rule_code'])}"
-        bucket(r["rule_code"], sev, title, r.get("remediation_he", ""), None)
-
-    if annex_fails:
-        bucket(
-            "DISC_ANNEXES_BUNDLE",
-            "critical",
-            "כל הנספחים החיצוניים חסרים",
-            'ההגשה היא 63 עמודי תוכניות אדריכליות בלבד, ללא ששת הנספחים הנדרשים: '
-            'חומריות, צמחייה, הידרולוגי, אקוסטי, ת"י 5281, איכות סביבה וקיימות. '
-            'יש להגיש את כל הנספחים בגרסה הבאה — תיקון מהותי.',
-            None,
-            override_plots="ברמת תכנית",
-            sort_rank=0,  # pin to the very top of the critical tier
-        )
-
-    order = {"critical": 0, "major": 1, "minor": 2, "info": 3}
-    items = sorted(
-        grouped.values(),
-        key=lambda x: (order.get(x["severity"], 9), x.get("sort_rank", 5), x["title"]),
-    )
-    out = []
-    for it in items:
-        if it.get("override_plots_label"):
-            plots = it["override_plots_label"]
-        else:
-            plots = ", ".join(it["plots"]) if it["plots"] else ""
-        title_full = it["title"] + (f" — {plots}" if plots else "")
-        out.append({"title_with_plots": title_full, "body": it["body"]})
-    return out
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Appendix A (divider + detail)
-# ─────────────────────────────────────────────────────────────────────────────
-
-def _render_appendix_divider() -> str:
-    return f"""
-    <div class="appendix-divider chapter" id="sec-appendix-a">
-      <div class="label">{_esc(EYEBROW)}</div>
-      <div class="big-title">נספח א</div>
-      <div class="subtitle">ליקויי פורמט בחוברת ההגשה</div>
-      <p class="note">סעיפי פורמט הסוטים מהסטנדרט שנקבע בחוברת ההנחיות העירונית.<br>
-        <em>סעיפים תקינים — אינם מוצגים.</em></p>
-    </div>
-    """
-
-
-def _render_appendix_detail(format_results: list[dict]) -> str:
-    visible = [r for r in format_results if _format_verdict_kind(r) in ("fail", "review", "missing")]
-    badges = _badges_table(_format_badge_counts(format_results))
-    intro = (
-        f'מנוע הפורמט בדק את ההגשה מול {len(format_results)} כללי פורמט. '
-        f'{len(visible)} כללים הניבו ממצא של אי-תאימות או הצריכו בדיקה ידנית. '
-        'שאר הכללים — תקינים ואינם מוצגים בנספח זה.'
-    )
-    groups: dict[str, list[dict]] = {}
-    for r in visible:
-        sec = _format_rule_section(r)
-        groups.setdefault(sec, []).append(r)
-
-    blocks = []
-    for sec in sorted(groups.keys(), key=_sec_sort_key):
-        rows_html = "".join(_format_row_html(r) for r in sorted(groups[sec], key=lambda x: x["rule_code"]))
-        blocks.append(f"""
-        <div class="section-group-head">סעיף {_esc(sec)} ({len(groups[sec])} ליקויים)</div>
-        <table class="audit">
-          <thead><tr>
-            <th style="width:30%;">הכלל</th>
-            <th style="width:14%;">ממצא</th>
-            <th style="width:30%;">ראיות</th>
-            <th style="width:26%;">הערה</th>
-          </tr></thead>
-          <tbody>{rows_html}</tbody>
-        </table>
-        """)
-
-    body = f"""
-    <div class="chapter">
-      <div class="eyebrow">{_esc(EYEBROW)}</div>
-      <h2 class="chapter-num-title">נספח א — ליקויי פורמט שזוהו</h2>
-      <p class="chapter-intro">{_esc(intro)}</p>
-      {badges}
-      {''.join(blocks) if blocks else '<p style="color:#7A7A7A;">לא נמצאו ליקויי פורמט.</p>'}
-    </div>
-    """
-    return body
-
-
-def _format_badge_counts(format_results: list[dict]) -> list[tuple[int, str, str]]:
-    c = {"ok": 0, "fail": 0, "review": 0, "unknown": 0}
-    for r in format_results:
-        k = _format_verdict_kind(r)
-        if k == "pass":
-            c["ok"] += 1
-        elif k == "fail":
-            c["fail"] += 1
-        elif k == "review":
-            c["review"] += 1
-        elif k == "missing":
-            c["unknown"] += 1
-    return [
-        (c["fail"],    "טעויות בפורמט",        "fail"),
-        (c["review"],  "דורשים בירור",          "review"),
-        (c["unknown"], "לא ניתנים לבדיקה",      "unknown"),
-        (c["ok"],      "ללא טעויות (לא מוצגים)", "ok"),
-    ]
-
-
-def _format_verdict_kind(r: dict) -> str:
-    v = r.get("verdict")
-    ev = r.get("evidence", {}) or {}
-    if v in ("pass", "pass_with_note"):
-        return "pass"
-    if v == "requires_review":
-        return "review" if ev.get("check_method") == "manual_review" else "fail"
-    if v in ("fail", "fail_borderline", "not_submitted"):
-        return "fail"
-    if v == "unevaluable":
-        return "missing"
-    return "missing"
-
-
-def _format_row_html(r: dict) -> str:
-    title = _format_rule_title(r)
-    kind = _format_verdict_kind(r)
-    label_css = {"fail": ("נדרש תיקון", "v-fail"),
-                 "review": ("דורש בירור", "v-rev"),
-                 "missing": ("לא ניתן לבדיקה", "v-miss")}.get(kind, ("—", "v-na"))
-    evidence = _format_evidence_he(r)
-    note = r.get("notes_he", "")
-    return f"""
-    <tr>
-      <td>{_esc(title)}</td>
-      <td><span class="{label_css[1]}">{label_css[0]}</span></td>
-      <td>{_esc(evidence)}</td>
-      <td>{_esc(note)}</td>
-    </tr>
-    """
-
-
-def _format_evidence_he(r: dict) -> str:
-    ev = r.get("evidence", {}) or {}
-    if ev.get("check_method") == "manual_review":
-        return "דורש בדיקה ויזואלית של מהנדס/ת"
-    pages = ev.get("pages_checked") or []
-    if r.get("verdict") in ("fail", "fail_borderline"):
-        if pages:
-            short = pages[:4]
-            return f'לא נמצאו התאמות · עמ\' [{", ".join(str(p) for p in short)}{"…" if len(pages) > 4 else ""}]'
-        return "לא נמצאו התאמות"
-    if r.get("failure_mode") == "ENGINE_ERROR":
-        return f'שגיאת מנוע — {ev.get("extracted_values", {}).get("error", "")}'
-    return "—"
-
-
-def _format_rule_section(r: dict) -> str:
-    section_map = {
-        "FORMAT_PAGE_SIZE_A3_LANDSCAPE": "6.1", "FORMAT_TEXT_DIRECTION_RTL": "6.1",
-        "FORMAT_BACKGROUND_WHITE": "6.1", "FORMAT_FONT_HEBREW_SANS_SERIF": "6.2",
-        "FORMAT_HEADER_COLOR_CYAN": "6.2", "FORMAT_COVER_TITLE_TEXT": "6.3",
-        "FORMAT_COVER_PLAN_NUMBER": "6.3", "FORMAT_COVER_DATE": "6.3",
-        "FORMAT_COVER_SIGNATURE_TABLE": "6.3", "FORMAT_COVER_AERIAL_IMAGE": "6.3",
-        "FORMAT_TEAM_PAGE_EXISTS": "6.4", "FORMAT_TEAM_REQUIRED_DISCIPLINES": "6.4",
-        "FORMAT_TOC_EXISTS": "6.5", "FORMAT_TOC_THREE_COLUMNS": "6.5",
-        "FORMAT_CHAPTER_DIVIDER_PAGES": "6.6", "FORMAT_FOOTER_PRESENT_ALL_PAGES": "6.7",
-        "FORMAT_FOOTER_PAGE_NUMBERS": "6.7", "FORMAT_FOOTER_PROJECT_NAME": "6.7",
-        "FORMAT_LOGOS_FOOTER": "6.7", "FORMAT_CHAPTER_NUMBERING": "6.8",
-        "FORMAT_REQUIRED_CHAPTERS_TYPOLOGIES": "6.8", "FORMAT_REQUIRED_CHAPTER_ENVELOPE": "6.8",
-        "FORMAT_REQUIRED_CHAPTER_DEVELOPMENT": "6.8", "FORMAT_REQUIRED_CHAPTER_ENVIRONMENTAL": "6.8",
-        "FORMAT_REQUIRED_CHAPTER_INFRASTRUCTURE": "6.8", "FORMAT_TYPICAL_FLOOR_MIX_TABLE": "6.9",
-        "FORMAT_PARKING_TABLE": "6.9", "FORMAT_RENDERINGS_PRESENT": "6.9",
-        "FORMAT_LEGEND_ON_DEVELOPMENT_PAGES": "6.9", "FORMAT_SCALE_ANNOTATIONS": "6.10",
-        "FORMAT_NORTH_ARROW": "6.10", "FORMAT_REFERENT_SIGNATURE_PLACEHOLDERS": "6.10",
-        "FORMAT_VERSION_NOTATION": "6.10", "FORMAT_DIMENSIONS_ON_PLANS": "6.10",
-    }
-    return section_map.get(r.get("rule_code", ""), "אחר")
-
-
-def _format_rule_title(r: dict) -> str:
-    titles = {
-        "FORMAT_PAGE_SIZE_A3_LANDSCAPE": "גודל עמוד A3 לרוחב",
-        "FORMAT_TEXT_DIRECTION_RTL": "כיוון טקסט מימין לשמאל",
-        "FORMAT_BACKGROUND_WHITE": "רקע לבן",
-        "FORMAT_FONT_HEBREW_SANS_SERIF": "גופן עברי סנס-סריף",
-        "FORMAT_HEADER_COLOR_CYAN": "כותרות בצבע טורקיז",
-        "FORMAT_COVER_TITLE_TEXT": "שער — כותרת ראשית",
-        "FORMAT_COVER_PLAN_NUMBER": "שער — מספר תכנית",
-        "FORMAT_COVER_DATE": "שער — תאריך הגשה",
-        "FORMAT_COVER_SIGNATURE_TABLE": "שער — טבלת חתימות",
-        "FORMAT_COVER_AERIAL_IMAGE": "שער — הדמיה מרכזית",
-        "FORMAT_TEAM_PAGE_EXISTS": "עמוד צוות הפרויקט",
-        "FORMAT_TEAM_REQUIRED_DISCIPLINES": "צוות — דיסציפלינות נדרשות",
-        "FORMAT_TOC_EXISTS": "תוכן עניינים",
-        "FORMAT_TOC_THREE_COLUMNS": "תוכן עניינים — שלוש עמודות",
-        "FORMAT_CHAPTER_DIVIDER_PAGES": "עמודי מעבר לפרקים",
-        "FORMAT_FOOTER_PRESENT_ALL_PAGES": "כותרת תחתונה בכל עמוד",
-        "FORMAT_FOOTER_PAGE_NUMBERS": "מספרי עמודים בכותרת תחתונה",
-        "FORMAT_FOOTER_PROJECT_NAME": "שם הפרויקט בכותרת תחתונה",
-        "FORMAT_LOGOS_FOOTER": "לוגואים בכותרת תחתונה",
-        "FORMAT_CHAPTER_NUMBERING": "מספור פרקים X.Y",
-        "FORMAT_REQUIRED_CHAPTERS_TYPOLOGIES": "פרקי טיפולוגיות",
-        "FORMAT_REQUIRED_CHAPTER_ENVELOPE": "פרק מעטפת בניינים",
-        "FORMAT_REQUIRED_CHAPTER_DEVELOPMENT": "פרק פיתוח",
-        "FORMAT_REQUIRED_CHAPTER_ENVIRONMENTAL": "פרק הנחיות סביבתיות",
-        "FORMAT_REQUIRED_CHAPTER_INFRASTRUCTURE": "פרק הנחיות תשתיות",
-        "FORMAT_TYPICAL_FLOOR_MIX_TABLE": 'טבלת תמהיל יח"ד',
-        "FORMAT_PARKING_TABLE": "טבלת חניות במרתף",
-        "FORMAT_RENDERINGS_PRESENT": "הדמיות תלת-ממדיות",
-        "FORMAT_LEGEND_ON_DEVELOPMENT_PAGES": "מקרא לעמודי פיתוח",
-        "FORMAT_SCALE_ANNOTATIONS": "קני מידה 1:250",
-        "FORMAT_NORTH_ARROW": "חץ צפון על תוכניות",
-        "FORMAT_REFERENT_SIGNATURE_PLACEHOLDERS": "מקום לחתימת רפרנט עירוני",
-        "FORMAT_VERSION_NOTATION": "ציון גרסה ותאריך עדכון",
-        "FORMAT_DIMENSIONS_ON_PLANS": "מידות מסומנות על תוכניות",
-    }
-    return titles.get(r.get("rule_code", ""), r.get("rule_code", ""))
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Helpers
-# ─────────────────────────────────────────────────────────────────────────────
 
 def _residential_parcels(parcels: list[dict]) -> list[dict]:
     keep = []
