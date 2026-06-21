@@ -524,6 +524,38 @@ export async function putSettings(payload: SettingsPutPayload): Promise<Settings
   );
 }
 
+// ── Referent PDF extraction (Phase 2b Module D extension) ────────────────
+
+export interface ReferentExtractRow {
+  discipline_key: string;
+  status: string;
+  topic_he: string;
+  action_he: string;
+}
+
+export interface ReferentExtractResult {
+  comments: ReferentExtractRow[];
+  raw_text: string;
+  used_ai: boolean;
+  /** "scan" when the PDF is scanned/image-only and yielded no text. */
+  error?: string;
+}
+
+export async function extractReferentPdf(
+  submissionId: number,
+  pdfFile: File,
+): Promise<ReferentExtractResult> {
+  const form = new FormData();
+  form.append("pdf_file", pdfFile, pdfFile.name);
+  return jsonOrThrow<ReferentExtractResult>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/extract-referent-pdf`,
+      { method: "POST", body: form },
+    ),
+    `POST /submissions/${submissionId}/extract-referent-pdf`,
+  );
+}
+
 // ── Phase 1 demo: subprocess-isolation echo ──────────────────────────────
 
 export interface EchoResponse {

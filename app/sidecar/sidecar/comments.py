@@ -17,7 +17,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
@@ -244,5 +244,25 @@ def make_routers(engine: Engine, queue: EngineQueue, cfg) -> tuple[APIRouter, AP
             )
         job = queue.enqueue_render(submission_id)
         return JobOut(**job.to_dict())
+
+    # ── POST /submissions/{id}/extract-referent-pdf ───────────────────────
+    # Accepts a PDF upload, extracts text via PyMuPDF, then (when
+    # ANTHROPIC_API_KEY is set) calls Claude to structure the text into
+    # discipline/status/topic/action rows. Falls back to a single catch-all
+    # row when no key is configured so the feature works without AI.
+    _MAX_PDF_BYTES = 20 * 1024 * 1024  # 20 MB
+
+    @comments.post("/{submission_id}/extract-referent-pdf")
+    async def extract_referent_pdf(
+        submission_id: int,
+        pdf_file: UploadFile = File(...),
+    ) -> dict:
+        with _session() as sess:
+            _require_submission(sess, submission_id)
+        content = await pdf_file.read()
+        if len(content) > _MAX_PDF_BYTES:
+            raise HTTPException(413, "הקובץ גדול מדי — העלי קובץ עד 20MB")
+        from .referent_extract import extract_referent_comments  # noqa: PLC0415
+        return extract_referent_comments(content)
 
     return comments, disciplines

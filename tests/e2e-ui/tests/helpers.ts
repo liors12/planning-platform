@@ -320,6 +320,36 @@ export async function putSettingsViaApi(
   return await resp.json() as { anthropic_api_key_set: boolean };
 }
 
+// ── C3: referent PDF extraction via the sidecar API ──────────────────
+// Posts the same minimal PDF bytes used by other upload tests to
+// POST /submissions/{id}/extract-referent-pdf and returns the result.
+// A minimal PDF yields no text → the endpoint returns error:"scan" or
+// an empty comments array; the test accepts either (goal: no HTTP 500).
+export async function extractReferentPdfViaApi(
+  submissionId: number,
+): Promise<{ comments: unknown[]; raw_text: string; used_ai: boolean; error?: string }> {
+  const form = new FormData();
+  form.set(
+    "pdf_file",
+    new Blob([_MIN_PDF_BYTES], { type: "application/pdf" }),
+    "referent-test.pdf",
+  );
+  const resp = await fetch(
+    `http://127.0.0.1:17321/submissions/${submissionId}/extract-referent-pdf`,
+    { method: "POST", body: form },
+  );
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`extractReferentPdf failed: HTTP ${resp.status} — ${body}`);
+  }
+  return await resp.json() as {
+    comments: unknown[];
+    raw_text: string;
+    used_ai: boolean;
+    error?: string;
+  };
+}
+
 // ── P5: minimal RTL-safe PDF inspection ───────────────────────────────
 // Three cheap, RTL-safe checks per the P5 spec:
 //

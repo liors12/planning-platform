@@ -13,6 +13,7 @@ import {
   createComment,
   deleteComment,
   exportExcel,
+  extractReferentPdf,
   listComments,
   listDisciplines,
   openOutput,
@@ -23,6 +24,7 @@ import {
   type CommentOut,
   type DisciplineDef,
   type ProjectOut,
+  type ReferentExtractRow,
   type SubmissionOut,
 } from "../api";
 import { PdfViewer } from "./PdfViewer";
@@ -41,6 +43,10 @@ type ToastKind = "success" | "error";
 interface Toast {
   kind: ToastKind;
   text: string;
+}
+
+interface ExtractedPreviewRow extends ReferentExtractRow {
+  rowId: string;
 }
 
 export function CommentsTab({ project, submission }: Props) {
@@ -96,6 +102,14 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
 
   // PdfViewer reload via URL nonce — bumped after each successful render.
   const [pdfNonce, setPdfNonce] = useState(0);
+
+  // ── PDF-extraction flow ───────────────────────────────────────────────
+  const [extracting, setExtracting] = useState(false);
+  const [extractErr, setExtractErr] = useState<string | null>(null);
+  const [preview, setPreview] = useState<ExtractedPreviewRow[] | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveErr, setSaveErr] = useState<string | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
 
   // ── Load disciplines + comments ───────────────────────────────────────
   useEffect(() => {
@@ -176,6 +190,80 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     }
   }
 
+  function updatePreviewRow(rowId: string, patch: Partial<ExtractedPreviewRow>) {
+    setPreview((prev) =>
+      prev?.map((r) => (r.rowId === rowId ? { ...r, ...patch } : r)) ?? null,
+    );
+  }
+
+  function removePreviewRow(rowId: string) {
+    setPreview((prev) => prev?.filter((r) => r.rowId !== rowId) ?? null);
+  }
+
+  async function handlePdfFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = ""; // allow re-selecting same file
+    if (file.size > 20 * 1024 * 1024) {
+      setExtractErr("הקובץ גדול מדי — העלי קובץ עד 20MB.");
+      return;
+    }
+    setExtracting(true);
+    setExtractErr(null);
+    setPreview(null);
+    setSaveErr(null);
+    try {
+      const result = await extractReferentPdf(submission.id, file);
+      if (result.error === "scan") {
+        setExtractErr(
+          "לא ניתן לחלץ טקסט מה-PDF — ייתכן שהוא סרוק. המרי לפורמט טקסט ונסי שוב.",
+        );
+      } else if (result.comments.length === 0) {
+        setExtractErr("לא נמצאו הערות ב-PDF. ניתן להוסיף הערות ידנית בטופס למטה.");
+      } else {
+        setPreview(
+          result.comments.map((c) => ({ ...c, rowId: crypto.randomUUID() })),
+        );
+      }
+    } catch (err) {
+      setExtractErr("שגיאה בחילוץ ה-PDF. בדקי שהקובץ תקין ונסי שוב.");
+      console.error("extractReferentPdf failed", err);
+    }
+    setExtracting(false);
+  }
+
+  async function handleSavePreview() {
+    if (!preview || saving) return;
+    setSaving(true);
+    setSaveErr(null);
+    let failed = 0;
+    let firstId: string | undefined;
+    for (const row of preview) {
+      try {
+        const created = await createComment(submission.id, {
+          discipline_key: row.discipline_key,
+          status: row.status,
+          topic_he: row.topic_he.trim() || row.action_he.trim().slice(0, TOPIC_MAX_LEN),
+          action_he: row.action_he.trim(),
+        });
+        if (!firstId) firstId = created.id;
+      } catch {
+        failed++;
+      }
+    }
+    setSaving(false);
+    await refreshComments();
+    if (failed > 0) {
+      setSaveErr(
+        `${failed} הערות לא נשמרו. ${preview.length - failed} נשמרו בהצלחה.`,
+      );
+    } else {
+      setPreview(null);
+      setSaveErr(null);
+      if (firstId) scrollIntoView(firstId);
+    }
+  }
+
   async function onOpenRegen(kind: "pdf" | "xlsx") {
     try {
       await openOutput(submission.id, kind);
@@ -242,6 +330,26 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
             'צרי דו"ח מעודכן'
           )}
         </button>
+        <button
+          className="ghost-btn"
+          data-testid="pdf-extract-btn"
+          type="button"
+          onClick={() => pdfInputRef.current?.click()}
+          disabled={extracting}
+        >
+          {extracting ? (
+            <><span className="spinner" aria-hidden="true" /> מחלצת הערות מ-PDF...</>
+          ) : (
+            "העלי הערות PDF"
+          )}
+        </button>
+        <input
+          ref={pdfInputRef}
+          type="file"
+          accept=".pdf,application/pdf"
+          style={{ display: "none" }}
+          onChange={handlePdfFileChange}
+        />
         <span className="muted comments-meta">
           הגשה <span dir="ltr">{submission.version_string}</span> ·{" "}
           {comments?.length ?? 0} הערות
@@ -254,6 +362,91 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         onReveal={onRevealRegen}
         onDismiss={() => setRegenStatus(null)}
       />
+
+      {(extractErr || (preview !== null)) && (
+        <div className="card pdf-extract-card">
+          <div className="pdf-extract-header">
+            <h4 className="pdf-extract-title">
+              {extractErr ? "שגיאת חילוץ PDF" : "תצוגה מקדימה — הערות שחולצו"}
+            </h4>
+            <button
+              type="button"
+              className="ghost-btn small"
+              onClick={() => { setPreview(null); setExtractErr(null); setSaveErr(null); }}
+            >
+              סגרי ✕
+            </button>
+          </div>
+          {extractErr && <div className="error">{extractErr}</div>}
+          {saveErr && <div className="error">{saveErr}</div>}
+          {preview !== null && preview.length === 0 && (
+            <p className="muted">לא נמצאו הערות לשמירה.</p>
+          )}
+          {preview?.map((row) => (
+            <div key={row.rowId} className="pdf-extract-row">
+              <select
+                value={row.discipline_key}
+                onChange={(e) => updatePreviewRow(row.rowId, { discipline_key: e.target.value })}
+                aria-label="דיסציפלינה"
+              >
+                <option value="">בחרי דיסציפלינה ▾</option>
+                {disciplines.map((d) => (
+                  <option key={d.key} value={d.key}>{d.label}</option>
+                ))}
+              </select>
+              <select
+                value={row.status}
+                onChange={(e) => updatePreviewRow(row.rowId, { status: e.target.value })}
+                aria-label="סטטוס"
+              >
+                <option value="">בחרי סטטוס ▾</option>
+                {statuses.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                value={row.topic_he}
+                maxLength={TOPIC_MAX_LEN}
+                onChange={(e) => updatePreviewRow(row.rowId, { topic_he: e.target.value })}
+                placeholder={`נושא (עד ${TOPIC_MAX_LEN} תווים)`}
+              />
+              <textarea
+                value={row.action_he}
+                onChange={(e) => updatePreviewRow(row.rowId, { action_he: e.target.value })}
+                placeholder="פעולה נדרשת"
+                rows={3}
+              />
+              <button
+                type="button"
+                className="icon-btn danger"
+                aria-label="הסירי שורה"
+                onClick={() => removePreviewRow(row.rowId)}
+              >
+                🗑
+              </button>
+            </div>
+          ))}
+          {preview !== null && preview.length > 0 && (
+            <div className="pdf-extract-actions">
+              <button
+                type="button"
+                className="primary-btn"
+                data-testid="pdf-extract-save-btn"
+                onClick={handleSavePreview}
+                disabled={
+                  saving ||
+                  preview.some(
+                    (r) => !r.discipline_key || !r.status || !r.action_he.trim(),
+                  )
+                }
+              >
+                {saving ? "שומרת..." : `שמרי ${preview.length} הערות`}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {loadErr && <div className="error error-block">{loadErr}</div>}
 

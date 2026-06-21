@@ -8,3 +8,6 @@ python-multipart
 # "הפיקי אקסל" workbook export. Lazy-imported (function-body), so
 # PyInstaller also needs collect_submodules("openpyxl") in backend.spec.
 openpyxl>=3.1
+# PyMuPDF (import fitz) — PDF text extraction for referent-comments ingestion.
+# Already listed as a hidden import in backend.spec for PyInstaller.
+PyMuPDF>=1.24

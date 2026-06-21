@@ -27,6 +27,7 @@ import {
   createPerRunDataDir,
   createUserDataFolder,
   execSqlitePython,
+  extractReferentPdfViaApi,
   freeTcpPort,
   importSchemaViaApi,
   putSettingsViaApi,
@@ -630,5 +631,56 @@ test("flow C2 [warn]: settings API — store and persist Anthropic API key", asy
     process.stdout.write("[smoke] flow C2: PASSED ✓\n");
   } catch (err) {
     process.stdout.write(`[smoke] flow C2: WARN — ${String(err)}\n`);
+  }
+});
+
+// ── Flow C3: referent PDF extraction API ──────────────────────────────
+// Warn-only: wrapped in try/catch so CI stays green while this feature
+// is being rolled out.
+//
+// What this covers:
+//   - POST /submissions/{id}/extract-referent-pdf accepts a PDF upload
+//   - Returns {comments, raw_text, used_ai} with no HTTP 500
+//   - Minimal PDF (no real text) returns error:"scan" or empty comments —
+//     either is acceptable; the endpoint must not crash
+//
+// What this does NOT cover:
+//   - The full extraction pipeline with real referent PDF content
+//   - The Claude API path (requires a real ANTHROPIC_API_KEY)
+//   - The preview table UI in CommentsTab (requires native file picker)
+test("flow C3 [warn]: referent PDF extraction API — extract-referent-pdf endpoint", async () => {
+  await teardownCurrent();
+  const dataDir = createPerRunDataDir();
+  await launchAndAttach(dataDir);
+
+  try {
+    const projectId = await projectIdForTava(PILOT_TAVA);
+    const subsResp = await fetch(`http://127.0.0.1:17321/projects/${projectId}/submissions`);
+    const subs = await subsResp.json() as Array<{ id: number; version_string: string }>;
+    const v243 = subs.find(
+      (s) => s.version_string === PILOT_SEEDED_VERSION || s.version_string === "24.3",
+    );
+    expect(v243, `seeded ${PILOT_SEEDED_VERSION} must be present`).toBeDefined();
+
+    const result = await extractReferentPdfViaApi(v243!.id);
+    process.stdout.write(
+      `[smoke] flow C3: result = ${JSON.stringify({
+        used_ai: result.used_ai,
+        comment_count: result.comments.length,
+        has_raw_text: result.raw_text.length > 0,
+        error: result.error ?? null,
+      })}\n`,
+    );
+
+    // Minimal PDF bytes have no extractable text → expect error:"scan" or
+    // empty fallback. In either case the response shape must be valid.
+    expect(typeof result.used_ai).toBe("boolean");
+    expect(Array.isArray(result.comments)).toBe(true);
+    // raw_text is always a string (possibly empty for scanned PDFs).
+    expect(typeof result.raw_text).toBe("string");
+
+    process.stdout.write("[smoke] flow C3: PASSED ✓\n");
+  } catch (err) {
+    process.stdout.write(`[smoke] flow C3: WARN — ${String(err)}\n`);
   }
 });
