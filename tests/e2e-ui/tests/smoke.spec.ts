@@ -18,6 +18,7 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { ChildProcess } from "node:child_process";
 import {
+  createCommentViaApi,
   createPerRunDataDir,
   createUserDataFolder,
   freeTcpPort,
@@ -328,4 +329,66 @@ test("flow 6: delete → re-upload → buttons return to correct state", async (
   await expect(
     p.getByTestId(`delete-submission-${TEST_VERSION}`),
   ).toBeVisible();
+});
+
+// ── Comments tab: regenerate button persistent feedback ──────────────
+// Catches the "silent success" bug class on the regenerate button —
+// previously the button showed a 3-second toast that auto-dismissed
+// and offered no path to the produced files. Now (post-fix) it shows
+// a persistent banner: working → success-with-open-links, AND it
+// triggers BOTH the PDF render and the Excel export (not just PDF).
+//
+// We add a comment via API, open the comments tab, click regenerate,
+// and assert: working banner appears → success banner appears →
+// open-pdf + open-xlsx buttons are visible. Success banner appearing
+// is the proof both jobs completed (CommentsTab gates that state on
+// pdfOk && xlsxOk; partial success goes to a different banner).
+test("flow 8: comments tab regenerate fires PDF + Excel with persistent feedback", async () => {
+  await teardownCurrent();
+  const dataDir = createPerRunDataDir();
+  const p = await launchAndAttach(dataDir);
+
+  // Need the seeded v24.3 submission id (gated by has_audit_results,
+  // which the seed satisfies via bundled audit_outputs).
+  const projectId = await projectIdForTava(PILOT_TAVA);
+  const subsResp = await fetch(`http://127.0.0.1:17321/projects/${projectId}/submissions`);
+  const subs = await subsResp.json() as Array<{ id: number; version_string: string }>;
+  const v243 = subs.find((s) => s.version_string === PILOT_SEEDED_VERSION || s.version_string === "24.3");
+  expect(v243, `seeded ${PILOT_SEEDED_VERSION} must be present`).toBeDefined();
+
+  // Post a comment so the regenerate has something fresh to merge.
+  // Failure here means the comments API itself is broken — surface
+  // explicitly rather than masking as a UI assertion timeout later.
+  await createCommentViaApi(v243!.id);
+
+  // Navigate into the project + open the comments tab. The tab label
+  // "הערות רפרנטים" is plain Hebrew text; getByRole("button") matches
+  // the tab navigation.
+  await p.getByTestId(`home-project-link-${PILOT_TAVA}`).click();
+  await p.getByRole("button", { name: "הערות רפרנטים" }).click();
+
+  // The regenerate button only renders inside CommentsTabReady, which
+  // is gated on has_audit_results. Seeded v24.3 passes that gate.
+  const regenBtn = p.getByTestId("regenerate-comments-report");
+  await expect(regenBtn).toBeVisible({ timeout: 15_000 });
+  await expect(regenBtn).toBeEnabled();
+
+  // ── Click + assert WORKING → SUCCESS transition ────────────────────
+  await regenBtn.click();
+  await expect(
+    p.getByTestId("regen-banner-working"),
+  ).toBeVisible({ timeout: 5_000 });
+
+  // 90s ceiling matches the per-job poll budget in the React handler.
+  // Real wall-clock in CI is ~10–15s for both jobs combined.
+  await expect(
+    p.getByTestId("regen-banner-success"),
+  ).toBeVisible({ timeout: 90_000 });
+
+  // Success banner exposes the same actions the submissions-tab
+  // OutputBanner does. Visibility of both prove the persistent
+  // (non-toast) UX is in place AND both outputs ran (partial-success
+  // goes to a different banner with a different testid).
+  await expect(p.getByTestId("regen-open-pdf")).toBeVisible();
+  await expect(p.getByTestId("regen-open-xlsx")).toBeVisible();
 });

@@ -12,11 +12,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createComment,
   deleteComment,
+  exportExcel,
   listComments,
   listDisciplines,
+  openOutput,
   patchComment,
   pollJobUntilDone,
   renderSubmission,
+  revealOutput,
   type CommentOut,
   type DisciplineDef,
   type ProjectOut,
@@ -71,8 +74,25 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
   const [loadErr, setLoadErr] = useState<string | null>(null);
 
   const [toast, setToast] = useState<Toast | null>(null);
-  const [rendering, setRendering] = useState(false);
-  const [renderStage, setRenderStage] = useState<string>("");
+
+  // ── Regenerate-button feedback (P1 pattern, same shape as
+  //    SubmissionsTab.OutputBanner) ─────────────────────────────────────
+  // The previous version showed a 3-second auto-dismiss toast that was
+  // easy to miss + offered no path to the produced files. The persistent
+  // banner here matches the P1 success state from the submissions tab:
+  // working → success-with-open-links → error. "Success" includes both
+  // the PDF and the Excel — the regenerate flow now produces BOTH, since
+  // the user expects updated comments to show up in either output.
+  //
+  // partial means one of the two jobs failed; we still surface the one
+  // that succeeded so the user has something to open.
+  type RegenStatus =
+    | { kind: "working" }
+    | { kind: "success" }
+    | { kind: "partial"; pdfOk: boolean; xlsxOk: boolean }
+    | { kind: "error"; friendly: string }
+    | null;
+  const [regenStatus, setRegenStatus] = useState<RegenStatus>(null);
 
   // PdfViewer reload via URL nonce — bumped after each successful render.
   const [pdfNonce, setPdfNonce] = useState(0);
@@ -112,36 +132,65 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     return () => clearTimeout(t);
   }, [toast]);
 
-  // ── Render button handler ─────────────────────────────────────────────
-  async function handleRender() {
-    setRendering(true);
-    setRenderStage("מכינה דו\"ח...");
+  // ── Regenerate handler — PDF + Excel together ────────────────────────
+  // Both outputs are produced in parallel so the user gets a single
+  // "done" moment rather than two staggered ones. Each call enqueues
+  // its own job; we await both before declaring success. If only one
+  // succeeds we still surface the working file so nothing is lost.
+  async function handleRegenerate() {
+    setRegenStatus({ kind: "working" });
+    let pdfOk = false;
+    let xlsxOk = false;
     try {
-      const job = await renderSubmission(submission.id);
-      const terminal = await pollJobUntilDone(
-        job.id,
-        (j) => {
-          if (j.status === "queued") setRenderStage("בתור...");
-          else if (j.status === "running") setRenderStage("מעדכנת את הדו\"ח...");
-        },
-        1000,
-        90_000,
-      );
-      if (terminal.status === "completed") {
-        setPdfNonce((n) => n + 1);
-        setToast({ kind: "success", text: "הדו\"ח עודכן בהצלחה" });
+      const [pdfJob, xlsxJob] = await Promise.all([
+        renderSubmission(submission.id),
+        exportExcel(submission.id),
+      ]);
+      // 90s for PDF (WeasyPrint can be slow on large reports), 60s for
+      // Excel (always fast — pure openpyxl). No per-poll progress
+      // callback — the working banner is sufficient feedback.
+      const noProgress = () => { /* no-op */ };
+      const [pdfTerm, xlsxTerm] = await Promise.allSettled([
+        pollJobUntilDone(pdfJob.id, noProgress, 1000, 90_000),
+        pollJobUntilDone(xlsxJob.id, noProgress, 1000, 60_000),
+      ]);
+      pdfOk = pdfTerm.status === "fulfilled" && pdfTerm.value.status === "completed";
+      xlsxOk = xlsxTerm.status === "fulfilled" && xlsxTerm.value.status === "completed";
+      if (pdfOk) setPdfNonce((n) => n + 1);   // reload the embedded viewer
+      if (pdfOk && xlsxOk) {
+        setRegenStatus({ kind: "success" });
+      } else if (pdfOk || xlsxOk) {
+        setRegenStatus({ kind: "partial", pdfOk, xlsxOk });
       } else {
-        setToast({
+        setRegenStatus({
           kind: "error",
-          text: 'שגיאה בעדכון הדו"ח — נסי שוב',
+          friendly: "אירעה תקלה ביצירת הדו״ח. הפרטים נשמרו לקובץ יומן.",
         });
       }
     } catch (e) {
-      console.error("render failed", e);
-      setToast({ kind: "error", text: 'שגיאה בעדכון הדו"ח — נסי שוב' });
-    } finally {
-      setRendering(false);
-      setRenderStage("");
+      console.error("regenerate failed", e);
+      setRegenStatus({
+        kind: "error",
+        friendly: "אירעה תקלה ביצירת הדו״ח. הפרטים נשמרו לקובץ יומן.",
+      });
+    }
+  }
+
+  async function onOpenRegen(kind: "pdf" | "xlsx") {
+    try {
+      await openOutput(submission.id, kind);
+    } catch (e) {
+      setToast({ kind: "error", text: 'לא ניתן לפתוח את הקובץ — נסי "פתחי תיקייה".' });
+      console.error("openOutput failed", e);
+    }
+  }
+
+  async function onRevealRegen(kind: "pdf" | "xlsx") {
+    try {
+      await revealOutput(submission.id, kind);
+    } catch (e) {
+      setToast({ kind: "error", text: 'לא ניתן לפתוח את התיקייה.' });
+      console.error("revealOutput failed", e);
     }
   }
 
@@ -180,13 +229,14 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
       <div className="comments-toolbar">
         <button
           className="primary-btn render-btn"
-          onClick={handleRender}
-          disabled={rendering}
+          data-testid="regenerate-comments-report"
+          onClick={handleRegenerate}
+          disabled={regenStatus?.kind === "working"}
         >
-          {rendering ? (
+          {regenStatus?.kind === "working" ? (
             <>
               <span className="spinner" aria-hidden="true" />
-              {renderStage || "מעדכנת..."}
+              יוצרת דו״ח מעודכן + אקסל, נא להמתין...
             </>
           ) : (
             'צרי דו"ח מעודכן'
@@ -197,6 +247,13 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           {comments?.length ?? 0} הערות
         </span>
       </div>
+
+      <RegenBanner
+        status={regenStatus}
+        onOpen={onOpenRegen}
+        onReveal={onRevealRegen}
+        onDismiss={() => setRegenStatus(null)}
+      />
 
       {loadErr && <div className="error error-block">{loadErr}</div>}
 
@@ -231,6 +288,98 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           {toast.text}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Persistent regenerate-status banner (P1 pattern from SubmissionsTab) ──
+// Stays visible until the user dismisses it (no auto-fade like the old
+// 3-second toast). The success state exposes the same actions the
+// submissions-tab banner does — open PDF, open Excel, open folder.
+type RegenBannerStatus =
+  | { kind: "working" }
+  | { kind: "success" }
+  | { kind: "partial"; pdfOk: boolean; xlsxOk: boolean }
+  | { kind: "error"; friendly: string }
+  | null;
+
+function RegenBanner({
+  status, onOpen, onReveal, onDismiss,
+}: {
+  status: RegenBannerStatus;
+  onOpen: (k: "pdf" | "xlsx") => void;
+  onReveal: (k: "pdf" | "xlsx") => void;
+  onDismiss: () => void;
+}) {
+  if (!status) return null;
+
+  if (status.kind === "working") {
+    return (
+      <div className="output-banner output-working" role="status" aria-live="polite"
+           data-testid="regen-banner-working">
+        <span className="spinner" aria-hidden="true" />
+        <span>יוצרת דו״ח מעודכן + אקסל, נא להמתין...</span>
+      </div>
+    );
+  }
+
+  if (status.kind === "success") {
+    return (
+      <div className="output-banner output-success" role="status" aria-live="polite"
+           data-testid="regen-banner-success">
+        <span className="output-icon" aria-hidden="true">✓</span>
+        <span className="output-msg">
+          הדו״ח המעודכן והאקסל מוכנים ✓ • שמורים בתיקיית התוצאות של הפרויקט
+        </span>
+        <button className="ghost-btn small" type="button"
+                data-testid="regen-open-pdf"
+                onClick={() => onOpen("pdf")}>פתחי דו״ח</button>
+        <button className="ghost-btn small" type="button"
+                data-testid="regen-open-xlsx"
+                onClick={() => onOpen("xlsx")}>פתחי אקסל</button>
+        <button className="ghost-btn small" type="button"
+                onClick={() => onReveal("pdf")}>פתחי תיקייה</button>
+        <button className="output-dismiss" type="button" aria-label="סגרי"
+                onClick={onDismiss}>✕</button>
+      </div>
+    );
+  }
+
+  if (status.kind === "partial") {
+    // One succeeded, one failed. Show what worked + a calm note about
+    // the other. The "failed" half is recoverable by clicking the
+    // regenerate button again — common cause is a transient lock on
+    // the output file.
+    return (
+      <div className="output-banner output-success" role="status" aria-live="polite"
+           data-testid="regen-banner-partial">
+        <span className="output-icon" aria-hidden="true">⚠</span>
+        <span className="output-msg">
+          {status.pdfOk && !status.xlsxOk && "הדו״ח עודכן ✓ • האקסל לא נוצר — לחצי שוב על הכפתור."}
+          {!status.pdfOk && status.xlsxOk && "האקסל עודכן ✓ • הדו״ח לא נוצר — לחצי שוב על הכפתור."}
+        </span>
+        {status.pdfOk && (
+          <button className="ghost-btn small" type="button"
+                  onClick={() => onOpen("pdf")}>פתחי דו״ח</button>
+        )}
+        {status.xlsxOk && (
+          <button className="ghost-btn small" type="button"
+                  onClick={() => onOpen("xlsx")}>פתחי אקסל</button>
+        )}
+        <button className="output-dismiss" type="button" aria-label="סגרי"
+                onClick={onDismiss}>✕</button>
+      </div>
+    );
+  }
+
+  // error
+  return (
+    <div className="output-banner output-error" role="alert"
+         data-testid="regen-banner-error">
+      <span className="output-icon" aria-hidden="true">✗</span>
+      <span className="output-msg">{status.friendly}</span>
+      <button className="output-dismiss" type="button" aria-label="סגרי"
+              onClick={onDismiss}>✕</button>
     </div>
   );
 }

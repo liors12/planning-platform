@@ -247,6 +247,39 @@ export async function projectIdForTava(tava: string): Promise<number> {
   return match.id;
 }
 
+// Post a discipline comment via the sidecar API. Mirrors the UI's
+// add-comment form. Pre-baked sensible defaults so the test can call
+// it with just the submissionId for the happy path.
+export async function createCommentViaApi(
+  submissionId: number,
+  body?: Partial<{
+    discipline_key: string;
+    status: string;
+    topic_he: string;
+    action_he: string;
+  }>,
+): Promise<{ id: string }> {
+  const payload = {
+    discipline_key: body?.discipline_key ?? "sec-3-1",
+    status: body?.status ?? "תקין",
+    topic_he: body?.topic_he ?? "בדיקת הרמוניה",
+    action_he: body?.action_he ?? "הערה אוטומטית מבדיקת UI smoke",
+  };
+  const resp = await fetch(
+    `http://127.0.0.1:17321/submissions/${submissionId}/comments`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+  if (!resp.ok) {
+    const text = await resp.text();
+    throw new Error(`createComment failed: HTTP ${resp.status} — ${text}`);
+  }
+  return await resp.json() as { id: string };
+}
+
 // ── P5: minimal RTL-safe PDF inspection ───────────────────────────────
 // Three cheap, RTL-safe checks per the P5 spec:
 //
