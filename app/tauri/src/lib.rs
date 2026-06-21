@@ -108,13 +108,23 @@ fn spawn_bundled_binary(app: &AppHandle) -> std::io::Result<SpawnResult> {
     }
 
     let command = format!("{} (release bundle)", sidecar_exe.display());
-    let child = Command::new(&sidecar_exe)
-        // The PyInstaller --onedir binary's working dir doesn't matter — all
-        // paths in the sidecar are resolved from $HOME/.platform (data_dir)
-        // or computed relative to __file__ at bundle build time.
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .spawn()?;
+    let mut cmd = Command::new(&sidecar_exe);
+    // On Windows the sidecar is a console-subsystem binary. Without
+    // CREATE_NO_WINDOW, the OS opens a visible cmd.exe shell behind the app
+    // window — confusing for Ellen. The flag suppresses it while leaving the
+    // process fully functional. stdout/stderr go to null: the Tauri GUI parent
+    // has no console to receive them, and the sidecar logs to
+    // data_dir/logs/errors.log for diagnostics.
+    #[cfg(target_os = "windows")]
+    {
+        use std::os::windows::process::CommandExt;
+        cmd.creation_flags(0x0800_0000) // CREATE_NO_WINDOW
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+    }
+    #[cfg(not(target_os = "windows"))]
+    cmd.stdout(Stdio::inherit()).stderr(Stdio::inherit());
+    let child = cmd.spawn()?;
     Ok(SpawnResult {
         child,
         mode: "release (PyInstaller bundle)",
