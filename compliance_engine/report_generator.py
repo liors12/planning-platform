@@ -83,18 +83,27 @@ FONT_DIR = _resolve_font_dir()
 EYEBROW = "המינהלת להתחדשות עירונית — עיריית נס ציונה"
 DOC_TYPE_LABEL = "טיוטה לסקירה — לא לחתימה"
 
-VERDICT_TO_VCLASS_AND_LABEL: dict[str, tuple[str, str]] = {
-    "pass":            ("v-ok",   "תקין"),
-    "pass_with_note":  ("v-ok",   "תקין בהערה"),
-    "fail":            ("v-fail", "לא תקין"),
-    "fail_borderline": ("v-fail", "נדרש תיקון"),
-    "not_submitted":   ("v-miss", "לא הוגש"),
-    "requires_review": ("v-rev",  "נדרשת השלמה"),
-    "unevaluable":     ("v-na",   "לא ניתן לבדיקה"),
-    "not_applicable":  ("v-na",   "לא רלוונטי"),
+from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER, STATUS_MAP  # noqa: E402
+
+# CSS class per verdict (HTML-only; Excel uses STATUS_MAP directly).
+_VERDICT_CSS: dict[str, str] = {
+    "pass":            "v-ok",
+    "pass_with_note":  "v-ok",
+    "fail":            "v-fail",
+    "fail_borderline": "v-fail",
+    "not_submitted":   "v-miss",
+    "requires_review": "v-rev",
+    "unevaluable":     "v-na",
+    "not_applicable":  "v-na",
 }
 
-from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER  # noqa: E402
+# Labels come from the single source of truth in constants.STATUS_MAP so Excel
+# and HTML report always agree.  "unevaluable" has no STATUS_MAP entry (not
+# produced by the engine) so it falls back to the literal below.
+VERDICT_TO_VCLASS_AND_LABEL: dict[str, tuple[str, str]] = {
+    v: (_VERDICT_CSS[v], STATUS_MAP.get(v, "לא ניתן לבדיקה"))
+    for v in _VERDICT_CSS
+}
 
 HEBREW_MONTHS = {
     1: "ינואר", 2: "פברואר", 3: "מרץ", 4: "אפריל", 5: "מאי", 6: "יוני",

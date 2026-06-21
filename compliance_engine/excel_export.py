@@ -49,7 +49,7 @@ FONT_FAMILY = "Arial"
 # ─────────────────────────────────────────────────────────────────────────────
 # Domain mappings
 # ─────────────────────────────────────────────────────────────────────────────
-from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER
+from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER, STATUS_MAP
 
 DISCIPLINE_HE = DISCIPLINE_NAME_HE
 _DISC_SORT_IDX = {DISCIPLINE_NAME_HE.get(k, k): i for i, k in enumerate(DISCIPLINE_ORDER)}
@@ -67,28 +67,13 @@ _SIDECAR_DISC_HE: dict[str, str] = {
     "sec-3-9": "שירותים לדיירים",
 }
 
-STATUS_HE = {
-    "fail": "נכשל",
-    "pass": "עובר",
-    "requires_review": "דורש בדיקה",
-    "not_applicable": "לא רלוונטי",
-    "not_submitted": "לא הוגש",
-    "missing": "חסר",
-    "non_compliant": "אי-התאמה",
-    "table_format_concern": "בעיית מבנה טבלה",
-    "m2_provenance_concern": "בעיית מקור",
-}
-
 STATUS_PRIORITY = {
-    "נכשל": 0,
-    "דורש בדיקה": 1,
-    "חסר": 2,
-    "לא הוגש": 2,
-    "אי-התאמה": 2,
-    "בעיית מבנה טבלה": 2,
-    "בעיית מקור": 2,
-    "עובר": 3,
-    "לא רלוונטי": 4,
+    "לא תקין":      0,
+    "נדרשת השלמה":  1,
+    "לא הוגש":      2,
+    "הערת פגישה":   2,
+    "תקין":         3,
+    "לא רלוונטי":  4,
 }
 
 SECTION_PRIORITY = {
@@ -161,7 +146,7 @@ def _row_from_discipline(f: dict) -> dict:
         "discipline": DISCIPLINE_HE.get(disc_key, disc_key),
         "plot": "",
         "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
-        "status": STATUS_HE.get(verdict, verdict),
+        "status": STATUS_MAP.get(verdict, verdict),
         "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
     }
 
@@ -174,7 +159,7 @@ def _row_from_content(f: dict) -> dict:
         "discipline": 'בדיקת תאימות לתב"ע',
         "plot": _format_plot(f.get("ta_shetach_id")),
         "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
-        "status": STATUS_HE.get(verdict, verdict),
+        "status": STATUS_MAP.get(verdict, verdict),
         "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
     }
 
@@ -188,7 +173,7 @@ def _row_from_sidecar(f: dict) -> dict:
         "discipline": 'בדיקת תאימות לתב"ע',
         "plot": _format_plot(f.get("ta_shetach_takanon")),
         "name": _patch_name(f"סעיף {clause_id}" if clause_id else ""),
-        "status": STATUS_HE.get(indicator, indicator),
+        "status": STATUS_MAP.get(indicator, indicator),
         "description": f.get("reasoning") or "",
     }
 

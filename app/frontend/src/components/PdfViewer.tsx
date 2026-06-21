@@ -70,25 +70,10 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
     [onLoad],
   );
 
-  const onDocumentLoadError = useCallback((err: Error) => {
-    const msg = err.message || String(err);
-    // Map the two failure modes that surface as scary English strings
-    // ("failed to fetch" / "404 Not Found") to a calm Hebrew message.
-    // Both mean the same thing in practice: the PDF file referenced by
-    // the submission's pdf_path is not on disk — typically because the
-    // seed shipped the metadata.json without the source PDF, or because
-    // an earlier upload's file was moved/deleted. The rest of the
-    // surrounding tab still works (comments, report generation read
-    // from audit_outputs, not pdf_path), so the user shouldn't be
-    // alarmed by this — direct them at the recovery action.
-    if (/failed to fetch|404|not found|missing/i.test(msg)) {
-      setLoadError(
-        "התכנית לא זמינה לתצוגה. ההערות והפקת הדו״ח עדיין פועלות כרגיל; " +
-        "לתצוגה מלאה — מחקי את הגרסה והעלי מחדש."
-      );
-    } else {
-      setLoadError(msg);
-    }
+  const onDocumentLoadError = useCallback((_err: Error) => {
+    setLoadError(
+      "התכנית אינה זמינה לתצוגה — ההערות והפקת הדו״ח פועלות כרגיל."
+    );
   }, []);
 
   function onPageLoadSuccess(p: { originalWidth: number; originalHeight: number }) {
@@ -190,10 +175,7 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
 
       <div ref={containerRef} className="pdf-canvas-area">
         {loadError && (
-          <div className="error error-block">
-            <strong>שגיאת טעינת תכנית העיצוב:</strong> {loadError}
-            <p className="muted">ודאי ששירותי הרקע פעילים ושההגשה לא נמחקה מהדיסק.</p>
-          </div>
+          <div className="muted pdf-load-notice">{loadError}</div>
         )}
         <Document
           file={documentFile}
