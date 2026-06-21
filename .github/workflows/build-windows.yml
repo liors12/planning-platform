@@ -169,7 +169,18 @@ jobs:
         # https://github.com/tauri-apps/tauri/releases and finishes in <30s.
         # --no-confirm is required in CI (no interactive prompt available);
         # --locked tracks the same SemVer constraint we had before.
-        run: cargo binstall --no-confirm --locked tauri-cli@^2
+        #
+        # Cache note: ~/.cargo/bin is now cached (see cargo cache step). When
+        # the cache is warm, cargo-tauri.exe already exists and binstall would
+        # error "binary already exists — add --force to overwrite". Skip the
+        # install entirely if the binary is already on PATH from the cache.
+        shell: bash
+        run: |
+          if cargo tauri --version > /dev/null 2>&1; then
+            echo "cargo-tauri already installed from cache: $(cargo tauri --version)"
+          else
+            cargo binstall --no-confirm --locked tauri-cli@^2
+          fi
 
       - name: Build Tauri app (NSIS installer)
         # Unsigned for the pilot. NSIS installer config:
