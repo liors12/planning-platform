@@ -1,0 +1,123 @@
+name: UI Smoke (WebView2)
+# Lightweight re-run of just the Playwright UI gate — no full build.
+# Typical runtime: ~7 min vs ~40 min for build-windows.yml.
+#
+# Two triggers:
+#   1. workflow_run  — auto-fires after every successful Build Windows Installer.
+#      This keeps the full CI signal alive without being in the critical build path.
+#   2. workflow_dispatch — manual trigger for iterating on test changes.
+#      Supply the build-windows run ID to test against a specific installer.
+#      Leave run_id blank when triggering from workflow_run (resolved automatically).
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'build-windows run ID to download installer from (required for manual dispatch)'
+        required: true
+  workflow_run:
+    workflows: ["Build Windows Installer"]
+    types: [completed]
+
+permissions:
+  contents: read
+  actions: read    # needed to download artifacts from a cross-workflow run
+
+jobs:
+  ui-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    # workflow_run: only proceed if the triggering build succeeded.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve source run ID
+        id: run_ref
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "run_id=${{ inputs.run_id }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ness-ziona-installer-windows
+          run-id: ${{ steps.run_ref.outputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: installer
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Python deps (pypdf for P5 PDF health check)
+        shell: bash
+        run: python -m pip install --quiet pypdf
+
+      - name: Install Playwright deps
+        shell: bash
+        run: |
+          cd tests/e2e-ui
+          npm ci --no-audit --no-fund
+
+      - name: Install app (NSIS silent)
+        shell: pwsh
+        run: |
+          $installer = Get-ChildItem installer\*.exe | Select-Object -First 1
+          if (-not $installer) { throw "no installer .exe in ./installer/" }
+          Write-Host "Installer: $($installer.FullName)"
+          Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          if (-not (Test-Path $installDir)) {
+            throw "install dir missing after NSIS /S: $installDir"
+          }
+          Write-Host "── install dir contents ──"
+          Get-ChildItem -Recurse -File $installDir |
+            Select-Object FullName, Length | Format-Table -AutoSize | Out-Host
+
+      - name: Run UI smoke (real WebView2)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Push-Location tests\e2e-ui
+          npx playwright test --reporter=list
+          $exit = $LASTEXITCODE
+          Pop-Location
+          if ($exit -ne 0) {
+            Write-Host "::error::UI smoke FAILED — see Playwright report artifact."
+            exit $exit
+          }
+          Write-Host "UI smoke PASSED ✓"
+
+      - name: Uninstall app
+        if: always()
+        shell: pwsh
+        run: |
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          $uninstaller = Join-Path $installDir "uninstall.exe"
+          if (Test-Path $uninstaller) {
+            Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
+            Start-Sleep -Seconds 3
+          }
+
+      - name: Upload Playwright artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-smoke-report
+          path: |
+            tests/e2e-ui/playwright-report/**
+            tests/e2e-ui/test-results/**
+          if-no-files-found: ignore
+          retention-days: 14

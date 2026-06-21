@@ -4,7 +4,13 @@ on:
   workflow_dispatch:           # manual trigger
   push:
     tags:
-      - 'v*'                   # also triggers on version tags
+      - 'v*'                   # version-tag releases
+    branches:
+      - main
+    paths:                     # skip build on doc/test-only changes
+      - 'app/**'
+      - '.github/workflows/build-windows.yml'
+      - '.github/workflows/ui-smoke.yml'
 
 permissions:
   contents: write          # softprops/action-gh-release needs write to create tags + releases
@@ -141,7 +147,10 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
             app/tauri/target
+          # ~/.cargo/bin covers cargo-binstall itself + the tauri-cli prebuilt
+          # binary, saving the ~30s re-download on cache hits.
           key: ${{ runner.os }}-cargo-${{ hashFiles('app/tauri/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
