@@ -56,15 +56,16 @@ _DISC_SORT_IDX = {DISCIPLINE_NAME_HE.get(k, k): i for i, k in enumerate(DISCIPLI
 
 # Sidecar discipline keys → Hebrew labels (mirrors app/sidecar/sidecar/disciplines.py).
 _SIDECAR_DISC_HE: dict[str, str] = {
-    "sec-3-1": 'שפ"ע — אשפה ופינוי פסולת',
-    "sec-3-2": "גנים ונוף",
-    "sec-3-3": "תשתיות",
-    "sec-3-4": "תנועה — רחבות כיבוי אש",
-    "sec-3-5": "ניקוז וחלחול",
-    "sec-3-6": "גגות וגינון על גג",
-    "sec-3-7": "אדריכלות וחזיתות",
-    "sec-3-8": "הנחיות סביבתיות",
-    "sec-3-9": "שירותים לדיירים",
+    "sec-3-1":  'שפ"ע — אשפה ופינוי פסולת',
+    "sec-3-2":  "גנים ונוף",
+    "sec-3-3":  "תשתיות",
+    "sec-3-4":  "תנועה — רחבות כיבוי אש",
+    "sec-3-5":  "ניקוז וחלחול",
+    "sec-3-6":  "גגות וגינון על גג",
+    "sec-3-7":  "אדריכלות וחזיתות",
+    "sec-3-8":  "הנחיות סביבתיות",
+    "sec-3-9":  "שירותים לדיירים",
+    "city-arch": DISCIPLINE_NAME_HE["city-arch"],
 }
 
 STATUS_PRIORITY = {
@@ -77,9 +78,10 @@ STATUS_PRIORITY = {
 }
 
 SECTION_PRIORITY = {
-    "הערות מפגישות": 0,
-    "בדיקה רב-תחומית": 1,
-    'בדיקת תאימות לתב"ע': 2,
+    "הערות מפגישות":          0,
+    "הערות אדריכלית העיר":    1,
+    "בדיקה רב-תחומית":        2,
+    'בדיקת תאימות לתב"ע':    3,
 }
 
 ARCHITECT_STATUS_OPTIONS = ["טופל", "לא טופל", "בטיפול", "לא רלוונטי"]
@@ -180,10 +182,15 @@ def _row_from_sidecar(f: dict) -> dict:
 
 def _row_from_comment(c: dict) -> dict:
     disc_key = c.get("discipline_key") or ""
+    disc_label = _SIDECAR_DISC_HE.get(disc_key, disc_key)
+    if disc_key == "city-arch":
+        section = "הערות אדריכלית העיר"
+    else:
+        section = "הערות מפגישות"
     return {
         "is_new": True,
-        "report_section": "הערות מפגישות",
-        "discipline": _SIDECAR_DISC_HE.get(disc_key, disc_key),
+        "report_section": section,
+        "discipline": disc_label,
         "plot": "",
         "name": c.get("topic_he") or "",
         "status": "הערת פגישה",

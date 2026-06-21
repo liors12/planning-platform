@@ -18,6 +18,7 @@ DISCIPLINES: list[dict] = [
     {"key": "sec-3-7", "label": "אדריכלות וחזיתות"},
     {"key": "sec-3-8", "label": "הנחיות סביבתיות"},
     {"key": "sec-3-9", "label": "שירותים לדיירים"},
+    {"key": "city-arch", "label": "הערות אדריכלית העיר"},
 ]
 
 DISCIPLINE_KEYS: frozenset[str] = frozenset(d["key"] for d in DISCIPLINES)
