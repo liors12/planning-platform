@@ -5,25 +5,27 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Browser, Page } from "@playwright/test";
 
-// ── Paths that must match the installer + sidecar config ──────────────
-// IMPORTANT: Tauri NSIS with installMode=currentUser AND the sidecar's
-// default data dir BOTH resolve to %LOCALAPPDATA%\Planning Platform\.
-// So install and data co-exist in the same folder, e.g.:
+// ── Install vs data dir ───────────────────────────────────────────────
+// The INSTALL dir is where NSIS unpacks the binaries:
 //   %LOCALAPPDATA%\Planning Platform\
-//     Planning Platform.exe       <-- install (Tauri shell)
-//     sidecar\sidecar.exe         <-- install
-//     weasyprint\weasyprint.exe   <-- install
-//     uninstall.exe               <-- install
-//     platform.db                 <-- DATA
-//     projects\                   <-- DATA (uploaded PDFs, metadata)
-//     audit_outputs\              <-- DATA (rendered reports)
-//     logs\                       <-- DATA
-//     jobs\                       <-- DATA
-// Wiping the whole folder would brick the install. So the "wipe" step
-// targets only the known DATA names and leaves binaries alone.
+//     Planning Platform.exe       <-- shell
+//     sidecar\sidecar.exe         <-- bundled FastAPI
+//     weasyprint\weasyprint.exe
+//     uninstall.exe
+//
+// The DATA dir is where the sidecar writes platform.db, projects/,
+// audit_outputs/, logs/, jobs/. By default it ALSO resolves to
+// %LOCALAPPDATA%\Planning Platform\ — i.e. install and data co-exist.
+// That collision is what made every "wipe data" risk the install.
+//
+// P3 fix: the sidecar's PLATFORM_DATA_DIR env var (already supported
+// at app/sidecar/sidecar/config.py:68) overrides the data dir. The
+// UI suite now creates a per-run tempdir and passes it via that env
+// var on launch, so:
+//   - data lives at a fresh tmpdir for each test run
+//   - teardown is rmSync(perRunDataDir) — no install-dir surgery
+//   - the install dir is never touched, even by mistake
 const PRODUCT_DIR = "Planning Platform";
-const DATA_FILES = ["platform.db", "platform.db-shm", "platform.db-wal"];
-const DATA_SUBDIRS = ["projects", "audit_outputs", "logs", "jobs"];
 
 function localAppData(): string {
   const p = process.env.LOCALAPPDATA;
@@ -77,43 +79,27 @@ export function logInstallDirContents(): void {
   }
 }
 
-export function dataDir(): string {
-  return join(localAppData(), PRODUCT_DIR);
+// ── P3: per-run data dir (PLATFORM_DATA_DIR override) ─────────────────
+// Each test run gets a fresh tempdir; the sidecar's PLATFORM_DATA_DIR
+// env var (config.py:68) redirects the entire data tree there. After
+// this:
+//   - "wipe" is just "make a new tmpdir" — fresh by construction
+//   - teardown is rmSync on that tmpdir — never touches the install
+//   - two tests on the same machine can't poison each other
+// Caller responsibility: pass the returned path to launchApp(),
+// wipe it in teardown via wipePerRunDataDir().
+export function createPerRunDataDir(): string {
+  return mkdtempSync(join(tmpdir(), "pp-ui-smoke-data-"));
 }
 
-// ── Wipe data, preserve install ───────────────────────────────────────
-// "Fresh data state" per the spec, without nuking the binaries that
-// would force a reinstall every run. After this returns, the app comes
-// up exactly as a freshly-installed first-launch would: seed populates
-// the pilot project, no prior submissions, no DB.
-export function wipeData(): void {
-  const d = dataDir();
-  if (!existsSync(d)) return;
-  for (const f of DATA_FILES) {
-    const p = join(d, f);
-    if (existsSync(p)) rmSync(p, { force: true });
-  }
-  for (const s of DATA_SUBDIRS) {
-    const p = join(d, s);
-    if (existsSync(p)) rmSync(p, { recursive: true, force: true });
-  }
-}
-
-// Sanity check: after wipeData(), confirm none of the data names remain.
-// Throws with a diagnostic listing if any survived.
-export function assertDataWiped(): void {
-  const d = dataDir();
-  if (!existsSync(d)) return; // pre-install state — also OK
-  const survivors: string[] = [];
-  for (const name of [...DATA_FILES, ...DATA_SUBDIRS]) {
-    if (existsSync(join(d, name))) survivors.push(name);
-  }
-  if (survivors.length > 0) {
-    const all = readdirSync(d).join(", ");
-    throw new Error(
-      `wipeData() did not remove: ${survivors.join(", ")}. ` +
-      `Full dir listing: ${all}`
-    );
+export function wipePerRunDataDir(folder: string | null): void {
+  if (!folder) return;
+  try {
+    rmSync(folder, { recursive: true, force: true });
+  } catch {
+    // Best-effort. SQLite WAL files sometimes linger past sidecar exit;
+    // the OS reclaims the tempdir eventually. Don't fail the test over
+    // teardown noise.
   }
 }
 
@@ -166,15 +152,31 @@ export function wipeUserDataFolder(folder: string | null): void {
   }
 }
 
-// ── Launch the installed .exe with WebView2 CDP port open ─────────────
-// WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS is read by the WebView2 loader
-// itself; no Tauri config change needed. Production runs without the
-// var set, so the debug port never opens in shipped builds.
+// ── Launch the installed .exe with full per-run isolation ─────────────
+// Three env vars layered on the spawn:
 //
-// userDataFolder gets passed via WEBVIEW2_USER_DATA_FOLDER (also a
-// WebView2 loader env var) to isolate this run's storage from any
-// other WebView2 instance on the box. See createUserDataFolder above.
-export function launchApp(cdpPort: number, userDataFolder: string): ChildProcess {
+//   WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS — opens the CDP debug port
+//     (WebView2 loader honors this; production unsets it so the port
+//     stays closed in shipped installers).
+//
+//   WEBVIEW2_USER_DATA_FOLDER — private WebView2 cookies / cache /
+//     IndexedDB so concurrent or back-to-back runs don't collide.
+//
+//   PLATFORM_DATA_DIR — sidecar config.py:68 honors this to redirect
+//     ALL platform data (platform.db, projects/, audit_outputs/, logs/,
+//     jobs/) away from %LOCALAPPDATA%\Planning Platform\ (which is
+//     where the binaries also live). Tauri's Command::new inherits env
+//     by default, so the env we set on the shell propagates to the
+//     spawned sidecar.exe automatically — verified against
+//     app/tauri/src/lib.rs:111.
+//
+// All three vars are unset in production: the shipped app uses default
+// paths and the debug port stays closed.
+export function launchApp(
+  cdpPort: number,
+  userDataFolder: string,
+  platformDataDir: string,
+): ChildProcess {
   const exe = installedExePath();
   if (!existsSync(exe)) {
     throw new Error(`Packaged app not found at ${exe}. Was the installer run with /S?`);
@@ -184,6 +186,7 @@ export function launchApp(cdpPort: number, userDataFolder: string): ChildProcess
       ...process.env,
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${cdpPort}`,
       WEBVIEW2_USER_DATA_FOLDER: userDataFolder,
+      PLATFORM_DATA_DIR: platformDataDir,
     },
     detached: false,
     stdio: ["ignore", "pipe", "pipe"],

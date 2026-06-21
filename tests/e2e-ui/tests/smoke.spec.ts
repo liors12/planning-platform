@@ -16,9 +16,8 @@ import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { ChildProcess } from "node:child_process";
 import {
-  assertDataWiped,
+  createPerRunDataDir,
   createUserDataFolder,
-  dataDir,
   freeTcpPort,
   installedExePath,
   killApp,
@@ -27,7 +26,7 @@ import {
   pickTauriPage,
   waitForCdp,
   waitForSidecar,
-  wipeData,
+  wipePerRunDataDir,
   wipeUserDataFolder,
 } from "./helpers";
 
@@ -39,10 +38,11 @@ const PILOT_SEEDED_VERSION = "v24.3";
 let appProcess: ChildProcess | null = null;
 let browser: Browser | null = null;
 let page: Page | null = null;
-// P2: per-run isolation — both filled in inside the test, cleaned up
+// Per-run isolation state — all filled in inside the test, cleaned up
 // in afterAll regardless of pass/fail.
 let cdpPort: number | null = null;
 let userDataFolder: string | null = null;
+let platformDataDir: string | null = null;
 
 test.beforeAll(async () => {
   // Sanity: skip the whole suite on non-Windows so a developer running
@@ -58,40 +58,45 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
-  // P2: teardown order matters — close CDP first (so Playwright doesn't
-  // log noisy disconnect errors), then force-kill the app + sidecar
-  // tree + any orphan msedge.exe holding the user data folder open,
-  // THEN delete the user data folder. Each step is best-effort and
+  // Teardown order matters: close CDP first (so Playwright doesn't log
+  // noisy disconnect errors), then force-kill the app + sidecar tree +
+  // any orphan msedge.exe holding the WebView2 user data folder open,
+  // THEN delete both per-run tmpdirs. Each step is best-effort and
   // never throws, so a single failed teardown doesn't mask the real
   // test result.
+  //
+  // P3 note: wipePerRunDataDir targets a tmpdir we created — the
+  // install folder at %LOCALAPPDATA%\Planning Platform\ is never
+  // touched here, even on failure.
   try { if (browser) await browser.close(); } catch { /* ignore */ }
   killApp(appProcess);
   wipeUserDataFolder(userDataFolder);
+  wipePerRunDataDir(platformDataDir);
   appProcess = null;
   userDataFolder = null;
+  platformDataDir = null;
   cdpPort = null;
 });
 
 test("flow 1–4: wipe → launch → seeded state → generate report", async () => {
-  // ── 1. WIPE (data only — install stays put) ─────────────────────────
-  // The spec said "wipe the whole folder", but Tauri NSIS currentUser
-  // mode installs the app into the SAME folder as the sidecar's data dir
-  // (%LOCALAPPDATA%\Planning Platform\). Wiping everything would brick
-  // the install. wipeData() removes only the known data names — DB
-  // files, projects/, audit_outputs/, logs/, jobs/ — leaving binaries.
-  wipeData();
-  assertDataWiped();
-
-  // ── 2. LAUNCH (with P2 isolation: dynamic port + private WebView2 dir) ──
-  // Dynamic CDP port: avoids the "9223 still held by previous orphan"
-  // race. Per-run WEBVIEW2_USER_DATA_FOLDER: prevents the cookies/GPU-
-  // cache lock contention that breaks the second run on a machine.
+  // ── 1. FRESH STATE (per-run tmpdir, install never touched) ──────────
+  // P3: instead of "wipe data in place" (which risked the install
+  // folder, since NSIS currentUser puts binaries in the same dir as
+  // default data), we create a fresh tmpdir and pass it as
+  // PLATFORM_DATA_DIR. The sidecar honors that env var (config.py:68)
+  // and writes its entire data tree there. Fresh by construction —
+  // no wipe needed, no install-dir surgery, no risk of corrupting
+  // a real install on a developer's machine.
   cdpPort = await freeTcpPort();
   userDataFolder = createUserDataFolder();
+  platformDataDir = createPerRunDataDir();
   process.stdout.write(
-    `[smoke] launch with cdpPort=${cdpPort} userDataFolder=${userDataFolder}\n`
+    `[smoke] launch with cdpPort=${cdpPort} userDataFolder=${userDataFolder} ` +
+    `platformDataDir=${platformDataDir}\n`
   );
-  appProcess = launchApp(cdpPort, userDataFolder);
+
+  // ── 2. LAUNCH ───────────────────────────────────────────────────────
+  appProcess = launchApp(cdpPort, userDataFolder, platformDataDir);
   await waitForSidecar(30_000);
   const wsUrl = await waitForCdp(cdpPort, 30_000);
   browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`);
@@ -155,10 +160,11 @@ test("flow 1–4: wipe → launch → seeded state → generate report", async (
     page.getByTestId("output-banner-success-pdf")
   ).toBeVisible({ timeout: 60_000 });
 
-  // PDF must land in <data_dir>/audit_outputs/<tava>/v<ver>/audit_report_<ver>.pdf
+  // PDF must land in <platformDataDir>/audit_outputs/<tava>/v<ver>/audit_report_<ver>.pdf
+  // (PLATFORM_DATA_DIR redirected the data tree to our tmpdir.)
   const verBare = PILOT_SEEDED_VERSION.replace(/^v/, "");
   const pdfPath = join(
-    dataDir(), "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION,
+    platformDataDir!, "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION,
     `audit_report_${verBare}.pdf`
   );
   expect(existsSync(pdfPath)).toBe(true);
@@ -175,7 +181,7 @@ test("flow 1–4: wipe → launch → seeded state → generate report", async (
   // Excel filename embeds Hebrew + version — verify by listing the dir
   // rather than constructing the bidi string in JS (where escape
   // semantics get fiddly).
-  const outDir = join(dataDir(), "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION);
+  const outDir = join(platformDataDir!, "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION);
   const entries = readdirSync(outDir);
   expect(
     entries.some((e) => e.endsWith(`_v${verBare}.xlsx`)),
