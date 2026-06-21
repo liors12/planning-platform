@@ -46,18 +46,11 @@ FONT_FAMILY = "Arial"
 # ─────────────────────────────────────────────────────────────────────────────
 # Domain mappings
 # ─────────────────────────────────────────────────────────────────────────────
-DISCIPLINE_HE = {
-    "arch": "אדריכלות",
-    "env": "סביבה ונוף",
-    "fire": "כיבוי אש",
-    "infra": "תשתיות",
-    "drainage": "ניקוז",
-    "shafa": 'שפ"א',
-    "balcony": "מרפסות",
-    "laundry": "מתקני כביסה",
-    "roofs": "גגות",
-    "gardens": "גינות",
-}
+from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER
+
+# Alias so the rest of this file reads naturally.
+DISCIPLINE_HE = DISCIPLINE_NAME_HE
+_DISC_SORT_IDX = {DISCIPLINE_NAME_HE.get(k, k): i for i, k in enumerate(DISCIPLINE_ORDER)}
 
 STATUS_HE = {
     "fail": "נכשל",
@@ -216,7 +209,10 @@ def export_findings_to_excel(
         + [_row_from_content(f) for f in content]
         + [_row_from_sidecar(f) for f in sidecar]
     )
-    rows.sort(key=lambda r: STATUS_PRIORITY.get(r["status"], 2))
+    rows.sort(key=lambda r: (
+        _DISC_SORT_IDX.get(r["discipline"], len(DISCIPLINE_ORDER)),
+        STATUS_PRIORITY.get(r["status"], 2),
+    ))
 
     if len(rows) != expected_total:
         raise RuntimeError(

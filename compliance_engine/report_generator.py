@@ -94,19 +94,7 @@ VERDICT_TO_VCLASS_AND_LABEL: dict[str, tuple[str, str]] = {
     "not_applicable":  ("v-na",   "לא רלוונטי"),
 }
 
-DISCIPLINE_NAME_HE: dict[str, str] = {
-    "shafa":    'שפ"ע — אשפה ופינוי פסולת',
-    "gardens":  "גנים ונוף",
-    "infra":    "תשתיות",
-    "fire":     "רחבות כיבוי אש",
-    "drainage": "ניקוז וחלחול",
-    "roofs":    "גגות וגינון על גג",
-    "arch":     "אדריכלות וחזיתות",
-    "balcony":  "מרפסות",
-    "laundry":  "מסתורי כביסה",
-    "env":      "הנחיות סביבתיות",
-}
-DISCIPLINE_ORDER = list(DISCIPLINE_NAME_HE.keys())
+from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER  # noqa: E402
 
 HEBREW_MONTHS = {
     1: "ינואר", 2: "פברואר", 3: "מרץ", 4: "אפריל", 5: "מאי", 6: "יוני",
