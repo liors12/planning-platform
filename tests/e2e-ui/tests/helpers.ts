@@ -197,6 +197,56 @@ export function launchApp(
   return child;
 }
 
+// ── P4: API upload helper ─────────────────────────────────────────────
+// The submission upload UI is a native file picker that Playwright can't
+// drive through WebView2. The sidecar exposes the same endpoint at the
+// HTTP layer, and from the perspective of the bug class we're catching
+// ("buttons in wrong state after re-upload"), it doesn't matter HOW the
+// row arrived in the DB — only that the UI reconciles correctly.
+//
+// Uses the same minimal-valid PDF magic bytes as the backend e2e smoke
+// (.github/workflows/build-windows.yml:413) so the upload endpoint
+// accepts the payload — it doesn't parse PDF structure, just stores
+// the bytes.
+const _MIN_PDF_BYTES = new Uint8Array([
+  0x25, 0x50, 0x44, 0x46, 0x2D, 0x31, 0x2E, 0x34, 0x0A, // %PDF-1.4\n
+  0x25, 0x25, 0x45, 0x4F, 0x46, 0x0A,                  // %%EOF\n
+]);
+
+export async function uploadSubmissionViaApi(
+  projectId: number,
+  versionString: string,
+): Promise<{ id: number; status: string }> {
+  const form = new FormData();
+  form.set("version_string", versionString);
+  form.set(
+    "pdf",
+    new Blob([_MIN_PDF_BYTES], { type: "application/pdf" }),
+    `${versionString}.pdf`,
+  );
+  const resp = await fetch(
+    `http://127.0.0.1:17321/projects/${projectId}/submissions`,
+    { method: "POST", body: form },
+  );
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`upload ${versionString} failed: HTTP ${resp.status} — ${body}`);
+  }
+  return await resp.json() as { id: number; status: string };
+}
+
+// Convenience: look up the seeded pilot's project id by tava_number.
+// The /projects endpoint is stable; we only need this once per test to
+// translate "the pilot" into an id the upload endpoint expects.
+export async function projectIdForTava(tava: string): Promise<number> {
+  const resp = await fetch("http://127.0.0.1:17321/projects");
+  if (!resp.ok) throw new Error(`/projects returned HTTP ${resp.status}`);
+  const projects = await resp.json() as Array<{ id: number; tava_number: string }>;
+  const match = projects.find((p) => p.tava_number === tava);
+  if (!match) throw new Error(`no project with tava=${tava} in ${JSON.stringify(projects)}`);
+  return match.id;
+}
+
 // ── P2: select the Tauri main window page deterministically ───────────
 // Don't assume pages()[0] — a Tauri WebView2 host can expose:
 //   - the Tauri main window (tauri://localhost or http://tauri.localhost)

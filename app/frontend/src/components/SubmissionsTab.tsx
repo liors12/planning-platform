@@ -366,6 +366,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   <button
                     type="button"
                     className="icon-btn danger"
+                    data-testid={`delete-submission-${sub.version_string}`}
                     onClick={() => onDeleteSubmission(sub)}
                     disabled={!!activeJobId || sub.status === "analyzing"}
                     title="מחקי גרסה זו"

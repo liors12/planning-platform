@@ -1,13 +1,15 @@
-// Flows 1–4 of the UI smoke gate: wipe → install/launch → verify seeded
-// state → generate report. Drives the REAL packaged Windows app via
-// WebView2's CDP endpoint. See README.md for the why.
+// UI smoke gate: drives the REAL packaged Windows app via WebView2's CDP
+// endpoint. See README.md for the why.
 //
 // What this catches that backend-CI cannot:
-//   - Buttons missing from the rendered UI (today's "report buttons
-//     vanished after re-upload" class)
-//   - target="_blank" failing in WebView2 (today's "open report" dead link)
+//   - Buttons missing from the rendered UI ("report buttons vanished
+//     after re-upload" class)
+//   - target="_blank" failing in WebView2 (the "open report" dead link)
 //   - Rendered Hebrew labels mis-bound to wrong handlers
 //   - Sidecar bootstrap producing the wrong initial state on first launch
+//   - State NOT persisting across an app restart (flow 5)
+//   - Delete + re-upload leaving the UI in a stale state (flow 6 — this
+//     is the literal sequence that broke on the user's machine)
 //
 // What it does NOT catch — see README.md.
 
@@ -24,6 +26,8 @@ import {
   launchApp,
   logInstallDirContents,
   pickTauriPage,
+  projectIdForTava,
+  uploadSubmissionViaApi,
   waitForCdp,
   waitForSidecar,
   wipePerRunDataDir,
@@ -58,6 +62,9 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+  // Sweep whatever state the last test left behind.
+  // Tests run serially in the order they appear, each managing its own
+  // resources; this is the final cleanup for the LAST test's state.
   // Teardown order matters: close CDP first (so Playwright doesn't log
   // noisy disconnect errors), then force-kill the app + sidecar tree +
   // any orphan msedge.exe holding the WebView2 user data folder open,
@@ -68,123 +75,230 @@ test.afterAll(async () => {
   // P3 note: wipePerRunDataDir targets a tmpdir we created — the
   // install folder at %LOCALAPPDATA%\Planning Platform\ is never
   // touched here, even on failure.
+  await teardownCurrent();
+});
+
+// ── Shared launch sequence ────────────────────────────────────────────
+// Each test that needs a fresh app does: teardownCurrent() (if anything
+// from a prior test is still up) → launchAndAttach(...). The relaunch
+// flow (flow 5) skips the teardown's tmpdir wipes so data persists,
+// then calls launchAndAttach with the SAME platformDataDir.
+async function teardownCurrent(): Promise<void> {
   try { if (browser) await browser.close(); } catch { /* ignore */ }
   killApp(appProcess);
   wipeUserDataFolder(userDataFolder);
   wipePerRunDataDir(platformDataDir);
   appProcess = null;
+  browser = null;
+  page = null;
   userDataFolder = null;
   platformDataDir = null;
   cdpPort = null;
-});
+}
 
-test("flow 1–4: wipe → launch → seeded state → generate report", async () => {
-  // ── 1. FRESH STATE (per-run tmpdir, install never touched) ──────────
-  // P3: instead of "wipe data in place" (which risked the install
-  // folder, since NSIS currentUser puts binaries in the same dir as
-  // default data), we create a fresh tmpdir and pass it as
-  // PLATFORM_DATA_DIR. The sidecar honors that env var (config.py:68)
-  // and writes its entire data tree there. Fresh by construction —
-  // no wipe needed, no install-dir surgery, no risk of corrupting
-  // a real install on a developer's machine.
+// Bring the app + Playwright session up against the given data dir,
+// allocating fresh CDP port + WebView2 user data folder. Returns once
+// app-ready is visible — callers don't need their own polling.
+async function launchAndAttach(dataDir: string): Promise<Page> {
   cdpPort = await freeTcpPort();
   userDataFolder = createUserDataFolder();
-  platformDataDir = createPerRunDataDir();
+  platformDataDir = dataDir;
   process.stdout.write(
     `[smoke] launch with cdpPort=${cdpPort} userDataFolder=${userDataFolder} ` +
     `platformDataDir=${platformDataDir}\n`
   );
-
-  // ── 2. LAUNCH ───────────────────────────────────────────────────────
   appProcess = launchApp(cdpPort, userDataFolder, platformDataDir);
   await waitForSidecar(30_000);
-  const wsUrl = await waitForCdp(cdpPort, 30_000);
+  await waitForCdp(cdpPort, 30_000);
   browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`);
-  // P2: pick the Tauri main window page deterministically rather than
-  // taking pages()[0]. On a slow boot the first target is often
-  // about:blank, and clicks against it silently no-op.
   page = await pickTauriPage(browser, 15_000);
-  // Avoid unused-var lint
-  expect(wsUrl).toMatch(/^ws:/);
+  await expect(page.getByTestId("app-ready")).toBeVisible({ timeout: 30_000 });
+  return page;
+}
 
-  // ── P1: deterministic app-ready handshake ──────────────────────────
-  // This is the FIRST UI assertion and runs before any click. The
-  // app-ready marker fires only when /health 200 + /projects loaded
-  // + at least one project rendered — proving the seeded data is on
-  // screen, not just that some fetch returned 200. Today's race-prone
-  // failure mode ("project loaded but submission didn't") happened
-  // because clicks fired before the UI had reconciled with the
-  // backend; this gate eliminates that class of flake.
-  await expect(
-    page.getByTestId("app-ready")
-  ).toBeVisible({ timeout: 30_000 });
+test("flow 1–4: wipe → launch → seeded state → generate report", async () => {
+  // P3: fresh tmpdir as PLATFORM_DATA_DIR — install never touched.
+  const dataDir = createPerRunDataDir();
+  const p = await launchAndAttach(dataDir);
 
   // After app-ready, the home-project-link is by construction present
   // (app-ready gates on recent.length > 0). This is a redundancy check
   // — if it ever fails, app-ready's invariant has drifted.
-  await expect(
-    page.getByTestId(`home-project-link-${PILOT_TAVA}`)
-  ).toBeVisible();
+  await expect(p.getByTestId(`home-project-link-${PILOT_TAVA}`)).toBeVisible();
 
   // ── Navigate into the project ──────────────────────────────────────
-  await page.getByTestId(`home-project-link-${PILOT_TAVA}`).click();
-
-  // Switch to the submissions tab — that's where flows 3-4 happen.
+  await p.getByTestId(`home-project-link-${PILOT_TAVA}`).click();
   // The tab label "הגשות" is plain text; if the testid story needs to
   // grow here later we'll add tab testids in a follow-up.
-  await page.getByRole("button", { name: "הגשות" }).click();
+  await p.getByRole("button", { name: "הגשות" }).click();
 
   // ── 3. VERIFY SEEDED STATE ──────────────────────────────────────────
   // The seed populates submission v24.3 with audit_results on disk, so
   // has_audit_results=true → both report buttons should be present and
   // ENABLED. This is the exact assertion that would have caught today's
   // "buttons vanished after re-upload" bug.
-  const card = page.getByTestId(`submission-card-${PILOT_SEEDED_VERSION}`);
+  const card = p.getByTestId(`submission-card-${PILOT_SEEDED_VERSION}`);
   await expect(card).toBeVisible({ timeout: 15_000 });
 
-  const pdfBtn = page.getByTestId(`generate-report-pdf-${PILOT_SEEDED_VERSION}`);
-  const xlsxBtn = page.getByTestId(`generate-report-xlsx-${PILOT_SEEDED_VERSION}`);
+  const pdfBtn = p.getByTestId(`generate-report-pdf-${PILOT_SEEDED_VERSION}`);
+  const xlsxBtn = p.getByTestId(`generate-report-xlsx-${PILOT_SEEDED_VERSION}`);
   await expect(pdfBtn).toBeVisible();
   await expect(pdfBtn).toBeEnabled();
   await expect(xlsxBtn).toBeVisible();
   await expect(xlsxBtn).toBeEnabled();
 
   // ── 4. GENERATE REPORT — PDF ────────────────────────────────────────
-  // Click and watch for working → success transitions. Then assert the
-  // PDF actually exists on disk where the sidecar said it would.
   await pdfBtn.click();
-  await expect(
-    page.getByTestId("output-banner-working-pdf")
-  ).toBeVisible({ timeout: 5_000 });
-  await expect(
-    page.getByTestId("output-banner-success-pdf")
-  ).toBeVisible({ timeout: 60_000 });
+  await expect(p.getByTestId("output-banner-working-pdf")).toBeVisible({ timeout: 5_000 });
+  await expect(p.getByTestId("output-banner-success-pdf")).toBeVisible({ timeout: 60_000 });
 
-  // PDF must land in <platformDataDir>/audit_outputs/<tava>/v<ver>/audit_report_<ver>.pdf
-  // (PLATFORM_DATA_DIR redirected the data tree to our tmpdir.)
   const verBare = PILOT_SEEDED_VERSION.replace(/^v/, "");
   const pdfPath = join(
-    platformDataDir!, "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION,
-    `audit_report_${verBare}.pdf`
+    dataDir, "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION,
+    `audit_report_${verBare}.pdf`,
   );
   expect(existsSync(pdfPath)).toBe(true);
 
   // ── 4. GENERATE REPORT — EXCEL ──────────────────────────────────────
   await xlsxBtn.click();
-  await expect(
-    page.getByTestId("output-banner-working-xlsx")
-  ).toBeVisible({ timeout: 5_000 });
-  await expect(
-    page.getByTestId("output-banner-success-xlsx")
-  ).toBeVisible({ timeout: 60_000 });
+  await expect(p.getByTestId("output-banner-working-xlsx")).toBeVisible({ timeout: 5_000 });
+  await expect(p.getByTestId("output-banner-success-xlsx")).toBeVisible({ timeout: 60_000 });
 
-  // Excel filename embeds Hebrew + version — verify by listing the dir
-  // rather than constructing the bidi string in JS (where escape
-  // semantics get fiddly).
-  const outDir = join(platformDataDir!, "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION);
+  const outDir = join(dataDir, "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION);
   const entries = readdirSync(outDir);
   expect(
     entries.some((e) => e.endsWith(`_v${verBare}.xlsx`)),
-    `Expected an .xlsx file ending with _v${verBare}.xlsx in ${outDir}. Found: ${entries.join(", ")}`
+    `Expected an .xlsx file ending with _v${verBare}.xlsx in ${outDir}. Found: ${entries.join(", ")}`,
   ).toBe(true);
+});
+
+// ── P4 flow 5: restart-with-data ──────────────────────────────────────
+// Catches the SQLite/state-persistence bug class: app close + relaunch
+// leaves the prior submissions list + report buttons intact. Today's
+// "buttons missing until restart" bug was the inverse of this — the
+// state DID persist, but the UI didn't render it correctly on first
+// launch. This test catches both directions: state lost OR not rendered.
+//
+// Chains off flow 1–4: reuses the same platformDataDir (so the v24.3
+// row + audit_outputs + the report PDF generated in flow 4 are all
+// still on disk), but does a full process restart with a fresh CDP
+// port and a fresh WebView2 user data folder — same shape as Ellen
+// closing the app and reopening it the next morning.
+test("flow 5: restart-with-data — state survives app relaunch", async () => {
+  // Snapshot the previous test's platformDataDir BEFORE teardown
+  // clears the module var.
+  const persistedDataDir = platformDataDir;
+  expect(persistedDataDir, "flow 5 must run after flow 1–4").not.toBeNull();
+
+  // ── Close current app cleanly, preserve the data dir on disk ────────
+  // wipePerRunDataDir is skipped — we want the v24.3 row, the seeded
+  // audit_outputs, and flow 4's generated PDF + Excel to survive into
+  // the next launch.
+  try { if (browser) await browser.close(); } catch { /* ignore */ }
+  killApp(appProcess);
+  wipeUserDataFolder(userDataFolder);  // WebView2 cookies CAN be wiped
+  appProcess = null;
+  browser = null;
+  page = null;
+  userDataFolder = null;
+  cdpPort = null;
+  // platformDataDir stays — it's reused below.
+
+  // ── Relaunch against the same data ──────────────────────────────────
+  const p = await launchAndAttach(persistedDataDir!);
+
+  // App-ready already fired inside launchAndAttach. The seeded pilot
+  // is by construction present. Now drill into the project to assert
+  // flow 4's state survived.
+  await p.getByTestId(`home-project-link-${PILOT_TAVA}`).click();
+  await p.getByRole("button", { name: "הגשות" }).click();
+
+  // The v24.3 row was inserted by the seed at first launch + has
+  // audit_outputs on disk. Both must still be true after restart.
+  const card = p.getByTestId(`submission-card-${PILOT_SEEDED_VERSION}`);
+  await expect(card).toBeVisible({ timeout: 15_000 });
+
+  const pdfBtn = p.getByTestId(`generate-report-pdf-${PILOT_SEEDED_VERSION}`);
+  const xlsxBtn = p.getByTestId(`generate-report-xlsx-${PILOT_SEEDED_VERSION}`);
+  await expect(pdfBtn).toBeVisible();
+  await expect(pdfBtn).toBeEnabled();
+  await expect(xlsxBtn).toBeVisible();
+  await expect(xlsxBtn).toBeEnabled();
+
+  // The PDF generated in flow 4 must still be on disk. (Filesystem
+  // persistence sanity check — would catch a regression where teardown
+  // accidentally wiped the data dir between tests.)
+  const verBare = PILOT_SEEDED_VERSION.replace(/^v/, "");
+  const pdfPath = join(
+    persistedDataDir!, "audit_outputs", PILOT_TAVA, PILOT_SEEDED_VERSION,
+    `audit_report_${verBare}.pdf`,
+  );
+  expect(existsSync(pdfPath)).toBe(true);
+});
+
+// ── P4 flow 6: delete → re-upload → buttons return ────────────────────
+// The literal sequence that broke on Ellen's machine. Uses a throwaway
+// version (v99.0) so the seeded pilot's data is never disturbed, even
+// when this test fails partway.
+//
+// Upload + delete go through the sidecar HTTP API rather than the UI
+// (the upload UI is a native file picker that Playwright can't drive
+// through WebView2). From the bug-class perspective this is fine: the
+// bug was about how the UI reconciled with DB state, not about how
+// data got into the DB.
+test("flow 6: delete → re-upload → buttons return to correct state", async () => {
+  // Independent — start with a fresh data dir so flow 5's state can't
+  // contaminate this one.
+  await teardownCurrent();
+  const dataDir = createPerRunDataDir();
+  const p = await launchAndAttach(dataDir);
+
+  await p.getByTestId(`home-project-link-${PILOT_TAVA}`).click();
+  await p.getByRole("button", { name: "הגשות" }).click();
+
+  // ── Upload v99.0 via API ────────────────────────────────────────────
+  const projectId = await projectIdForTava(PILOT_TAVA);
+  const TEST_VERSION = "v99.0";
+  await uploadSubmissionViaApi(projectId, TEST_VERSION);
+
+  // The submissions list auto-polls every few seconds. Wait for the
+  // new card to appear without forcing a hard reload (the bug was
+  // about the UI's polling/reconciliation, so we test that path).
+  const newCard = p.getByTestId(`submission-card-${TEST_VERSION}`);
+  await expect(newCard).toBeVisible({ timeout: 15_000 });
+
+  // ── Click trash, accept the Hebrew confirm dialog ───────────────────
+  // window.confirm in WebView2 fires Playwright's 'dialog' event.
+  // Pre-register the handler so the click can resolve.
+  p.once("dialog", (d) => { void d.accept(); });
+  await p.getByTestId(`delete-submission-${TEST_VERSION}`).click();
+
+  // Card disappears once the DELETE + refresh round-trip lands.
+  await expect(newCard).toBeHidden({ timeout: 15_000 });
+
+  // ── Re-upload the same version_string ───────────────────────────────
+  // The literal sequence that broke today: same version coming back
+  // after a delete. After re-upload, the card must reappear with the
+  // correct state — NOT the report buttons (no audit data on disk for
+  // this fresh upload), but the card itself must render and the trash
+  // button must remain functional.
+  await uploadSubmissionViaApi(projectId, TEST_VERSION);
+  await expect(newCard).toBeVisible({ timeout: 15_000 });
+
+  // No report buttons for a fresh upload — has_audit_results is false
+  // because no engine has run against this throwaway PDF. Assert their
+  // absence to prove the UI is correctly reflecting that state (rather
+  // than stale-rendering buttons from the deleted predecessor row).
+  await expect(
+    p.getByTestId(`generate-report-pdf-${TEST_VERSION}`),
+  ).toHaveCount(0);
+  await expect(
+    p.getByTestId(`generate-report-xlsx-${TEST_VERSION}`),
+  ).toHaveCount(0);
+
+  // Trash button on the re-uploaded row must still be present and
+  // functional (catches the "buttons vanished after re-upload" inverse).
+  await expect(
+    p.getByTestId(`delete-submission-${TEST_VERSION}`),
+  ).toBeVisible();
 });
