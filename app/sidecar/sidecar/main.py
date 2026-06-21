@@ -251,11 +251,24 @@ def _discover_submissions(cfg: Config, engine: Engine) -> dict:
                                 metadata_path, exc)
                     continue
                 # Idempotency check: skip if a row already exists for this
-                # (project, version). Covers both prior seed runs AND a
-                # row the user uploaded interactively with the same version.
+                # (project, version). Match BOTH prefix forms — Ellen's
+                # pre-existing upload from before the seed-creates-
+                # submissions feature stored the raw user input "24.3",
+                # while ver_dir.name is always canonical "v24.3" (storage
+                # layer ensures that on disk). Comparing only on the
+                # canonical form let the seed insert a duplicate row
+                # alongside her original — the bug that surfaced as
+                # "two v24.3 submissions" on her install.
+                #
+                # storage._canonical_version_segment is the source-of-
+                # truth normalization; the IN-list below covers every
+                # form an old row could legally carry (with or without
+                # the leading "v"). Per-project unique constraint at
+                # the DB layer prevents collisions across projects.
+                bare = version_string[1:] if version_string.startswith("v") else version_string
                 existing = (sess.query(Submission)
                                 .filter(Submission.project_id == project.id,
-                                        Submission.version_string == version_string)
+                                        Submission.version_string.in_([version_string, bare]))
                                 .first())
                 if existing is not None:
                     skipped += 1
