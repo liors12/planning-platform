@@ -257,19 +257,27 @@ test("flow 6: delete → re-upload → buttons return to correct state", async (
   await p.getByRole("button", { name: "הגשות" }).click();
 
   // ── Upload v99.0 via API ────────────────────────────────────────────
+  // The UI doesn't auto-poll for new submissions — it refreshes only
+  // on user actions (upload via picker, delete) or on tab/page
+  // mount. Since our upload bypasses the UI entirely (Playwright
+  // can't drive WebView2's native file picker), we trigger the
+  // SubmissionsTab's mount-time refetch by clicking away to a
+  // different tab and back. This is real production behavior — Ellen
+  // sees fresh data whenever she navigates back to הגשות.
   const projectId = await projectIdForTava(PILOT_TAVA);
   const TEST_VERSION = "v99.0";
   await uploadSubmissionViaApi(projectId, TEST_VERSION);
+  await p.getByRole("button", { name: "סקירה" }).click();      // away
+  await p.getByRole("button", { name: "הגשות" }).click();      // back → refetch
 
-  // The submissions list auto-polls every few seconds. Wait for the
-  // new card to appear without forcing a hard reload (the bug was
-  // about the UI's polling/reconciliation, so we test that path).
   const newCard = p.getByTestId(`submission-card-${TEST_VERSION}`);
   await expect(newCard).toBeVisible({ timeout: 15_000 });
 
   // ── Click trash, accept the Hebrew confirm dialog ───────────────────
   // window.confirm in WebView2 fires Playwright's 'dialog' event.
-  // Pre-register the handler so the click can resolve.
+  // Pre-register the handler so the click can resolve. The delete
+  // path in the UI handler triggers its own refetch, so no tab
+  // bounce needed here.
   p.once("dialog", (d) => { void d.accept(); });
   await p.getByTestId(`delete-submission-${TEST_VERSION}`).click();
 
@@ -278,11 +286,11 @@ test("flow 6: delete → re-upload → buttons return to correct state", async (
 
   // ── Re-upload the same version_string ───────────────────────────────
   // The literal sequence that broke today: same version coming back
-  // after a delete. After re-upload, the card must reappear with the
-  // correct state — NOT the report buttons (no audit data on disk for
-  // this fresh upload), but the card itself must render and the trash
-  // button must remain functional.
+  // after a delete. Bounce tabs again to trigger the refetch (same
+  // reason as the first upload — API bypasses the UI's refresh path).
   await uploadSubmissionViaApi(projectId, TEST_VERSION);
+  await p.getByRole("button", { name: "סקירה" }).click();
+  await p.getByRole("button", { name: "הגשות" }).click();
   await expect(newCard).toBeVisible({ timeout: 15_000 });
 
   // No report buttons for a fresh upload — has_audit_results is false
