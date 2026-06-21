@@ -83,13 +83,24 @@ test("flow 1–4: wipe → launch → seeded state → generate report", async (
   // Avoid unused-var lint
   expect(wsUrl).toMatch(/^ws:/);
 
-  // Wait for the home list to populate. The seed runs inside the sidecar
-  // startup hook; by the time /health answers, the seed should be done,
-  // but the React app still needs to fetch /projects and render. We
-  // assert on the testid we added rather than text to dodge RTL issues.
+  // ── P1: deterministic app-ready handshake ──────────────────────────
+  // This is the FIRST UI assertion and runs before any click. The
+  // app-ready marker fires only when /health 200 + /projects loaded
+  // + at least one project rendered — proving the seeded data is on
+  // screen, not just that some fetch returned 200. Today's race-prone
+  // failure mode ("project loaded but submission didn't") happened
+  // because clicks fired before the UI had reconciled with the
+  // backend; this gate eliminates that class of flake.
+  await expect(
+    page.getByTestId("app-ready")
+  ).toBeVisible({ timeout: 30_000 });
+
+  // After app-ready, the home-project-link is by construction present
+  // (app-ready gates on recent.length > 0). This is a redundancy check
+  // — if it ever fails, app-ready's invariant has drifted.
   await expect(
     page.getByTestId(`home-project-link-${PILOT_TAVA}`)
-  ).toBeVisible({ timeout: 15_000 });
+  ).toBeVisible();
 
   // ── Navigate into the project ──────────────────────────────────────
   await page.getByTestId(`home-project-link-${PILOT_TAVA}`).click();
