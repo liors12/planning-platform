@@ -204,6 +204,25 @@ class Job(Base):
 # render path merges them in as additional discipline rows at PDF generation
 # time, tagged "(הערת רפרנט)". Re-running the engine never clobbers them.
 
+# ─────────────────────────────────────────────────────────────────────────────
+# Settings — key-value store for user-configurable runtime settings
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Single-row design: each setting is a row keyed by a well-known string.
+# The DB is plaintext sqlite3 (no SQLCipher on Windows). The API never
+# echoes back secret values — GET /settings returns only boolean flags.
+
+class Settings(Base):
+    __tablename__ = "settings"
+
+    key: Mapped[str] = mapped_column(String(64), primary_key=True)
+    value: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DisciplineComment — Phase 2b Module D (partial)
+# ─────────────────────────────────────────────────────────────────────────────
+#
 class DisciplineComment(Base):
     __tablename__ = "discipline_comments"
 

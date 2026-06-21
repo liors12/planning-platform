@@ -29,6 +29,7 @@ import {
   execSqlitePython,
   freeTcpPort,
   importSchemaViaApi,
+  putSettingsViaApi,
   installedExePath,
   killApp,
   launchApp,
@@ -564,5 +565,70 @@ test("flow C1 [warn]: schema import API — create project via JSON file", async
   } catch (err) {
     // Warn-only: log but don't re-throw so CI stays green.
     process.stdout.write(`[smoke] flow C1: WARN — ${String(err)}\n`);
+  }
+});
+
+// ── Flow C2: Settings API — PUT/GET /settings ─────────────────────────
+// Warn-only: wrapped in try/catch so CI stays green while this feature
+// is being rolled out.
+//
+// What this covers:
+//   - PUT /settings stores the key, returns anthropic_api_key_set: true
+//   - GET /settings returns anthropic_api_key_set: true (key is set)
+//   - GET /settings never echoes the key value in the response body
+//   - Restart persistence: GET after sidecar restart still returns true
+//
+// What this does NOT cover (UI path deferred — native form):
+//   - The Settings.tsx page UI — requires navigating to #/settings, which
+//     is exercised manually; the API surface is the load-bearing part.
+test("flow C2 [warn]: settings API — store and persist Anthropic API key", async () => {
+  await teardownCurrent();
+  const dataDir = createPerRunDataDir();
+  await launchAndAttach(dataDir);
+
+  // Fake key with the correct prefix — format-only validation, no live ping.
+  const FAKE_KEY = "sk-ant-api03-smoke-c2-00000000000000000000000000000000000000000000000000";
+
+  try {
+    // ── Step 1: PUT key → assert key_set: true ──────────────────────
+    const putResult = await putSettingsViaApi(FAKE_KEY);
+    process.stdout.write(
+      `[smoke] flow C2: PUT result = ${JSON.stringify(putResult)}\n`,
+    );
+    expect(putResult.anthropic_api_key_set, "PUT should return key_set: true").toBe(true);
+
+    // ── Step 2: GET /settings → key_set: true, key not echoed ───────
+    const getResp = await fetch("http://127.0.0.1:17321/settings");
+    expect(getResp.ok, "GET /settings failed").toBe(true);
+    const settings = await getResp.json() as Record<string, unknown>;
+    expect(settings.anthropic_api_key_set, "GET should return key_set: true").toBe(true);
+    const body = JSON.stringify(settings);
+    expect(
+      body.includes(FAKE_KEY),
+      "API key must not be echoed in GET /settings response",
+    ).toBe(false);
+
+    // ── Step 3: restart → GET /settings still returns key_set: true ─
+    // Kill + relaunch with the same data dir so the DB persists.
+    try { if (browser) await browser.close(); } catch { /* ignore */ }
+    killApp(appProcess);
+    wipeUserDataFolder(userDataFolder);
+    appProcess = null; browser = null; page = null;
+    userDataFolder = null; cdpPort = null;
+    // platformDataDir intentionally NOT cleared — reuse same DB.
+
+    await launchAndAttach(dataDir);
+
+    const getAfterRestart = await fetch("http://127.0.0.1:17321/settings");
+    expect(getAfterRestart.ok, "GET /settings after restart failed").toBe(true);
+    const settingsAfter = await getAfterRestart.json() as Record<string, unknown>;
+    expect(
+      settingsAfter.anthropic_api_key_set,
+      "key must persist across sidecar restart (loaded from DB at boot)",
+    ).toBe(true);
+
+    process.stdout.write("[smoke] flow C2: PASSED ✓\n");
+  } catch (err) {
+    process.stdout.write(`[smoke] flow C2: WARN — ${String(err)}\n`);
   }
 });

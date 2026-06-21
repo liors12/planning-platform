@@ -496,6 +496,34 @@ export async function revealOutput(submissionId: number, kind: "pdf" | "xlsx"): 
 }
 
 
+// ── Settings (Group C2) ───────────────────────────────────────────────────
+
+export interface SettingsOut {
+  anthropic_api_key_set: boolean;
+}
+
+export interface SettingsPutPayload {
+  anthropic_api_key: string;
+}
+
+export async function getSettings(): Promise<SettingsOut> {
+  return jsonOrThrow<SettingsOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/settings`),
+    "GET /settings",
+  );
+}
+
+export async function putSettings(payload: SettingsPutPayload): Promise<SettingsOut> {
+  return jsonOrThrow<SettingsOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/settings`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+    "PUT /settings",
+  );
+}
+
 // ── Phase 1 demo: subprocess-isolation echo ──────────────────────────────
 
 export interface EchoResponse {

@@ -35,6 +35,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
 from .comments import make_routers as make_comment_routers
+from .settings_routes import load_settings, make_router as make_settings_router
 from .config import VERSION, Config, load
 from .db import build_engine, initialize
 from .jobs.dispatch import JobError, run_job
@@ -314,6 +315,7 @@ def _discover_submissions(cfg: Config, engine: Engine) -> dict:
 async def lifespan(app: FastAPI):
     global DB_STATUS
     DB_STATUS = initialize(ENGINE)
+    load_settings(ENGINE)
     seed_report = _seed_data_dir(CFG)
     discovery_report = _discover_projects(CFG, ENGINE)
     submission_report = _discover_submissions(CFG, ENGINE)
@@ -346,7 +348,7 @@ app.add_middleware(
     # PATCH for project edits; multipart upload is POST so that's covered.
     # HEAD for pdf.js Range preflight on /submissions/{id}/pdf.
     # DELETE for Phase 2b Module D — discipline comment removal.
-    allow_methods=["GET", "HEAD", "POST", "PATCH", "DELETE"],
+    allow_methods=["GET", "HEAD", "POST", "PATCH", "PUT", "DELETE"],
     # Range is not a CORS-safelisted request header, so it triggers preflight
     # — allow it. Without this, react-pdf cannot send Range:bytes=... and
     # falls back to downloading the entire PDF before showing page 1.
@@ -612,6 +614,9 @@ app.include_router(make_jobs_router(QUEUE))
 _comments_router, _disciplines_router = make_comment_routers(ENGINE, QUEUE, CFG)
 app.include_router(_comments_router)
 app.include_router(_disciplines_router)
+
+# Group C2 — settings (API keys config).
+app.include_router(make_settings_router(lambda: ENGINE))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

@@ -99,15 +99,25 @@ export function Sidebar({ currentRoute, refreshKey, onOpenDiagnostics }: Props) 
           />
           הציגי פרויקטים בארכיון
         </label>
-        <button
-          className="diag-trigger"
-          onClick={onOpenDiagnostics}
-          title="לוח אבחון מערכת"
-          aria-label="לוח אבחון מערכת"
-          type="button"
-        >
-          <span aria-hidden="true">⚙</span> אבחון
-        </button>
+        <div className="sidebar-footer-actions">
+          <a
+            className="diag-trigger"
+            href={buildHash({ kind: "settings" })}
+            title="הגדרות מערכת"
+            aria-label="הגדרות מערכת"
+          >
+            <span aria-hidden="true">⚙</span> הגדרות
+          </a>
+          <button
+            className="diag-trigger"
+            onClick={onOpenDiagnostics}
+            title="לוח אבחון מערכת"
+            aria-label="לוח אבחון מערכת"
+            type="button"
+          >
+            🔬 אבחון
+          </button>
+        </div>
       </footer>
     </aside>
   );

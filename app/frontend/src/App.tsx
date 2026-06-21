@@ -4,6 +4,7 @@ import { DiagnosticsPanel } from "./components/DiagnosticsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { CreateProject } from "./pages/CreateProject";
 import { ProjectWorkspace } from "./pages/ProjectWorkspace";
+import { Settings } from "./pages/Settings";
 import { buildHash, useRoute } from "./route";
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
             onProjectChanged={bumpRefresh}
           />
         )}
+        {route.kind === "settings" && <Settings />}
       </main>
     </div>
   );

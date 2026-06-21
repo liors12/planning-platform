@@ -302,6 +302,24 @@ export async function importSchemaViaApi(
   return await resp.json() as { id: number; tava_number: string; has_schema: boolean };
 }
 
+// ── C2: PUT /settings with Anthropic API key ─────────────────────────
+// Mirrors Settings.tsx's putSettings() call but via raw fetch so the
+// harness doesn't depend on the compiled frontend bundle.
+export async function putSettingsViaApi(
+  anthropicApiKey: string,
+): Promise<{ anthropic_api_key_set: boolean }> {
+  const resp = await fetch("http://127.0.0.1:17321/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ anthropic_api_key: anthropicApiKey }),
+  });
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`putSettings failed: HTTP ${resp.status} — ${body}`);
+  }
+  return await resp.json() as { anthropic_api_key_set: boolean };
+}
+
 // ── P5: minimal RTL-safe PDF inspection ───────────────────────────────
 // Three cheap, RTL-safe checks per the P5 spec:
 //
