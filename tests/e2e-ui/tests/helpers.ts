@@ -1,6 +1,9 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { existsSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
+import { createServer } from "node:net";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { Browser, Page } from "@playwright/test";
 
 // ── Paths that must match the installer + sidecar config ──────────────
 // IMPORTANT: Tauri NSIS with installMode=currentUser AND the sidecar's
@@ -114,11 +117,64 @@ export function assertDataWiped(): void {
   }
 }
 
+// ── P2: dynamic free TCP port ─────────────────────────────────────────
+// Hard-coding the CDP port (was 9223) breaks when a previous test run
+// left WebView2 holding it, or when two test invocations overlap. Ask
+// the OS for any free port — bind to 0, read the assigned port, close.
+// The window between close and re-bind is small but non-zero; the
+// alternative (port-in-use retry loop) hides real bugs behind retries.
+export function freeTcpPort(): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const srv = createServer();
+    srv.unref();
+    srv.on("error", reject);
+    srv.listen(0, "127.0.0.1", () => {
+      const addr = srv.address();
+      if (addr === null || typeof addr === "string") {
+        srv.close();
+        return reject(new Error("freeTcpPort: server address unavailable"));
+      }
+      const port = addr.port;
+      srv.close(() => resolve(port));
+    });
+  });
+}
+
+// ── P2: per-run WebView2 user data folder ─────────────────────────────
+// WebView2's default user data location is shared across all WebView2
+// hosts on the machine. When two test runs (or a leftover msedge.exe
+// from the previous run) touch the same folder, you get file-lock
+// flakiness: "another instance has this database open", cookies
+// corruption, GPU cache races. Microsoft's WebView2 + Playwright docs
+// require a unique folder per session for exactly this reason.
+//
+// Caller responsibility: pass the returned path to launchApp() AND
+// wipe it in teardown via wipeUserDataFolder(). Lives under the OS
+// tempdir so OS-level cleanup eventually reclaims orphans.
+export function createUserDataFolder(): string {
+  return mkdtempSync(join(tmpdir(), "pp-ui-smoke-webview2-"));
+}
+
+export function wipeUserDataFolder(folder: string | null): void {
+  if (!folder) return;
+  try {
+    rmSync(folder, { recursive: true, force: true });
+  } catch {
+    // Best-effort. WebView2 sometimes holds file handles past process
+    // exit; OS will reclaim the temp dir eventually. Don't fail the
+    // test over teardown noise.
+  }
+}
+
 // ── Launch the installed .exe with WebView2 CDP port open ─────────────
 // WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS is read by the WebView2 loader
 // itself; no Tauri config change needed. Production runs without the
 // var set, so the debug port never opens in shipped builds.
-export function launchApp(cdpPort: number): ChildProcess {
+//
+// userDataFolder gets passed via WEBVIEW2_USER_DATA_FOLDER (also a
+// WebView2 loader env var) to isolate this run's storage from any
+// other WebView2 instance on the box. See createUserDataFolder above.
+export function launchApp(cdpPort: number, userDataFolder: string): ChildProcess {
   const exe = installedExePath();
   if (!existsSync(exe)) {
     throw new Error(`Packaged app not found at ${exe}. Was the installer run with /S?`);
@@ -127,6 +183,7 @@ export function launchApp(cdpPort: number): ChildProcess {
     env: {
       ...process.env,
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${cdpPort}`,
+      WEBVIEW2_USER_DATA_FOLDER: userDataFolder,
     },
     detached: false,
     stdio: ["ignore", "pipe", "pipe"],
@@ -135,6 +192,39 @@ export function launchApp(cdpPort: number): ChildProcess {
   child.stdout?.on("data", (b) => process.stdout.write(`[app stdout] ${b}`));
   child.stderr?.on("data", (b) => process.stderr.write(`[app stderr] ${b}`));
   return child;
+}
+
+// ── P2: select the Tauri main window page deterministically ───────────
+// Don't assume pages()[0] — a Tauri WebView2 host can expose:
+//   - the Tauri main window (tauri://localhost or http://tauri.localhost)
+//   - blank/preload pages (about:blank)
+//   - DevTools or service worker targets
+// pages()[0] picks whichever target hit the CDP list first; on a slow
+// boot, that's frequently about:blank, and clicks fired there silently
+// do nothing. Filter explicitly.
+export async function pickTauriPage(browser: Browser, timeoutMs = 15_000): Promise<Page> {
+  const deadline = Date.now() + timeoutMs;
+  let lastSeen: string[] = [];
+  while (Date.now() < deadline) {
+    for (const ctx of browser.contexts()) {
+      for (const p of ctx.pages()) {
+        const url = p.url();
+        if (
+          url.startsWith("tauri://") ||
+          url.startsWith("http://tauri.localhost") ||
+          url.startsWith("https://tauri.localhost")
+        ) {
+          return p;
+        }
+        lastSeen.push(url);
+      }
+    }
+    await sleep(250);
+  }
+  throw new Error(
+    `pickTauriPage: no tauri:// or tauri.localhost page found within ${timeoutMs}ms. ` +
+    `Saw URLs: ${[...new Set(lastSeen)].join(", ") || "<none>"}`
+  );
 }
 
 // ── Wait for sidecar /health to respond ───────────────────────────────
@@ -182,18 +272,31 @@ export function sleep(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
-// ── Kill the app process and any stragglers ───────────────────────────
-// Tauri spawns the sidecar as a child; killing the parent should cascade,
-// but on Windows that's not always true. We use taskkill /T to walk
-// the tree and /F to skip graceful shutdown (the next test will wipe
-// the data dir anyway). Safe to call repeatedly.
+// ── P2: defensive teardown — kill app tree + sweep stragglers ─────────
+// `taskkill /F /T /PID` walks the parent's process tree, which SHOULD
+// catch the spawned sidecar.exe + the WebView2 msedge.exe children.
+// But on Windows that's not always reliable: a previous CI run left
+// orphan msedge.exe processes that held the user data folder open,
+// breaking the next run. Belt-and-braces:
+//   1. Kill the Tauri parent PID with /T (the happy path)
+//   2. Defensively sweep any remaining sidecar.exe by image name
+//   3. Defensively sweep any remaining msedge.exe by image name —
+//      acceptable risk: if the developer happens to be running Edge
+//      on the same Windows box, this kills their browser. In CI
+//      (windows-latest) and a dedicated test VM, no Edge is running.
+// Errors swallowed — taskkill exit 128 means "no such process",
+// which is success for our purposes.
 export function killApp(child: ChildProcess | null): void {
+  const { execSync } = require("node:child_process") as typeof import("node:child_process");
+  const sweep = (cmd: string) => {
+    try { execSync(cmd, { stdio: "ignore" }); } catch { /* already gone */ }
+  };
   if (child?.pid) {
-    try {
-      const { execSync } = require("node:child_process");
-      execSync(`taskkill /F /T /PID ${child.pid}`, { stdio: "ignore" });
-    } catch {
-      // process may already be gone — ignore
-    }
+    sweep(`taskkill /F /T /PID ${child.pid}`);
   }
+  // Image-name sweeps are CI-safe; a real developer machine running
+  // this teardown shouldn't have these processes for any other reason.
+  sweep("taskkill /F /IM sidecar.exe /T");
+  sweep("taskkill /F /IM msedgewebview2.exe /T");
+  sweep("taskkill /F /IM msedge.exe /T");
 }

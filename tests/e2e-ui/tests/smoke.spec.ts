@@ -17,14 +17,18 @@ import { join } from "node:path";
 import type { ChildProcess } from "node:child_process";
 import {
   assertDataWiped,
+  createUserDataFolder,
   dataDir,
+  freeTcpPort,
   installedExePath,
   killApp,
   launchApp,
   logInstallDirContents,
+  pickTauriPage,
   waitForCdp,
   waitForSidecar,
   wipeData,
+  wipeUserDataFolder,
 } from "./helpers";
 
 // The seeded pilot project + submission. Must match
@@ -32,12 +36,13 @@ import {
 const PILOT_TAVA = "407-1048248";
 const PILOT_SEEDED_VERSION = "v24.3";
 
-// Arbitrary high port that's almost never in use on a GH runner.
-const CDP_PORT = 9223;
-
 let appProcess: ChildProcess | null = null;
 let browser: Browser | null = null;
 let page: Page | null = null;
+// P2: per-run isolation — both filled in inside the test, cleaned up
+// in afterAll regardless of pass/fail.
+let cdpPort: number | null = null;
+let userDataFolder: string | null = null;
 
 test.beforeAll(async () => {
   // Sanity: skip the whole suite on non-Windows so a developer running
@@ -53,9 +58,18 @@ test.beforeAll(async () => {
 });
 
 test.afterAll(async () => {
+  // P2: teardown order matters — close CDP first (so Playwright doesn't
+  // log noisy disconnect errors), then force-kill the app + sidecar
+  // tree + any orphan msedge.exe holding the user data folder open,
+  // THEN delete the user data folder. Each step is best-effort and
+  // never throws, so a single failed teardown doesn't mask the real
+  // test result.
   try { if (browser) await browser.close(); } catch { /* ignore */ }
   killApp(appProcess);
+  wipeUserDataFolder(userDataFolder);
   appProcess = null;
+  userDataFolder = null;
+  cdpPort = null;
 });
 
 test("flow 1–4: wipe → launch → seeded state → generate report", async () => {
@@ -68,18 +82,23 @@ test("flow 1–4: wipe → launch → seeded state → generate report", async (
   wipeData();
   assertDataWiped();
 
-  // ── 2. LAUNCH ───────────────────────────────────────────────────────
-  // App starts cold (no data dir), sidecar boots, seed re-populates the
-  // pilot project. Then WebView2 must expose its CDP endpoint so we can
-  // attach Playwright.
-  appProcess = launchApp(CDP_PORT);
+  // ── 2. LAUNCH (with P2 isolation: dynamic port + private WebView2 dir) ──
+  // Dynamic CDP port: avoids the "9223 still held by previous orphan"
+  // race. Per-run WEBVIEW2_USER_DATA_FOLDER: prevents the cookies/GPU-
+  // cache lock contention that breaks the second run on a machine.
+  cdpPort = await freeTcpPort();
+  userDataFolder = createUserDataFolder();
+  process.stdout.write(
+    `[smoke] launch with cdpPort=${cdpPort} userDataFolder=${userDataFolder}\n`
+  );
+  appProcess = launchApp(cdpPort, userDataFolder);
   await waitForSidecar(30_000);
-  const wsUrl = await waitForCdp(CDP_PORT, 30_000);
-  browser = await chromium.connectOverCDP(`http://127.0.0.1:${CDP_PORT}`);
-  const contexts = browser.contexts();
-  if (contexts.length === 0) throw new Error("CDP returned no browser contexts");
-  const pages = contexts[0].pages();
-  page = pages.length > 0 ? pages[0] : await contexts[0].newPage();
+  const wsUrl = await waitForCdp(cdpPort, 30_000);
+  browser = await chromium.connectOverCDP(`http://127.0.0.1:${cdpPort}`);
+  // P2: pick the Tauri main window page deterministically rather than
+  // taking pages()[0]. On a slow boot the first target is often
+  // about:blank, and clicks against it silently no-op.
+  page = await pickTauriPage(browser, 15_000);
   // Avoid unused-var lint
   expect(wsUrl).toMatch(/^ws:/);
 
