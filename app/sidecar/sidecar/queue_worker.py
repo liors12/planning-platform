@@ -590,6 +590,24 @@ class EngineQueue:
         helper. Fast — no subprocess, no timeout budget needed at this size."""
         error_payload = None
         output_path_str: Optional[str] = None
+
+        # Fetch meeting notes (discipline_comments) for this submission so the
+        # Excel includes הערות מפגישות rows alongside the compliance findings.
+        comments_dicts: list[dict] = []
+        try:
+            with Session(self._engine) as _cs:
+                job_row = _cs.get(Job, job_id)
+                if job_row and job_row.submission_id:
+                    _comments = (
+                        _cs.query(DisciplineComment)
+                        .filter_by(submission_id=job_row.submission_id)
+                        .order_by(DisciplineComment.created_at)
+                        .all()
+                    )
+                    comments_dicts = [c.to_dict() for c in _comments]
+        except Exception:
+            log.exception("could not load discipline_comments for excel export (non-fatal)")
+
         try:
             normalized_version = _normalize_submission_version(submission_version_string)
             # Local import to keep cold-start light (same pattern as render).
@@ -599,6 +617,7 @@ class EngineQueue:
                 submission_version=normalized_version,
                 output_subdir="audit_outputs",
                 base_dir=self._cfg.data_dir,
+                discipline_comments=comments_dicts or None,
             )
             if rc != 0:
                 error_payload = {

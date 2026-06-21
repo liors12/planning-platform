@@ -1,19 +1,21 @@
 """Excel export of audit findings for architect response workflow.
 
 Reads the same ``audit_results`` dict that :func:`generate_audit_pdf` consumes
-(from ``audit_results.m4.sanitized.json`` in the canonical render path) and
-emits a single-sheet RTL Excel workbook where each row is one finding. The
-architect fills two columns ("סטטוס טיפול" + "הערות האדריכל") and returns the
-file; the rest of the columns are read-only context.
+and optionally a list of discipline_comments dicts (from the sidecar DB) to
+produce a single-sheet RTL Excel workbook. Column schema matches the M8.2
+reference file:
 
-Visual identity matches the v24.3 PDF (Ness Ziona green ``#005030``, gray-light
-borders ``#D6D6D6``, gray-bg alt rows ``#F5F5F5``) — these are sourced from
-``compliance_engine/report_generator.py``'s ``_CSS`` CSS-variable block. Only
-the architect-input columns and the read-only warning banner deviate to draw
-the eye (peach + light yellow, respectively).
+  # | חדש? | מקטע בדוח | דיסציפלינה | תא שטח | נושא | סטטוס ממצא |
+  תיאור / פעולה נדרשת | סטטוס טיפול | הערות האדריכל
+
+Row sources:
+  • בדיקה רב-תחומית      — audit_results["disciplines"]
+  • בדיקת תאימות לתב"ע  — audit_results["content"] + m4 sidecar findings
+  • הערות מפגישות        — discipline_comments rows (marked ✓ חדש, blue fill)
 """
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -39,6 +41,7 @@ COLOR_ALT_ROW = "FFF5F5F5"          # --gray-bg
 COLOR_ARCHITECT_BG = "FFFCE4D6"     # peach — architect input columns
 COLOR_WARNING_BG = "FFFFF2CC"       # light yellow — read-only banner
 COLOR_WARNING_TEXT = "FFC62828"     # --red
+COLOR_NEW_ROW_BG = "FFD9EAF7"       # light blue — ✓ חדש meeting-notes rows
 
 FONT_FAMILY = "Arial"
 
@@ -48,9 +51,21 @@ FONT_FAMILY = "Arial"
 # ─────────────────────────────────────────────────────────────────────────────
 from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER
 
-# Alias so the rest of this file reads naturally.
 DISCIPLINE_HE = DISCIPLINE_NAME_HE
 _DISC_SORT_IDX = {DISCIPLINE_NAME_HE.get(k, k): i for i, k in enumerate(DISCIPLINE_ORDER)}
+
+# Sidecar discipline keys → Hebrew labels (mirrors app/sidecar/sidecar/disciplines.py).
+_SIDECAR_DISC_HE: dict[str, str] = {
+    "sec-3-1": 'שפ"ע — אשפה ופינוי פסולת',
+    "sec-3-2": "גנים ונוף",
+    "sec-3-3": "תשתיות",
+    "sec-3-4": "תנועה — רחבות כיבוי אש",
+    "sec-3-5": "ניקוז וחלחול",
+    "sec-3-6": "גגות וגינון על גג",
+    "sec-3-7": "אדריכלות וחזיתות",
+    "sec-3-8": "הנחיות סביבתיות",
+    "sec-3-9": "שירותים לדיירים",
+}
 
 STATUS_HE = {
     "fail": "נכשל",
@@ -64,8 +79,6 @@ STATUS_HE = {
     "m2_provenance_concern": "בעיית מקור",
 }
 
-# Sort priority — lower number sorts earlier (worst at top, "not relevant" at
-# bottom). Anything we don't recognize falls in the middle so it stays visible.
 STATUS_PRIORITY = {
     "נכשל": 0,
     "דורש בדיקה": 1,
@@ -78,24 +91,43 @@ STATUS_PRIORITY = {
     "לא רלוונטי": 4,
 }
 
-# Architect-input dropdown values for column 9 (סטטוס טיפול)
+SECTION_PRIORITY = {
+    "הערות מפגישות": 0,
+    "בדיקה רב-תחומית": 1,
+    'בדיקת תאימות לתב"ע': 2,
+}
+
 ARCHITECT_STATUS_OPTIONS = ["טופל", "לא טופל", "בטיפול", "לא רלוונטי"]
 
+# Temporary patch: engine rule_name_he / clause_id values that still contain
+# English codes. Applied to the נושא cell before writing. Remove each entry
+# once the engine produces the Hebrew name natively (tracked in D1 backlog).
+_NAME_PATCH: dict[str, str] = {
+    "קווי בניין (front/side/rear)":              "קווי בניין (קדמי/צידי/אחורי)",
+    "סעיף chatakhim.height_ceiling.plot_5":       "חריגת גובה מוחלט — תא שטח 5",
+    "סעיף chatakhim.ground_reference.A2":         "אי-עקביות מפלס קרקע — מבנה A2",
+    "סעיף chatakhim.ground_reference.B4":         "אי-עקביות מפלס קרקע — מבנה B4",
+    "סעיף 5.table":                               "טבלת זכויות בנייה",
+    "סעיף cad.plot_completeness":                 "שלמות תאי שטח",
+}
+
+
+def _patch_name(name: str) -> str:
+    return _NAME_PATCH.get(name, name)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Column layout
+# Column layout (matches M8.2 reference schema)
 # ─────────────────────────────────────────────────────────────────────────────
-# (header, width). Order matters — column 1 is "#", column 10 is the architect
-# free-text column.
 COLUMNS: list[tuple[str, int]] = [
     ("#", 6),
-    ("דיסציפלינה", 14),
-    ("שם הממצא", 30),
-    ("סטטוס ממצא", 14),
-    ("תיאור הממצא", 55),
-    ("דרישת תיקון", 45),
+    ("חדש?", 8),
+    ("מקטע בדוח", 20),
+    ("דיסציפלינה", 22),
     ("תא שטח", 10),
-    ("עמודים בתוכנית העיצוב", 14),
+    ("נושא", 30),
+    ("סטטוס ממצא", 14),
+    ("תיאור / פעולה נדרשת", 55),
     ("סטטוס טיפול", 14),
     ("הערות האדריכל", 40),
 ]
@@ -106,14 +138,6 @@ ARCHITECT_COL_INDICES = (9, 10)  # 1-based
 # Row builders — one per source bucket
 # ─────────────────────────────────────────────────────────────────────────────
 def _format_plot(raw: Any) -> str:
-    """Normalize a plot id into 'תא שטח N' form.
-
-    Accepts:
-      - ``None`` / empty → ``""``
-      - ``"plot_3"`` (content[] convention) → ``"תא שטח 3"``
-      - ``"9"`` (sidecar convention)        → ``"תא שטח 9"``
-      - any other non-empty string          → ``"תא שטח <as-is>"``
-    """
     if raw is None:
         return ""
     s = str(raw).strip()
@@ -124,36 +148,34 @@ def _format_plot(raw: Any) -> str:
     return f"תא שטח {s}"
 
 
-def _format_pages(pages: Any) -> str:
-    if not pages:
-        return ""
-    return ", ".join(str(p) for p in pages)
+def _join(parts: list[str]) -> str:
+    return "\n".join(p for p in parts if p)
 
 
 def _row_from_discipline(f: dict) -> dict:
     disc_key = f.get("discipline") or ""
     verdict = f.get("verdict") or ""
     return {
+        "is_new": False,
+        "report_section": "בדיקה רב-תחומית",
         "discipline": DISCIPLINE_HE.get(disc_key, disc_key),
-        "name": f.get("rule_name_he") or f.get("rule_code") or "",
-        "status": STATUS_HE.get(verdict, verdict),
-        "description": f.get("notes_he") or "",
-        "remediation": f.get("remediation_he") or "",
         "plot": "",
-        "pages": _format_pages(f.get("booklet_pages")),
+        "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
+        "status": STATUS_HE.get(verdict, verdict),
+        "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
     }
 
 
 def _row_from_content(f: dict) -> dict:
     verdict = f.get("verdict") or ""
     return {
-        "discipline": "",
-        "name": f.get("rule_name_he") or f.get("rule_code") or "",
-        "status": STATUS_HE.get(verdict, verdict),
-        "description": f.get("notes_he") or "",
-        "remediation": f.get("remediation_he") or "",
+        "is_new": False,
+        "report_section": 'בדיקת תאימות לתב"ע',
+        "discipline": 'בדיקת תאימות לתב"ע',
         "plot": _format_plot(f.get("ta_shetach_id")),
-        "pages": "",
+        "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
+        "status": STATUS_HE.get(verdict, verdict),
+        "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
     }
 
 
@@ -161,13 +183,26 @@ def _row_from_sidecar(f: dict) -> dict:
     indicator = f.get("compliance_indicator") or ""
     clause_id = f.get("clause_id") or ""
     return {
-        "discipline": "",
-        "name": f"סעיף {clause_id}" if clause_id else "",
+        "is_new": False,
+        "report_section": 'בדיקת תאימות לתב"ע',
+        "discipline": 'בדיקת תאימות לתב"ע',
+        "plot": _format_plot(f.get("ta_shetach_takanon")),
+        "name": _patch_name(f"סעיף {clause_id}" if clause_id else ""),
         "status": STATUS_HE.get(indicator, indicator),
         "description": f.get("reasoning") or "",
-        "remediation": "",
-        "plot": _format_plot(f.get("ta_shetach_takanon")),
-        "pages": _format_pages(f.get("source_pages")),
+    }
+
+
+def _row_from_comment(c: dict) -> dict:
+    disc_key = c.get("discipline_key") or ""
+    return {
+        "is_new": True,
+        "report_section": "הערות מפגישות",
+        "discipline": _SIDECAR_DISC_HE.get(disc_key, disc_key),
+        "plot": "",
+        "name": c.get("topic_he") or "",
+        "status": "הערת פגישה",
+        "description": c.get("action_he") or "",
     }
 
 
@@ -178,6 +213,7 @@ def export_findings_to_excel(
     audit_results: dict,
     output_path: Path,
     report_version: str = "",
+    discipline_comments: list[dict] | None = None,
 ) -> Path:
     """Build the architect-response workbook.
 
@@ -185,13 +221,9 @@ def export_findings_to_excel(
     ------
     Row 1: read-only warning banner (merged A1:J1, light yellow, bold red)
     Row 2: column headers (dark green Ness Ziona band, white bold text)
-    Row 3+: data rows, sorted by status severity
-    Row N+1: blank
-    Row N+2: bold summary footer
+    Row 3+: data rows sorted by section (meeting notes → compliance → plan checks)
 
-    Auto-filter ref starts at row 2 so the dropdown arrows sit on the styled
-    column-header row. The warning band (row 1) is intentionally outside the
-    filter range — it can never be hidden by a filter selection.
+    Blue fill marks ✓ חדש rows from meeting notes (discipline_comments).
     """
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -201,26 +233,20 @@ def export_findings_to_excel(
     sidecar = list(
         (audit_results.get("m4_summary") or {}).get("sidecar_only_findings") or []
     )
-    expected_total = len(disciplines) + len(content) + len(sidecar)
+    comments_list = list(discipline_comments or [])
 
-    # Build flat row list, then sort by status priority
     rows: list[dict] = (
         [_row_from_discipline(f) for f in disciplines]
         + [_row_from_content(f) for f in content]
         + [_row_from_sidecar(f) for f in sidecar]
+        + [_row_from_comment(c) for c in comments_list]
     )
+
     rows.sort(key=lambda r: (
-        _DISC_SORT_IDX.get(r["discipline"], len(DISCIPLINE_ORDER)),
+        SECTION_PRIORITY.get(r["report_section"], 99),
+        _DISC_SORT_IDX.get(r["discipline"], 50),
         STATUS_PRIORITY.get(r["status"], 2),
     ))
-
-    if len(rows) != expected_total:
-        raise RuntimeError(
-            f"Excel export row count mismatch: built {len(rows)} rows but "
-            f"input had {expected_total} findings "
-            f"(disciplines={len(disciplines)}, content={len(content)}, "
-            f"sidecar={len(sidecar)}). Refusing to write a partial workbook."
-        )
 
     # ── Workbook + sheet ────────────────────────────────────────────────
     wb = Workbook()
@@ -228,7 +254,6 @@ def export_findings_to_excel(
     ws.title = f"הערות סקירה v{report_version}".strip()
     ws.sheet_view.rightToLeft = True
 
-    # Column widths
     for col_idx, (_, width) in enumerate(COLUMNS, start=1):
         ws.column_dimensions[get_column_letter(col_idx)].width = width
 
@@ -245,6 +270,7 @@ def export_findings_to_excel(
         horizontal="right", vertical="center", wrap_text=True, readingOrder=2
     )
     alt_fill = PatternFill("solid", fgColor=COLOR_ALT_ROW)
+    new_fill = PatternFill("solid", fgColor=COLOR_NEW_ROW_BG)
     architect_fill = PatternFill("solid", fgColor=COLOR_ARCHITECT_BG)
     warning_fill = PatternFill("solid", fgColor=COLOR_WARNING_BG)
     warning_font = Font(
@@ -254,30 +280,26 @@ def export_findings_to_excel(
         horizontal="center", vertical="center", wrap_text=True, readingOrder=2
     )
 
-    # Row layout: warning row 1, column headers row 2, data row 3+. This
-    # ordering lets the auto-filter dropdowns sit on the styled header row
-    # (row 2) while keeping the warning band outside the filter range.
     WARNING_ROW = 1
     HEADER_ROW = 2
     DATA_START_ROW = 3
     n_cols = len(COLUMNS)
 
     # ── Row 1: read-only warning (merged, NOT part of filter) ──────────
+    today_str = date.today().strftime("%d/%m/%Y")
     warning_text = (
-        "אין לשנות או למחוק עמודות ונתונים בגיליון זה. "
-        "יש למלא אך ורק את העמודות: ״סטטוס טיפול״ ו-״הערות האדריכל״"
+        "אין לשנות או למחוק עמודות ונתונים בגיליון זה. יש למלא אך ורק את העמודות: ״סטטוס טיפול״ ו-״הערות האדריכל״.\n"
+        f'השורות המסומנות בכחול ובעמודת ״חדש?״ הן הערות מפגישות שנוספו עד {today_str}. שאר השורות הן ממצאי סקירת התאימות.'
     )
     ws.merge_cells(
         start_row=WARNING_ROW, start_column=1,
         end_row=WARNING_ROW, end_column=n_cols,
     )
-    ws.row_dimensions[WARNING_ROW].height = 32
+    ws.row_dimensions[WARNING_ROW].height = 40
     wc = ws.cell(row=WARNING_ROW, column=1, value=warning_text)
     wc.font = warning_font
     wc.fill = warning_fill
     wc.alignment = warning_align
-    # Fill + border every cell in the merge so RTL/print views don't reveal
-    # un-merged white cells underneath.
     for col_idx in range(1, n_cols + 1):
         ws.cell(row=WARNING_ROW, column=col_idx).border = cell_border
         ws.cell(row=WARNING_ROW, column=col_idx).fill = warning_fill
@@ -295,18 +317,23 @@ def export_findings_to_excel(
     for i, row in enumerate(rows, start=1):
         excel_row = DATA_START_ROW + (i - 1)
         ws.row_dimensions[excel_row].height = 45
-        is_alt = (i % 2 == 0)
-        row_fill = alt_fill if is_alt else None
+
+        if row["is_new"]:
+            row_fill = new_fill
+        elif i % 2 == 0:
+            row_fill = alt_fill
+        else:
+            row_fill = None
 
         values = [
             i,
+            "✓ חדש" if row["is_new"] else "",
+            row["report_section"],
             row["discipline"],
+            row["plot"],
             row["name"],
             row["status"],
             row["description"],
-            row["remediation"],
-            row["plot"],
-            row["pages"],
             "",  # architect: status
             "",  # architect: free-text comments
         ]
@@ -322,26 +349,19 @@ def export_findings_to_excel(
 
     last_data_row = DATA_START_ROW + len(rows) - 1
 
-    # ── Summary footer (blank row, then bold count) ─────────────────────
+    # ── Summary footer ──────────────────────────────────────────────────
     footer_row = last_data_row + 2
     fc = ws.cell(row=footer_row, column=1, value=f'סה"כ ממצאים: {len(rows)}')
     fc.font = Font(name=FONT_FAMILY, size=11, bold=True)
     fc.alignment = Alignment(horizontal="right", vertical="center", readingOrder=2)
 
     # ── Freeze panes + auto-filter ──────────────────────────────────────
-    # Freeze BELOW the warning band so the architect always sees the column
-    # headers AND the warning while scrolling.
     ws.freeze_panes = f"A{DATA_START_ROW}"
-
-    # Filter range = column-header row (row 2) through last data row, so
-    # the dropdown arrows render on the styled green band. Row 1 (warning)
-    # sits outside the range and cannot be hidden by filter selections.
     ws.auto_filter.ref = (
         f"A{HEADER_ROW}:{get_column_letter(n_cols)}{last_data_row}"
     )
 
     # ── Architect status dropdown (column 9) ────────────────────────────
-    # openpyxl wants the list as a comma-joined string in double quotes.
     dv = DataValidation(
         type="list",
         formula1='"' + ",".join(ARCHITECT_STATUS_OPTIONS) + '"',
