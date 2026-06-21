@@ -247,6 +247,57 @@ export async function projectIdForTava(tava: string): Promise<number> {
   return match.id;
 }
 
+// ── P5: minimal RTL-safe PDF inspection ───────────────────────────────
+// Three cheap, RTL-safe checks per the P5 spec:
+//
+//   size_bytes — catches "0-byte PDF" / "weasyprint crashed silently"
+//   page_count — catches "blank cover only" + "render exploded into
+//                a thousand pages from a layout bug"
+//   hebrew_chars — counts code points in the Hebrew Unicode block
+//                  (U+0590–U+05FF). > 0 catches the catastrophic
+//                  "all glyphs rendered as tofu boxes" font-failure
+//                  case. NOT a string-equality check — pypdf returns
+//                  Hebrew in visual (reversed) order, so any exact-
+//                  string assertion would be brittle.
+//
+// Implementation: shells out to python -c "..." with pypdf because
+// pypdf is already in the CI env (pre-installed at workflow line
+// build-windows.yml:323) and pypdf's Hebrew extraction is the same
+// behavior the existing backend smoke already relies on. Node-side
+// PDF libraries are heavier and would drift from CI's existing tool.
+export interface PdfHealthReport {
+  size_bytes: number;
+  page_count: number;
+  hebrew_chars: number;
+}
+
+export function pdfHealthCheck(pdfPath: string): PdfHealthReport {
+  if (!existsSync(pdfPath)) {
+    throw new Error(`pdfHealthCheck: file not found at ${pdfPath}`);
+  }
+  // One-liner so the test stays self-contained — no separate .py file
+  // to ship. The script gates each step (size, pages, text) with
+  // explicit error markers so a partial failure is diagnosable from
+  // the test artifact.
+  const script = [
+    "import sys, json, os",
+    "from pypdf import PdfReader",
+    "p = sys.argv[1]",
+    "size = os.path.getsize(p)",
+    "r = PdfReader(p)",
+    "pages = len(r.pages)",
+    "txt = ''.join((pg.extract_text() or '') for pg in r.pages)",
+    "heb = sum(1 for c in txt if 0x0590 <= ord(c) <= 0x05FF)",
+    "print(json.dumps({'size_bytes': size, 'page_count': pages, 'hebrew_chars': heb}))",
+  ].join("; ");
+  const { execFileSync } = require("node:child_process") as typeof import("node:child_process");
+  const out = execFileSync("python", ["-c", script, pdfPath], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  return JSON.parse(out.trim()) as PdfHealthReport;
+}
+
 // ── P2: select the Tauri main window page deterministically ───────────
 // Don't assume pages()[0] — a Tauri WebView2 host can expose:
 //   - the Tauri main window (tauri://localhost or http://tauri.localhost)

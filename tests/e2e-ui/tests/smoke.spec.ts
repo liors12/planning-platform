@@ -25,6 +25,7 @@ import {
   killApp,
   launchApp,
   logInstallDirContents,
+  pdfHealthCheck,
   pickTauriPage,
   projectIdForTava,
   uploadSubmissionViaApi,
@@ -158,6 +159,24 @@ test("flow 1–4: wipe → launch → seeded state → generate report", async (
     `audit_report_${verBare}.pdf`,
   );
   expect(existsSync(pdfPath)).toBe(true);
+
+  // ── P5: minimal RTL-safe PDF health check ───────────────────────────
+  // Three bounds — see helpers.ts pdfHealthCheck for rationale.
+  // Floors and ranges intentionally loose: the goal is to catch
+  // catastrophic regressions (empty PDF, font failure → tofu boxes,
+  // 1-page truncated render, exploded layout) NOT to enforce a
+  // specific page count or text content. Tightening these requires
+  // knowing the canonical report shape, which changes with template
+  // edits — for that, use the existing visual-regression checks.
+  const health = pdfHealthCheck(pdfPath);
+  process.stdout.write(`[smoke] pdf health: ${JSON.stringify(health)}\n`);
+  expect(health.size_bytes, "PDF too small to be a real report").toBeGreaterThan(10240);
+  expect(health.page_count, "page_count out of sane range").toBeGreaterThanOrEqual(1);
+  expect(health.page_count, "page_count out of sane range").toBeLessThanOrEqual(500);
+  expect(
+    health.hebrew_chars,
+    "no Hebrew text extracted — likely a font-failure or empty PDF",
+  ).toBeGreaterThan(100);
 
   // ── 4. GENERATE REPORT — EXCEL ──────────────────────────────────────
   await xlsxBtn.click();

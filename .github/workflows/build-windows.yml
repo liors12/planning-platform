@@ -824,6 +824,11 @@ jobs:
           # Install Playwright test deps. We DON'T `playwright install`
           # browsers — connectOverCDP attaches to WebView2, no bundled
           # Chromium needed.
+          # pypdf is for P5's RTL-safe PDF health check (test shells out
+          # to python -c). Idempotent — already installed for e2e smoke
+          # at workflow line 323, but install explicitly so this step
+          # is self-sufficient if the e2e step is ever moved.
+          python -m pip install --quiet pypdf
           Push-Location tests\e2e-ui
           npm ci --no-audit --no-fund
           npx playwright test --reporter=list
