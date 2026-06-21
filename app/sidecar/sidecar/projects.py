@@ -5,12 +5,15 @@
   GET    /projects/{id}           — full detail
   PATCH  /projects/{id}           — partial update
   POST   /projects/{id}/archive   — soft-archive
+  POST   /projects/import-schema  — create project by uploading a schema JSON file
 """
 from __future__ import annotations
 
+import json
 from datetime import datetime, timezone
+from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, File, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
@@ -64,7 +67,7 @@ class ProjectOut(BaseModel):
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
 
-def make_router(get_engine):
+def make_router(get_engine, cfg=None):
     def _session() -> Session:
         return Session(get_engine())
 
@@ -144,6 +147,109 @@ def make_router(get_engine):
                         },
                     }) from exc
                 raise HTTPException(500, f"db integrity error: {exc}") from exc
+            sess.refresh(project)
+            return _serialize(project, include_summary=True)
+
+    @_router.post("/import-schema", response_model=ProjectOut, status_code=201)
+    async def import_schema(schema_file: UploadFile = File(...)) -> ProjectOut:
+        # Read + validate JSON
+        try:
+            content = await schema_file.read()
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            raise HTTPException(422, "הקובץ שהועלה אינו JSON תקין")
+        except Exception as exc:
+            raise HTTPException(422, f"שגיאה בקריאת הקובץ: {exc}")
+
+        # Extract tava_number — required field in the schema JSON
+        tava = str(data.get("tava_number") or "").strip()
+        if not tava:
+            raise HTTPException(422, 'הקובץ אינו מכיל מספר תב"ע (tava_number). הוסיפי שדה "tava_number" לקובץ.')
+
+        # Extract optional project name; fall back to the tava number
+        name_he = str(data.get("name_he") or "").strip() or f'פרויקט {tava}'
+        name_en = str(data.get("name_en") or "").strip() or None
+        address = str(data.get("address") or "").strip() or None
+
+        with _session() as sess:
+            # Duplicate-tava check — same pattern as create_project
+            existing = (
+                sess.query(Project)
+                .filter(Project.tava_number == tava, Project.status != "archived")
+                .order_by(Project.created_at.asc())
+                .first()
+            )
+            if existing is not None:
+                raise HTTPException(status_code=409, detail={
+                    "error": "duplicate_tava_active",
+                    "message_he": (
+                        f'פרויקט עם תב"ע {tava} כבר קיים '
+                        f'("{existing.name_he}"). הוסיפי הגשה חדשה אליו במקום לייבא כפילות, '
+                        f'או העבירי אותו לארכיון תחילה.'
+                    ),
+                    "existing_project": {
+                        "id": existing.id,
+                        "name_he": existing.name_he,
+                        "tava_number": existing.tava_number,
+                        "status": existing.status,
+                    },
+                })
+
+            project = Project(
+                name_he=name_he,
+                tava_number=tava,
+                name_en=name_en,
+                address=address,
+                status="active",
+            )
+            sess.add(project)
+            try:
+                sess.commit()
+            except IntegrityError as exc:
+                sess.rollback()
+                race_existing = (
+                    sess.query(Project)
+                    .filter(Project.tava_number == tava, Project.status != "archived")
+                    .order_by(Project.created_at.asc())
+                    .first()
+                )
+                if race_existing is not None:
+                    raise HTTPException(status_code=409, detail={
+                        "error": "duplicate_tava_active",
+                        "message_he": (
+                            f'פרויקט עם תב"ע {tava} כבר קיים '
+                            f'("{race_existing.name_he}"). הוסיפי הגשה חדשה אליו במקום לייבא כפילות.'
+                        ),
+                        "existing_project": {
+                            "id": race_existing.id,
+                            "name_he": race_existing.name_he,
+                            "tava_number": race_existing.tava_number,
+                            "status": race_existing.status,
+                        },
+                    }) from exc
+                raise HTTPException(500, f"db integrity error: {exc}") from exc
+
+            # Write schema files to disk so the engine can discover this project.
+            # data_dir is only available when cfg was passed at router construction.
+            if cfg is not None:
+                proj_dir: Path = cfg.data_dir / "projects" / tava
+                proj_dir.mkdir(parents=True, exist_ok=True)
+
+                schema_path = proj_dir / f"project-schema-{tava}-v2.json"
+                schema_path.write_bytes(content)
+
+                descriptor = proj_dir / "_project.json"
+                descriptor.write_text(
+                    json.dumps({
+                        "tava_number": tava,
+                        "name_he": name_he,
+                        "name_en": name_en,
+                        "address": address,
+                        "status": "active",
+                    }, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+
             sess.refresh(project)
             return _serialize(project, include_summary=True)
 

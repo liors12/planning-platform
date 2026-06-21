@@ -280,6 +280,28 @@ export async function createCommentViaApi(
   return await resp.json() as { id: string };
 }
 
+// ── C1: import a project schema JSON via the sidecar API ─────────────
+// Mirrors the "ייבאי קובץ תב"ע" tab in CreateProject.tsx. Accepts a
+// minimal schema object so the harness doesn't need a real plan file;
+// only tava_number is required. Duplicates the 409 error surface so the
+// test can check for it explicitly when needed.
+export async function importSchemaViaApi(
+  schema: { tava_number: string; name_he?: string; [k: string]: unknown },
+): Promise<{ id: number; tava_number: string; has_schema: boolean }> {
+  const blob = new Blob([JSON.stringify(schema)], { type: "application/json" });
+  const form = new FormData();
+  form.set("schema_file", blob, `project-schema-${schema.tava_number}-v2.json`);
+  const resp = await fetch("http://127.0.0.1:17321/projects/import-schema", {
+    method: "POST",
+    body: form,
+  });
+  if (!resp.ok) {
+    const body = await resp.text();
+    throw new Error(`importSchema failed: HTTP ${resp.status} — ${body}`);
+  }
+  return await resp.json() as { id: number; tava_number: string; has_schema: boolean };
+}
+
 // ── P5: minimal RTL-safe PDF inspection ───────────────────────────────
 // Three cheap, RTL-safe checks per the P5 spec:
 //

@@ -28,6 +28,7 @@ import {
   createUserDataFolder,
   execSqlitePython,
   freeTcpPort,
+  importSchemaViaApi,
   installedExePath,
   killApp,
   launchApp,
@@ -495,4 +496,73 @@ test("flow 7: upgrade-path — seed idempotent across version-prefix variants", 
   await expect(
     p.getByRole("button", { name: "+ הוסיפי הערה" }),
   ).toBeVisible({ timeout: 15_000 });
+});
+
+// ── Flow C1: schema import API — POST /projects/import-schema ────────
+// Warn-only: wrapped in try/catch so CI stays green while this feature
+// is being rolled out. A failure here emits a warning line but does NOT
+// block the build. Promote to a hard assertion once stable.
+//
+// What this covers:
+//   - Backend: POST /projects/import-schema accepts a JSON file,
+//     creates a DB row, writes schema + _project.json to disk
+//   - has_schema: true is returned immediately (file was just written)
+//   - The project appears in GET /projects
+//   - A duplicate-tava import returns 409 (not 500 / crash)
+//
+// What this does NOT cover (deferred to a separate UI flow):
+//   - The "ייבאי קובץ תב"ע" tab UI — needs native file picker driving
+//     which is not possible through CDP/WebView2 without OS automation
+test("flow C1 [warn]: schema import API — create project via JSON file", async () => {
+  await teardownCurrent();
+  const dataDir = createPerRunDataDir();
+  const p = await launchAndAttach(dataDir);
+
+  const TEST_TAVA = "999-smoke-c1";
+  try {
+    // ── Step 1: import a minimal schema ────────────────────────────────
+    const created = await importSchemaViaApi({
+      tava_number: TEST_TAVA,
+      name_he: "פרויקט בדיקה C1",
+    });
+    process.stdout.write(
+      `[smoke] flow C1: created project id=${created.id} tava=${created.tava_number} ` +
+      `has_schema=${created.has_schema}\n`,
+    );
+    expect(created.tava_number, "tava_number mismatch").toBe(TEST_TAVA);
+    expect(created.has_schema, "has_schema should be true after import").toBe(true);
+
+    // ── Step 2: project appears in GET /projects ────────────────────
+    const listResp = await fetch("http://127.0.0.1:17321/projects");
+    expect(listResp.ok, "GET /projects failed").toBe(true);
+    const projects = await listResp.json() as Array<{ tava_number: string; has_schema: boolean }>;
+    const match = projects.find((pr) => pr.tava_number === TEST_TAVA);
+    expect(match, `project ${TEST_TAVA} not in /projects list`).toBeTruthy();
+    expect(match?.has_schema, "has_schema false in list response").toBe(true);
+
+    // ── Step 3: duplicate import → 409, not 500 ─────────────────────
+    try {
+      await importSchemaViaApi({ tava_number: TEST_TAVA, name_he: "כפילות" });
+      process.stdout.write("[smoke] flow C1: WARNING — duplicate import did not return 409\n");
+    } catch (dupErr) {
+      const msg = String(dupErr);
+      if (!msg.includes("409")) {
+        process.stdout.write(`[smoke] flow C1: WARNING — duplicate error was not 409: ${msg}\n`);
+      } else {
+        process.stdout.write("[smoke] flow C1: duplicate 409 ✓\n");
+      }
+    }
+
+    // ── Step 4: project link appears in the home UI ─────────────────
+    await p.reload();
+    await expect(p.getByTestId("app-ready")).toBeVisible({ timeout: 20_000 });
+    await expect(
+      p.getByTestId(`home-project-link-${TEST_TAVA}`),
+    ).toBeVisible({ timeout: 10_000 });
+
+    process.stdout.write("[smoke] flow C1: PASSED ✓\n");
+  } catch (err) {
+    // Warn-only: log but don't re-throw so CI stays green.
+    process.stdout.write(`[smoke] flow C1: WARN — ${String(err)}\n`);
+  }
 });

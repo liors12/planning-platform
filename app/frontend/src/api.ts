@@ -243,6 +243,18 @@ export async function patchProject(
   );
 }
 
+export async function importSchema(schemaFile: File): Promise<ProjectOut> {
+  const form = new FormData();
+  form.append("schema_file", schemaFile, schemaFile.name);
+  return jsonOrThrow<ProjectOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/import-schema`, {
+      method: "POST",
+      body: form,
+    }),
+    "POST /projects/import-schema",
+  );
+}
+
 export async function archiveProject(id: number): Promise<ProjectOut> {
   return jsonOrThrow<ProjectOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/projects/${id}/archive`, { method: "POST" }),

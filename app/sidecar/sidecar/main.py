@@ -599,7 +599,7 @@ def echo(req: EchoRequest) -> EchoResponse:
 # Mount module routers
 # ─────────────────────────────────────────────────────────────────────────────
 
-app.include_router(make_projects_router(lambda: ENGINE))
+app.include_router(make_projects_router(lambda: ENGINE, cfg=CFG))
 
 _projects_subs_router, _subs_router = make_submission_routers(
     lambda: ENGINE, cfg=CFG, queue=QUEUE,
