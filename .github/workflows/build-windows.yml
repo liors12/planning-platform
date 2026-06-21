@@ -795,9 +795,14 @@ jobs:
       # rollout plan — failures here surface but don't block publishing.
       # Promoted to a hard gate once it's stayed green across several
       # builds with no flaky failures. See tests/e2e-ui/README.md.
-      - name: UI smoke gate (real WebView2, warn-only)
+      - name: UI smoke gate (real WebView2)
         id: ui_smoke
-        continue-on-error: true
+        # Promoted to hard gate after 12+ green runs across P1→P5 with
+        # zero flakes. The single transient red was a real test-
+        # scaffolding bug (flow 6 missing UI refetch), not a flake —
+        # caught + fixed in the same iteration. Same gating semantics
+        # as the e2e backend smoke now: a UI regression blocks the
+        # installer from publishing.
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
@@ -835,7 +840,7 @@ jobs:
           $exit = $LASTEXITCODE
           Pop-Location
           if ($exit -ne 0) {
-            Write-Host "::warning::UI smoke gate FAILED (warn-only) — see Playwright report artifact"
+            Write-Host "::error::UI smoke gate FAILED — installer will not publish. See Playwright report artifact."
             exit $exit
           }
           Write-Host "UI smoke gate PASSED ✓"

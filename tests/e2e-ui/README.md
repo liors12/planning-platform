@@ -67,8 +67,7 @@ message rather than producing a confusing error.
 
 ## Status
 
-**Warn-only** for the first 1–2 weeks per the rollout plan. CI runs the
-suite but failures don't block the installer from publishing to the
-release channel. Once the suite has stayed green across several builds
-with no flaky failures, it's promoted to a hard gate alongside the
-existing backend smoke.
+**Hard gate** alongside the existing backend smoke. A UI regression
+blocks the installer from publishing. Promoted from warn-only after
+12+ green runs across the P1–P5 hardening pass with zero flakes (the
+one transient red was a real test-scaffolding bug, not a flake).
