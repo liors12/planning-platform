@@ -10,6 +10,11 @@
 //   - State NOT persisting across an app restart (flow 5)
 //   - Delete + re-upload leaving the UI in a stale state (flow 6 — this
 //     is the literal sequence that broke on the user's machine)
+//   - UPGRADE-PATH bugs: new build over pre-existing user data with the
+//     old version-string format (flow 7 — the v24.3-duplicate bug that
+//     hit Ellen). All other flows test fresh installs; this one tests
+//     "Ellen reinstalls" and is the missing coverage that lets us catch
+//     "works on fresh, breaks on upgrade" before shipping.
 //
 // What it does NOT catch — see README.md.
 
@@ -21,6 +26,7 @@ import {
   createCommentViaApi,
   createPerRunDataDir,
   createUserDataFolder,
+  execSqlitePython,
   freeTcpPort,
   installedExePath,
   killApp,
@@ -391,4 +397,102 @@ test("flow 8: comments tab regenerate fires PDF + Excel with persistent feedback
   // goes to a different banner with a different testid).
   await expect(p.getByTestId("regen-open-pdf")).toBeVisible();
   await expect(p.getByTestId("regen-open-xlsx")).toBeVisible();
+});
+
+// ── P7 flow 7: upgrade-path (the bug class that hit Ellen) ────────────
+// The duplicate-v24.3-row bug happened because every other flow tests a
+// FRESH install. Ellen UPGRADES over data that pre-dates the seed-creates-
+// submissions feature, where her manual upload stored "24.3" (no
+// v-prefix). The seed compared the literal version_string, didn't
+// recognize "24.3" as equivalent to its canonical "v24.3", and inserted
+// a duplicate row alongside hers.
+//
+// This flow simulates the upgrade by: launching once on a fresh data
+// dir (seed inserts canonical v24.3), then mutating the DB via sqlite3
+// to rename that row to "24.3" (mimics what Ellen's DB looked like
+// pre-upgrade), then relaunching with the same data dir (the seed
+// runs again over the "pre-existing" data).
+//
+// Fix proof: with the version-prefix-aware idempotency check now in
+// main.py:_discover_submissions, the second seed run skips instead
+// of duplicating. Without that fix this test would assert two rows
+// where there should be one — caught locally before the user did.
+test("flow 7: upgrade-path — seed idempotent across version-prefix variants", async () => {
+  await teardownCurrent();
+  const dataDir = createPerRunDataDir();
+  const dbPath = join(dataDir, "platform.db");
+
+  // ── Phase A: fresh launch, seed inserts v24.3 ───────────────────────
+  await launchAndAttach(dataDir);
+  // Cleanly shut down so we can directly mutate the SQLite file —
+  // sidecar holds a writer lock while up.
+  try { if (browser) await browser.close(); } catch { /* ignore */ }
+  killApp(appProcess);
+  wipeUserDataFolder(userDataFolder);
+  appProcess = null; browser = null; page = null;
+  userDataFolder = null; cdpPort = null;
+
+  // ── Phase B: simulate pre-upgrade state ─────────────────────────────
+  // Rename the canonical "v24.3" row to "24.3" — mimics what Ellen's
+  // DB looked like before the seed-creates-submissions feature shipped.
+  // Also flip status back to "uploaded" so the simulation matches her
+  // actual pre-upgrade row shape (status="uploaded" was the upload
+  // endpoint's default before the seed started using "complete").
+  const beforeMutation = execSqlitePython(
+    dbPath,
+    "SELECT id, version_string, status FROM submissions WHERE version_string='v24.3'",
+  );
+  expect(beforeMutation.length, "phase A: seed should have created v24.3").toBe(1);
+  execSqlitePython(
+    dbPath,
+    "UPDATE submissions SET version_string='24.3', status='uploaded' " +
+    "WHERE version_string='v24.3'",
+  );
+  process.stdout.write(`[smoke] flow 7: renamed v24.3 → 24.3 to simulate upgrade\n`);
+
+  // ── Phase C: relaunch — seed runs again over the "pre-existing" data ─
+  const p = await launchAndAttach(dataDir);
+
+  // ── Assert 1: exactly ONE v24.3-ish row (not two) ───────────────────
+  // Direct DB count is the load-bearing assertion — exactly the check
+  // that would have flagged the duplicate Ellen saw. Both prefix forms
+  // checked to be future-proof against the seed normalizing in either
+  // direction.
+  const rows = execSqlitePython(
+    dbPath,
+    "SELECT id, version_string, status FROM submissions " +
+    "WHERE version_string IN ('24.3', 'v24.3')",
+  ) as Array<{ id: number; version_string: string; status: string }>;
+  process.stdout.write(`[smoke] flow 7: post-relaunch rows = ${JSON.stringify(rows)}\n`);
+  expect(
+    rows.length,
+    `upgrade-path regression: expected 1 v24.3 row, found ${rows.length}: ` +
+    `${JSON.stringify(rows)}`,
+  ).toBe(1);
+  // The surviving row should be the pre-existing "24.3" (not the
+  // canonical "v24.3" the seed wanted to insert) — the idempotency
+  // check has to recognize the existing one and skip, not overwrite it.
+  expect(rows[0].version_string, "seed clobbered the pre-existing row").toBe("24.3");
+
+  // ── Assert 2: submissions tab renders the row + report buttons ──────
+  // The testid uses the stored version_string verbatim, so "24.3" not
+  // "v24.3". If the wrong card renders, this fails with a clear
+  // locator-not-found error.
+  await p.getByTestId(`home-project-link-${PILOT_TAVA}`).click();
+  await p.getByRole("button", { name: "הגשות" }).click();
+  await expect(p.getByTestId("submission-card-24.3")).toBeVisible({ timeout: 15_000 });
+  await expect(p.getByTestId("generate-report-pdf-24.3")).toBeVisible();
+  await expect(p.getByTestId("generate-report-xlsx-24.3")).toBeVisible();
+
+  // ── Assert 3: comments tab loads (no crash from duplicate-row state) ─
+  // Ellen's reported symptom was "שגיאת טעינת תכנית העיצוב: failed to
+  // fetch" — the PDF viewer error from the seeded row's phantom
+  // pdf_path. With the idempotency fix in place, only the row with the
+  // real (seed-supplied path) survives — but the test ALSO needs to
+  // prove the tab itself renders. We check for the add-comment form's
+  // submit button as proof the gate opened and the inner UI mounted.
+  await p.getByRole("button", { name: "הערות רפרנטים" }).click();
+  await expect(
+    p.getByRole("button", { name: "+ הוסיפי הערה" }),
+  ).toBeVisible({ timeout: 15_000 });
 });

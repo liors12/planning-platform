@@ -304,6 +304,40 @@ export interface PdfHealthReport {
   hebrew_chars: number;
 }
 
+// ── P7: minimal sqlite mutation/query for upgrade-path tests ──────────
+// Same shell-out-to-python pattern as pdfHealthCheck — Python's stdlib
+// sqlite3 is already on the CI runner (no extra install needed) and
+// avoids pulling in a Node-side sqlite binding just for tests. SELECT
+// returns rows as a list of dicts; mutations return [].
+//
+// Sidecar must be killed before calling — SQLite WAL holds an exclusive
+// writer lock while the app is up. The caller's pattern is:
+//   killApp(appProcess); execSqlitePython(db, "UPDATE ...");
+//   appProcess = launchApp(...);
+export function execSqlitePython(dbPath: string, sql: string): unknown[] {
+  if (!existsSync(dbPath)) {
+    throw new Error(`execSqlitePython: db not found at ${dbPath}`);
+  }
+  const script = [
+    "import sys, json, sqlite3",
+    "db, sql = sys.argv[1], sys.argv[2]",
+    "con = sqlite3.connect(db)",
+    "con.row_factory = sqlite3.Row",
+    "cur = con.cursor()",
+    "cur.executescript(sql) if ';' in sql.rstrip(';') else cur.execute(sql)",
+    "rows = [dict(r) for r in cur.fetchall()] if cur.description else []",
+    "con.commit()",
+    "con.close()",
+    "print(json.dumps(rows))",
+  ].join("; ");
+  const { execFileSync } = require("node:child_process") as typeof import("node:child_process");
+  const out = execFileSync("python", ["-c", script, dbPath, sql], {
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+  return JSON.parse(out.trim()) as unknown[];
+}
+
 export function pdfHealthCheck(pdfPath: string): PdfHealthReport {
   if (!existsSync(pdfPath)) {
     throw new Error(`pdfHealthCheck: file not found at ${pdfPath}`);
