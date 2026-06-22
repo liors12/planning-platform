@@ -121,8 +121,9 @@ COLUMNS: list[tuple[str, int]] = [
     ("תיאור / פעולה נדרשת", 55),
     ("סטטוס טיפול", 14),
     ("הערות האדריכל", 40),
+    ("source_id", 0),   # hidden — stable row identifier for round-trip matching
 ]
-ARCHITECT_COL_INDICES = (9, 10)  # 1-based
+ARCHITECT_COL_INDICES = (9, 10)  # 1-based; col 11 (source_id) is hidden/read-only
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -154,33 +155,38 @@ def _row_from_discipline(f: dict) -> dict:
         "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
         "status": STATUS_MAP.get(verdict, verdict),
         "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
+        "source_id": f"disc:{disc_key}:{f.get('rule_code') or ''}",
     }
 
 
 def _row_from_content(f: dict) -> dict:
     verdict = f.get("verdict") or ""
+    ta = f.get("ta_shetach_id") or ""
     return {
         "is_new": False,
         "report_section": 'בדיקת תאימות לתב"ע',
         "discipline": 'בדיקת תאימות לתב"ע',
-        "plot": _format_plot(f.get("ta_shetach_id")),
+        "plot": _format_plot(ta),
         "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
         "status": STATUS_MAP.get(verdict, verdict),
         "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
+        "source_id": f"cont:{f.get('rule_code') or ''}:{ta}",
     }
 
 
 def _row_from_sidecar(f: dict) -> dict:
     indicator = f.get("compliance_indicator") or ""
     clause_id = f.get("clause_id") or ""
+    ta = f.get("ta_shetach_takanon") or ""
     return {
         "is_new": False,
         "report_section": 'בדיקת תאימות לתב"ע',
         "discipline": 'בדיקת תאימות לתב"ע',
-        "plot": _format_plot(f.get("ta_shetach_takanon")),
+        "plot": _format_plot(ta),
         "name": _patch_name(f"סעיף {clause_id}" if clause_id else ""),
         "status": STATUS_MAP.get(indicator, indicator),
         "description": f.get("reasoning") or "",
+        "source_id": f"side:{clause_id}:{ta}",
     }
 
 
@@ -199,6 +205,7 @@ def _row_from_comment(c: dict) -> dict:
         "name": c.get("topic_he") or "",
         "status": "הערת פגישה",
         "description": c.get("action_he") or "",
+        "source_id": f"cmt:{c.get('id') or ''}",
     }
 
 
@@ -251,7 +258,10 @@ def export_findings_to_excel(
     ws.sheet_view.rightToLeft = True
 
     for col_idx, (_, width) in enumerate(COLUMNS, start=1):
-        ws.column_dimensions[get_column_letter(col_idx)].width = width
+        dim = ws.column_dimensions[get_column_letter(col_idx)]
+        dim.width = width
+        if width == 0:
+            dim.hidden = True
 
     # Reusable styles
     thin = Side(style="thin", color=COLOR_BORDER)
@@ -332,6 +342,7 @@ def export_findings_to_excel(
             row["description"],
             "",  # architect: status
             "",  # architect: free-text comments
+            row.get("source_id", ""),
         ]
         for col_idx, v in enumerate(values, start=1):
             c = ws.cell(row=excel_row, column=col_idx, value=v)
