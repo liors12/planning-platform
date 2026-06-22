@@ -704,13 +704,25 @@ function ResponseReviewSection({
       ) : (
         <div className="response-table-wrap">
           <table className="response-table" dir="rtl">
+            <colgroup>
+              <col className="rt-col-original" span={3} />
+              <col className="rt-col-response" span={2} />
+            </colgroup>
             <thead>
+              <tr className="rt-group-row">
+                <th colSpan={3} className="rt-group-header rt-group-original-hdr">
+                  ממצא מקורי
+                </th>
+                <th colSpan={2} className="rt-group-header rt-group-response-hdr">
+                  תשובת האדריכל
+                </th>
+              </tr>
               <tr>
                 <th>נושא</th>
                 <th>סטטוס ממצא</th>
-                <th>תיאור</th>
+                <th className="rt-divider-col">תיאור</th>
                 <th>סטטוס טיפול</th>
-                <th>הערות האדריכל</th>
+                <th>הערות</th>
               </tr>
             </thead>
             <tbody>
@@ -719,7 +731,7 @@ function ResponseReviewSection({
                     className={r.treatment_status || r.architect_notes ? "" : "rt-empty"}>
                   <td>{r.topic_he ?? "—"}</td>
                   <td>{r.finding_status ?? "—"}</td>
-                  <td className="rt-desc">{r.description ?? "—"}</td>
+                  <td className="rt-desc rt-divider-col">{r.description ?? "—"}</td>
                   <td>
                     {r.treatment_status
                       ? <span className="rt-treatment">{r.treatment_status}</span>

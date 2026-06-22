@@ -1638,6 +1638,7 @@ code, .path {
   white-space: nowrap;
   position: sticky;
   top: 0;
+  z-index: 1;
 }
 .response-table td {
   padding: 5px 10px;
@@ -1648,6 +1649,21 @@ code, .path {
 .response-table tr.rt-empty td { opacity: 0.5; }
 .rt-desc { max-width: 260px; }
 .rt-notes { max-width: 220px; }
+/* Group header row — two labeled zones */
+.rt-group-row th { top: 0; padding-block: 4px; font-size: 11px; letter-spacing: 0.02em; text-transform: uppercase; border-block-end: none; }
+.rt-group-header { text-align: center; }
+.rt-group-original-hdr { background: #eef2ff; color: #3730a3; border-inline-end: 2px solid #c7d2fe; }
+.rt-group-response-hdr { background: #f0fdf4; color: #166534; }
+/* Second header row (column labels) */
+.response-table thead tr:nth-child(2) th { top: 28px; border-block-end: 2px solid var(--border); }
+.response-table thead tr:nth-child(2) th:nth-child(3) { border-inline-end: 2px solid #c7d2fe; }
+/* Divider column in body rows */
+.rt-divider-col { border-inline-end: 2px solid #c7d2fe; }
+/* Tinted zones in data rows */
+.response-table tbody td:nth-child(-n+3) { background: rgba(238,242,255,0.25); }
+.response-table tbody td:nth-child(n+4) { background: rgba(240,253,244,0.35); }
+/* Override: keep empty-row opacity across both zones */
+.response-table tr.rt-empty td { opacity: 0.45; }
 .rt-treatment {
   font-weight: 600;
   font-size: 11.5px;
