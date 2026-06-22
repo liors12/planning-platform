@@ -136,6 +136,39 @@ def _stream_upload_to_disk(upload: UploadFile, target: Path) -> None:
             out.write(chunk)
 
 
+def _sha256_file(path: Path) -> str:
+    """Return the hex SHA-256 digest of a file, reading in 1 MB chunks."""
+    import hashlib
+    h = hashlib.sha256()
+    with path.open("rb") as f:
+        while True:
+            chunk = f.read(1 << 20)
+            if not chunk:
+                break
+            h.update(chunk)
+    return h.hexdigest()
+
+
+_OVERLAY_NAMES = ("extracts.json", "discipline_findings.json")
+
+
+def _archive_overlays(target_dir: Path) -> None:
+    """Rename existing engine overlay files in target_dir with a timestamp suffix.
+
+    Called before a new upload lands in an existing directory so the engine's
+    previous frozen output is preserved (not deleted) and does not suppress
+    re-analysis of the new files.
+    """
+    from datetime import datetime as _dt, timezone as _tz
+    stamp = _dt.now(_tz.utc).strftime("%Y%m%dT%H%M%SZ")
+    for name in _OVERLAY_NAMES:
+        src = target_dir / name
+        if src.exists():
+            dst = target_dir / f"{src.stem}.{stamp}{src.suffix}"
+            src.rename(dst)
+            log.info("archived overlay %s → %s", src.name, dst.name)
+
+
 def make_routers(get_engine, cfg: Config, queue: EngineQueue):
     def _session() -> Session:
         return Session(get_engine())
@@ -198,6 +231,11 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     raise HTTPException(422, str(exc))
                 cad_path = target_dir / cad_leaf
 
+            # Archive any existing engine overlays before writing new files,
+            # so a re-upload to the same directory doesn't silently reuse
+            # frozen results from a prior run.
+            _archive_overlays(target_dir)
+
             # Stream the uploads to disk.
             _stream_upload_to_disk(pdf, pdf_path)
             if cad_file is not None and cad_path is not None:
@@ -234,12 +272,17 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     encoding="utf-8",
                 )
 
+            pdf_hash = _sha256_file(pdf_path)
+            cad_hash = _sha256_file(cad_path) if cad_path else None
+
             submission = Submission(
                 project_id=project_id,
                 version_string=version_string,
                 status="uploaded",
                 pdf_path=str(pdf_path),
                 dwg_path=str(cad_path) if cad_path else None,
+                pdf_hash=pdf_hash,
+                cad_hash=cad_hash,
             )
             sess.add(submission)
             try:
@@ -772,6 +815,21 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     409,
                     f"submission {submission_id} PDF missing from disk at {sub.pdf_path}",
                 )
+            if sub.pdf_hash:
+                duplicate = (
+                    sess.query(Submission)
+                    .filter(
+                        Submission.project_id == sub.project_id,
+                        Submission.id != submission_id,
+                        Submission.pdf_hash == sub.pdf_hash,
+                    )
+                    .first()
+                )
+                if duplicate:
+                    raise HTTPException(
+                        409,
+                        "הקובץ זהה לגרסה הקודמת. לא בוצע ניתוח חוזר.",
+                    )
 
         # Enqueue from outside the session so the new Session inside enqueue_run_audit
         # doesn't conflict.

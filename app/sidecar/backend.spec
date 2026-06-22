@@ -42,7 +42,6 @@ hidden_imports = [
     "compliance_engine",
     "compliance_engine.render",
     "compliance_engine.report_generator",
-    "compliance_engine.report_surgery",
     "compliance_engine.excel_export",
     # Full-audit chain (V0.2 in-process path)
     "compliance_engine.audit",

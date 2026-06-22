@@ -499,13 +499,28 @@
       "policy_he": "להגשה יצורף נספח איכות סביבה וקיימות הכולל פירוט אסטרטגיות סביבתיות בתכנון.",
       "remediation_he": "יש להגיש נספח איכות סביבה וקיימות.",
       "required_artifact_he": "נספח איכות סביבה וקיימות"
+    },
+    {
+      "rule_code": "DISC_TRAFFIC_ANNEX",
+      "discipline": "תנועה",
+      "rule_name_he": "נספח תנועה",
+      "booklet_section": "3.4",
+      "booklet_pages": [],
+      "check_type": "annex_required",
+      "check_spec": {"annex_keywords": ["נספח תנועה", "תסקיר תנועה", "יועץ תנועה", "תכנון תנועה"]},
+      "verdict_on_pass": "pass",
+      "verdict_on_fail": "not_submitted",
+      "severity": "major",
+      "policy_he": "נספח תנועה נדרש כחלק מהגשת תכנית העיצוב.",
+      "remediation_he": "יש להגיש נספח תנועה חתום על ידי יועץ תנועה מוסמך.",
+      "required_artifact_he": "נספח תנועה"
     }
   ],
   "_summary_stats": {
-    "total_rules": 33,
+    "total_rules": 34,
     "by_discipline": {
       "shafa": 4, "gardens": 3, "infra": 3, "fire": 3, "drainage": 4,
-      "roofs": 3, "arch": 5, "balcony": 2, "laundry": 2, "env": 4
+      "roofs": 3, "arch": 5, "balcony": 2, "laundry": 2, "env": 4, "תנועה": 1
     }
   }
 }

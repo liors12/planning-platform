@@ -117,6 +117,10 @@ class Submission(Base):
     # exposed as cad_path in all API responses to reflect DXF/DWG duality.
     dwg_path: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
     findings_json_path: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
+    # SHA-256 hex digest of the uploaded PDF / CAD file — used to detect
+    # identical re-uploads and skip redundant engine runs.
+    pdf_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    cad_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
 
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -137,6 +141,8 @@ class Submission(Base):
             "cad_path": self.dwg_path,
             "findings_json_path": self.findings_json_path,
             "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
+            "pdf_hash": self.pdf_hash,
+            "cad_hash": self.cad_hash,
         }
 
     def to_summary(self) -> dict:
