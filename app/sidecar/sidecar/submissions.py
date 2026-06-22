@@ -32,7 +32,8 @@ from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import has_schema
-from .models import ArchitectResponse, Project, ResponseRow, Submission, SubmissionAttachment
+from .models import (ArchitectResponse, EmailCorrection, EmailCorrectionRow,
+                     Project, ResponseRow, Submission, SubmissionAttachment)
 from .queue_worker import EngineQueue
 from .storage import StorageError, sanitize_upload_filename, submission_dir
 
@@ -163,6 +164,42 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def _convert_dwfx_to_pdf(dwfx_path: Path) -> Path | None:
+    """Render a DWFX file to a raster PDF at 100 DPI using PyMuPDF (MuPDF XPS engine).
+    Saves <stem>_converted.pdf alongside the DWFX. Returns the PDF path on success,
+    None if PyMuPDF is unavailable or the format is unsupported."""
+    try:
+        import fitz
+    except ImportError:
+        log.warning("PyMuPDF not installed — DWFX→PDF conversion skipped for %s", dwfx_path.name)
+        return None
+    pdf_path = dwfx_path.with_name(dwfx_path.stem + "_converted.pdf")
+    try:
+        doc = fitz.open(str(dwfx_path))
+        if doc.page_count == 0:
+            doc.close()
+            log.warning("DWFX→PDF: %s opened with 0 pages — skipping conversion", dwfx_path.name)
+            return None
+        out = fitz.open()
+        mat = fitz.Matrix(100 / 72, 100 / 72)  # 100 DPI (fitz default is 72 DPI)
+        for page in doc:
+            pix = page.get_pixmap(matrix=mat)
+            pg = out.new_page(width=pix.width, height=pix.height)
+            pg.insert_image(pg.rect, pixmap=pix)
+        out.save(str(pdf_path))
+        out.close()
+        doc.close()
+        log.info(
+            "DWFX→PDF converted: %s → %s (%d pages, %.1f KB)",
+            dwfx_path.name, pdf_path.name, out.page_count if hasattr(out, 'page_count') else '?',
+            pdf_path.stat().st_size / 1024,
+        )
+        return pdf_path
+    except Exception as exc:
+        log.warning("DWFX→PDF conversion failed for %s: %s", dwfx_path.name, exc)
+        return None
+
+
 _OVERLAY_NAMES = ("extracts.json", "discipline_findings.json")
 
 
@@ -275,6 +312,9 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     except Exception:
                         cad_path.unlink(missing_ok=True)
                         raise HTTPException(422, "קובץ DXF אינו תקין או פגום")
+                # DWFX→PDF auto-conversion so the engine can analyse the drawing.
+                elif cad_path.suffix.lower() == ".dwfx":
+                    _convert_dwfx_to_pdf(cad_path)
 
             # P2-A: write metadata.json so the render path always has it.
             # Originally this file was synthesized by the Phase 2a "Approach
@@ -964,6 +1004,8 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 except Exception:
                     new_cad_path.unlink(missing_ok=True)
                     raise HTTPException(422, "קובץ DXF אינו תקין או פגום")
+            elif new_cad_path.suffix.lower() == ".dwfx":
+                _convert_dwfx_to_pdf(new_cad_path)
         elif src_cad_path and src_cad_path.exists():
             new_cad_path = target_dir / src_cad_path.name
             shutil.copy2(src_cad_path, new_cad_path)
@@ -1197,6 +1239,131 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 "Content-Range": f"bytes {start}-{end}/{file_size}",
             },
         )
+
+    # ── POST /submissions/{id}/upload-email-response ──────────────────
+    # Upload an architect's email-as-PDF. Extracts structured corrections
+    # (page, description, category) via Claude and stores them in DB.
+    # Re-uploading replaces the previous EmailCorrection for this submission.
+
+    _MAX_EMAIL_PDF_BYTES = 20 * 1024 * 1024  # 20 MB
+
+    class _EmailCorrectionRowOut(BaseModel):
+        id: int
+        correction_id: int
+        page_number: int | None
+        change_he: str
+        category: str
+
+    class _EmailCorrectionOut(BaseModel):
+        id: int
+        submission_id: int
+        row_count: int
+        used_ai: bool
+        uploaded_at: str
+        rows: list[_EmailCorrectionRowOut]
+        raw_text: str | None = None
+        error: str | None = None
+        error_message: str | None = None
+
+    @_subs_router.post(
+        "/{submission_id}/upload-email-response",
+        response_model=_EmailCorrectionOut,
+        status_code=201,
+    )
+    async def upload_email_response(
+        submission_id: int,
+        pdf: UploadFile = File(...),
+    ) -> _EmailCorrectionOut:
+        """Extract architect corrections from an email-as-PDF and store them."""
+        from .email_extract import extract_email_corrections  # noqa: PLC0415
+
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+
+        content = await pdf.read(_MAX_EMAIL_PDF_BYTES + 1)
+        if len(content) > _MAX_EMAIL_PDF_BYTES:
+            raise HTTPException(
+                413,
+                f"קובץ ה-PDF גדול מדי — מקסימום {_MAX_EMAIL_PDF_BYTES // (1024*1024)} MB",
+            )
+
+        result = extract_email_corrections(content)
+
+        with _session() as sess:
+            # Replace any existing EmailCorrection for this submission.
+            existing = sess.query(EmailCorrection).filter_by(
+                submission_id=submission_id
+            ).first()
+            if existing:
+                sess.delete(existing)
+                sess.flush()
+
+            correction = EmailCorrection(
+                submission_id=submission_id,
+                raw_text=result.get("raw_text"),
+                row_count=len(result.get("corrections", [])),
+                used_ai=bool(result.get("used_ai")),
+            )
+            sess.add(correction)
+            sess.flush()
+
+            for item in result.get("corrections", []):
+                sess.add(EmailCorrectionRow(
+                    correction_id=correction.id,
+                    page_number=item.get("page_number"),
+                    change_he=item.get("change_he", ""),
+                    category=item.get("category", "drawing_change"),
+                ))
+            sess.commit()
+            sess.refresh(correction)
+
+            rows_out = [
+                _EmailCorrectionRowOut(**r.to_dict()) for r in correction.rows
+            ]
+            return _EmailCorrectionOut(
+                id=correction.id,
+                submission_id=submission_id,
+                row_count=correction.row_count,
+                used_ai=bool(correction.used_ai),
+                uploaded_at=correction.uploaded_at.isoformat(),
+                rows=rows_out,
+                raw_text=correction.raw_text,
+                error=result.get("error"),
+                error_message=result.get("error_message"),
+            )
+
+    # ── GET /submissions/{id}/email-corrections ────────────────────────
+
+    @_subs_router.get(
+        "/{submission_id}/email-corrections",
+        response_model=_EmailCorrectionOut,
+    )
+    def get_email_corrections(submission_id: int) -> _EmailCorrectionOut:
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            correction = sess.query(EmailCorrection).filter_by(
+                submission_id=submission_id
+            ).first()
+            if correction is None:
+                raise HTTPException(
+                    404,
+                    "לא נמצאו תיקוני מייל עבור הגשה זו",
+                )
+            rows_out = [
+                _EmailCorrectionRowOut(**r.to_dict()) for r in correction.rows
+            ]
+            return _EmailCorrectionOut(
+                id=correction.id,
+                submission_id=submission_id,
+                row_count=correction.row_count,
+                used_ai=bool(correction.used_ai),
+                uploaded_at=correction.uploaded_at.isoformat(),
+                rows=rows_out,
+            )
 
     return _projects_subs_router, _subs_router
 

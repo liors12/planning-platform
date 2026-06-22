@@ -384,6 +384,68 @@ class LayerMapping(Base):
         }
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# EmailCorrection + EmailCorrectionRow — architect email response extraction
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# One EmailCorrection per submission (unique constraint). Uploading a new
+# email PDF replaces the old one (cascade delete of EmailCorrectionRow children).
+# EmailCorrectionRow carries one architect-reported correction per row:
+#   page_number   — page the architect mentions (nullable)
+#   change_he     — what was changed, in Hebrew
+#   category      — text_addition | table_update | drawing_change
+
+class EmailCorrection(Base):
+    __tablename__ = "email_corrections"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    submission_id: Mapped[int] = mapped_column(
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    raw_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    row_count: Mapped[int] = mapped_column(Integer, nullable=False,
+                                            default=0, server_default="0")
+    used_ai: Mapped[bool] = mapped_column(Integer, nullable=False,
+                                           default=0, server_default="0")
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.datetime("now"), nullable=False,
+    )
+
+    rows: Mapped[list["EmailCorrectionRow"]] = relationship(
+        "EmailCorrectionRow", back_populates="correction", cascade="all, delete-orphan",
+    )
+
+
+class EmailCorrectionRow(Base):
+    __tablename__ = "email_correction_rows"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    correction_id: Mapped[int] = mapped_column(
+        ForeignKey("email_corrections.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    page_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    change_he: Mapped[str] = mapped_column(Text, nullable=False)
+    category: Mapped[str] = mapped_column(String(32), nullable=False,
+                                           default="drawing_change", server_default="drawing_change")
+
+    correction: Mapped["EmailCorrection"] = relationship("EmailCorrection",
+                                                          back_populates="rows")
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "correction_id": self.correction_id,
+            "page_number": self.page_number,
+            "change_he": self.change_he,
+            "category": self.category,
+        }
+
+
 class DisciplineComment(Base):
     __tablename__ = "discipline_comments"
 
