@@ -174,10 +174,6 @@ body {
   @bottom-right { content: none; }
   @bottom-left { content: none; }
 }
-@page appendix-divider {
-  @bottom-right { content: none; }
-  @bottom-left { content: none; }
-}
 @page signature {
   size: A4;
   margin: 20mm 22mm 22mm 22mm;
@@ -668,40 +664,6 @@ ol.priority-list strong { font-weight: 700; color: #1a1a1a; }
   color: var(--gray-mid);
   line-height: 1.8;
   font-style: italic;
-}
-
-/* ============================================
-   APPENDIX A DIVIDER — no letter-spacing on Hebrew
-   ============================================ */
-.appendix-divider {
-  page: appendix-divider;
-  text-align: center;
-  padding-top: 70mm;
-}
-.appendix-divider .label {
-  font-size: 11pt;
-  color: var(--gray-mid);
-  margin-bottom: 14mm;
-}
-.appendix-divider .big-title {
-  font-size: 60pt;
-  font-weight: 700;
-  color: var(--green-dark);
-  margin-bottom: 6mm;
-}
-.appendix-divider .subtitle {
-  font-size: 18pt;
-  color: var(--gray-dark);
-  margin-bottom: 14mm;
-  font-weight: 400;
-}
-.appendix-divider .note {
-  font-size: 11pt;
-  color: var(--gray-mid);
-  font-style: italic;
-  max-width: 130mm;
-  margin: 0 auto;
-  line-height: 1.8;
 }
 
 /* ============================================
