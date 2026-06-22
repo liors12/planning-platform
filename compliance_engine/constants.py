@@ -15,11 +15,9 @@ DISCIPLINE_NAME_HE: dict[str, str] = {
     "shafa":            'שפ"ע — אשפה ופינוי פסולת',
     "gardens":          "גנים ונוף",
     "infra":            "תשתיות",
-    "fire":             "תנועה",
+    "fire":             "תנועה — רחבות כיבוי אש",
     "drainage":         "ניקוז וחלחול",
-    # roofs is aliased to arch so any engine findings for "roofs" fold into
-    # the "אדריכלות וחזיתות" section instead of creating a separate column.
-    "roofs":            "אדריכלות וחזיתות",
+    "roofs":            "גגות וגינון על גג",
     "arch":             "אדריכלות וחזיתות",
     "balcony":          "מרפסות",
     "laundry":          "מסתורי כביסה",
@@ -36,7 +34,9 @@ DISCIPLINE_NAME_HE: dict[str, str] = {
 # section ("הערות אדריכלית העיר") and has no matching §3 anchor in the PDF.
 DISCIPLINE_ORDER: list[str] = [
     "shafa", "gardens", "infra", "fire", "drainage",
-    "arch", "balcony", "laundry", "env", "public-buildings", "general",
+    "roofs", "arch", "env", "public-buildings", "general",
+    # "balcony" and "laundry" are intentionally omitted here; their findings
+    # are merged into the "arch" subsection by _render_section_3.
 ]
 
 

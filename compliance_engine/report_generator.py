@@ -2041,10 +2041,17 @@ def _render_section_3(
     for r in discipline_results:
         by_disc.setdefault(r.get("discipline", "unknown"), []).append(r)
 
+    # Findings for these disciplines are absorbed into the "arch" subsection
+    # (matching reference §3.7 which contains arch + balcony + laundry rows).
+    _MERGE_INTO_ARCH = {"balcony", "laundry"}
+
     subs = []
     disc_i = 0
     for code in DISCIPLINE_ORDER:
-        rules = by_disc.get(code)
+        rules = list(by_disc.get(code) or [])
+        if code == "arch":
+            for extra in _MERGE_INTO_ARCH:
+                rules.extend(by_disc.get(extra) or [])
         if not rules:
             continue
         disc_i += 1

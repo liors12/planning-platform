@@ -61,9 +61,7 @@ _SIDECAR_DISC_HE: dict[str, str] = {
     "sec-3-3":          "תשתיות",
     "sec-3-4":          DISCIPLINE_NAME_HE["fire"],
     "sec-3-5":          "ניקוז וחלחול",
-    # sec-3-6 (גגות) was merged into arch; comments filed under sec-3-6
-    # show the arch label so the Excel section collapses correctly.
-    "sec-3-6":          DISCIPLINE_NAME_HE["arch"],
+    "sec-3-6":          DISCIPLINE_NAME_HE["roofs"],
     "sec-3-7":          DISCIPLINE_NAME_HE["arch"],
     "sec-3-8":          "הנחיות סביבתיות",
     "sec-3-9":          "שירותים לדיירים",
