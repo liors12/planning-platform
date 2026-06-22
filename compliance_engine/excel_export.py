@@ -90,21 +90,11 @@ SECTION_PRIORITY = {
 
 ARCHITECT_STATUS_OPTIONS = ["טופל", "לא טופל", "בטיפול", "לא רלוונטי"]
 
-# Temporary patch: engine rule_name_he / clause_id values that still contain
-# English codes. Applied to the נושא cell before writing. Remove each entry
-# once the engine produces the Hebrew name natively (tracked in D1 backlog).
-_NAME_PATCH: dict[str, str] = {
-    "קווי בניין (front/side/rear)":              "קווי בניין (קדמי/צידי/אחורי)",
-    "סעיף chatakhim.height_ceiling.plot_5":       "חריגת גובה מוחלט — תא שטח 5",
-    "סעיף chatakhim.ground_reference.A2":         "אי-עקביות מפלס קרקע — מבנה A2",
-    "סעיף chatakhim.ground_reference.B4":         "אי-עקביות מפלס קרקע — מבנה B4",
-    "סעיף 5.table":                               "טבלת זכויות בנייה",
-    "סעיף cad.plot_completeness":                 "שלמות תאי שטח",
+# Human-readable Hebrew names for well-known sidecar clause_ids that don't
+# carry an explicit rule_name_he (e.g. Bug A guard entries from M4 processor).
+_SIDECAR_CLAUSE_NAMES: dict[str, str] = {
+    "5.table": "טבלת זכויות בנייה",
 }
-
-
-def _patch_name(name: str) -> str:
-    return _NAME_PATCH.get(name, name)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -152,7 +142,7 @@ def _row_from_discipline(f: dict) -> dict:
         "report_section": "בדיקה רב-תחומית",
         "discipline": DISCIPLINE_HE.get(disc_key, disc_key),
         "plot": "",
-        "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
+        "name": f.get("rule_name_he") or f.get("rule_code") or "",
         "status": STATUS_MAP.get(verdict, verdict),
         "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
         "source_id": f"disc:{disc_key}:{f.get('rule_code') or ''}",
@@ -167,7 +157,7 @@ def _row_from_content(f: dict) -> dict:
         "report_section": 'בדיקת תאימות לתב"ע',
         "discipline": 'בדיקת תאימות לתב"ע',
         "plot": _format_plot(ta),
-        "name": _patch_name(f.get("rule_name_he") or f.get("rule_code") or ""),
+        "name": f.get("rule_name_he") or f.get("rule_code") or "",
         "status": STATUS_MAP.get(verdict, verdict),
         "description": _join([f.get("notes_he") or "", f.get("remediation_he") or ""]),
         "source_id": f"cont:{f.get('rule_code') or ''}:{ta}",
@@ -183,7 +173,11 @@ def _row_from_sidecar(f: dict) -> dict:
         "report_section": 'בדיקת תאימות לתב"ע',
         "discipline": 'בדיקת תאימות לתב"ע',
         "plot": _format_plot(ta),
-        "name": _patch_name(f"סעיף {clause_id}" if clause_id else ""),
+        "name": (
+            f.get("rule_name_he")
+            or _SIDECAR_CLAUSE_NAMES.get(clause_id)
+            or (f"סעיף {clause_id}" if clause_id else "")
+        ),
         "status": STATUS_MAP.get(indicator, indicator),
         "description": f.get("reasoning") or "",
         "source_id": f"side:{clause_id}:{ta}",

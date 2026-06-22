@@ -85,6 +85,7 @@ def _build_finding(
     return {
         # M4 sidecar shape (so report_generator's existing renderer can pick it up):
         "clause_id": "cad.plot_completeness",
+        "rule_name_he": "שלמות תאי שטח",
         "ta_shetach_takanon": None,  # plan-wide finding
         "compliance_indicator": indicator,
         "reasoning": reasoning_he,

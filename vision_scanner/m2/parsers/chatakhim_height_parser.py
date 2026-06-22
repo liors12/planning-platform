@@ -820,6 +820,17 @@ def _build_finding(
     list of sidecar-shaped findings to m4_summary.sidecar_only_findings.
     report_generator splits by source_type to render the right section.
     """
+    if check_type == "ceiling":
+        _name_he: Optional[str] = f"חריגת גובה — מבנה {building_id}"
+    elif check_type == "consistency":
+        _name_he = f"אי-עקביות גובה — מבנה {building_id}"
+    elif check_type == "ground_reference":
+        _name_he = f"אי-עקביות מפלס קרקע — מבנה {building_id}"
+    elif check_type == "ceiling_plot_level":
+        _name_he = f"חריגת גובה מוחלט — תא שטח {plot_id}"
+    else:
+        _name_he = None
+
     finding = {
         # M4 sidecar shape:
         "clause_id": clause_id,
@@ -834,6 +845,8 @@ def _build_finding(
         "ceiling_m": ABSOLUTE_CEILING_M,
         "ceiling_source_section": "סעיף 6.7",
     }
+    if _name_he:
+        finding["rule_name_he"] = _name_he
     finding.update(extras)
     return finding
 

@@ -151,7 +151,7 @@
     },
     {
       "rule_code": "CONTENT_SETBACKS",
-      "rule_name_he": "קווי בניין (front/side/rear)",
+      "rule_name_he": "קווי בניין (קדמי/צידי/אחורי)",
       "guidelines_section": "3.6",
       "category": "content_compliance",
       "rule_type": "geometric",
