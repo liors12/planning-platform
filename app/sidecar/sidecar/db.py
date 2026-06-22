@@ -146,10 +146,10 @@ def initialize(engine: Engine) -> dict:
     # fresh installs; for existing DBs create_all is idempotent via IF NOT EXISTS).
     # No ALTER TABLE needed: create_all only creates missing tables.
 
-    # re-audit prerequisites migration — add pdf_hash / cad_hash to submissions.
+    # re-audit prerequisites migration — add pdf_hash / cad_hash / source_submission_id.
     with engine.begin() as conn:
         cols = {c[1] for c in conn.execute(text("PRAGMA table_info(submissions)")).fetchall()}
-        for col in ("pdf_hash", "cad_hash"):
+        for col in ("pdf_hash", "cad_hash", "source_submission_id"):
             if col not in cols:
                 conn.execute(text(f"ALTER TABLE submissions ADD COLUMN {col} TEXT"))
                 log.info("migration: added %s column to submissions", col)

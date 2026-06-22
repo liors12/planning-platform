@@ -72,6 +72,8 @@ export interface SubmissionOut {
    * can't spawn an external Python in the packaged build. UI disables
    * the "הפעילי את התוכנה" button when false. */
   engine_run_available: boolean;
+  /** Set when this submission is a revision of another (re-audit lineage). */
+  source_submission_id: number | null;
 }
 
 export type JobStatus = "queued" | "running" | "completed" | "failed";
@@ -309,6 +311,36 @@ export async function runEngine(submissionId: number): Promise<JobOut> {
       method: "POST",
     }),
     `POST /submissions/${submissionId}/run-engine`,
+  );
+}
+
+export async function suggestRevisionVersion(
+  submissionId: number,
+): Promise<{ suggested: string }> {
+  return jsonOrThrow<{ suggested: string }>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/suggest-revision-version`,
+    ),
+    `GET /submissions/${submissionId}/suggest-revision-version`,
+  );
+}
+
+export async function createRevision(
+  submissionId: number,
+  versionString: string,
+  pdf?: File | null,
+  cadFile?: File | null,
+): Promise<SubmissionOut> {
+  const form = new FormData();
+  form.append("version_string", versionString);
+  if (pdf) form.append("pdf", pdf, pdf.name);
+  if (cadFile) form.append("cad_file", cadFile, cadFile.name);
+  return jsonOrThrow<SubmissionOut>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/create-revision`,
+      { method: "POST", body: form },
+    ),
+    `POST /submissions/${submissionId}/create-revision`,
   );
 }
 

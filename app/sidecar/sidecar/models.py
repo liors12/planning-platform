@@ -121,6 +121,10 @@ class Submission(Base):
     # identical re-uploads and skip redundant engine runs.
     pdf_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     cad_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # Points to the earlier submission this one revises (re-audit lineage).
+    source_submission_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("submissions.id", ondelete="SET NULL"), nullable=True,
+    )
 
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -143,6 +147,7 @@ class Submission(Base):
             "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
             "pdf_hash": self.pdf_hash,
             "cad_hash": self.cad_hash,
+            "source_submission_id": self.source_submission_id,
         }
 
     def to_summary(self) -> dict:

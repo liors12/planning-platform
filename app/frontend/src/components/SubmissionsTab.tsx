@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  deleteAttachment, deleteSubmission, exportExcel, getArchitectResponse,
-  listAttachments, listSubmissions, openOutput, openUrl, pollJobUntilDone,
-  renderSubmission, revealOutput, runEngine, setWorkflowStage,
-  uploadArchitectResponse, uploadAttachment, uploadSubmission,
+  createRevision, deleteAttachment, deleteSubmission, exportExcel,
+  getArchitectResponse, listAttachments, listSubmissions, openOutput, openUrl,
+  pollJobUntilDone, renderSubmission, revealOutput, runEngine, setWorkflowStage,
+  suggestRevisionVersion, uploadArchitectResponse, uploadAttachment, uploadSubmission,
   type ArchitectResponseRow, type AttachmentOut, type ProjectOut,
   type SubmissionOut, type WorkflowStage,
 } from "../api";
@@ -111,6 +111,20 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   const [attachmentsLoading, setAttachmentsLoading] = useState<Record<number, boolean>>({});
   const [attachmentUploading, setAttachmentUploading] = useState<Record<number, boolean>>({});
   const [attachmentDeleting, setAttachmentDeleting] = useState<Record<number, Set<number>>>({});
+
+  // Revision dialog state.
+  const [revisionDialog, setRevisionDialog] = useState<{
+    sourceId: number;
+    sourceName: string;
+    suggestedVersion: string;
+  } | null>(null);
+  const [revisionVersion, setRevisionVersion] = useState("");
+  const [revisionPdf, setRevisionPdf] = useState<File | null>(null);
+  const [revisionCad, setRevisionCad] = useState<File | null>(null);
+  const [revisionUploading, setRevisionUploading] = useState(false);
+  const [revisionErr, setRevisionErr] = useState<string | null>(null);
+  const revisionPdfRef = useRef<HTMLInputElement | null>(null);
+  const revisionCadRef = useRef<HTMLInputElement | null>(null);
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -241,6 +255,45 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     } catch (e) {
       setErr(friendlyError(String(e)) ||
              "אירעה תקלה במחיקת הגרסה. הפרטים נשמרו לקובץ יומן.");
+    }
+  }
+
+  async function onOpenRevisionDialog(sub: SubmissionOut) {
+    try {
+      const { suggested } = await suggestRevisionVersion(sub.id);
+      setRevisionDialog({ sourceId: sub.id, sourceName: sub.version_string, suggestedVersion: suggested });
+      setRevisionVersion(suggested);
+      setRevisionPdf(null);
+      setRevisionCad(null);
+      setRevisionErr(null);
+    } catch (e) {
+      setErr(String(e));
+    }
+  }
+
+  async function onSubmitRevision(e: React.FormEvent) {
+    e.preventDefault();
+    if (!revisionDialog) return;
+    if (!revisionVersion.trim()) {
+      setRevisionErr("יש להזין מספר גרסה");
+      return;
+    }
+    setRevisionErr(null);
+    setRevisionUploading(true);
+    try {
+      await createRevision(revisionDialog.sourceId, revisionVersion.trim(), revisionPdf, revisionCad);
+      setRevisionDialog(null);
+      refresh();
+      onSubmissionsChanged();
+    } catch (e) {
+      const raw = String(e);
+      if (/HTTP 409/.test(raw)) {
+        setRevisionErr(`גרסה ${revisionVersion.trim()} כבר קיימת. בחרי מספר גרסה אחר.`);
+      } else {
+        setRevisionErr(raw);
+      }
+    } finally {
+      setRevisionUploading(false);
     }
   }
 
@@ -469,6 +522,65 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
         {subs !== null && subs.length === 0 && (
           <p className="muted">אין הגשות עדיין.</p>
         )}
+        {revisionDialog && (
+          <div className="modal-overlay" role="dialog" aria-modal="true"
+            aria-label="העלאת גרסה מתוקנת">
+            <div className="modal-box">
+              <h3>העלאת גרסה מתוקנת</h3>
+              <p className="muted">
+                גרסה חדשה על בסיס{" "}
+                <span dir="ltr">{revisionDialog.sourceName}</span>.
+                ניתן להעלות קבצים חדשים — אם לא תבחרי, הקבצים הקיימים יועתקו.
+              </p>
+              <form onSubmit={onSubmitRevision} className="revision-form">
+                <label className="form-label">
+                  מספר גרסה חדשה
+                  <input
+                    type="text"
+                    value={revisionVersion}
+                    dir="ltr"
+                    onChange={(e) => setRevisionVersion(e.target.value)}
+                    disabled={revisionUploading}
+                  />
+                </label>
+                <label className="form-label">
+                  PDF חדש (אופציונלי)
+                  <input
+                    ref={revisionPdfRef}
+                    type="file"
+                    accept=".pdf,application/pdf"
+                    disabled={revisionUploading}
+                    onChange={(e) => setRevisionPdf(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                <label className="form-label">
+                  קובץ CAD חדש (אופציונלי)
+                  <input
+                    ref={revisionCadRef}
+                    type="file"
+                    accept=".dxf,.dwg,.dwfx"
+                    disabled={revisionUploading}
+                    onChange={(e) => setRevisionCad(e.target.files?.[0] ?? null)}
+                  />
+                </label>
+                {revisionErr && <div className="error">{revisionErr}</div>}
+                <div className="modal-actions">
+                  <button type="submit" className="primary-btn" disabled={revisionUploading}>
+                    {revisionUploading
+                      ? <><span className="spinner" aria-hidden="true" />מעלה גרסה...</>
+                      : "העלי גרסה מתוקנת"}
+                  </button>
+                  <button type="button" className="ghost-btn"
+                    disabled={revisionUploading}
+                    onClick={() => setRevisionDialog(null)}>
+                    ביטול
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
         {subs?.map((sub) => {
           const activeJobId = activeJobs[sub.id];
           // engine_run_available is False in the Windows-frozen package — the
@@ -597,6 +709,16 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   }
                 >
                   {sub.status === "complete" ? "הפעילי שוב את התוכנה" : "הפעילי את התוכנה"}
+                </button>
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  data-testid={`create-revision-${sub.version_string}`}
+                  onClick={() => onOpenRevisionDialog(sub)}
+                  disabled={!!activeJobId || sub.status === "analyzing"}
+                  title="העלאת גרסה מתוקנת על בסיס הגרסה הזו"
+                >
+                  העלאת גרסה מתוקנת ↑
                 </button>
 
                 {sub.has_audit_results && (() => {

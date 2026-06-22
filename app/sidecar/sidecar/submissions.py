@@ -836,6 +836,153 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
         job = queue.enqueue_run_audit(submission_id)
         return JobOut(**job.to_dict())
 
+    # ── GET /submissions/{id}/suggest-revision-version ─────────────────
+
+    @_subs_router.get("/{submission_id}/suggest-revision-version")
+    def suggest_revision_version(submission_id: int) -> dict:
+        """Return a suggested version string for a revision of this submission.
+        Increments the last numeric segment: 'v24.3' → 'v24.4'."""
+        import re
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            current = sub.version_string
+        m = re.match(r"^(.*?)(\d+)$", current)
+        if m:
+            suggested = f"{m.group(1)}{int(m.group(2)) + 1}"
+        else:
+            suggested = f"{current}-r2"
+        return {"suggested": suggested}
+
+    # ── POST /submissions/{id}/create-revision ─────────────────────────
+
+    @_subs_router.post("/{submission_id}/create-revision",
+                       response_model=SubmissionOut, status_code=201)
+    async def create_revision(
+        submission_id: int,
+        version_string: str = Form(..., min_length=1, max_length=64),
+        pdf: UploadFile | None = File(None),
+        cad_file: UploadFile | None = File(None),
+    ) -> SubmissionOut:
+        """Create a new submission as a revision of an existing one.
+        If no PDF is supplied, copies the source submission's PDF. If no CAD is
+        supplied and the source had one, copies it too. Archives any existing
+        engine overlays in the new version's directory."""
+        with _session() as sess:
+            src = sess.get(Submission, submission_id)
+            if src is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            project = src.project
+            src_pdf_path = Path(src.pdf_path)
+            src_cad_path = Path(src.dwg_path) if src.dwg_path else None
+
+            try:
+                target_dir = submission_dir(cfg, project.tava_number, version_string)
+            except StorageError as exc:
+                raise HTTPException(422, f"{exc} {_VERSION_HINT}")
+
+            # Prevent overwriting an existing version — DB will also catch it,
+            # but fail fast here with a clearer message.
+            existing = (
+                sess.query(Submission)
+                .filter(Submission.project_id == project.id,
+                        Submission.version_string == version_string)
+                .first()
+            )
+            if existing:
+                raise HTTPException(
+                    409,
+                    f"גרסה {version_string!r} כבר קיימת. בחרי מספר גרסה אחר."
+                )
+
+        _archive_overlays(target_dir)
+
+        # Determine the new PDF path.
+        if pdf is not None and pdf.filename:
+            try:
+                pdf_leaf = sanitize_upload_filename(pdf.filename)
+            except StorageError as exc:
+                raise HTTPException(422, str(exc))
+            new_pdf_path = target_dir / pdf_leaf
+            _stream_upload_to_disk(pdf, new_pdf_path)
+        else:
+            # Copy source PDF into the new version directory.
+            if not src_pdf_path.exists():
+                raise HTTPException(
+                    409,
+                    "קובץ ה-PDF של הגרסה המקורית חסר מהדיסק. יש להעלות קובץ חדש."
+                )
+            new_pdf_path = target_dir / src_pdf_path.name
+            target_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src_pdf_path, new_pdf_path)
+
+        # Determine the new CAD path.
+        new_cad_path: Path | None = None
+        if cad_file is not None and cad_file.filename:
+            fname = cad_file.filename
+            ext = Path(fname).suffix.lower()
+            if ext not in (".dwg", ".dxf", ".dwfx"):
+                raise HTTPException(422, "קובץ ה-CAD חייב להיות בפורמט DXF, DWG או DWFX")
+            try:
+                cad_leaf = sanitize_upload_filename(fname)
+            except StorageError as exc:
+                raise HTTPException(422, str(exc))
+            new_cad_path = target_dir / cad_leaf
+            _stream_upload_to_disk(cad_file, new_cad_path)
+            if new_cad_path.suffix.lower() == ".dxf":
+                try:
+                    import ezdxf
+                    ezdxf.readfile(str(new_cad_path))
+                except Exception:
+                    new_cad_path.unlink(missing_ok=True)
+                    raise HTTPException(422, "קובץ DXF אינו תקין או פגום")
+        elif src_cad_path and src_cad_path.exists():
+            new_cad_path = target_dir / src_cad_path.name
+            shutil.copy2(src_cad_path, new_cad_path)
+
+        # Write metadata.json for the new version.
+        metadata_path = target_dir / "metadata.json"
+        if not metadata_path.exists():
+            bare_version = (version_string[1:] if version_string.startswith("v")
+                            else version_string)
+            metadata_path.write_text(
+                json.dumps({
+                    "plan_number": project.tava_number,
+                    "submission_version": bare_version,
+                    "submission_date": datetime.now(timezone.utc).date().isoformat(),
+                    "file_name": new_pdf_path.name,
+                    "_source": "platform-sidecar-revision",
+                }, ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+
+        pdf_hash = _sha256_file(new_pdf_path)
+        cad_hash = _sha256_file(new_cad_path) if new_cad_path else None
+
+        with _session() as sess:
+            revision = Submission(
+                project_id=project.id,
+                version_string=version_string,
+                status="uploaded",
+                pdf_path=str(new_pdf_path),
+                dwg_path=str(new_cad_path) if new_cad_path else None,
+                pdf_hash=pdf_hash,
+                cad_hash=cad_hash,
+                source_submission_id=submission_id,
+            )
+            sess.add(revision)
+            try:
+                sess.commit()
+            except IntegrityError:
+                sess.rollback()
+                raise HTTPException(
+                    409,
+                    f"גרסה {version_string!r} כבר קיימת. בחרי מספר גרסה אחר."
+                )
+            sess.refresh(revision)
+            return _hydrate(revision)
+
     # ── GET /submissions/{id}/findings ─────────────────────────────────
 
     @_subs_router.get("/{submission_id}/findings")
