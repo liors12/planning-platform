@@ -281,8 +281,17 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     setRevisionErr(null);
     setRevisionUploading(true);
     try {
-      await createRevision(revisionDialog.sourceId, revisionVersion.trim(), revisionPdf, revisionCad);
+      const revision = await createRevision(revisionDialog.sourceId, revisionVersion.trim(), revisionPdf, revisionCad);
       setRevisionDialog(null);
+      // Auto-enqueue engine run for the new revision.
+      if (revision.engine_run_available) {
+        try {
+          const job = await runEngine(revision.id);
+          setActiveJobs((prev) => ({ ...prev, [revision.id]: job.id }));
+        } catch {
+          // Ignore engine-unavailable errors; Ellen can trigger manually.
+        }
+      }
       refresh();
       onSubmissionsChanged();
     } catch (e) {
