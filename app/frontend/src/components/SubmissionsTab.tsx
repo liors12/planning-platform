@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  deleteSubmission, exportExcel, listSubmissions, openOutput,
+  deleteSubmission, exportExcel, listSubmissions, openOutput, openUrl,
   pollJobUntilDone, renderSubmission, revealOutput, runEngine,
   uploadSubmission, type ProjectOut, type SubmissionOut,
 } from "../api";
@@ -240,11 +240,27 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     }
   }
 
+  async function onOpenMavat() {
+    const url = `https://mavat.iplan.gov.il/SV4/1/1001/${encodeURIComponent(project.tava_number)}`;
+    try { await openUrl(url); }
+    catch { /* silently ignore — worst case the browser doesn't open */ }
+  }
+
   return (
     <div className="submissions-tab">
       {/* ── Upload form ─────────────────────────────────────────────── */}
       <section className="card upload-card">
-        <h3>הגשה חדשה</h3>
+        <div className="upload-card-header">
+          <h3>הגשה חדשה</h3>
+          <span className="tava-meta">
+            {'תב"ע '}
+            <code dir="ltr">{project.tava_number}</code>
+            {" "}
+            <button type="button" className="ghost-btn small" onClick={onOpenMavat}>
+              צפי בתכנון זמין ↗
+            </button>
+          </span>
+        </div>
         {!project.has_schema && (
           <div className="warning-block">
             <strong>אזהרה:</strong> לא נמצא קובץ סכמה (project-schema) לתב"ע{" "}
@@ -433,6 +449,12 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                 onDismiss={() => setOutputStatus((p) => ({ ...p, [sub.id]: null }))}
               />
 
+              <LastReportSection
+                hasPdf={sub.has_report_pdf}
+                hasXlsx={sub.has_report_xlsx}
+                onOpen={(k) => onOpenOutput(sub.id, k)}
+              />
+
               {activeJobId && (
                 <EngineStatus
                   jobId={activeJobId}
@@ -513,6 +535,38 @@ function OutputBanner({
       <span className="output-icon" aria-hidden="true">✗</span>
       <span className="output-msg">{status.friendly}</span>
       <button className="output-dismiss" type="button" aria-label="סגרי" onClick={onDismiss}>✕</button>
+    </div>
+  );
+}
+
+// ─── Last generated report section ──────────────────────────────────────────
+// Persistent access to existing report files. Complements the transient
+// OutputBanner (which only appears right after generating in the current
+// session). When has_report_pdf / has_report_xlsx come back true on list
+// refresh, these buttons let the user open a report generated in a prior
+// session — without having to regenerate it.
+
+function LastReportSection({
+  hasPdf, hasXlsx, onOpen,
+}: {
+  hasPdf: boolean;
+  hasXlsx: boolean;
+  onOpen: (k: "pdf" | "xlsx") => void;
+}) {
+  if (!hasPdf && !hasXlsx) return null;
+  return (
+    <div className="last-report-section">
+      <span className="last-report-label">דו״ח סקירה אחרון:</span>
+      {hasPdf && (
+        <button type="button" className="ghost-btn small" onClick={() => onOpen("pdf")}>
+          פתחי דו״ח PDF
+        </button>
+      )}
+      {hasXlsx && (
+        <button type="button" className="ghost-btn small" onClick={() => onOpen("xlsx")}>
+          פתחי אקסל
+        </button>
+      )}
     </div>
   );
 }

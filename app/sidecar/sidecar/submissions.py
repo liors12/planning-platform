@@ -16,13 +16,14 @@ import os
 import shutil
 import subprocess
 import sys
+import webbrowser
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
 
 log = logging.getLogger(__name__)
 
-from fastapi import APIRouter, File, Form, Header, HTTPException, Request, UploadFile
+from fastapi import APIRouter, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.engine import Engine
@@ -476,6 +477,13 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             _spawn(["open", "-R", str(path)])
         else:
             _spawn(["xdg-open", str(path.parent)])
+        return Response(status_code=204)
+
+    @_subs_router.post("/open-url", status_code=204)
+    def open_url(url: str = Query(...)):
+        """Open an external URL in the OS default browser.
+        Needed because the Tauri webview ignores target="_blank"."""
+        webbrowser.open(url)
         return Response(status_code=204)
 
     # ── POST /submissions/{id}/run-engine ──────────────────────────────

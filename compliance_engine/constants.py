@@ -12,19 +12,22 @@ from __future__ import annotations
 # Ellen reviewed and approved. Order in this dict IS the canonical section
 # order used by the HTML report (§3.1 = shafa, §3.2 = gardens, …).
 DISCIPLINE_NAME_HE: dict[str, str] = {
-    "shafa":     'שפ"ע — אשפה ופינוי פסולת',
-    "gardens":   "גנים ונוף",
-    "infra":     "תשתיות",
-    "fire":      "רחבות כיבוי אש",
-    "drainage":  "ניקוז וחלחול",
-    "roofs":     "גגות וגינון על גג",
-    "arch":      "אדריכלות וחזיתות",
-    "balcony":   "מרפסות",
-    "laundry":   "מסתורי כביסה",
-    "env":       "הנחיות סביבתיות",
+    "shafa":            'שפ"ע — אשפה ופינוי פסולת',
+    "gardens":          "גנים ונוף",
+    "infra":            "תשתיות",
+    "fire":             "כיבוי אש",
+    "drainage":         "ניקוז וחלחול",
+    # roofs is aliased to arch so any engine findings for "roofs" fold into
+    # the "אדריכלות וחזיתות" section instead of creating a separate column.
+    "roofs":            "אדריכלות וחזיתות",
+    "arch":             "אדריכלות וחזיתות",
+    "balcony":          "מרפסות",
+    "laundry":          "מסתורי כביסה",
+    "env":              "הנחיות סביבתיות",
+    "public-buildings": "מבני ציבור",
     # city-arch is intentionally excluded from DISCIPLINE_ORDER below;
     # it renders as its own Excel section, not a §3 PDF subsection.
-    "city-arch": "הערות אדריכלית העיר",
+    "city-arch":        "הערות אדריכלית העיר",
 }
 
 # Canonical §3 section order for the HTML report and Excel sort.
@@ -32,7 +35,7 @@ DISCIPLINE_NAME_HE: dict[str, str] = {
 # section ("הערות אדריכלית העיר") and has no matching §3 anchor in the PDF.
 DISCIPLINE_ORDER: list[str] = [
     "shafa", "gardens", "infra", "fire", "drainage",
-    "roofs", "arch", "balcony", "laundry", "env",
+    "arch", "balcony", "laundry", "env", "public-buildings",
 ]
 
 

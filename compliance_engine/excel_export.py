@@ -56,16 +56,19 @@ _DISC_SORT_IDX = {DISCIPLINE_NAME_HE.get(k, k): i for i, k in enumerate(DISCIPLI
 
 # Sidecar discipline keys → Hebrew labels (mirrors app/sidecar/sidecar/disciplines.py).
 _SIDECAR_DISC_HE: dict[str, str] = {
-    "sec-3-1":  'שפ"ע — אשפה ופינוי פסולת',
-    "sec-3-2":  "גנים ונוף",
-    "sec-3-3":  "תשתיות",
-    "sec-3-4":  "תנועה — רחבות כיבוי אש",
-    "sec-3-5":  "ניקוז וחלחול",
-    "sec-3-6":  "גגות וגינון על גג",
-    "sec-3-7":  "אדריכלות וחזיתות",
-    "sec-3-8":  "הנחיות סביבתיות",
-    "sec-3-9":  "שירותים לדיירים",
-    "city-arch": DISCIPLINE_NAME_HE["city-arch"],
+    "sec-3-1":          'שפ"ע — אשפה ופינוי פסולת',
+    "sec-3-2":          "גנים ונוף",
+    "sec-3-3":          "תשתיות",
+    "sec-3-4":          DISCIPLINE_NAME_HE["fire"],
+    "sec-3-5":          "ניקוז וחלחול",
+    # sec-3-6 (גגות) was merged into arch; comments filed under sec-3-6
+    # show the arch label so the Excel section collapses correctly.
+    "sec-3-6":          DISCIPLINE_NAME_HE["arch"],
+    "sec-3-7":          DISCIPLINE_NAME_HE["arch"],
+    "sec-3-8":          "הנחיות סביבתיות",
+    "sec-3-9":          "שירותים לדיירים",
+    "city-arch":        DISCIPLINE_NAME_HE["city-arch"],
+    "public-buildings": DISCIPLINE_NAME_HE["public-buildings"],
 }
 
 STATUS_PRIORITY = {

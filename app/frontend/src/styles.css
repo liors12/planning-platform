@@ -360,6 +360,25 @@ code, .path {
 /* ─── Submissions ───────────────────────────────────────────────────── */
 
 .upload-card { background: var(--green-soft); border-color: var(--green-line); }
+.upload-card-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-block-end: 4px;
+}
+.upload-card-header h3 { margin: 0; }
+.tava-meta { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.last-report-section {
+  margin-block-start: 8px;
+  padding-block-start: 8px;
+  border-block-start: 1px solid var(--gray-line, #e8e8e8);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.last-report-label { font-size: 13px; color: var(--muted); }
 .upload-grid {
   display: grid;
   grid-template-columns: 1fr 2fr 2fr;

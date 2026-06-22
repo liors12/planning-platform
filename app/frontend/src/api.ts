@@ -495,6 +495,15 @@ export async function revealOutput(submissionId: number, kind: "pdf" | "xlsx"): 
   );
 }
 
+/** Open an external URL in the OS default browser via the sidecar.
+ * Used for Mavat links — the Tauri webview ignores target="_blank". */
+export async function openUrl(url: string): Promise<void> {
+  await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/open-url?url=${encodeURIComponent(url)}`,
+    { method: "POST" },
+  );
+}
+
 
 // ── Settings (Group C2) ───────────────────────────────────────────────────
 
