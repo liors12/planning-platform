@@ -578,6 +578,9 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 sess.add(ResponseRow(
                     response_id=arch_resp.id,
                     source_id=row["source_id"],
+                    topic_he=row.get("topic_he") or None,
+                    finding_status=row.get("finding_status") or None,
+                    description=row.get("description") or None,
                     treatment_status=row.get("treatment_status") or None,
                     architect_notes=row.get("architect_notes") or None,
                 ))
@@ -609,6 +612,9 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             rows = [
                 {
                     "source_id": r.source_id,
+                    "topic_he": r.topic_he,
+                    "finding_status": r.finding_status,
+                    "description": r.description,
                     "treatment_status": r.treatment_status,
                     "architect_notes": r.architect_notes,
                 }
@@ -852,9 +858,12 @@ def _parse_response_xlsx(path: Path) -> list[dict]:
     """Parse the architect-filled response Excel.
 
     Expects the same column layout as excel_export.py:
-      col 9  (0-based idx 8)  — סטטוס טיפול   (treatment status)
-      col 10 (0-based idx 9)  — הערות האדריכל (architect notes)
-      col 11 (0-based idx 10) — source_id      (hidden round-trip key)
+      col 6  (0-based idx 5)  — נושא              (topic / finding name)
+      col 7  (0-based idx 6)  — סטטוס ממצא        (original finding status)
+      col 8  (0-based idx 7)  — תיאור/פעולה נדרשת (description / required action)
+      col 9  (0-based idx 8)  — סטטוס טיפול        (treatment status — architect fills)
+      col 10 (0-based idx 9)  — הערות האדריכל      (architect notes — architect fills)
+      col 11 (0-based idx 10) — source_id           (hidden round-trip key)
 
     Row 1 is the header; data starts at row 2. Rows without a source_id
     (empty or None) are skipped — they are section-separator / header rows
@@ -872,12 +881,13 @@ def _parse_response_xlsx(path: Path) -> list[dict]:
         source_id = str(raw_sid).strip() if raw_sid is not None else ""
         if not source_id or source_id.lower() == "none":
             continue
-        treatment = str(row[8]).strip() if row[8] is not None else ""
-        notes = str(row[9]).strip() if row[9] is not None else ""
         result.append({
             "source_id": source_id,
-            "treatment_status": treatment or None,
-            "architect_notes": notes or None,
+            "topic_he": str(row[5]).strip() if row[5] is not None else None or None,
+            "finding_status": str(row[6]).strip() if row[6] is not None else None or None,
+            "description": str(row[7]).strip() if row[7] is not None else None or None,
+            "treatment_status": str(row[8]).strip() if row[8] is not None else None or None,
+            "architect_notes": str(row[9]).strip() if row[9] is not None else None or None,
         })
     wb.close()
     return result

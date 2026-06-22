@@ -1602,6 +1602,66 @@ code, .path {
   pointer-events: none;
 }
 .response-uploaded-note { font-size: 12px; }
+
+/* ── B3: Response review section ─────────────────────────────────────────── */
+.response-review-section {
+  margin-block: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: var(--surface-card);
+}
+.response-review-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-block-end: 10px;
+}
+.response-review-title { font-weight: 600; font-size: 13.5px; }
+.response-review-count { font-size: 12px; }
+.response-table-wrap {
+  overflow-x: auto;
+  margin-block-end: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.response-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  text-align: right;
+}
+.response-table th {
+  background: var(--surface-raised);
+  padding: 6px 10px;
+  border-block-end: 2px solid var(--border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+.response-table td {
+  padding: 5px 10px;
+  border-block-end: 1px solid var(--border);
+  vertical-align: top;
+  max-width: 200px;
+}
+.response-table tr.rt-empty td { opacity: 0.5; }
+.rt-desc { max-width: 260px; }
+.rt-notes { max-width: 220px; }
+.rt-treatment {
+  font-weight: 600;
+  font-size: 11.5px;
+  background: #fef3c7;
+  color: #92400e;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.response-verify-row {
+  margin-block-start: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
 .sr-only {
   position: absolute;
   width: 1px; height: 1px;

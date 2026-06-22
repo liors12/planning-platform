@@ -525,6 +525,31 @@ export async function setWorkflowStage(
 }
 
 
+export interface ArchitectResponseRow {
+  source_id: string;
+  topic_he: string | null;
+  finding_status: string | null;
+  description: string | null;
+  treatment_status: string | null;
+  architect_notes: string | null;
+}
+
+export interface ArchitectResponseInfo {
+  submission_id: number;
+  row_count: number;
+  uploaded_at: string;
+  rows: ArchitectResponseRow[];
+}
+
+export async function getArchitectResponse(
+  submissionId: number,
+): Promise<ArchitectResponseInfo> {
+  return jsonOrThrow<ArchitectResponseInfo>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/response`),
+    "get architect response",
+  );
+}
+
 export async function uploadArchitectResponse(
   submissionId: number,
   xlsx: File,

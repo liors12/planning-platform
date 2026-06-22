@@ -142,6 +142,20 @@ def initialize(engine: Engine) -> dict:
             ))
             log.info("migration: added workflow_stage column to submissions")
 
+    # B3 migration — add topic_he/finding_status/description to response_rows
+    # for existing DBs that were created under the B2 schema.
+    with engine.begin() as conn:
+        rr_exists = conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='response_rows'"
+        )).fetchone()
+        if rr_exists:
+            rr_cols = {c[1] for c in conn.execute(
+                text("PRAGMA table_info(response_rows)")).fetchall()}
+            for col in ("topic_he", "finding_status", "description"):
+                if col not in rr_cols:
+                    conn.execute(text(f"ALTER TABLE response_rows ADD COLUMN {col} TEXT"))
+                    log.info("migration: added %s to response_rows", col)
+
     with engine.begin() as conn:
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS app_metadata (

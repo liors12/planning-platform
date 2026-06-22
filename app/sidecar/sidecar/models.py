@@ -270,6 +270,11 @@ class ResponseRow(Base):
         index=True,
     )
     source_id: Mapped[str] = mapped_column(String(512), nullable=False)
+    # Original finding columns captured from the Excel (cols 5/6/7) — B3
+    topic_he: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    finding_status: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    # Architect-filled columns (cols 9/10)
     treatment_status: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     architect_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 

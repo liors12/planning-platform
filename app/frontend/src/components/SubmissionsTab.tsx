@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  deleteSubmission, exportExcel, listSubmissions, openOutput, openUrl,
-  pollJobUntilDone, renderSubmission, revealOutput, runEngine,
-  setWorkflowStage, uploadArchitectResponse, uploadSubmission,
-  type ProjectOut, type SubmissionOut, type WorkflowStage,
+  deleteSubmission, exportExcel, getArchitectResponse, listSubmissions,
+  openOutput, openUrl, pollJobUntilDone, renderSubmission, revealOutput,
+  runEngine, setWorkflowStage, uploadArchitectResponse, uploadSubmission,
+  type ArchitectResponseRow, type ProjectOut, type SubmissionOut, type WorkflowStage,
 } from "../api";
 import { EngineStatus } from "./EngineStatus";
 
@@ -98,6 +98,11 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
   // Spinner while architect response is uploading.
   const [responseUploading, setResponseUploading] = useState<Record<number, boolean>>({});
+
+  // Loaded response rows per submission (B3 verification table).
+  const [responseRows, setResponseRows] = useState<Record<number, ArchitectResponseRow[] | null>>({});
+  const [responseRowsLoading, setResponseRowsLoading] = useState<Record<number, boolean>>({});
+  const [verifyLoading, setVerifyLoading] = useState<Record<number, boolean>>({});
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -264,6 +269,32 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       setErr(String(e));
     } finally {
       setResponseUploading((p) => ({ ...p, [submissionId]: false }));
+    }
+  }
+
+  async function onLoadResponse(submissionId: number) {
+    if (responseRows[submissionId] !== undefined) return; // already loaded
+    setResponseRowsLoading((p) => ({ ...p, [submissionId]: true }));
+    try {
+      const info = await getArchitectResponse(submissionId);
+      setResponseRows((p) => ({ ...p, [submissionId]: info.rows }));
+    } catch (e) {
+      setResponseRows((p) => ({ ...p, [submissionId]: [] }));
+    } finally {
+      setResponseRowsLoading((p) => ({ ...p, [submissionId]: false }));
+    }
+  }
+
+  async function onMarkVerified(submissionId: number) {
+    setVerifyLoading((p) => ({ ...p, [submissionId]: true }));
+    try {
+      const updated = await setWorkflowStage(submissionId, "verified");
+      setSubs((prev) => prev?.map((s) => s.id === submissionId ? updated : s) ?? prev);
+      onSubmissionsChanged();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setVerifyLoading((p) => ({ ...p, [submissionId]: false }));
     }
   }
 
@@ -443,6 +474,16 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                 </div>
               )}
 
+              {sub.workflow_stage === "response_received" && (
+                <ResponseReviewSection
+                  rows={responseRows[sub.id]}
+                  loading={responseRowsLoading[sub.id]}
+                  verifyLoading={verifyLoading[sub.id]}
+                  onLoad={() => onLoadResponse(sub.id)}
+                  onMarkVerified={() => onMarkVerified(sub.id)}
+                />
+              )}
+
               {sub.workflow_stage === "sent" && (
                 <div className="response-upload-row">
                   <label className={`ghost-btn small response-upload-label${responseUploading[sub.id] ? " disabled" : ""}`}>
@@ -541,6 +582,101 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
           );
         })}
       </section>
+    </div>
+  );
+}
+
+// ─── B3: Response review section ─────────────────────────────────────────────
+
+function ResponseReviewSection({
+  rows, loading, verifyLoading, onLoad, onMarkVerified,
+}: {
+  rows: ArchitectResponseRow[] | null | undefined;
+  loading: boolean | undefined;
+  verifyLoading: boolean | undefined;
+  onLoad: () => void;
+  onMarkVerified: () => void;
+}) {
+  const isLoaded = rows !== null && rows !== undefined;
+
+  if (!isLoaded && !loading) {
+    return (
+      <div className="response-review-section">
+        <button type="button" className="ghost-btn small" onClick={onLoad}>
+          הצגת תשובות האדריכל ▼
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="response-review-section">
+        <span className="spinner" aria-hidden="true" />{" "}
+        <span className="muted">טוענת תשובות...</span>
+      </div>
+    );
+  }
+
+  const filled = (rows ?? []).filter(
+    (r) => r.treatment_status || r.architect_notes
+  );
+
+  return (
+    <div className="response-review-section">
+      <div className="response-review-header">
+        <span className="response-review-title">תשובות האדריכל</span>
+        <span className="muted response-review-count">
+          {filled.length} / {(rows ?? []).length} ממצאים עם תשובה
+        </span>
+      </div>
+
+      {(rows ?? []).length === 0 ? (
+        <p className="muted">לא נמצאו שורות בקובץ התשובה.</p>
+      ) : (
+        <div className="response-table-wrap">
+          <table className="response-table" dir="rtl">
+            <thead>
+              <tr>
+                <th>נושא</th>
+                <th>סטטוס ממצא</th>
+                <th>תיאור</th>
+                <th>סטטוס טיפול</th>
+                <th>הערות האדריכל</th>
+              </tr>
+            </thead>
+            <tbody>
+              {(rows ?? []).map((r, i) => (
+                <tr key={i}
+                    className={r.treatment_status || r.architect_notes ? "" : "rt-empty"}>
+                  <td>{r.topic_he ?? "—"}</td>
+                  <td>{r.finding_status ?? "—"}</td>
+                  <td className="rt-desc">{r.description ?? "—"}</td>
+                  <td>
+                    {r.treatment_status
+                      ? <span className="rt-treatment">{r.treatment_status}</span>
+                      : <span className="muted">—</span>}
+                  </td>
+                  <td className="rt-notes">{r.architect_notes ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="response-verify-row">
+        <button
+          type="button"
+          className="ghost-btn small"
+          disabled={verifyLoading}
+          onClick={onMarkVerified}
+        >
+          {verifyLoading
+            ? <><span className="spinner" aria-hidden="true" />מעדכנת...</>
+            : "סימנתי כמאומת ✓"}
+        </button>
+      </div>
     </div>
   );
 }
