@@ -79,3 +79,19 @@ Probe WeasyPrint inside the bundle:
 |---|---|---|
 | `dist/sidecar/sidecar` (44 MB, sidecar deps only) | ✅ ships clean | `./sidecar` launches, `/health` returns 200 with `cipher_version: 4.12.0 community` + `journal_mode: wal` |
 | `dist/sidecar_full/sidecar_full` (187 MB, forward-compat probe) | ✅ all deps load | `--probe weasyprint` emits `{"ok": true, "pdf_bytes": 2831, "magic": "%PDF"}` |
+
+## Verification summary (Re-Audit + CAD feature set — Build 7)
+
+Rebuilt after Builds 1–7 added: DXF upload + layer mapping + geometry extraction
+(`ezdxf`, `shapely`, `vision_scanner.cad_ingest.dxf_geometry`), CAD compliance
+checks (`compliance_engine.cad_compliance_checker`), re-audit with PDF hash
+deduplication, three-way comparison Excel (`generate_comparison_xlsx`), and
+referent PDF ingestion.
+
+| Bundle | Status | Verification |
+|---|---|---|
+| `dist/sidecar/sidecar` (152 MB, full feature set) | ✅ ships clean | `./sidecar` launches, `/health` returns 200 with `cipher_version: 4.12.0 community` + `journal_mode: wal` |
+
+Size grew 44 MB → 152 MB because `backend.spec` now includes PyMuPDF (`fitz`),
+`pdfplumber`, `ezdxf`, `shapely`, and the full `compliance_engine` audit chain
+that were previously in the forward-compat probe only.
