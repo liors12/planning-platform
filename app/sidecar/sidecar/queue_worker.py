@@ -418,7 +418,7 @@ class EngineQueue:
                     }
                 else:
                     # Collect: copy job_output.json → platform findings_path.
-                    dest = findings_path(self._cfg, project_id, submission_version_string)
+                    dest = findings_path(self._cfg, project_tava_number, submission_version_string)
                     dest.parent.mkdir(parents=True, exist_ok=True)
                     dest.write_bytes(job_output_path.read_bytes())
         except subprocess.TimeoutExpired:
@@ -476,7 +476,7 @@ class EngineQueue:
                     sub.status = "failed"
             else:
                 job.status = "completed"
-                dest = findings_path(self._cfg, sub.project_id, sub.version_string)
+                dest = findings_path(self._cfg, project_tava_number, sub.version_string)
                 job.output_path = str(dest)
                 if sub is not None:
                     sub.status = "complete"
