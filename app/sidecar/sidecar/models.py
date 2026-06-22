@@ -227,6 +227,56 @@ class Settings(Base):
 # DisciplineComment — Phase 2b Module D (partial)
 # ─────────────────────────────────────────────────────────────────────────────
 #
+# ─────────────────────────────────────────────────────────────────────────────
+# ArchitectResponse + ResponseRow — B2 round-trip
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# One ArchitectResponse per submission (unique constraint). Uploading a new
+# response replaces the old one (cascade delete of ResponseRow children).
+# ResponseRow carries the three relevant columns from the filled-in Excel:
+#   - source_id       (col 11, hidden) — round-trip key back to original row
+#   - treatment_status (col 9)         — architect's handling status
+#   - architect_notes  (col 10)        — free-text architect comments
+
+class ArchitectResponse(Base):
+    __tablename__ = "architect_responses"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    submission_id: Mapped[int] = mapped_column(
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    xlsx_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    row_count: Mapped[int] = mapped_column(Integer, nullable=False,
+                                            default=0, server_default="0")
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.datetime("now"), nullable=False,
+    )
+
+    rows: Mapped[list["ResponseRow"]] = relationship(
+        "ResponseRow", back_populates="response", cascade="all, delete-orphan",
+    )
+
+
+class ResponseRow(Base):
+    __tablename__ = "response_rows"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    response_id: Mapped[int] = mapped_column(
+        ForeignKey("architect_responses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    source_id: Mapped[str] = mapped_column(String(512), nullable=False)
+    treatment_status: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    architect_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    response: Mapped["ArchitectResponse"] = relationship("ArchitectResponse",
+                                                          back_populates="rows")
+
+
 class DisciplineComment(Base):
     __tablename__ = "discipline_comments"
 

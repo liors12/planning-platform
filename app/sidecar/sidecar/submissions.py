@@ -32,7 +32,7 @@ from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import has_schema
-from .models import Project, Submission
+from .models import ArchitectResponse, Project, ResponseRow, Submission
 from .queue_worker import EngineQueue, engine_run_available
 from .storage import StorageError, sanitize_upload_filename, submission_dir
 
@@ -97,6 +97,8 @@ class SubmissionOut(BaseModel):
     has_audit_results: bool = False
     has_report_pdf: bool = False
     has_report_xlsx: bool = False
+    # True iff an architect_responses row exists for this submission (B2).
+    has_architect_response: bool = False
     # False on win32+frozen, where the full-audit subprocess can't
     # spawn an external Python interpreter (the render-only path is
     # already in-process). Frontend hides/disables "הפעילי את התוכנה"
@@ -138,7 +140,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
     def _session() -> Session:
         return Session(get_engine())
 
-    def _hydrate(sub: Submission) -> SubmissionOut:
+    def _hydrate(sub: Submission, *, has_arch_response: bool = False) -> SubmissionOut:
         """Build a SubmissionOut with the on-disk flags resolved. Project
         tava_number is read off the loaded relationship; safe because each
         route opens its own session and we serialize before exit."""
@@ -148,6 +150,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             has_audit_results=_audit_results_path(cfg, tava, sub.version_string) is not None,
             has_report_pdf=_report_pdf_path(cfg, tava, sub.version_string).exists(),
             has_report_xlsx=_report_xlsx_path(cfg, tava, sub.version_string).exists(),
+            has_architect_response=has_arch_response,
             engine_run_available=engine_run_available(),
         )
 
@@ -264,7 +267,13 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 .order_by(Submission.uploaded_at.desc(), Submission.id.desc())
                 .all()
             )
-            return [_hydrate(r) for r in rows]
+            sub_ids = {r.id for r in rows}
+            arch_ids: set[int] = {
+                r[0] for r in sess.query(ArchitectResponse.submission_id)
+                .filter(ArchitectResponse.submission_id.in_(sub_ids))
+                .all()
+            } if sub_ids else set()
+            return [_hydrate(r, has_arch_response=r.id in arch_ids) for r in rows]
 
     # ── GET /submissions/{id} ──────────────────────────────────────────
 
@@ -274,7 +283,9 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             sub = sess.get(Submission, submission_id)
             if sub is None:
                 raise HTTPException(404, f"submission {submission_id} not found")
-            return _hydrate(sub)
+            has_arch = sess.query(ArchitectResponse).filter_by(
+                submission_id=submission_id).first() is not None
+            return _hydrate(sub, has_arch_response=has_arch)
 
     # ── DELETE /submissions/{id} ───────────────────────────────────────
     # Removes the submission row + every file it produced. After delete,
@@ -513,6 +524,103 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             sess.expunge(sub)
         return _hydrate(sub)
 
+    # ── POST /submissions/{id}/upload-response ─────────────────────────
+    # Accepts the architect's filled-in Excel, parses source_id/treatment_
+    # status/notes from every data row, and upserts into architect_responses
+    # + response_rows. Re-uploading replaces the prior response entirely
+    # (cascade). Stage auto-flips to response_received on success.
+
+    @_subs_router.post("/{submission_id}/upload-response", response_model=SubmissionOut)
+    async def upload_architect_response(
+        submission_id: int,
+        xlsx: UploadFile = File(...),
+    ) -> SubmissionOut:
+        fname = xlsx.filename or "response.xlsx"
+        if not fname.lower().endswith(".xlsx"):
+            raise HTTPException(422, "יש להעלות קובץ Excel בפורמט .xlsx בלבד")
+
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            version = sub.version_string
+
+        ver_bare = version[1:] if version.startswith("v") else version
+        out_dir = _audit_outputs_dir(cfg, tava, version)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        xlsx_path = out_dir / f"תשובת_אדריכל_v{ver_bare}.xlsx"
+        _stream_upload_to_disk(xlsx, xlsx_path)
+
+        try:
+            parsed_rows = _parse_response_xlsx(xlsx_path)
+        except Exception as exc:
+            log.exception("response xlsx parse failed for submission %s", submission_id)
+            raise HTTPException(422, "קובץ האקסל אינו תקין או אינו בפורמט הצפוי") from exc
+
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            existing = sess.query(ArchitectResponse).filter_by(
+                submission_id=submission_id).first()
+            if existing is not None:
+                sess.delete(existing)
+                sess.flush()
+            arch_resp = ArchitectResponse(
+                submission_id=submission_id,
+                xlsx_path=str(xlsx_path),
+                row_count=len(parsed_rows),
+            )
+            sess.add(arch_resp)
+            sess.flush()
+            for row in parsed_rows:
+                sess.add(ResponseRow(
+                    response_id=arch_resp.id,
+                    source_id=row["source_id"],
+                    treatment_status=row.get("treatment_status") or None,
+                    architect_notes=row.get("architect_notes") or None,
+                ))
+            sub.workflow_stage = "response_received"
+            sess.commit()
+            sess.refresh(sub)
+            sess.expunge(sub)
+
+        log.info("response uploaded for submission %s: %d rows parsed", submission_id,
+                 len(parsed_rows))
+        return _hydrate(sub, has_arch_response=True)
+
+    # ── GET /submissions/{id}/response ─────────────────────────────────
+
+    class _ResponseInfo(BaseModel):
+        submission_id: int
+        row_count: int
+        uploaded_at: str
+        rows: list[dict]
+
+    @_subs_router.get("/{submission_id}/response", response_model=_ResponseInfo)
+    def get_architect_response(submission_id: int) -> _ResponseInfo:
+        with _session() as sess:
+            arch = sess.query(ArchitectResponse).filter_by(
+                submission_id=submission_id).first()
+            if arch is None:
+                raise HTTPException(404,
+                    f"no architect response uploaded for submission {submission_id}")
+            rows = [
+                {
+                    "source_id": r.source_id,
+                    "treatment_status": r.treatment_status,
+                    "architect_notes": r.architect_notes,
+                }
+                for r in arch.rows
+            ]
+            return _ResponseInfo(
+                submission_id=submission_id,
+                row_count=arch.row_count,
+                uploaded_at=arch.uploaded_at.isoformat(),
+                rows=rows,
+            )
+
     # ── POST /submissions/{id}/run-engine ──────────────────────────────
 
     @_subs_router.post("/{submission_id}/run-engine", response_model=JobOut, status_code=202)
@@ -738,3 +846,38 @@ def _stream_file_range(path: Path, start: int, end: int, chunk_size: int) -> Ite
                 return
             remaining -= len(chunk)
             yield chunk
+
+
+def _parse_response_xlsx(path: Path) -> list[dict]:
+    """Parse the architect-filled response Excel.
+
+    Expects the same column layout as excel_export.py:
+      col 9  (0-based idx 8)  — סטטוס טיפול   (treatment status)
+      col 10 (0-based idx 9)  — הערות האדריכל (architect notes)
+      col 11 (0-based idx 10) — source_id      (hidden round-trip key)
+
+    Row 1 is the header; data starts at row 2. Rows without a source_id
+    (empty or None) are skipped — they are section-separator / header rows
+    inserted by the exporter.
+    """
+    import openpyxl
+
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    ws = wb.active
+    result: list[dict] = []
+    for row in ws.iter_rows(min_row=2, values_only=True):
+        if len(row) < 11:
+            continue
+        raw_sid = row[10]
+        source_id = str(raw_sid).strip() if raw_sid is not None else ""
+        if not source_id or source_id.lower() == "none":
+            continue
+        treatment = str(row[8]).strip() if row[8] is not None else ""
+        notes = str(row[9]).strip() if row[9] is not None else ""
+        result.append({
+            "source_id": source_id,
+            "treatment_status": treatment or None,
+            "architect_notes": notes or None,
+        })
+    wb.close()
+    return result

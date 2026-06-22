@@ -66,6 +66,8 @@ export interface SubmissionOut {
   has_audit_results: boolean;
   has_report_pdf: boolean;
   has_report_xlsx: boolean;
+  /** True iff an architect response Excel has been uploaded and parsed (B2). */
+  has_architect_response: boolean;
   /** False on win32+frozen — the subprocess that runs the full audit
    * can't spawn an external Python in the packaged build. UI disables
    * the "הפעילי את התוכנה" button when false. */
@@ -522,6 +524,21 @@ export async function setWorkflowStage(
   );
 }
 
+
+export async function uploadArchitectResponse(
+  submissionId: number,
+  xlsx: File,
+): Promise<SubmissionOut> {
+  const fd = new FormData();
+  fd.append("xlsx", xlsx);
+  return jsonOrThrow<SubmissionOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/upload-response`, {
+      method: "POST",
+      body: fd,
+    }),
+    "upload architect response",
+  );
+}
 
 // ── Settings (Group C2) ───────────────────────────────────────────────────
 

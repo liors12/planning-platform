@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   deleteSubmission, exportExcel, listSubmissions, openOutput, openUrl,
   pollJobUntilDone, renderSubmission, revealOutput, runEngine,
-  setWorkflowStage, uploadSubmission,
+  setWorkflowStage, uploadArchitectResponse, uploadSubmission,
   type ProjectOut, type SubmissionOut, type WorkflowStage,
 } from "../api";
 import { EngineStatus } from "./EngineStatus";
@@ -95,6 +95,9 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
   // Spinner while a workflow-stage PATCH is in-flight.
   const [stageLoading, setStageLoading] = useState<Record<number, boolean>>({});
+
+  // Spinner while architect response is uploading.
+  const [responseUploading, setResponseUploading] = useState<Record<number, boolean>>({});
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -248,6 +251,20 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     const url = `https://mavat.iplan.gov.il/SV4/1/1001/${encodeURIComponent(project.tava_number)}`;
     try { await openUrl(url); }
     catch { /* silently ignore — worst case the browser doesn't open */ }
+  }
+
+  async function onUploadResponse(submissionId: number, file: File) {
+    setResponseUploading((p) => ({ ...p, [submissionId]: true }));
+    setErr(null);
+    try {
+      const updated = await uploadArchitectResponse(submissionId, file);
+      setSubs((prev) => prev?.map((s) => s.id === submissionId ? updated : s) ?? prev);
+      onSubmissionsChanged();
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setResponseUploading((p) => ({ ...p, [submissionId]: false }));
+    }
   }
 
   async function onSetStage(submissionId: number, stage: WorkflowStage) {
@@ -423,6 +440,30 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                       ? <><span className="spinner" aria-hidden="true" />מעדכנת...</>
                       : "סימנתי כנשלח לאדריכל ✓"}
                   </button>
+                </div>
+              )}
+
+              {sub.workflow_stage === "sent" && (
+                <div className="response-upload-row">
+                  <label className={`ghost-btn small response-upload-label${responseUploading[sub.id] ? " disabled" : ""}`}>
+                    {responseUploading[sub.id]
+                      ? <><span className="spinner" aria-hidden="true" />מעלה תשובה...</>
+                      : "העלאת תשובת אדריכל (אקסל) ↑"}
+                    <input
+                      type="file"
+                      accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                      className="sr-only"
+                      disabled={responseUploading[sub.id]}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) onUploadResponse(sub.id, f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                  {sub.has_architect_response && (
+                    <span className="response-uploaded-note muted">תשובה הועלתה ✓</span>
+                  )}
                 </div>
               )}
 

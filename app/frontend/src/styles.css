@@ -1583,3 +1583,29 @@ code, .path {
 .sp-sent              { background: #dbeafe; color: #1d4ed8; }
 .sp-response_received { background: #fef3c7; color: #92400e; }
 .sp-verified          { background: #dcfce7; color: #15803d; }
+
+/* ── B2: Architect response upload row ──────────────────────────────────── */
+.response-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-block: 8px;
+}
+.response-upload-label {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.response-upload-label.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.response-uploaded-note { font-size: 12px; }
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
