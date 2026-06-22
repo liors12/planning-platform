@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { archiveProject, getProject, getFindings, listSubmissions, type ProjectOut, type SubmissionOut } from "../api";
 import { CommentsTab } from "../components/CommentsTab";
 import { DebugOverlay } from "../components/DebugOverlay";
+import { LayerMappingTab } from "../components/LayerMappingTab";
 import { SubmissionsTab } from "../components/SubmissionsTab";
 import { FindingsView } from "../components/FindingsView";
 import { PdfViewer } from "../components/PdfViewer";
@@ -16,19 +17,20 @@ interface Props {
   onProjectChanged: () => void;
 }
 
-type TabKey = "overview" | "submissions" | "findings" | "comments" | "guidelines" | "history" | "final";
+type TabKey = "overview" | "submissions" | "findings" | "comments" | "cad_layers" | "guidelines" | "history" | "final";
 
 const TAB_LABELS: Record<TabKey, string> = {
   overview: "סקירה",
   submissions: "הגשות",
   findings: "ממצאים",
   comments: "הערות רפרנטים",
+  cad_layers: "שכבות CAD",
   guidelines: "הנחיות",
   history: "היסטוריה",
   final: "חוות דעת",
 };
 
-const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "guidelines", "history", "final"];
+const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "cad_layers", "guidelines", "history", "final"];
 
 export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Props) {
   const [project, setProject] = useState<ProjectOut | null>(null);
@@ -151,6 +153,9 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
         )}
         {tab === "comments" && (
           <CommentsTab project={project} submission={latestCompleteSub} />
+        )}
+        {tab === "cad_layers" && (
+          <LayerMappingTab project={project} />
         )}
         {tab === "guidelines" && <Placeholder badge="בקרוב" title="עורך הנחיות" desc="עריכת ערכי הסף של בדיקות התוכנה + יצירת גרסת מסמך דרישות מעודכן לאדריכל. יתווסף בעדכון הבא." />}
         {tab === "history" && <Placeholder badge="בקרוב" title="היסטוריה" desc="ציר זמן של כל הפעולות בפרויקט — יצירה, הגשות, ריצות בדיקה, עריכת הנחיות, החלטות מנהלי דיסציפלינה." />}

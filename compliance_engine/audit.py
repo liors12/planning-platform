@@ -1,12 +1,14 @@
 """
-Top-level audit entry point: format + content + disciplines, with feedback merge.
+Top-level audit entry point: format + content + disciplines + CAD, with feedback merge.
 """
 from __future__ import annotations
 
 import json
+import logging
 from dataclasses import asdict
 from pathlib import Path
 
+from .cad_compliance_checker import run_cad_compliance
 from .content_compliance_checker import run_content_compliance
 from .discipline_policy_checker import run_discipline_checks
 from .feedback_store import ensure_db_initialized, get_feedback_for_audit, merge_with_feedback
@@ -14,6 +16,7 @@ from .format_rules_checker import check_submission_format
 from .submission_data_extractor import extract as extract_submission_data
 from .submission_extracts import load_extracts
 
+log = logging.getLogger(__name__)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -32,6 +35,8 @@ def run_full_audit(
     audit_run_id: str | None = None,
     feedback_db_path: Path | None = None,
     allow_llm: bool | None = None,
+    cad_path: Path | None = None,
+    layer_mapping: dict[str, str] | None = None,
 ) -> dict:
     pdf_path = Path(pdf_path)
     if content_rules_path is None:
@@ -89,10 +94,24 @@ def run_full_audit(
             content_results = merge_with_feedback(content_results, audit_run_id, db_path=feedback_db_path)
             discipline_results = merge_with_feedback(discipline_results, audit_run_id, db_path=feedback_db_path)
 
+    # --- CAD geometric checks ---
+    cad_results: list[dict] = []
+    if cad_path is not None and layer_mapping is not None:
+        try:
+            from vision_scanner.cad_ingest.dxf_geometry import extract_geometry
+            geometry = extract_geometry(Path(cad_path), layer_mapping)
+            cad_results = run_cad_compliance(geometry, project_schema)
+        except Exception as exc:
+            log.warning("CAD compliance run failed: %s", exc)
+            cad_results = run_cad_compliance(None, project_schema)
+    else:
+        cad_results = run_cad_compliance(None, project_schema)
+
     return {
         "format": format_results,
         "content": content_results,
         "disciplines": discipline_results,
+        "cad": cad_results,
         "extraction_cache": asdict(extracted),
         "extracts_overlay": extracts_overlay,
         "feedback_entries": feedback_entries,

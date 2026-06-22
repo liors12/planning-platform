@@ -40,6 +40,7 @@ from .config import VERSION, Config, load
 from .db import build_engine, initialize
 from .jobs.dispatch import JobError, run_job
 from .jobs_routes import make_router as make_jobs_router
+from .layer_mappings import make_router as make_layer_mappings_router
 from .models import Project, Submission
 from .projects import make_router as make_projects_router
 from .queue_worker import EngineQueue
@@ -617,6 +618,9 @@ app.include_router(_disciplines_router)
 
 # Group C2 — settings (API keys config).
 app.include_router(make_settings_router(lambda: ENGINE))
+
+# DXF layer mapping — per-project layer → semantic role table.
+app.include_router(make_layer_mappings_router(lambda: ENGINE, cfg=CFG))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

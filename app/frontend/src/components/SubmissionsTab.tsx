@@ -114,10 +114,10 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const dwgInputRef = useRef<HTMLInputElement | null>(null);
+  const cadFileInputRef = useRef<HTMLInputElement | null>(null);
   const [version, setVersion] = useState("");
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [dwgFile, setDwgFile] = useState<File | null>(null);
+  const [cadFile, setCadFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState("");
   const [validationErr, setValidationErr] = useState<string | null>(null);
@@ -147,12 +147,12 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     setErr(null);
     setUploadProgress(`מעלה ${pdfFile.name} (${(pdfFile.size / 1024 / 1024).toFixed(1)} MB)...`);
     try {
-      await uploadSubmission(project.id, version.trim(), pdfFile, dwgFile);
+      await uploadSubmission(project.id, version.trim(), pdfFile, cadFile);
       setVersion("");
       setPdfFile(null);
-      setDwgFile(null);
+      setCadFile(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
-      if (dwgInputRef.current) dwgInputRef.current.value = "";
+      if (cadFileInputRef.current) cadFileInputRef.current.value = "";
       refresh();
       onSubmissionsChanged();
     } catch (e) {
@@ -418,12 +418,12 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               />
             </label>
             <label className="form-field">
-              <span className="form-label">קובץ DWG (אופציונלי)</span>
+              <span className="form-label">קובץ DXF / DWG (אופציונלי)</span>
               <input
-                ref={dwgInputRef}
+                ref={cadFileInputRef}
                 type="file"
-                accept=".dwg,.dxf"
-                onChange={(e) => setDwgFile(e.target.files?.[0] ?? null)}
+                accept=".dxf,.dwg"
+                onChange={(e) => setCadFile(e.target.files?.[0] ?? null)}
                 disabled={uploading}
               />
             </label>

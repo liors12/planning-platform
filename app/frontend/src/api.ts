@@ -60,7 +60,7 @@ export interface SubmissionOut {
   status: SubmissionStatus;
   workflow_stage: WorkflowStage;
   pdf_path: string;
-  dwg_path: string | null;
+  cad_path: string | null;
   findings_json_path: string | null;
   uploaded_at: string;
   has_audit_results: boolean;
@@ -288,12 +288,12 @@ export async function uploadSubmission(
   projectId: number,
   versionString: string,
   pdf: File,
-  dwg?: File | null,
+  cadFile?: File | null,
 ): Promise<SubmissionOut> {
   const form = new FormData();
   form.append("version_string", versionString);
   form.append("pdf", pdf, pdf.name);
-  if (dwg) form.append("dwg", dwg, dwg.name);
+  if (cadFile) form.append("cad_file", cadFile, cadFile.name);
   return jsonOrThrow<SubmissionOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/submissions`, {
       method: "POST",
@@ -702,5 +702,76 @@ export async function postEcho(message: string): Promise<EchoResponse> {
       body: JSON.stringify({ message }),
     }),
     "/jobs/echo",
+  );
+}
+
+// ── Layer mappings — DXF layer → semantic role ────────────────────────────
+
+export interface LayerMappingOut {
+  id: number;
+  project_id: number;
+  layer_name: string;
+  role: string;
+  confidence: string;
+  confirmed: boolean;
+  updated_at: string;
+}
+
+export const LAYER_ROLES = [
+  "PLOT_BOUNDARY",
+  "BUILDING_FOOTPRINT",
+  "SETBACK_FRONT",
+  "SETBACK_SIDE",
+  "SETBACK_REAR",
+  "PUBLIC_SPACE",
+  "PARKING",
+  "OTHER",
+  "UNKNOWN",
+] as const;
+
+export const LAYER_ROLE_LABELS: Record<string, string> = {
+  PLOT_BOUNDARY:      "גבול מגרש",
+  BUILDING_FOOTPRINT: "תכסית בנייה",
+  SETBACK_FRONT:      "קו בניין קדמי",
+  SETBACK_SIDE:       "קו בניין צדדי",
+  SETBACK_REAR:       "קו בניין אחורי",
+  PUBLIC_SPACE:       'שטח ציבורי פתוח (שצ"פ)',
+  PARKING:            "חניה",
+  OTHER:              "אחר",
+  UNKNOWN:            "לא מזוהה",
+};
+
+export async function listLayerMappings(projectId: number): Promise<LayerMappingOut[]> {
+  return jsonOrThrow<LayerMappingOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/layer-mappings`),
+    `GET /projects/${projectId}/layer-mappings`,
+  );
+}
+
+export async function discoverLayerMappings(projectId: number): Promise<LayerMappingOut[]> {
+  return jsonOrThrow<LayerMappingOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/layer-mappings/discover`, {
+      method: "POST",
+    }),
+    `POST /projects/${projectId}/layer-mappings/discover`,
+  );
+}
+
+export async function updateLayerMapping(
+  projectId: number,
+  layerName: string,
+  role: string,
+  confirmed: boolean,
+): Promise<LayerMappingOut> {
+  return jsonOrThrow<LayerMappingOut>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/projects/${projectId}/layer-mappings/${encodeURIComponent(layerName)}`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role, confirmed }),
+      },
+    ),
+    `PATCH /projects/${projectId}/layer-mappings/${layerName}`,
   );
 }

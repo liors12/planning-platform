@@ -235,8 +235,20 @@ class EngineQueue:
             project_tava_number = sub.project.tava_number
             submission_version_string = sub.version_string
             submission_pdf_path = sub.pdf_path
+            submission_cad_path = sub.dwg_path  # DB column still named dwg_path
             job_type = job.job_type
             job_dir_str = job.job_dir
+            # Load layer mapping for CAD checks (confirmed rows only)
+            from .models import LayerMapping
+            layer_mapping_rows = (
+                sess.query(LayerMapping)
+                .filter(LayerMapping.project_id == project_id,
+                        LayerMapping.confirmed.is_(True))
+                .all()
+            )
+            layer_mapping_dict: dict[str, str] = {
+                r.layer_name: r.role for r in layer_mapping_rows
+            }
             job.status = "running"
             job.started_at = datetime.now(timezone.utc)
             sess.commit()
@@ -270,6 +282,8 @@ class EngineQueue:
                 project_tava_number=project_tava_number,
                 submission_version_string=submission_version_string,
                 submission_pdf_path=submission_pdf_path,
+                submission_cad_path=submission_cad_path,
+                layer_mapping=layer_mapping_dict,
                 job_dir_str=job_dir_str,
             )
             return
@@ -439,6 +453,8 @@ class EngineQueue:
         project_tava_number: str,
         submission_version_string: str,
         submission_pdf_path: str,
+        submission_cad_path: str | None = None,
+        layer_mapping: dict[str, str] | None = None,
         job_dir_str: str,
     ) -> None:
         """V0.2: run the full audit in-process on win32+frozen builds.
@@ -484,6 +500,8 @@ class EngineQueue:
                             audit_outputs_root=self._cfg.data_dir / "audit_outputs",
                             project_key=project_tava_number,
                             submission_version=normalized_version,
+                            cad_path=Path(submission_cad_path) if submission_cad_path else None,
+                            layer_mapping=layer_mapping if layer_mapping else None,
                         )
                 except Exception as exc:
                     exc_holder[0] = exc

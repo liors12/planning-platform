@@ -1,6 +1,6 @@
 """Submission endpoints — Phase 2a Module A + engine integration + Phase 2b PDF serving.
 
-  POST   /projects/{project_id}/submissions     — multipart upload (PDF + opt DWG)
+  POST   /projects/{project_id}/submissions     — multipart upload (PDF + opt CAD file)
   GET    /projects/{project_id}/submissions     — list submissions for a project
   GET    /submissions/{submission_id}           — full detail
   POST   /submissions/{submission_id}/run-engine — enqueue engine job
@@ -86,7 +86,7 @@ class SubmissionOut(BaseModel):
     status: str
     workflow_stage: str = "draft"
     pdf_path: str
-    dwg_path: str | None
+    cad_path: str | None
     findings_json_path: str | None
     uploaded_at: str
     # True iff audit_results.m4.sanitized.json (or .m4.json fallback)
@@ -165,7 +165,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
         project_id: int,
         version_string: str = Form(..., min_length=1, max_length=64),
         pdf: UploadFile = File(...),
-        dwg: UploadFile | None = File(None),
+        cad_file: UploadFile | None = File(None),
     ) -> SubmissionOut:
         with _session() as sess:
             project = sess.get(Project, project_id)
@@ -186,18 +186,30 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 raise HTTPException(422, str(exc))
             pdf_path = target_dir / pdf_leaf
 
-            dwg_path: Path | None = None
-            if dwg is not None and dwg.filename:
+            cad_path: Path | None = None
+            if cad_file is not None and cad_file.filename:
+                fname = cad_file.filename
+                ext = Path(fname).suffix.lower()
+                if ext not in (".dwg", ".dxf"):
+                    raise HTTPException(422, "קובץ ה-CAD חייב להיות בפורמט DXF או DWG")
                 try:
-                    dwg_leaf = sanitize_upload_filename(dwg.filename)
+                    cad_leaf = sanitize_upload_filename(fname)
                 except StorageError as exc:
                     raise HTTPException(422, str(exc))
-                dwg_path = target_dir / dwg_leaf
+                cad_path = target_dir / cad_leaf
 
             # Stream the uploads to disk.
             _stream_upload_to_disk(pdf, pdf_path)
-            if dwg is not None and dwg_path is not None:
-                _stream_upload_to_disk(dwg, dwg_path)
+            if cad_file is not None and cad_path is not None:
+                _stream_upload_to_disk(cad_file, cad_path)
+                # Validate DXF files structurally — catch truncated/corrupt uploads.
+                if cad_path.suffix.lower() == ".dxf":
+                    try:
+                        import ezdxf
+                        ezdxf.readfile(str(cad_path))
+                    except Exception:
+                        cad_path.unlink(missing_ok=True)
+                        raise HTTPException(422, "קובץ DXF אינו תקין או פגום")
 
             # P2-A: write metadata.json so the render path always has it.
             # Originally this file was synthesized by the Phase 2a "Approach
@@ -227,7 +239,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 version_string=version_string,
                 status="uploaded",
                 pdf_path=str(pdf_path),
-                dwg_path=str(dwg_path) if dwg_path else None,
+                dwg_path=str(cad_path) if cad_path else None,
             )
             sess.add(submission)
             try:

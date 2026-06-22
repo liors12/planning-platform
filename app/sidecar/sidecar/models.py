@@ -113,6 +113,8 @@ class Submission(Base):
                                                 server_default="draft")
 
     pdf_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    # DB column kept as dwg_path for backward compat (no Alembic migration yet);
+    # exposed as cad_path in all API responses to reflect DXF/DWG duality.
     dwg_path: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
     findings_json_path: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
 
@@ -132,7 +134,7 @@ class Submission(Base):
             "status": self.status,
             "workflow_stage": self.workflow_stage,
             "pdf_path": self.pdf_path,
-            "dwg_path": self.dwg_path,
+            "cad_path": self.dwg_path,
             "findings_json_path": self.findings_json_path,
             "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
         }
@@ -309,6 +311,65 @@ class SubmissionAttachment(Base):
             "filename": self.filename,
             "file_size": self.file_size,
             "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# LayerMapping — per-project DXF layer → semantic role mapping table
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Populated automatically when a DXF is first uploaded (heuristic scan),
+# then refined by Ellen in the layer-mapping UI tab. Each row maps one
+# layer name to a semantic role understood by the CAD compliance checks.
+#
+# Role values (plain strings, not a DB enum):
+#   PLOT_BOUNDARY    — outer boundary of the submitted plot
+#   BUILDING_FOOTPRINT — projected building footprint
+#   SETBACK_FRONT    — front setback line / zone
+#   SETBACK_SIDE     — side setback line / zone
+#   SETBACK_REAR     — rear setback line / zone
+#   PUBLIC_SPACE     — public open-space polygon (שצ"פ)
+#   PARKING          — parking stall polygon
+#   OTHER            — present in file, no compliance role
+#   UNKNOWN          — not yet classified
+#
+# Confidence values:
+#   AUTO      — matched by layer-name pattern (fully automatic)
+#   HEURISTIC — matched by heuristic (e.g. RZ_ prefix convention)
+#   MANUAL    — Ellen confirmed or overrode this assignment
+
+class LayerMapping(Base):
+    __tablename__ = "layer_mappings"
+    __table_args__ = (
+        UniqueConstraint("project_id", "layer_name", name="uq_layer_mapping_project_layer"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    layer_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    role: Mapped[str] = mapped_column(String(64), nullable=False, default="UNKNOWN",
+                                      server_default="UNKNOWN")
+    confidence: Mapped[str] = mapped_column(String(16), nullable=False, default="UNKNOWN",
+                                             server_default="UNKNOWN")
+    confirmed: Mapped[bool] = mapped_column(Integer, nullable=False, default=0,
+                                             server_default="0")
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.datetime("now"), nullable=False,
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "project_id": self.project_id,
+            "layer_name": self.layer_name,
+            "role": self.role,
+            "confidence": self.confidence,
+            "confirmed": bool(self.confirmed),
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
 
 

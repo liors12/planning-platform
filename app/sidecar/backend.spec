@@ -35,9 +35,10 @@ hidden_imports = [
     *collect_submodules("sqlalchemy.dialects.sqlite"),
     # ── compliance_engine: render + Excel-export + full-audit path ───────
     # Listed by name (rather than collect_submodules("compliance_engine"))
-    # because cad_ingest imports ezdxf which is explicitly excluded below.
-    # This list covers: render-only, Excel-export, AND the V0.2 in-process
-    # full-audit path (run_full_audit → audit submodule chain).
+    # to keep the import list explicit and reviewable.
+    # This list covers: render-only, Excel-export, the V0.2 in-process
+    # full-audit path (run_full_audit → audit submodule chain), AND the
+    # Phase 1 CAD geometric checks (cad_compliance_checker + dxf_geometry).
     "compliance_engine",
     "compliance_engine.render",
     "compliance_engine.report_generator",
@@ -63,6 +64,18 @@ hidden_imports = [
     # excel_export's body — PyInstaller's static analysis doesn't follow
     # transitively into deferred imports, so make it explicit.
     *collect_submodules("openpyxl"),
+    # ── CAD geometric analysis (Phase 1) ─────────────────────────────────
+    # ezdxf: DXF reader for layer discovery and geometry extraction.
+    # shapely: geometric calculations (distance, area, intersection).
+    # Both are lazy-imported inside vision_scanner.cad_ingest.dxf_geometry
+    # and compliance_engine.cad_compliance_checker, so PyInstaller's static
+    # analysis won't pick them up without explicit entries here.
+    *collect_submodules("ezdxf"),
+    *collect_submodules("shapely"),
+    "vision_scanner",
+    "vision_scanner.cad_ingest",
+    "vision_scanner.cad_ingest.dxf_geometry",
+    "compliance_engine.cad_compliance_checker",
     # uvicorn's [standard] extras: httptools, websockets, watchfiles, etc.
     "uvicorn.logging",
     "uvicorn.loops",
@@ -86,12 +99,14 @@ hidden_imports = [
 # it; Windows pilot build falls back to stdlib sqlite3 via db.py's
 # try/except import). Conditional avoids "package not found" errors at
 # PyInstaller analysis time on Windows.
+binaries = [*collect_dynamic_libs("shapely")]
+
 try:
     import sqlcipher3  # noqa: F401  # presence-only test
     hidden_imports.append("sqlcipher3")
-    binaries = collect_dynamic_libs("sqlcipher3")
+    binaries += collect_dynamic_libs("sqlcipher3")
 except ImportError:
-    binaries = []
+    pass
 
 a = Analysis(
     # Use the launcher shim (run_sidecar.py) so `sidecar.main` is imported as
@@ -134,7 +149,6 @@ a = Analysis(
         "matplotlib",
         "PIL",
         "weasyprint",
-        "ezdxf",
     ],
     noarchive=False,
     optimize=0,
