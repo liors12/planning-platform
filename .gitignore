@@ -106,6 +106,7 @@ audit_outputs/*/
 !data/projects/*/takanon_cad/
 !data/projects/*/takanon_cad/*.dwg
 !data/projects/*/takanon_cad/*.DWG
+!tests/fixtures/*.dxf
 
 # ── Fonts ─────────────────────────────────────────────────────────────
 # Heebo + NotoSansHebrew are SIL OFL 1.1 — redistribution is permitted, so
