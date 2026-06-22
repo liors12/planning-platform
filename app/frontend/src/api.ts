@@ -455,11 +455,17 @@ export async function renderSubmission(submissionId: number): Promise<JobOut> {
   );
 }
 
-export async function exportExcel(submissionId: number): Promise<JobOut> {
+export async function exportExcel(
+  submissionId: number,
+  disciplineFilter?: string[],
+): Promise<JobOut> {
+  let url = `${SIDECAR_BASE}/submissions/${submissionId}/export-excel`;
+  if (disciplineFilter && disciplineFilter.length > 0) {
+    const qs = disciplineFilter.map((d) => `discipline=${encodeURIComponent(d)}`).join("&");
+    url += `?${qs}`;
+  }
   return jsonOrThrow<JobOut>(
-    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/export-excel`, {
-      method: "POST",
-    }),
+    await fetchOrThrow(url, { method: "POST" }),
     `POST /submissions/${submissionId}/export-excel`,
   );
 }

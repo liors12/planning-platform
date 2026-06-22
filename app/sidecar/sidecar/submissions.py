@@ -359,7 +359,10 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
         response_model=JobOut,
         status_code=202,
     )
-    def export_excel(submission_id: int) -> JobOut:
+    def export_excel(
+        submission_id: int,
+        discipline: list[str] = Query(default=[]),
+    ) -> JobOut:
         with _session() as sess:
             sub = sess.get(Submission, submission_id)
             if sub is None:
@@ -371,7 +374,8 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     f"submission {submission_id} has no audit_results.m4.json on disk; "
                     "run the engine first.",
                 )
-        job = queue.enqueue_excel(submission_id)
+        discipline_filter = discipline if discipline else None
+        job = queue.enqueue_excel(submission_id, discipline_filter=discipline_filter)
         return JobOut(**job.to_dict())
 
     # ── GET /submissions/{id}/report.pdf ───────────────────────────────

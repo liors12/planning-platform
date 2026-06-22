@@ -217,6 +217,7 @@ def export_findings_to_excel(
     output_path: Path,
     report_version: str = "",
     discipline_comments: list[dict] | None = None,
+    discipline_filter: list[str] | None = None,
 ) -> Path:
     """Build the architect-response workbook.
 
@@ -244,6 +245,10 @@ def export_findings_to_excel(
         + [_row_from_sidecar(f) for f in sidecar]
         + [_row_from_comment(c) for c in comments_list]
     )
+
+    if discipline_filter:
+        _allowed = set(discipline_filter)
+        rows = [r for r in rows if r.get("discipline") in _allowed]
 
     rows.sort(key=lambda r: (
         SECTION_PRIORITY.get(r["report_section"], 99),

@@ -137,6 +137,7 @@ def run_export_excel(
     output_subdir: str,
     base_dir: Path | None = None,
     discipline_comments: list[dict] | None = None,
+    discipline_filter: list[str] | None = None,
 ) -> int:
     """Export findings to an architect-response Excel workbook.
 
@@ -175,6 +176,7 @@ def run_export_excel(
         output_path=xlsx_path,
         report_version=submission_version,
         discipline_comments=discipline_comments,
+        discipline_filter=discipline_filter,
     )
     print(f"Excel export: {xlsx_path}")
     return 0

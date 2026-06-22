@@ -139,7 +139,11 @@ class EngineQueue:
             log.info("enqueued job %s for submission %s", job_id, submission_id)
             return job
 
-    def enqueue_excel(self, submission_id: int) -> Job:
+    def enqueue_excel(
+        self,
+        submission_id: int,
+        discipline_filter: list[str] | None = None,
+    ) -> Job:
         """Queue an architect-response Excel export. Fast (~1-2s), no
         subprocess. Submission status is NOT changed."""
         with Session(self._engine) as sess:
@@ -149,6 +153,13 @@ class EngineQueue:
             job_id = str(uuid.uuid4())
             job_dir = self._cfg.jobs_dir / job_id
             job_dir.mkdir(parents=True, exist_ok=True)
+            # Write discipline_filter into job_input.json so _process_export_excel
+            # can pick it up without touching the Job ORM row.
+            job_input_path = job_dir / "job_input.json"
+            job_input_path.write_text(
+                json.dumps({"discipline_filter": discipline_filter}),
+                encoding="utf-8",
+            )
             job = Job(
                 id=job_id,
                 job_type="export_excel",
@@ -591,6 +602,19 @@ class EngineQueue:
         error_payload = None
         output_path_str: Optional[str] = None
 
+        # Read discipline_filter written by enqueue_excel (A2).
+        discipline_filter: list[str] | None = None
+        try:
+            with Session(self._engine) as _fs:
+                _job = _fs.get(Job, job_id)
+                if _job:
+                    job_input_path = Path(_job.job_dir) / "job_input.json"
+                    if job_input_path.exists():
+                        _ji = json.loads(job_input_path.read_text(encoding="utf-8"))
+                        discipline_filter = _ji.get("discipline_filter") or None
+        except Exception:
+            log.exception("could not load discipline_filter for excel export (non-fatal)")
+
         # Fetch meeting notes (discipline_comments) for this submission so the
         # Excel includes הערות מפגישות rows alongside the compliance findings.
         comments_dicts: list[dict] = []
@@ -618,6 +642,7 @@ class EngineQueue:
                 output_subdir="audit_outputs",
                 base_dir=self._cfg.data_dir,
                 discipline_comments=comments_dicts or None,
+                discipline_filter=discipline_filter,
             )
             if rc != 0:
                 error_payload = {
