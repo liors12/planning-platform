@@ -3,6 +3,16 @@
   GET    /projects/{project_id}/layer-mappings          — list all mappings
   POST   /projects/{project_id}/layer-mappings/discover — scan DXF + seed rows
   PATCH  /projects/{project_id}/layer-mappings/{layer}  — update role (Ellen confirms)
+
+Layer roles follow the national רישוי זמין (RZ) spec from מינהל התכנון:
+  RZ_AREA     → AREA_ZONES      (area polygons with USAGE_TYPE attribute)
+  RZ_FLOOR    → FLOOR_DEFINITION
+  RZ_FRAME    → PRINT_FRAME
+  RZ_LANCOVER → BUILDING_COVERAGE  (note: single V, not LANDCOVER)
+  RZ_ANCHOR   → GEOGRAPHIC_ANCHOR
+
+Usage type codes (from USAGE_TYPE block attribute on RZ_AREA_SYM):
+  1=residential, 33=parking, 10=public buildings, 30=balcony, etc.
 """
 from __future__ import annotations
 
@@ -25,6 +35,13 @@ router = APIRouter(prefix="/projects", tags=["layer-mappings"])
 # ─────────────────────────────────────────────────────────────────────────────
 
 VALID_ROLES = {
+    # National standard (רישוי זמין) roles
+    "AREA_ZONES",           # RZ_AREA — polygons tagged with USAGE_TYPE
+    "FLOOR_DEFINITION",     # RZ_FLOOR
+    "PRINT_FRAME",          # RZ_FRAME
+    "BUILDING_COVERAGE",    # RZ_LANCOVER — ground coverage (תכסית)
+    "GEOGRAPHIC_ANCHOR",    # RZ_ANCHOR
+    # Geometric roles (used by compliance checks)
     "PLOT_BOUNDARY",
     "BUILDING_FOOTPRINT",
     "SETBACK_FRONT",
@@ -38,84 +55,104 @@ VALID_ROLES = {
 
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Heuristics
+# Heuristics — four tiers
 # ─────────────────────────────────────────────────────────────────────────────
 
-# Tier 1 — exact layer name → role (firm-specific known names from existing DXFs)
-_EXACT: dict[str, str] = {
-    # Ness Ziona firm defaults (observed in existing project DXFs)
-    "pgvul1": "PLOT_BOUNDARY",
-    "pcell": "PLOT_BOUNDARY",
-    "pvul": "PLOT_BOUNDARY",
-    "scellno": "OTHER",
-    # Common generic names
-    "boundary": "PLOT_BOUNDARY",
-    "plot": "PLOT_BOUNDARY",
-    "footprint": "BUILDING_FOOTPRINT",
-    "building": "BUILDING_FOOTPRINT",
-    "setback": "SETBACK_FRONT",
-    "parking": "PARKING",
-    "parkings": "PARKING",
-}
-
-# Tier 2 — RZ_ (Rishui Zamin / rezoning approval) standard prefixes from gov.il spec.
-# Present in formal submission DXFs; may be absent in early-stage files.
-_RZ_PREFIX: dict[str, str] = {
+# Tier 1 — National RZ_ standard (HIGH confidence).
+# Exact uppercase layer names from מינהל התכנון official guide.
+_TIER1_RZ: dict[str, str] = {
+    # Core RZ layers (confirmed from official spec)
+    "RZ_AREA":      "AREA_ZONES",        # area polygons, USAGE_TYPE attribute
+    "RZ_FLOOR":     "FLOOR_DEFINITION",  # floor definition
+    "RZ_FRAME":     "PRINT_FRAME",       # print frame
+    "RZ_LANCOVER":  "BUILDING_COVERAGE", # ground coverage/תכסית (single V)
+    "RZ_ANCHOR":    "GEOGRAPHIC_ANCHOR", # geographic anchor point
+    # Additional RZ geometry layers (setbacks, plot, public space, parking)
     "RZ_BOUNDARY":      "PLOT_BOUNDARY",
-    "RZ_AREA":          "PLOT_BOUNDARY",
     "RZ_FOOTPRINT":     "BUILDING_FOOTPRINT",
-    "RZ_LANDCOVER":     "BUILDING_FOOTPRINT",
     "RZ_SETBACK_F":     "SETBACK_FRONT",
     "RZ_SETBACK_FRONT": "SETBACK_FRONT",
     "RZ_SETBACK_S":     "SETBACK_SIDE",
     "RZ_SETBACK_SIDE":  "SETBACK_SIDE",
     "RZ_SETBACK_R":     "SETBACK_REAR",
     "RZ_SETBACK_REAR":  "SETBACK_REAR",
-    "RZ_SETBACK":       "SETBACK_FRONT",   # generic setback → treat as front
+    "RZ_SETBACK":       "SETBACK_FRONT",  # generic → treat as front
     "RZ_PUBLIC":        "PUBLIC_SPACE",
     "RZ_GREEN":         "PUBLIC_SPACE",
     "RZ_PARKING":       "PARKING",
     "RZ_PARK":          "PARKING",
 }
 
-# Tier 3 — substring / keyword heuristics (Hebrew and English)
-_PATTERNS: list[tuple[str, str]] = [
+# Tier 2 — Tel Aviv municipal variant (MEDIUM confidence).
+# muni_* layer names and block names from רישוי עסקים spec.
+_TIER2_MUNI: dict[str, str] = {
+    "muni_area":  "AREA_ZONES",
+    "area_muni":  "AREA_ZONES",
+    "muni_floor": "FLOOR_DEFINITION",
+    "floor_muni": "FLOOR_DEFINITION",
+    "muni_plot":  "PRINT_FRAME",
+    "plot_muni":  "PRINT_FRAME",
+}
+
+# Tier 3 — firm-specific exact names (HIGH confidence for known firms).
+_TIER3_EXACT: dict[str, str] = {
+    "pgvul1":    "PLOT_BOUNDARY",
+    "pcell":     "PLOT_BOUNDARY",
+    "pvul":      "PLOT_BOUNDARY",
+    "scellno":   "OTHER",
+    "boundary":  "PLOT_BOUNDARY",
+    "plot":      "PLOT_BOUNDARY",
+    "footprint": "BUILDING_FOOTPRINT",
+    "building":  "BUILDING_FOOTPRINT",
+    "setback":   "SETBACK_FRONT",
+    "parking":   "PARKING",
+    "parkings":  "PARKING",
+}
+
+# Tier 4 — substring / keyword heuristics (LOW confidence).
+_TIER4_PATTERNS: list[tuple[str, str]] = [
     (r"גבול\s*מגרש|גבמגרש|gvul|pvul",           "PLOT_BOUNDARY"),
     (r"תכסית|תכס|buildingfoot|bldg_foot",         "BUILDING_FOOTPRINT"),
     (r"קו\s*בנין\s*קד|setback.{0,4}front|חזית",  "SETBACK_FRONT"),
     (r"קו\s*בנין\s*צד|setback.{0,4}side|צד",     "SETBACK_SIDE"),
     (r"קו\s*בנין\s*אחו|setback.{0,4}rear|אחור",  "SETBACK_REAR"),
-    (r"קו\s*בנין|קובנ|setback",                   "SETBACK_FRONT"),
+    (r"קו\s*בנין|קובנ|setback|kav.?binyan",       "SETBACK_FRONT"),
     (r'שצ"פ|שצפ|public.?space|green.?area|ירוק', "PUBLIC_SPACE"),
     (r"חנייה|חניה|parking|חנ",                    "PARKING"),
+    (r"שטח|area|zone",                             "AREA_ZONES"),
+    (r"floor|קומה|קומות|manzor",                  "FLOOR_DEFINITION"),
 ]
 
 
 def _classify_layer(name: str) -> tuple[str, str]:
-    """Return (role, confidence) for a layer name using three-tier heuristics."""
+    """Return (role, confidence) for a layer name using four-tier heuristics."""
     low = name.lower().strip()
     up = name.upper().strip()
 
-    # Tier 1 — exact match (case-insensitive)
-    if low in _EXACT:
-        return _EXACT[low], "AUTO"
+    # Tier 1 — RZ_ national standard (exact match, case-insensitive upper)
+    if up in _TIER1_RZ:
+        return _TIER1_RZ[up], "HIGH"
 
-    # Tier 2 — RZ_ prefix (case-insensitive on the full name)
-    if up in _RZ_PREFIX:
-        return _RZ_PREFIX[up], "AUTO"
-
-    # Also match RZ_ prefix with suffix variations not listed explicitly
+    # Also match RZ_ prefix with suffix variations not in the explicit list
     if up.startswith("RZ_"):
-        for key, role in _RZ_PREFIX.items():
+        for key, role in _TIER1_RZ.items():
             if up.startswith(key):
-                return role, "HEURISTIC"
+                return role, "HIGH"
 
-    # Tier 3 — pattern matching
-    for pattern, role in _PATTERNS:
+    # Tier 2 — muni_ municipal variant (exact match, case-insensitive lower)
+    if low in _TIER2_MUNI:
+        return _TIER2_MUNI[low], "MEDIUM"
+
+    # Tier 3 — firm-specific exact names (case-insensitive lower)
+    if low in _TIER3_EXACT:
+        return _TIER3_EXACT[low], "HIGH"
+
+    # Tier 4 — keyword/regex patterns (LOW confidence)
+    for pattern, role in _TIER4_PATTERNS:
         if re.search(pattern, name, re.IGNORECASE):
-            return role, "HEURISTIC"
+            return role, "LOW"
 
-    return "UNKNOWN", "HEURISTIC"
+    return "UNKNOWN", "LOW"
 
 
 def discover_layers_from_dxf(dxf_path: Path) -> list[str]:

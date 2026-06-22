@@ -718,6 +718,13 @@ export interface LayerMappingOut {
 }
 
 export const LAYER_ROLES = [
+  // National RZ_ standard roles (מינהל התכנון)
+  "AREA_ZONES",
+  "FLOOR_DEFINITION",
+  "PRINT_FRAME",
+  "BUILDING_COVERAGE",
+  "GEOGRAPHIC_ANCHOR",
+  // Geometric compliance roles
   "PLOT_BOUNDARY",
   "BUILDING_FOOTPRINT",
   "SETBACK_FRONT",
@@ -730,6 +737,13 @@ export const LAYER_ROLES = [
 ] as const;
 
 export const LAYER_ROLE_LABELS: Record<string, string> = {
+  // National RZ_ standard
+  AREA_ZONES:         "אזורי שטח (RZ_AREA)",
+  FLOOR_DEFINITION:   "הגדרת קומה (RZ_FLOOR)",
+  PRINT_FRAME:        "מסגרת הדפסה (RZ_FRAME)",
+  BUILDING_COVERAGE:  "תכסית קרקע (RZ_LANCOVER)",
+  GEOGRAPHIC_ANCHOR:  "עוגן גיאוגרפי (RZ_ANCHOR)",
+  // Geometric compliance
   PLOT_BOUNDARY:      "גבול מגרש",
   BUILDING_FOOTPRINT: "תכסית בנייה",
   SETBACK_FRONT:      "קו בניין קדמי",

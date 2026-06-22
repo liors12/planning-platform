@@ -190,8 +190,8 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             if cad_file is not None and cad_file.filename:
                 fname = cad_file.filename
                 ext = Path(fname).suffix.lower()
-                if ext not in (".dwg", ".dxf"):
-                    raise HTTPException(422, "קובץ ה-CAD חייב להיות בפורמט DXF או DWG")
+                if ext not in (".dwg", ".dxf", ".dwfx"):
+                    raise HTTPException(422, "קובץ ה-CAD חייב להיות בפורמט DXF, DWG או DWFX")
                 try:
                     cad_leaf = sanitize_upload_filename(fname)
                 except StorageError as exc:

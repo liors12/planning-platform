@@ -418,11 +418,11 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               />
             </label>
             <label className="form-field">
-              <span className="form-label">קובץ DXF / DWG (אופציונלי)</span>
+              <span className="form-label">קובץ CAD (DXF / DWG / DWFX) — אופציונלי</span>
               <input
                 ref={cadFileInputRef}
                 type="file"
-                accept=".dxf,.dwg"
+                accept=".dxf,.dwg,.dwfx"
                 onChange={(e) => setCadFile(e.target.files?.[0] ?? null)}
                 disabled={uploading}
               />
@@ -491,6 +491,13 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   <div className="muted submission-meta">
                     הועלה: {sub.uploaded_at.replace("T", " ").slice(0, 19)}
                     {" · "}גודל PDF: {pdfNameOf(sub.pdf_path)}
+                    {sub.cad_path && (() => {
+                      const ext = sub.cad_path.split(".").pop()?.toLowerCase();
+                      if (ext === "dxf") return <span className="cad-badge cad-dxf">{" · "}DXF צורף</span>;
+                      if (ext === "dwg") return <span className="cad-badge cad-dwg">{" · "}DWG צורף — לניתוח נדרש DXF</span>;
+                      if (ext === "dwfx") return <span className="cad-badge cad-dwfx">{" · "}DWFX צורף (לצפייה בלבד)</span>;
+                      return null;
+                    })()}
                   </div>
                 </div>
                 <div className="submission-header-right">

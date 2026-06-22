@@ -19,7 +19,7 @@
 #     OR a multi-mode binary that dispatches by --worker-name CLI arg.
 
 import os
-from PyInstaller.utils.hooks import collect_dynamic_libs, collect_submodules
+from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs, collect_submodules
 
 # Repo root — needed in pathex so PyInstaller's Analysis pass can resolve
 # `compliance_engine.*` imports that originate from inside the sidecar
@@ -137,6 +137,9 @@ a = Analysis(
         ("../../content_rules.json", "."),
         ("../../discipline_rules.json", "."),
         ("seed", "seed"),
+        # shapely bundles geos_c.dll (Windows) as package data — collect_data_files
+        # ensures geos_c.dll lands next to shapely's Python extension in the bundle.
+        *collect_data_files("shapely"),
     ],
     hiddenimports=hidden_imports,
     hookspath=[],

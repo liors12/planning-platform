@@ -483,6 +483,10 @@ code, .path {
   font-size: 16px;
 }
 .submission-meta { font-size: 12.5px; margin-block-start: 3px; }
+.cad-badge { font-size: 11px; border-radius: 3px; padding: 1px 5px; margin-inline-start: 4px; }
+.cad-dxf  { background: #e8f5e9; color: #2e7d32; }
+.cad-dwg  { background: #fff8e1; color: #f57c00; }
+.cad-dwfx { background: #e3f2fd; color: #1565c0; }
 .submission-header-right { display: flex; align-items: center; gap: 8px; }
 .submission-actions {
   margin-block-start: 12px;
