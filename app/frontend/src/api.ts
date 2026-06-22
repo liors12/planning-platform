@@ -50,11 +50,14 @@ export type SubmissionStatus =
   | "complete"
   | "failed";
 
+export type WorkflowStage = "draft" | "sent" | "response_received" | "verified";
+
 export interface SubmissionOut {
   id: number;
   project_id: number;
   version_string: string;
   status: SubmissionStatus;
+  workflow_stage: WorkflowStage;
   pdf_path: string;
   dwg_path: string | null;
   findings_json_path: string | null;
@@ -501,6 +504,20 @@ export async function openUrl(url: string): Promise<void> {
   await fetchOrThrow(
     `${SIDECAR_BASE}/submissions/open-url?url=${encodeURIComponent(url)}`,
     { method: "POST" },
+  );
+}
+
+export async function setWorkflowStage(
+  submissionId: number,
+  stage: WorkflowStage,
+): Promise<SubmissionOut> {
+  return jsonOrThrow<SubmissionOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/stage`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stage }),
+    }),
+    "set workflow stage",
   );
 }
 

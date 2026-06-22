@@ -76,11 +76,15 @@ _projects_subs_router = APIRouter(prefix="/projects", tags=["submissions"])
 _subs_router = APIRouter(prefix="/submissions", tags=["submissions"])
 
 
+_VALID_WORKFLOW_STAGES = {"draft", "sent", "response_received", "verified"}
+
+
 class SubmissionOut(BaseModel):
     id: int
     project_id: int
     version_string: str
     status: str
+    workflow_stage: str = "draft"
     pdf_path: str
     dwg_path: str | None
     findings_json_path: str | None
@@ -485,6 +489,29 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
         Needed because the Tauri webview ignores target="_blank"."""
         webbrowser.open(url)
         return Response(status_code=204)
+
+    # ── PATCH /submissions/{id}/stage ─────────────────────────────────
+
+    class _StageUpdate(BaseModel):
+        stage: str
+
+    @_subs_router.patch("/{submission_id}/stage", response_model=SubmissionOut)
+    def set_workflow_stage(submission_id: int, body: _StageUpdate) -> SubmissionOut:
+        """Advance or roll back the workflow stage for a submission."""
+        if body.stage not in _VALID_WORKFLOW_STAGES:
+            raise HTTPException(
+                422, f"invalid stage '{body.stage}'. "
+                f"Valid values: {sorted(_VALID_WORKFLOW_STAGES)}"
+            )
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            sub.workflow_stage = body.stage
+            sess.commit()
+            sess.refresh(sub)
+            sess.expunge(sub)
+        return _hydrate(sub)
 
     # ── POST /submissions/{id}/run-engine ──────────────────────────────
 

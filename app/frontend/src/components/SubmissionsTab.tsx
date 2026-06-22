@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import {
   deleteSubmission, exportExcel, listSubmissions, openOutput, openUrl,
   pollJobUntilDone, renderSubmission, revealOutput, runEngine,
-  uploadSubmission, type ProjectOut, type SubmissionOut,
+  setWorkflowStage, uploadSubmission,
+  type ProjectOut, type SubmissionOut, type WorkflowStage,
 } from "../api";
 import { EngineStatus } from "./EngineStatus";
 
@@ -91,6 +92,9 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   // Drives a visible banner under the action buttons so Ellen sees what
   // the app is doing at every step.
   const [outputStatus, setOutputStatus] = useState<Record<number, OutputStatus>>({});
+
+  // Spinner while a workflow-stage PATCH is in-flight.
+  const [stageLoading, setStageLoading] = useState<Record<number, boolean>>({});
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -246,6 +250,18 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     catch { /* silently ignore — worst case the browser doesn't open */ }
   }
 
+  async function onSetStage(submissionId: number, stage: WorkflowStage) {
+    setStageLoading((p) => ({ ...p, [submissionId]: true }));
+    try {
+      const updated = await setWorkflowStage(submissionId, stage);
+      setSubs((prev) => prev?.map((s) => s.id === submissionId ? updated : s) ?? prev);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setStageLoading((p) => ({ ...p, [submissionId]: false }));
+    }
+  }
+
   return (
     <div className="submissions-tab">
       {/* ── Upload form ─────────────────────────────────────────────── */}
@@ -393,6 +409,23 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                 </div>
               </header>
 
+              <WorkflowStepper stage={sub.workflow_stage ?? "draft"} />
+
+              {sub.workflow_stage === "draft" && sub.has_report_xlsx && (
+                <div className="mark-sent-row">
+                  <button
+                    type="button"
+                    className="ghost-btn small"
+                    disabled={stageLoading[sub.id]}
+                    onClick={() => onSetStage(sub.id, "sent")}
+                  >
+                    {stageLoading[sub.id]
+                      ? <><span className="spinner" aria-hidden="true" />מעדכנת...</>
+                      : "סימנתי כנשלח לאדריכל ✓"}
+                  </button>
+                </div>
+              )}
+
               <div className="submission-actions">
                 <button
                   className="primary-btn"
@@ -474,6 +507,38 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 function pdfNameOf(p: string): string {
   const idx = Math.max(p.lastIndexOf("/"), p.lastIndexOf("\\"));
   return idx >= 0 ? p.slice(idx + 1) : p;
+}
+
+// ─── Workflow stepper ────────────────────────────────────────────────────
+
+const WORKFLOW_STEPS: { key: WorkflowStage; label: string }[] = [
+  { key: "draft",             label: "הוכנה" },
+  { key: "sent",              label: "נשלח לאדריכל" },
+  { key: "response_received", label: "התקבלה תשובה" },
+  { key: "verified",          label: "נסגר" },
+];
+
+const STAGE_IDX: Record<WorkflowStage, number> = {
+  draft: 0, sent: 1, response_received: 2, verified: 3,
+};
+
+function WorkflowStepper({ stage }: { stage: WorkflowStage }) {
+  const current = STAGE_IDX[stage] ?? 0;
+  return (
+    <ol className="workflow-stepper" aria-label="שלבי הטיפול">
+      {WORKFLOW_STEPS.map((step, idx) => {
+        const state = idx < current ? "done" : idx === current ? "active" : "future";
+        return (
+          <li key={step.key} className={`ws-step ws-${state}`}>
+            <span className="ws-dot" aria-hidden="true">
+              {state === "done" ? "✓" : idx + 1}
+            </span>
+            <span className="ws-label">{step.label}</span>
+          </li>
+        );
+      })}
+    </ol>
+  );
 }
 
 // ─── Output status banner ────────────────────────────────────────────────

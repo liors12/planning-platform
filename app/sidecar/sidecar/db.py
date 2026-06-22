@@ -131,6 +131,17 @@ def initialize(engine: Engine) -> dict:
             "ON projects (tava_number) WHERE status != 'archived'"
         ))
 
+    # C1 migration — add workflow_stage to submissions for existing DBs.
+    # SQLite doesn't support ADD COLUMN IF NOT EXISTS, so we probe first.
+    with engine.begin() as conn:
+        cols = conn.execute(text("PRAGMA table_info(submissions)")).fetchall()
+        if "workflow_stage" not in {c[1] for c in cols}:
+            conn.execute(text(
+                "ALTER TABLE submissions ADD COLUMN "
+                "workflow_stage TEXT NOT NULL DEFAULT 'draft'"
+            ))
+            log.info("migration: added workflow_stage column to submissions")
+
     with engine.begin() as conn:
         conn.execute(text("""
             CREATE TABLE IF NOT EXISTS app_metadata (

@@ -109,6 +109,8 @@ class Submission(Base):
     version_string: Mapped[str] = mapped_column(String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="uploaded",
                                         server_default="uploaded")
+    workflow_stage: Mapped[str] = mapped_column(String(32), nullable=False, default="draft",
+                                                server_default="draft")
 
     pdf_path: Mapped[str] = mapped_column(String(1024), nullable=False)
     dwg_path: Mapped[Optional[str]] = mapped_column(String(1024), nullable=True)
@@ -128,6 +130,7 @@ class Submission(Base):
             "project_id": self.project_id,
             "version_string": self.version_string,
             "status": self.status,
+            "workflow_stage": self.workflow_stage,
             "pdf_path": self.pdf_path,
             "dwg_path": self.dwg_path,
             "findings_json_path": self.findings_json_path,
@@ -140,6 +143,7 @@ class Submission(Base):
             "id": self.id,
             "version_string": self.version_string,
             "status": self.status,
+            "workflow_stage": self.workflow_stage,
             "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
         }
 
