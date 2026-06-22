@@ -68,7 +68,6 @@ export function LayerMappingTab({ project }: Props) {
   }
 
   const pendingCount = rows?.filter((r) => !r.confirmed).length ?? 0;
-  const hasAnyDxf = (rows !== null && rows.length > 0) || false;
 
   return (
     <div className="layer-mapping-tab">

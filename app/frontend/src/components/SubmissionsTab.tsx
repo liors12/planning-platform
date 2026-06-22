@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import {
   createRevision, deleteAttachment, deleteSubmission, exportExcel,
-  getArchitectResponse, listAttachments, listSubmissions, openOutput, openUrl,
+  generateComparisonExcel, getArchitectResponse, listAttachments, listSubmissions,
+  openComparisonExcel, openOutput, openUrl,
   pollJobUntilDone, renderSubmission, revealOutput, runEngine, setWorkflowStage,
   suggestRevisionVersion, uploadArchitectResponse, uploadAttachment, uploadSubmission,
   type ArchitectResponseRow, type AttachmentOut, type ProjectOut,
@@ -125,6 +126,9 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   const [revisionErr, setRevisionErr] = useState<string | null>(null);
   const revisionPdfRef = useRef<HTMLInputElement | null>(null);
   const revisionCadRef = useRef<HTMLInputElement | null>(null);
+
+  // Per-submission comparison Excel generation status.
+  const [comparisonStatus, setComparisonStatus] = useState<Record<number, OutputStatus>>({});
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -352,6 +356,31 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       setResponseRows((p) => ({ ...p, [submissionId]: [] }));
     } finally {
       setResponseRowsLoading((p) => ({ ...p, [submissionId]: false }));
+    }
+  }
+
+  async function onGenerateComparison(submissionId: number) {
+    setComparisonStatus((p) => ({ ...p, [submissionId]: { kind: "working", what: "xlsx" } }));
+    try {
+      const job = await generateComparisonExcel(submissionId);
+      const terminal = await pollJobUntilDone(job.id, () => {}, 1000, 120_000);
+      if (terminal.status !== "completed") {
+        setComparisonStatus((p) => ({
+          ...p,
+          [submissionId]: {
+            kind: "error", what: "xlsx",
+            friendly: friendlyError(terminal.error),
+          },
+        }));
+      } else {
+        setComparisonStatus((p) => ({ ...p, [submissionId]: { kind: "success", what: "xlsx" } }));
+        refresh();
+      }
+    } catch (e) {
+      setComparisonStatus((p) => ({
+        ...p,
+        [submissionId]: { kind: "error", what: "xlsx", friendly: friendlyError(String(e)) },
+      }));
     }
   }
 
@@ -729,6 +758,41 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                 >
                   העלאת גרסה מתוקנת ↑
                 </button>
+
+                {sub.source_submission_id !== null && sub.has_audit_results && (() => {
+                  const cmpSt = comparisonStatus[sub.id];
+                  const cmpBusy = cmpSt?.kind === "working";
+                  return (
+                    <>
+                      <button
+                        className="ghost-btn"
+                        data-testid={`generate-comparison-${sub.version_string}`}
+                        onClick={() => onGenerateComparison(sub.id)}
+                        disabled={cmpBusy || !!activeJobId}
+                      >
+                        {cmpBusy
+                          ? <><span className="spinner" aria-hidden="true" />מפיקה השוואה…</>
+                          : "הפיקי השוואה"}
+                      </button>
+                      {sub.has_comparison_xlsx && (
+                        <button
+                          className="ghost-btn"
+                          onClick={() => openComparisonExcel(sub.id)}
+                        >
+                          פתחי השוואה
+                          {sub.comparison_fixed !== null && sub.comparison_total_fixable !== null && (
+                            <span className="badge-fixed">
+                              {" "}{sub.comparison_fixed}/{sub.comparison_total_fixable} תוקנו
+                            </span>
+                          )}
+                        </button>
+                      )}
+                      {cmpSt?.kind === "error" && (
+                        <span className="muted small-error">{cmpSt.friendly}</span>
+                      )}
+                    </>
+                  );
+                })()}
 
                 {sub.has_audit_results && (() => {
                   const st = outputStatus[sub.id];

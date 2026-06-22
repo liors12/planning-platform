@@ -71,6 +71,16 @@ def _report_xlsx_path(cfg: Config, tava_number: str, version_string: str) -> Pat
     return _audit_outputs_dir(cfg, tava_number, version_string) / f"הערות_סקירה_v{ver_bare}.xlsx"
 
 
+def _comparison_xlsx_path(cfg: Config, tava_number: str, version_string: str) -> Path:
+    ver_bare = version_string[1:] if version_string.startswith("v") else version_string
+    return _audit_outputs_dir(cfg, tava_number, version_string) / f"השוואה_v{ver_bare}.xlsx"
+
+
+def _comparison_stats_path(cfg: Config, tava_number: str, version_string: str) -> Path:
+    ver_bare = version_string[1:] if version_string.startswith("v") else version_string
+    return _audit_outputs_dir(cfg, tava_number, version_string) / f"השוואה_v{ver_bare}_stats.json"
+
+
 # Two routers because the URL grouping crosses prefixes:
 _projects_subs_router = APIRouter(prefix="/projects", tags=["submissions"])
 _subs_router = APIRouter(prefix="/submissions", tags=["submissions"])
@@ -99,6 +109,10 @@ class SubmissionOut(BaseModel):
     has_report_xlsx: bool = False
     # True iff an architect_responses row exists for this submission (B2).
     has_architect_response: bool = False
+    # True iff the three-way comparison xlsx has been generated for this revision.
+    has_comparison_xlsx: bool = False
+    comparison_fixed: int | None = None
+    comparison_total_fixable: int | None = None
     # False on win32+frozen, where the full-audit subprocess can't
     # spawn an external Python interpreter (the render-only path is
     # already in-process). Frontend hides/disables "הפעילי את התוכנה"
@@ -178,6 +192,16 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
         tava_number is read off the loaded relationship; safe because each
         route opens its own session and we serialize before exit."""
         tava = sub.project.tava_number
+        _cmp_fixed: int | None = None
+        _cmp_total: int | None = None
+        _stats_path = _comparison_stats_path(cfg, tava, sub.version_string)
+        if _stats_path.exists():
+            try:
+                _s = json.loads(_stats_path.read_text(encoding="utf-8"))
+                _cmp_fixed = _s.get("fixed")
+                _cmp_total = _s.get("total_fixable")
+            except Exception:
+                pass
         return SubmissionOut(
             **sub.to_dict(),
             has_audit_results=_audit_results_path(cfg, tava, sub.version_string) is not None,
@@ -185,6 +209,9 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             has_report_xlsx=_report_xlsx_path(cfg, tava, sub.version_string).exists(),
             has_architect_response=has_arch_response,
             engine_run_available=True,
+            has_comparison_xlsx=_comparison_xlsx_path(cfg, tava, sub.version_string).exists(),
+            comparison_fixed=_cmp_fixed,
+            comparison_total_fixable=_cmp_total,
         )
 
     # ── POST /projects/{project_id}/submissions ────────────────────────
@@ -982,6 +1009,65 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 )
             sess.refresh(revision)
             return _hydrate(revision)
+
+    # ── POST /submissions/{id}/comparison-excel ────────────────────────
+
+    class _JobOut(BaseModel):
+        id: str
+        job_type: str
+        submission_id: int | None
+        status: str
+        queued_at: str
+        started_at: str | None
+        completed_at: str | None
+        error: str | None
+
+    @_subs_router.post("/{submission_id}/comparison-excel", response_model=_JobOut, status_code=202)
+    def enqueue_comparison_excel(submission_id: int) -> _JobOut:
+        """Enqueue a three-way comparison Excel job for a revision submission."""
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            if sub.source_submission_id is None:
+                raise HTTPException(
+                    422,
+                    "הגשה זו אינה גרסה מתוקנת ואינה ניתנת להשוואה."
+                )
+        try:
+            job = queue.enqueue_comparison_excel(submission_id)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+        return _JobOut(
+            id=job.id,
+            job_type=job.job_type,
+            submission_id=job.submission_id,
+            status=job.status,
+            queued_at=job.queued_at.isoformat() if job.queued_at else "",
+            started_at=job.started_at.isoformat() if job.started_at else None,
+            completed_at=job.completed_at.isoformat() if job.completed_at else None,
+            error=job.error_json,
+        )
+
+    @_subs_router.post("/{submission_id}/open-comparison", status_code=204)
+    def open_comparison(submission_id: int) -> Response:
+        """Open the comparison xlsx in the OS default app."""
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            version = sub.version_string
+        path = _comparison_xlsx_path(cfg, tava, version)
+        if not path.exists():
+            raise HTTPException(404, "קובץ ההשוואה עדיין לא הופק")
+        if sys.platform == "win32":
+            os.startfile(str(path))  # type: ignore[attr-defined]
+        elif sys.platform == "darwin":
+            _spawn(["open", str(path)])
+        else:
+            _spawn(["xdg-open", str(path)])
+        return Response(status_code=204)
 
     # ── GET /submissions/{id}/findings ─────────────────────────────────
 

@@ -381,3 +381,187 @@ def export_findings_to_excel(
 
     wb.save(output_path)
     return output_path
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Three-way comparison workbook (re-audit round-trip)
+# ─────────────────────────────────────────────────────────────────────────────
+
+_FAIL_STATUSES = {"לא תקין", "נדרשת השלמה", "לא הוגש"}
+
+_CMP_COL_EXTRA: list[tuple[str, int]] = [
+    ("תוצאת בדיקה חוזרת", 18),
+    ("סטטוס", 18),
+]
+
+_CMP_STATUS_COLOR: dict[str, str] = {
+    "תקין ✓":     "FFCCFFCC",
+    "דרוש תיקון": "FFFFCCCC",
+    "דרוש בירור": "FFFFFF99",
+    "ללא שינוי":  "FFE0E0E0",
+}
+
+
+def _cmp_verdict(src_status: str, rev_status: str | None) -> str:
+    if src_status not in _FAIL_STATUSES:
+        return "ללא שינוי"
+    if rev_status is None:
+        return "דרוש בירור"
+    return "תקין ✓" if rev_status not in _FAIL_STATUSES else "דרוש תיקון"
+
+
+def _audit_to_status_map(audit: dict) -> dict[str, str]:
+    """Map source_id → Hebrew status string for every row in an audit dict."""
+    result: dict[str, str] = {}
+    for f in audit.get("disciplines") or []:
+        sid = f"disc:{f.get('discipline') or ''}:{f.get('rule_code') or ''}"
+        result[sid] = STATUS_MAP.get(f.get("verdict") or "", f.get("verdict") or "")
+    for f in audit.get("content") or []:
+        ta = f.get("ta_shetach_id") or ""
+        sid = f"cont:{f.get('rule_code') or ''}:{ta}"
+        result[sid] = STATUS_MAP.get(f.get("verdict") or "", f.get("verdict") or "")
+    for f in (audit.get("m4_summary") or {}).get("sidecar_only_findings") or []:
+        clause_id = f.get("clause_id") or ""
+        ta = f.get("ta_shetach_takanon") or ""
+        sid = f"side:{clause_id}:{ta}"
+        result[sid] = STATUS_MAP.get(
+            f.get("compliance_indicator") or "", f.get("compliance_indicator") or ""
+        )
+    return result
+
+
+def generate_comparison_xlsx(
+    source_audit: dict,
+    response_rows: list[dict],
+    revision_audit: dict | None,
+    output_path: Path,
+    source_version: str,
+    revision_version: str,
+) -> dict:
+    """Build the three-way comparison workbook.
+
+    Columns: standard finding cols (1–11, with architect cols pre-filled)
+    + col 12 "תוצאת בדיקה חוזרת" + col 13 "סטטוס" (comparison verdict).
+
+    Returns {"fixed": int, "total_fixable": int} for the badge.
+    """
+    output_path = Path(output_path)
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Build source rows (discipline + content + sidecar only; no meeting notes)
+    rows: list[dict] = (
+        [_row_from_discipline(f) for f in (source_audit.get("disciplines") or [])]
+        + [_row_from_content(f) for f in (source_audit.get("content") or [])]
+        + [_row_from_sidecar(f) for f in (
+            (source_audit.get("m4_summary") or {}).get("sidecar_only_findings") or []
+        )]
+    )
+    rows.sort(key=lambda r: (
+        SECTION_PRIORITY.get(r["report_section"], 99),
+        _DISC_SORT_IDX.get(r["discipline"], 50),
+        STATUS_PRIORITY.get(r["status"], 2),
+    ))
+
+    resp_map: dict[str, dict] = {
+        r["source_id"]: r for r in response_rows if r.get("source_id")
+    }
+    rev_map: dict[str, str] = _audit_to_status_map(revision_audit) if revision_audit else {}
+
+    all_cols = COLUMNS + _CMP_COL_EXTRA
+    n_cols = len(all_cols)
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = f"השוואה {source_version}→{revision_version}"
+    ws.sheet_view.rightToLeft = True
+
+    for col_idx, (_, width) in enumerate(all_cols, start=1):
+        dim = ws.column_dimensions[get_column_letter(col_idx)]
+        dim.width = width
+        if width == 0:
+            dim.hidden = True
+
+    thin = Side(style="thin", color=COLOR_BORDER)
+    cell_border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    header_font = Font(name=FONT_FAMILY, size=11, bold=True, color=COLOR_HEADER_TEXT)
+    header_fill = PatternFill("solid", fgColor=COLOR_HEADER_BG)
+    header_align = Alignment(horizontal="center", vertical="center", wrap_text=True, readingOrder=2)
+    data_font = Font(name=FONT_FAMILY, size=10)
+    data_align = Alignment(horizontal="right", vertical="center", wrap_text=True, readingOrder=2)
+    alt_fill = PatternFill("solid", fgColor=COLOR_ALT_ROW)
+    architect_fill = PatternFill("solid", fgColor=COLOR_ARCHITECT_BG)
+
+    HEADER_ROW = 1
+    DATA_START_ROW = 2
+
+    ws.row_dimensions[HEADER_ROW].height = 30
+    for col_idx, (header, _) in enumerate(all_cols, start=1):
+        c = ws.cell(row=HEADER_ROW, column=col_idx, value=header)
+        c.font = header_font
+        c.fill = header_fill
+        c.alignment = header_align
+        c.border = cell_border
+
+    fixed = 0
+    total_fixable = 0
+
+    for i, row in enumerate(rows, start=1):
+        excel_row = DATA_START_ROW + (i - 1)
+        ws.row_dimensions[excel_row].height = 45
+
+        src_id = row.get("source_id", "")
+        resp = resp_map.get(src_id, {})
+        rev_status = rev_map.get(src_id)
+        verdict = _cmp_verdict(row["status"], rev_status)
+
+        if row["status"] in _FAIL_STATUSES:
+            total_fixable += 1
+        if verdict == "תקין ✓":
+            fixed += 1
+
+        values = [
+            i,
+            "",  # חדש? — not used in comparison sheet
+            row["report_section"],
+            row["discipline"],
+            row["plot"],
+            row["name"],
+            row["status"],
+            row["description"],
+            resp.get("treatment_status") or "",
+            resp.get("architect_notes") or "",
+            src_id,
+            rev_status or "",
+            verdict,
+        ]
+
+        row_fill = alt_fill if i % 2 == 0 else None
+        verdict_color = _CMP_STATUS_COLOR.get(verdict)
+        verdict_fill = PatternFill("solid", fgColor=verdict_color) if verdict_color else None
+
+        for col_idx, v in enumerate(values, start=1):
+            c = ws.cell(row=excel_row, column=col_idx, value=v)
+            c.font = data_font
+            c.alignment = data_align
+            c.border = cell_border
+            if col_idx in ARCHITECT_COL_INDICES:
+                c.fill = architect_fill
+            elif col_idx == n_cols and verdict_fill:
+                c.fill = verdict_fill
+            elif row_fill is not None:
+                c.fill = row_fill
+
+    last_data_row = DATA_START_ROW + len(rows) - 1
+    footer_row = last_data_row + 2
+    fc = ws.cell(
+        row=footer_row, column=1,
+        value=f'{fixed}/{total_fixable} ממצאים תוקנו | סה"כ שורות: {len(rows)}',
+    )
+    fc.font = Font(name=FONT_FAMILY, size=11, bold=True)
+    fc.alignment = Alignment(horizontal="right", vertical="center", readingOrder=2)
+
+    ws.freeze_panes = f"A{DATA_START_ROW}"
+    ws.auto_filter.ref = f"A{HEADER_ROW}:{get_column_letter(n_cols)}{last_data_row}"
+
+    wb.save(output_path)
+    return {"fixed": fixed, "total_fixable": total_fixable}

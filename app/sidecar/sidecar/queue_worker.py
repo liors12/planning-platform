@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import resolve_schema
-from .models import DisciplineComment, Job, Submission
+from .models import ArchitectResponse, DisciplineComment, Job, Submission
 from .storage import findings_path
 from sqlalchemy import select
 
@@ -192,6 +192,38 @@ class EngineQueue:
                      job_id, submission_id)
             return job
 
+    def enqueue_comparison_excel(self, revision_submission_id: int) -> Job:
+        """Queue a three-way comparison Excel job for a revision submission."""
+        with Session(self._engine) as sess:
+            sub = sess.get(Submission, revision_submission_id)
+            if sub is None:
+                raise ValueError(f"submission {revision_submission_id} not found")
+            if sub.source_submission_id is None:
+                raise ValueError(f"submission {revision_submission_id} has no source_submission_id")
+            job_id = str(uuid.uuid4())
+            job_dir = self._cfg.jobs_dir / job_id
+            job_dir.mkdir(parents=True, exist_ok=True)
+            (job_dir / "job_input.json").write_text(
+                json.dumps({"source_submission_id": sub.source_submission_id}),
+                encoding="utf-8",
+            )
+            job = Job(
+                id=job_id,
+                job_type="comparison_excel",
+                submission_id=revision_submission_id,
+                status="queued",
+                job_dir=str(job_dir),
+            )
+            sess.add(job)
+            sess.commit()
+            sess.refresh(job)
+            if self._loop is None:
+                raise RuntimeError("EngineQueue.start() was not called")
+            asyncio.run_coroutine_threadsafe(self._queue.put(job_id), self._loop)
+            log.info("enqueued comparison_excel job %s for submission %s",
+                     job_id, revision_submission_id)
+            return job
+
     def get_job(self, job_id: str) -> Optional[Job]:
         with Session(self._engine) as sess:
             return sess.get(Job, job_id)
@@ -266,6 +298,15 @@ class EngineQueue:
         if job_type == "export_excel":
             self._process_export_excel(
                 job_id=job_id,
+                project_tava_number=project_tava_number,
+                submission_version_string=submission_version_string,
+            )
+            return
+
+        if job_type == "comparison_excel":
+            self._process_comparison_excel(
+                job_id=job_id,
+                submission_id=submission_id_local,
                 project_tava_number=project_tava_number,
                 submission_version_string=submission_version_string,
             )
@@ -823,6 +864,126 @@ class EngineQueue:
             job.completed_at = now
             sess.commit()
             log.info("excel job %s finished: status=%s", job_id, job.status)
+
+    def _process_comparison_excel(
+        self,
+        *,
+        job_id: str,
+        submission_id: int,
+        project_tava_number: str,
+        submission_version_string: str,
+    ) -> None:
+        """Generate the three-way comparison xlsx in-process."""
+        error_payload = None
+        output_path_str: Optional[str] = None
+
+        def _find_audit(tava: str, version: str) -> "Optional[Path]":
+            ver = version if version.startswith("v") else f"v{version}"
+            out_dir = self._cfg.data_dir / "audit_outputs" / tava / ver
+            for leaf in ("audit_results.m4.sanitized.json", "audit_results.m4.json"):
+                p = out_dir / leaf
+                if p.exists():
+                    return p
+            return None
+
+        try:
+            # Read source_submission_id from job_input.json
+            source_submission_id: Optional[int] = None
+            with Session(self._engine) as _fs:
+                _job = _fs.get(Job, job_id)
+                if _job:
+                    _ji_path = Path(_job.job_dir) / "job_input.json"
+                    if _ji_path.exists():
+                        source_submission_id = json.loads(
+                            _ji_path.read_text(encoding="utf-8")
+                        ).get("source_submission_id")
+            if source_submission_id is None:
+                raise ValueError("job_input.json missing source_submission_id")
+
+            # Load source submission metadata + architect response from DB
+            with Session(self._engine) as _ss:
+                src_sub = _ss.get(Submission, source_submission_id)
+                if src_sub is None:
+                    raise ValueError(f"source submission {source_submission_id} not found")
+                src_tava = src_sub.project.tava_number
+                src_version = src_sub.version_string
+                arch_resp = (
+                    _ss.query(ArchitectResponse)
+                    .filter_by(submission_id=source_submission_id)
+                    .first()
+                )
+                response_rows = (
+                    [
+                        {
+                            "source_id": r.source_id,
+                            "treatment_status": r.treatment_status or "",
+                            "architect_notes": r.architect_notes or "",
+                        }
+                        for r in arch_resp.rows
+                    ]
+                    if arch_resp
+                    else []
+                )
+
+            # Load audit results from disk
+            src_audit_path = _find_audit(src_tava, src_version)
+            if src_audit_path is None:
+                raise ValueError(
+                    f"no audit results for source submission {source_submission_id}"
+                )
+            source_audit = json.loads(src_audit_path.read_text(encoding="utf-8"))
+
+            rev_audit_path = _find_audit(project_tava_number, submission_version_string)
+            revision_audit = (
+                json.loads(rev_audit_path.read_text(encoding="utf-8"))
+                if rev_audit_path is not None
+                else None
+            )
+
+            # Compute output path
+            normalized_version = _normalize_submission_version(submission_version_string)
+            out_dir = (
+                self._cfg.data_dir / "audit_outputs"
+                / project_tava_number / f"v{normalized_version}"
+            )
+            out_dir.mkdir(parents=True, exist_ok=True)
+            xlsx_path = out_dir / f"השוואה_v{normalized_version}.xlsx"
+            stats_path = out_dir / f"השוואה_v{normalized_version}_stats.json"
+
+            from compliance_engine.excel_export import generate_comparison_xlsx
+            stats = generate_comparison_xlsx(
+                source_audit=source_audit,
+                response_rows=response_rows,
+                revision_audit=revision_audit,
+                output_path=xlsx_path,
+                source_version=src_version,
+                revision_version=submission_version_string,
+            )
+            stats_path.write_text(json.dumps(stats, ensure_ascii=False), encoding="utf-8")
+            output_path_str = str(xlsx_path)
+            log.info("comparison_excel job %s: %s", job_id, stats)
+
+        except Exception as exc:
+            log.exception("comparison_excel job %s crashed", job_id)
+            error_payload = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            now = datetime.now(timezone.utc)
+            if error_payload is not None:
+                job.status = "failed"
+                job.error_json = json.dumps(error_payload, ensure_ascii=False)
+                log.error("job %s failed: %s", job_id,
+                          error_payload.get("error_message", error_payload))
+            else:
+                job.status = "completed"
+                job.output_path = output_path_str
+            job.completed_at = now
+            sess.commit()
+            log.info("comparison_excel job %s finished: status=%s", job_id, job.status)
 
     def _fail(self, sess: Session, job: Job, *, error_type: str, error_message: str) -> None:
         job.status = "failed"

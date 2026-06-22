@@ -74,6 +74,10 @@ export interface SubmissionOut {
   engine_run_available: boolean;
   /** Set when this submission is a revision of another (re-audit lineage). */
   source_submission_id: number | null;
+  /** True iff the three-way comparison xlsx has been generated. */
+  has_comparison_xlsx: boolean;
+  comparison_fixed: number | null;
+  comparison_total_fixable: number | null;
 }
 
 export type JobStatus = "queued" | "running" | "completed" | "failed";
@@ -341,6 +345,23 @@ export async function createRevision(
       { method: "POST", body: form },
     ),
     `POST /submissions/${submissionId}/create-revision`,
+  );
+}
+
+export async function generateComparisonExcel(submissionId: number): Promise<JobOut> {
+  return jsonOrThrow<JobOut>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/comparison-excel`,
+      { method: "POST" },
+    ),
+    `POST /submissions/${submissionId}/comparison-excel`,
+  );
+}
+
+export async function openComparisonExcel(submissionId: number): Promise<void> {
+  await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/open-comparison`,
+    { method: "POST" },
   );
 }
 
