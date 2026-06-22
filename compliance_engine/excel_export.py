@@ -69,6 +69,7 @@ _SIDECAR_DISC_HE: dict[str, str] = {
     "sec-3-9":          "שירותים לדיירים",
     "city-arch":        DISCIPLINE_NAME_HE["city-arch"],
     "public-buildings": DISCIPLINE_NAME_HE["public-buildings"],
+    "general":          DISCIPLINE_NAME_HE["general"],
 }
 
 STATUS_PRIORITY = {

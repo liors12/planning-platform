@@ -15,7 +15,7 @@ DISCIPLINE_NAME_HE: dict[str, str] = {
     "shafa":            'שפ"ע — אשפה ופינוי פסולת',
     "gardens":          "גנים ונוף",
     "infra":            "תשתיות",
-    "fire":             "כיבוי אש",
+    "fire":             "תנועה",
     "drainage":         "ניקוז וחלחול",
     # roofs is aliased to arch so any engine findings for "roofs" fold into
     # the "אדריכלות וחזיתות" section instead of creating a separate column.
@@ -25,6 +25,7 @@ DISCIPLINE_NAME_HE: dict[str, str] = {
     "laundry":          "מסתורי כביסה",
     "env":              "הנחיות סביבתיות",
     "public-buildings": "מבני ציבור",
+    "general":          "כללי",
     # city-arch is intentionally excluded from DISCIPLINE_ORDER below;
     # it renders as its own Excel section, not a §3 PDF subsection.
     "city-arch":        "הערות אדריכלית העיר",
@@ -35,7 +36,7 @@ DISCIPLINE_NAME_HE: dict[str, str] = {
 # section ("הערות אדריכלית העיר") and has no matching §3 anchor in the PDF.
 DISCIPLINE_ORDER: list[str] = [
     "shafa", "gardens", "infra", "fire", "drainage",
-    "arch", "balcony", "laundry", "env", "public-buildings",
+    "arch", "balcony", "laundry", "env", "public-buildings", "general",
 ]
 
 
