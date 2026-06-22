@@ -10,6 +10,8 @@ Supported entity types:
   CIRCLE               → approximated Polygon
   INSERT               → block reference; attributes extracted for AREA_ZONES
                          (USAGE_TYPE, AREA, ASSET from RZ_AREA_SYM / area_muni)
+                         and FLOOR_DEFINITION (BUILDING_NO, FLOOR, IS_UNDERGROUND,
+                         LEVEL_ELEVATION from RZ_FLOOR_SYM / floor_muni)
 
 INSERT entities in AREA_ZONES layers carry a USAGE_TYPE block attribute:
   33 = parking → contributes to parking_polygons (via point-in-polygon)
@@ -40,6 +42,9 @@ _USAGE_PARKING = 33
 # Block names that carry USAGE_TYPE attributes (national + Tel Aviv variants)
 _AREA_BLOCK_NAMES = frozenset({"RZ_AREA_SYM", "area_muni"})
 
+# Block names that carry FLOOR_DEFINITION attributes (national + Tel Aviv variants)
+_FLOOR_BLOCK_NAMES = frozenset({"RZ_FLOOR_SYM", "floor_muni"})
+
 # Roles that contribute to AREA_ZONES polygon collection
 _AREA_ZONE_ROLES = frozenset({"AREA_ZONES"})
 
@@ -62,6 +67,15 @@ class AreaZone:
 
 
 @dataclass
+class FloorDefinition:
+    """Floor-level data extracted from RZ_FLOOR_SYM / floor_muni block attributes."""
+    building_no: int | None = None
+    floor: int | None = None
+    is_underground: int | None = None   # 0 or 1
+    level_elevation: float | None = None
+
+
+@dataclass
 class DXFGeometry:
     """Geometry extracted from a submission DXF, keyed by semantic role."""
     plot_boundary: Optional[object] = None          # shapely.Polygon
@@ -72,6 +86,7 @@ class DXFGeometry:
     public_space_polygons: list = field(default_factory=list)  # list[Polygon]
     parking_polygons: list = field(default_factory=list)       # list[Polygon]
     area_zones: list = field(default_factory=list)             # list[AreaZone]
+    floor_definitions: list = field(default_factory=list)      # list[FloorDefinition]
     unmapped_layers: list[str] = field(default_factory=list)
     entity_counts: dict[str, int] = field(default_factory=dict)
 
@@ -306,8 +321,9 @@ def extract_geometry(
 
         if et == "INSERT":
             block_name = getattr(entity.dxf, "name", "").upper()
-            # Collect area-zone block inserts for pass 2
-            if block_name in {b.upper() for b in _AREA_BLOCK_NAMES} or role in _AREA_ZONE_ROLES:
+            # Collect area-zone and floor-definition block inserts for pass 2
+            _defer_names = {b.upper() for b in _AREA_BLOCK_NAMES | _FLOOR_BLOCK_NAMES}
+            if block_name in _defer_names or role in _AREA_ZONE_ROLES:
                 deferred_inserts.append(entity)
             else:
                 log.debug("Skipping INSERT block %s on layer %s", block_name, layer_name)
@@ -380,17 +396,32 @@ def extract_geometry(
     # Coordinate validation
     _check_itm_bounds(sample_points)
 
-    # ── Pass 2: bind INSERT block attributes to AREA_ZONES polygons ───────
-    # For each INSERT from an area-zone block, extract USAGE_TYPE and find
-    # which polygon contains the insert's insertion point.
+    # ── Pass 2: bind INSERT block attributes to polygons ──────────────────
+    # Area-zone blocks (RZ_AREA_SYM, area_muni): extract USAGE_TYPE and bind
+    # to the enclosing polygon via point-in-polygon.
+    # Floor-definition blocks (RZ_FLOOR_SYM, floor_muni): extract floor attrs
+    # directly into FloorDefinition records (no polygon binding needed).
     area_zones: list[AreaZone] = [AreaZone(polygon=p) for p in area_zone_polys]
+    floor_defs: list[FloorDefinition] = []
+    _floor_upper = {b.upper() for b in _FLOOR_BLOCK_NAMES}
 
     for entity in deferred_inserts:
         try:
+            block_name = getattr(entity.dxf, "name", "").upper()
+            attribs = _extract_block_attribs(entity)
+
+            if block_name in _floor_upper:
+                floor_defs.append(FloorDefinition(
+                    building_no=_attrib_int(attribs, "BUILDING_NO"),
+                    floor=_attrib_int(attribs, "FLOOR"),
+                    is_underground=_attrib_int(attribs, "IS_UNDERGROUND"),
+                    level_elevation=_attrib_float(attribs, "LEVEL_ELEVATION"),
+                ))
+                continue
+
             from shapely.geometry import Point
             ins = entity.dxf.insert
             pt = Point(ins.x, ins.y)
-            attribs = _extract_block_attribs(entity)
             usage_type = _attrib_int(attribs, "USAGE_TYPE")
             usage_type_old = _attrib_int(attribs, "USAGE_TYPE_OLD")
             area_sqm = _attrib_float(attribs, "AREA")
@@ -440,17 +471,19 @@ def extract_geometry(
     result.public_space_polygons = public_polys
     result.parking_polygons = parking_polys
     result.area_zones = area_zones
+    result.floor_definitions = floor_defs
     result.unmapped_layers = sorted(seen_unmapped)
 
     log.info(
         "extract_geometry: boundary=%s footprint=%s public=%d parking=%d "
-        "area_zones=%d (parking_from_uz=%d) unmapped=%d",
+        "area_zones=%d (parking_from_uz=%d) floor_defs=%d unmapped=%d",
         result.plot_boundary_area_sqm,
         result.building_footprint_area_sqm,
         len(public_polys),
         len(parking_polys),
         len(area_zones),
         sum(1 for az in area_zones if az.usage_type == _USAGE_PARKING),
+        len(floor_defs),
         len(seen_unmapped),
     )
     return result

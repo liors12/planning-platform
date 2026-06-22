@@ -11,3 +11,8 @@ openpyxl>=3.1
 # PyMuPDF (import fitz) — PDF text extraction for referent-comments ingestion.
 # Already listed as a hidden import in backend.spec for PyInstaller.
 PyMuPDF>=1.24
+# DXF geometry analysis (Phase 1 CAD checks).
+# collect_submodules/collect_data_files in backend.spec depend on these being
+# installed at PyInstaller analysis time — missing entries here cause CI to fail.
+ezdxf>=0.18
+shapely>=2.0
