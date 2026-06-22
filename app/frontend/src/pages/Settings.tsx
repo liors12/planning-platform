@@ -105,6 +105,10 @@ export function Settings() {
           </div>
         </form>
       </section>
+
+      <p className="settings-data-dir-note muted">
+        לשינוי מיקום הנתונים, הגדירי את משתנה הסביבה PLATFORM_DATA_DIR לפני הפעלת התוכנה.
+      </p>
     </article>
   );
 }

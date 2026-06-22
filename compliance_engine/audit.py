@@ -24,6 +24,7 @@ def run_full_audit(
     *,
     content_rules_path: Path | None = None,
     discipline_rules_path: Path | None = None,
+    format_rules_path: Path | None = None,
     extraction_cache_path: Path | None = None,
     audit_outputs_root: Path | None = None,
     project_key: str | None = None,
@@ -53,7 +54,8 @@ def run_full_audit(
         if "project" in project_schema
         else project_schema.get("meta", {}).get("format_rule_overrides")
     ) or []
-    format_results = check_submission_format(pdf_path, project_overrides=format_overrides)
+    _fmt_kwargs = {} if format_rules_path is None else {"rules_path": Path(format_rules_path)}
+    format_results = check_submission_format(pdf_path, **_fmt_kwargs, project_overrides=format_overrides)
 
     # --- content ---
     content_rules = json.loads(Path(content_rules_path).read_text(encoding="utf-8"))["rules"]

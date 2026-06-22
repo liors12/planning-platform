@@ -56,22 +56,6 @@ def _normalize_submission_version(version_string: str) -> str:
     return version_string[1:] if version_string.startswith("v") else version_string
 
 
-def engine_run_available() -> bool:
-    """Whether the full-audit subprocess path (_process_one → run_audit.py)
-    can actually execute on this machine.
-
-    The subprocess path spawns `cfg.sidecar_python` — which defaults to
-    `/opt/homebrew/bin/python3.13` (macOS Homebrew) when PLATFORM_PYTHON
-    isn't set. On a PyInstaller-frozen Windows install there's no
-    external Python interpreter, that path doesn't exist, and
-    `subprocess.run` raises FileNotFoundError [WinError 2]. The render-
-    only path already has a win32+frozen in-process branch
-    (_process_render_pdf); _process_one does not. Until it does, the
-    "הפעילי את התוכנה" button cannot succeed in the Windows package.
-
-    Returns False precisely when the subprocess path would 100% fail
-    pre-flight. macOS dev and non-frozen runs are unaffected."""
-    return not (sys.platform == "win32" and getattr(sys, "frozen", False))
 
 
 class EngineQueue:
@@ -275,6 +259,21 @@ class EngineQueue:
             )
             return
 
+        # V0.2: on win32+frozen there's no external Python interpreter to
+        # spawn; run run_full_audit() in-process instead (same pattern as
+        # _process_render_pdf's frozen branch).
+        if sys.platform == "win32" and getattr(sys, "frozen", False):
+            self._process_run_audit_inproc(
+                job_id=job_id,
+                submission_id=submission_id_local,
+                project_id=project_id,
+                project_tava_number=project_tava_number,
+                submission_version_string=submission_version_string,
+                submission_pdf_path=submission_pdf_path,
+                job_dir_str=job_dir_str,
+            )
+            return
+
         # Heavy work happens outside the session (subprocess.run blocks).
         # Phase 2b: write job_input.json with platform paths and spawn
         # `run_audit.py --job-dir DIR`. Engine reads inputs from disk, writes
@@ -417,6 +416,126 @@ class EngineQueue:
                 # a complete trail even when the engine signalled failure via
                 # return-code instead of raising (the case that hid Ellen's
                 # "metadata not found" error from the rotating handler).
+                log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
+                if sub is not None:
+                    sub.status = "failed"
+            else:
+                job.status = "completed"
+                dest = findings_path(self._cfg, sub.project_id, sub.version_string)
+                job.output_path = str(dest)
+                if sub is not None:
+                    sub.status = "complete"
+                    sub.findings_json_path = str(dest)
+            job.completed_at = now
+            sess.commit()
+            log.info("job %s finished: status=%s", job_id, job.status)
+
+    def _process_run_audit_inproc(
+        self,
+        *,
+        job_id: str,
+        submission_id: int,
+        project_id: int,
+        project_tava_number: str,
+        submission_version_string: str,
+        submission_pdf_path: str,
+        job_dir_str: str,
+    ) -> None:
+        """V0.2: run the full audit in-process on win32+frozen builds.
+
+        Mirrors _process_render_pdf's frozen branch: local import, stderr
+        capture, threading.Timer for the budget. Writes job_output.json from
+        the returned dict and copies it to findings_path exactly as the
+        subprocess path does after a successful run_audit.py invocation.
+        """
+        import contextlib
+        import io
+        import threading
+
+        error_payload = None
+        try:
+            job_dir = Path(job_dir_str)
+            normalized_version = _normalize_submission_version(submission_version_string)
+
+            schema_path = resolve_schema(project_tava_number)
+            project_schema = json.loads(Path(schema_path).read_text(encoding="utf-8"))
+
+            # Resolve rules-file paths from the PyInstaller bundle root.
+            _meipass = Path(getattr(sys, "_MEIPASS", ""))
+            content_rules_path = _meipass / "content_rules.json"
+            discipline_rules_path = _meipass / "discipline_rules.json"
+            format_rules_path = _meipass / "submission_format_rules.json"
+
+            from compliance_engine.audit import run_full_audit
+
+            _stderr_buf = io.StringIO()
+            result_holder: list[dict | None] = [None]
+            exc_holder: list[BaseException | None] = [None]
+
+            def _run() -> None:
+                try:
+                    with contextlib.redirect_stderr(_stderr_buf):
+                        result_holder[0] = run_full_audit(
+                            pdf_path=Path(submission_pdf_path),
+                            project_schema=project_schema,
+                            content_rules_path=content_rules_path,
+                            discipline_rules_path=discipline_rules_path,
+                            format_rules_path=format_rules_path,
+                            audit_outputs_root=self._cfg.data_dir / "audit_outputs",
+                            project_key=project_tava_number,
+                            submission_version=normalized_version,
+                        )
+                except Exception as exc:
+                    exc_holder[0] = exc
+
+            t = threading.Thread(target=_run, daemon=True)
+            t.start()
+            t.join(timeout=RUN_AUDIT_BUDGET_S)
+
+            if t.is_alive():
+                error_payload = {
+                    "error_type": "TimeoutExpired",
+                    "error_message": (
+                        f"run_full_audit exceeded {RUN_AUDIT_BUDGET_S}s wall-clock budget"
+                    ),
+                }
+            elif exc_holder[0] is not None:
+                log.exception("audit job %s in-process raised", job_id)
+                error_payload = {
+                    "error_type": type(exc_holder[0]).__name__,
+                    "error_message": str(exc_holder[0]),
+                    "stderr_tail": _stderr_buf.getvalue()[-4000:],
+                }
+            else:
+                result_dict = result_holder[0]
+                job_output_path = job_dir / "job_output.json"
+                job_output_path.write_text(
+                    json.dumps(result_dict, ensure_ascii=False, indent=2),
+                    encoding="utf-8",
+                )
+                dest = findings_path(self._cfg, project_id, submission_version_string)
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(job_output_path.read_bytes())
+
+        except FileNotFoundError as exc:
+            error_payload = {
+                "error_type": "SchemaNotFound",
+                "error_message": str(exc),
+            }
+        except Exception as exc:
+            log.exception("audit job %s in-process crashed", job_id)
+            error_payload = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+
+        with Session(self._engine) as sess:
+            job = sess.get(Job, job_id)
+            sub = sess.get(Submission, job.submission_id)
+            now = datetime.now(timezone.utc)
+            if error_payload is not None:
+                job.status = "failed"
+                job.error_json = json.dumps(error_payload, ensure_ascii=False)
                 log.error("job %s failed: %s", job_id, error_payload.get("error_message", error_payload))
                 if sub is not None:
                     sub.status = "failed"

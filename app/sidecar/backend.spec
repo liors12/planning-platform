@@ -33,20 +33,32 @@ hidden_imports = [
     # SQLAlchemy needs explicit dialect imports under PyInstaller because the
     # entry-point introspection doesn't carry through.
     *collect_submodules("sqlalchemy.dialects.sqlite"),
-    # ── compliance_engine: render + Excel-export path only ───────────────
+    # ── compliance_engine: render + Excel-export + full-audit path ───────
     # Listed by name (rather than collect_submodules("compliance_engine"))
-    # because the package also contains heavy submodules — format_rules_
-    # checker imports fitz, cad_ingest imports ezdxf, etc. — that are
-    # explicitly excluded below. A blanket collect_submodules would sweep
-    # those in and break Analysis. The four modules below are what
-    # queue_worker._process_render_pdf and _process_export_excel actually
-    # reach for at runtime; verified: none of them import any other
-    # compliance_engine.* module, so this whitelist is closed.
+    # because cad_ingest imports ezdxf which is explicitly excluded below.
+    # This list covers: render-only, Excel-export, AND the V0.2 in-process
+    # full-audit path (run_full_audit → audit submodule chain).
     "compliance_engine",
     "compliance_engine.render",
     "compliance_engine.report_generator",
     "compliance_engine.report_surgery",
     "compliance_engine.excel_export",
+    # Full-audit chain (V0.2 in-process path)
+    "compliance_engine.audit",
+    "compliance_engine.constants",
+    "compliance_engine.content_compliance_checker",
+    "compliance_engine.discipline_findings",
+    "compliance_engine.discipline_policy_checker",
+    "compliance_engine.extraction_cache",
+    "compliance_engine.feedback_store",
+    "compliance_engine.format_rules_checker",
+    "compliance_engine.submission_data_extractor",
+    "compliance_engine.submission_extracts",
+    # fitz (PyMuPDF) — used by format_rules_checker, discipline_policy_checker,
+    # and submission_data_extractor. Previously excluded; needed for full audit.
+    "fitz",
+    # pdfplumber — used by format_rules_checker and submission_data_extractor.
+    *collect_submodules("pdfplumber"),
     # openpyxl is excel_export's hard dependency. Lazy-imported inside
     # excel_export's body — PyInstaller's static analysis doesn't follow
     # transitively into deferred imports, so make it explicit.
@@ -104,6 +116,11 @@ a = Analysis(
         ("../../assets/fonts", "assets/fonts"),
         ("../../assets/nessziona_logo.png", "assets"),
         ("../../submission_format_rules.json", "."),
+        # Rules JSONs needed by the V0.2 in-process full-audit path:
+        #   audit.py resolves content_rules.json via PROJECT_ROOT (= _MEIPASS in frozen)
+        #   discipline_policy_checker.py resolves discipline_rules.json the same way
+        ("../../content_rules.json", "."),
+        ("../../discipline_rules.json", "."),
         ("seed", "seed"),
     ],
     hiddenimports=hidden_imports,
@@ -117,7 +134,6 @@ a = Analysis(
         "matplotlib",
         "PIL",
         "weasyprint",
-        "fitz",
         "ezdxf",
     ],
     noarchive=False,

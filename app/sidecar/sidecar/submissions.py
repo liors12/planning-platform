@@ -33,7 +33,7 @@ from sqlalchemy.orm import Session
 from .config import Config
 from .engine_bridge import has_schema
 from .models import ArchitectResponse, Project, ResponseRow, Submission, SubmissionAttachment
-from .queue_worker import EngineQueue, engine_run_available
+from .queue_worker import EngineQueue
 from .storage import StorageError, sanitize_upload_filename, submission_dir
 
 
@@ -151,7 +151,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             has_report_pdf=_report_pdf_path(cfg, tava, sub.version_string).exists(),
             has_report_xlsx=_report_xlsx_path(cfg, tava, sub.version_string).exists(),
             has_architect_response=has_arch_response,
-            engine_run_available=engine_run_available(),
+            engine_run_available=True,
         )
 
     # ── POST /projects/{project_id}/submissions ────────────────────────
@@ -742,23 +742,6 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
 
     @_subs_router.post("/{submission_id}/run-engine", response_model=JobOut, status_code=202)
     def run_engine(submission_id: int) -> JobOut:
-        # Pre-flight: never enqueue a job that is 100% guaranteed to
-        # fail. On win32+frozen the worker can't spawn cfg.sidecar_python
-        # (it's an external interpreter path that doesn't exist in the
-        # PyInstaller bundle). Fail fast with a structured 503 so the
-        # frontend can surface a friendly "feature not available" line.
-        if not engine_run_available():
-            raise HTTPException(
-                503,
-                detail={
-                    "error_type": "EngineNotAvailable",
-                    "error_message": (
-                        "Full-audit runs require a Python interpreter, which the "
-                        "current packaged build does not bundle. Use 'הפיקי דו״ח' "
-                        "to regenerate the report from existing audit results."
-                    ),
-                },
-            )
         with _session() as sess:
             sub = sess.get(Submission, submission_id)
             if sub is None:

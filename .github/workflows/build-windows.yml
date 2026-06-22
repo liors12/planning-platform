@@ -531,37 +531,27 @@ jobs:
               Fail "open/reveal endpoints did not all return 204"
             }
 
-            # ── 5.6. ENGINE-RUN AVAILABILITY GATE (Priority 2.5) ──────
-            # On the frozen Windows build the full-audit subprocess path
-            # can't spawn cfg.sidecar_python — see queue_worker.engine_
-            # run_available. SubmissionOut should report this as false
-            # and POST /run-engine should refuse with a structured 503
-            # instead of enqueuing a doomed job (which would surface as
-            # the misleading "SchemaNotFound / [WinError 2]" Ellen hit).
+            # ── 5.6. ENGINE-RUN AVAILABILITY (V0.2) ──────────────────
+            # V0.2 ships run_full_audit() in-process for the frozen Windows
+            # build, so engine_run_available must now be true and
+            # POST /run-engine must accept the job (202) rather than refusing
+            # with 503. The job will run in the background; the smoke test
+            # only verifies that the endpoint accepted the request.
             $subDetail = Invoke-RestMethod -Uri "http://127.0.0.1:17321/submissions/$subId"
-            Record "engine: SubmissionOut.engine_run_available == false on frozen Windows" `
-              ($subDetail.engine_run_available -eq $false) `
+            Record "engine: SubmissionOut.engine_run_available == true (V0.2 in-process)" `
+              ($subDetail.engine_run_available -eq $true) `
               "got=$($subDetail.engine_run_available)"
-            if ($subDetail.engine_run_available -ne $false) {
-              Fail "engine_run_available should be false on Windows-frozen"
+            if ($subDetail.engine_run_available -ne $true) {
+              Fail "engine_run_available should be true — V0.2 runs full audit in-process on frozen Windows"
             }
-            # PS 7's Invoke-WebRequest returns HttpResponseMessage on error
-            # (no GetResponseStream); -SkipHttpErrorCheck lets the call
-            # return successfully with the 503 + body intact instead of
-            # throwing. Same body parsing either way.
-            $resp503 = Invoke-WebRequest -UseBasicParsing -Method Post `
+            $respEngine = Invoke-WebRequest -UseBasicParsing -Method Post `
               -SkipHttpErrorCheck `
               -Uri "http://127.0.0.1:17321/submissions/$subId/run-engine"
-            $detailType = ""
-            try {
-              $detailType = ($resp503.Content | ConvertFrom-Json).detail.error_type
-            } catch { }
-            $blocked503 = ($resp503.StatusCode -eq 503) `
-                         -and ($detailType -eq "EngineNotAvailable")
-            Record "engine: /run-engine returns 503 EngineNotAvailable" `
-              $blocked503 "status=$($resp503.StatusCode) error_type=$detailType"
-            if (-not $blocked503) {
-              Fail "/run-engine should pre-flight-reject with 503 EngineNotAvailable on frozen Windows"
+            $engineAccepted = ($respEngine.StatusCode -eq 202)
+            Record "engine: POST /run-engine returns 202 (accepted, V0.2)" `
+              $engineAccepted "status=$($respEngine.StatusCode)"
+            if (-not $engineAccepted) {
+              Fail "POST /run-engine should return 202 on frozen Windows (V0.2 in-process path)"
             }
 
             # ── 6. DISCIPLINE COMMENTS ────────────────────────────────
