@@ -34,10 +34,11 @@ _SYSTEM_PROMPT = f"""\
    "לא תקין" כאשר יש דרישה לתיקון, "נדרשת השלמה" כאשר חסר מידע, "תקין" כאשר הרפרנט אישר.
 3. topic_he — תיאור קצר בעברית, עד 60 תווים.
 4. action_he — הדרישה או הפעולה המלאה בעברית.
+5. confidence — "high" כאשר שיוך הדיסציפלינה והסטטוס ברורים מהטקסט; "low" כאשר נדרש ניחוש או שהמידע חסר.
 
 כללים:
 - כל הערה/דרישה/תנאי נפרד → שורה נפרדת.
-- אם לא ברור לאיזה discipline שייכת הערה, בחר את הקרוב ביותר.
+- אם לא ברור לאיזה discipline שייכת הערה, בחר את הקרוב ביותר והגדר confidence=low.
 - החזר רק ערכים תקינים עבור discipline_key ו-status (מתוך הרשימות שלעיל).
 """
 
@@ -59,8 +60,12 @@ _EXTRACT_SCHEMA: dict = {
                     },
                     "topic_he": {"type": "string"},
                     "action_he": {"type": "string"},
+                    "confidence": {
+                        "type": "string",
+                        "enum": ["high", "low"],
+                    },
                 },
-                "required": ["discipline_key", "status", "topic_he", "action_he"],
+                "required": ["discipline_key", "status", "topic_he", "action_he", "confidence"],
             },
         }
     },
@@ -144,6 +149,7 @@ def _fallback_row(raw_text: str) -> list[dict[str, str]]:
             "status": "",
             "topic_he": "",
             "action_he": raw_text.strip()[:4000],
+            "confidence": "low",
         }
     ]
 

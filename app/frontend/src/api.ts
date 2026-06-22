@@ -653,6 +653,7 @@ export interface ReferentExtractRow {
   status: string;
   topic_he: string;
   action_he: string;
+  confidence: "high" | "low";
 }
 
 export interface ReferentExtractResult {

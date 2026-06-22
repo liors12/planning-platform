@@ -1369,6 +1369,71 @@ code, .path {
   justify-content: flex-start;
 }
 
+/* ─── PDF-extract preview card ──────────────────────────────────────── */
+
+.pdf-extract-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pdf-extract-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pdf-extract-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #3B2666;
+}
+
+.pdf-extract-row {
+  border: 1px solid #e3e3e3;
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: #fbf9ff;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pdf-extract-row-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pdf-extract-row-header select { flex: 1 1 140px; }
+
+.pdf-extract-row input,
+.pdf-extract-row textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pdf-extract-actions {
+  display: flex;
+  justify-content: flex-start;
+  padding-block-start: 4px;
+}
+
+/* Confidence indicator badge (D2) */
+.conf-badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.conf-high { background: #e1f3e7; color: #007840; }
+.conf-low  { background: #fef4d8; color: #8a5a00; }
+
 /* Toast */
 .comments-toast {
   position: absolute;

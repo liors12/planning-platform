@@ -384,26 +384,41 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           )}
           {preview?.map((row) => (
             <div key={row.rowId} className="pdf-extract-row">
-              <select
-                value={row.discipline_key}
-                onChange={(e) => updatePreviewRow(row.rowId, { discipline_key: e.target.value })}
-                aria-label="דיסציפלינה"
-              >
-                <option value="">בחרי דיסציפלינה ▾</option>
-                {disciplines.map((d) => (
-                  <option key={d.key} value={d.key}>{d.label}</option>
-                ))}
-              </select>
-              <select
-                value={row.status}
-                onChange={(e) => updatePreviewRow(row.rowId, { status: e.target.value })}
-                aria-label="סטטוס"
-              >
-                <option value="">בחרי סטטוס ▾</option>
-                {statuses.map((s) => (
-                  <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+              <div className="pdf-extract-row-header">
+                <select
+                  value={row.discipline_key}
+                  onChange={(e) => updatePreviewRow(row.rowId, { discipline_key: e.target.value })}
+                  aria-label="דיסציפלינה"
+                >
+                  <option value="">בחרי דיסציפלינה ▾</option>
+                  {disciplines.map((d) => (
+                    <option key={d.key} value={d.key}>{d.label}</option>
+                  ))}
+                </select>
+                <select
+                  value={row.status}
+                  onChange={(e) => updatePreviewRow(row.rowId, { status: e.target.value })}
+                  aria-label="סטטוס"
+                >
+                  <option value="">בחרי סטטוס ▾</option>
+                  {statuses.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <span
+                  className={
+                    "conf-badge " +
+                    (row.confidence === "high" ? "conf-high" : "conf-low")
+                  }
+                  title={
+                    row.confidence === "high"
+                      ? "המודל זיהה את הדיסציפלינה והסטטוס בביטחון גבוה"
+                      : "הסיווג אינו ודאי — מומלץ לבדוק"
+                  }
+                >
+                  {row.confidence === "high" ? "ודאות גבוהה" : "ודאות נמוכה"}
+                </span>
+              </div>
               <input
                 type="text"
                 value={row.topic_he}
