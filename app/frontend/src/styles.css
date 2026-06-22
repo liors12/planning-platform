@@ -1530,3 +1530,56 @@ code, .path {
   color: #b3261e;
   border: 1px solid #f4b4b0;
 }
+
+/* ── C2: Pipeline summary cards ─────────────────────────────────────────── */
+.pipeline-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-block-end: 24px;
+}
+.pipeline-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 16px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-card);
+  text-align: center;
+}
+.ps-count {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.ps-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.ps-draft   { border-top: 3px solid #94a3b8; }
+.ps-sent    { border-top: 3px solid #3b82f6; }
+.ps-response_received { border-top: 3px solid #f59e0b; }
+.ps-verified { border-top: 3px solid #22c55e; }
+
+/* ── C2: Stage pills in project list ─────────────────────────────────────── */
+.home-recent-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.stage-pill {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.sp-draft             { background: #f1f5f9; color: #64748b; }
+.sp-sent              { background: #dbeafe; color: #1d4ed8; }
+.sp-response_received { background: #fef3c7; color: #92400e; }
+.sp-verified          { background: #dcfce7; color: #15803d; }

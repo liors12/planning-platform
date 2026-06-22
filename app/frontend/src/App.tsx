@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getHealth, isSidecarUnreachable, listProjects, type ProjectOut } from "./api";
+import { getHealth, isSidecarUnreachable, listProjects, type ProjectOut, type WorkflowStage } from "./api";
 import { DiagnosticsPanel } from "./components/DiagnosticsPanel";
 import { Sidebar } from "./components/Sidebar";
 import { CreateProject } from "./pages/CreateProject";
@@ -44,32 +44,24 @@ export default function App() {
   );
 }
 
+const STAGE_LABEL_HE: Record<WorkflowStage, string> = {
+  draft:             "הוכנה",
+  sent:              "נשלח לאדריכל",
+  response_received: "התקבלה תשובה",
+  verified:          "נסגר",
+};
+
+const PIPELINE_STAGES: WorkflowStage[] = ["draft", "sent", "response_received", "verified"];
+
 function Home({ refreshKey, onOpenDiagnostics }: { refreshKey: number; onOpenDiagnostics: () => void }) {
-  const [recent, setRecent] = useState<ProjectOut[] | null>(null);
+  const [projects, setProjects] = useState<ProjectOut[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [unreachable, setUnreachable] = useState(false);
-  // P1 — deterministic app-ready handshake for the UI smoke gate.
-  // The harness waits on data-testid="app-ready" before any click,
-  // so the marker must reflect that the app has finished its initial
-  // render (not just that an HTTP fetch returned 200). Today's race
-  // — "project loaded but submission didn't" — happened because the
-  // test clicked before React had painted the seeded data, hitting a
-  // backend that wasn't fully ready and a UI that hadn't reconciled.
-  //
-  // The marker fires only when BOTH conditions hold:
-  //   1. /health returned 200 (sidecar fully bound, not just listening)
-  //   2. the project list has both loaded AND has at least one row
-  //      (proves the seeded pilot is rendered on screen)
-  // Each is necessary: /health 200 alone doesn't guarantee /projects
-  // is reconciled; recent.length > 0 alone doesn't guarantee /health
-  // (the recent fetch could have hit a stale-but-listening sidecar).
   const [healthOk, setHealthOk] = useState(false);
 
   useEffect(() => {
-    // Clear stale error so a startup-race TypeError doesn't linger next
-    // to the successful retry's data (see api.ts fetchOrThrow + Task #14).
     listProjects(false)
-      .then((all) => { setErr(null); setUnreachable(false); setRecent(all.slice(0, 5)); })
+      .then((all) => { setErr(null); setUnreachable(false); setProjects(all); })
       .catch((e) => {
         if (isSidecarUnreachable(e)) {
           setUnreachable(true);
@@ -79,17 +71,24 @@ function Home({ refreshKey, onOpenDiagnostics }: { refreshKey: number; onOpenDia
           setErr(String(e));
         }
       });
-    // Parallel /health probe — independent of /projects so a slow
-    // project-list query doesn't delay readiness, and a /health blip
-    // doesn't hide already-rendered data. Failures here are silent:
-    // the existing unreachable/err surfaces handle the "no sidecar"
-    // case via listProjects.
     getHealth()
       .then(() => setHealthOk(true))
-      .catch(() => { /* listProjects path handles the user-facing error */ });
+      .catch(() => {});
   }, [refreshKey]);
 
-  const appReady = healthOk && recent !== null && recent.length > 0;
+  const active = projects?.filter((p) => p.status !== "archived") ?? [];
+  const recent = active.slice(0, 5);
+  const appReady = healthOk && projects !== null && projects.length > 0;
+
+  // Count active projects by their latest submission's workflow_stage.
+  const stageCounts: Record<WorkflowStage, number> = {
+    draft: 0, sent: 0, response_received: 0, verified: 0,
+  };
+  for (const p of active) {
+    const s = p.latest_submission?.workflow_stage;
+    if (s && s in stageCounts) stageCounts[s]++;
+  }
+  const hasAny = active.some((p) => p.latest_submission);
 
   return (
     <article className="page-home">
@@ -101,6 +100,18 @@ function Home({ refreshKey, onOpenDiagnostics }: { refreshKey: number; onOpenDia
           לקראת חוות דעת מהנדס/ת הוועדה המקומית.
         </p>
       </header>
+
+      {/* ── Pipeline summary (C2) ─────────────────────────────────────── */}
+      {hasAny && (
+        <section className="pipeline-summary" aria-label="סיכום שלבי הגשה">
+          {PIPELINE_STAGES.map((stage) => (
+            <div key={stage} className={`pipeline-card ps-${stage}`}>
+              <span className="ps-count">{stageCounts[stage]}</span>
+              <span className="ps-label">{STAGE_LABEL_HE[stage]}</span>
+            </div>
+          ))}
+        </section>
+      )}
 
       <p className="home-cta-hint muted">
         בחרי פרויקט קיים מהסרגל בצד, או צרי פרויקט חדש בעזרת הכפתור
@@ -119,38 +130,46 @@ function Home({ refreshKey, onOpenDiagnostics }: { refreshKey: number; onOpenDia
           </div>
         )}
         {err && <div className="error">{err}</div>}
-        {!recent && !err && !unreachable && <p className="muted">טוענת...</p>}
-        {recent && recent.length === 0 && (
+        {!projects && !err && !unreachable && <p className="muted">טוענת...</p>}
+        {projects && recent.length === 0 && (
           <p className="muted">אין עדיין פרויקטים. פתחי פרויקט ראשון כדי להתחיל.</p>
         )}
-        {recent && recent.length > 0 && (
+        {recent.length > 0 && (
           <ul className="home-recent-list" data-testid={appReady ? "app-ready" : undefined}>
-            {recent.map((p) => (
-              <li key={p.id}>
-                <a className="home-recent-link"
-                   data-testid={`home-project-link-${p.tava_number}`}
-                   href={buildHash({ kind: "project", projectId: p.id })}>
-                  <div className="home-recent-name">{p.name_he}</div>
-                  <div className="home-recent-meta">
-                    <span dir="ltr">תב"ע {p.tava_number}</span>
-                    {p.submission_count !== null && p.submission_count > 0 && (
-                      <span>
-                        {" · "}
-                        {p.submission_count === 1
-                          ? "הגשה אחת"
-                          : `${p.submission_count} הגשות`}
-                      </span>
-                    )}
-                    {p.latest_submission && (
-                      <span>
-                        {" · "}עודכן{" "}
-                        {p.latest_submission.uploaded_at.replace("T", " ").slice(0, 10)}
-                      </span>
-                    )}
-                  </div>
-                </a>
-              </li>
-            ))}
+            {recent.map((p) => {
+              const ws = p.latest_submission?.workflow_stage;
+              return (
+                <li key={p.id}>
+                  <a className="home-recent-link"
+                     data-testid={`home-project-link-${p.tava_number}`}
+                     href={buildHash({ kind: "project", projectId: p.id })}>
+                    <div className="home-recent-name">{p.name_he}</div>
+                    <div className="home-recent-meta">
+                      <span dir="ltr">תב"ע {p.tava_number}</span>
+                      {p.submission_count !== null && p.submission_count > 0 && (
+                        <span>
+                          {" · "}
+                          {p.submission_count === 1
+                            ? "הגשה אחת"
+                            : `${p.submission_count} הגשות`}
+                        </span>
+                      )}
+                      {p.latest_submission && (
+                        <span>
+                          {" · "}עודכן{" "}
+                          {p.latest_submission.uploaded_at.replace("T", " ").slice(0, 10)}
+                        </span>
+                      )}
+                    </div>
+                  </a>
+                  {ws && (
+                    <span className={`stage-pill sp-${ws}`}>
+                      {STAGE_LABEL_HE[ws]}
+                    </span>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

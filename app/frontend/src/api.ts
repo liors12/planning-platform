@@ -40,6 +40,7 @@ export interface SubmissionSummary {
   id: number;
   version_string: string;
   status: string;
+  workflow_stage: WorkflowStage;
   uploaded_at: string;
 }
 
