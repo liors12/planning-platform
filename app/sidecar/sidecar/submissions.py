@@ -570,6 +570,8 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
 
         try:
             parsed_rows = _parse_response_xlsx(xlsx_path)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc))
         except Exception as exc:
             log.exception("response xlsx parse failed for submission %s", submission_id)
             raise HTTPException(422, "קובץ האקסל אינו תקין או אינו בפורמט הצפוי") from exc
@@ -961,39 +963,136 @@ def _stream_file_range(path: Path, start: int, end: int, chunk_size: int) -> Ite
 
 
 def _parse_response_xlsx(path: Path) -> list[dict]:
-    """Parse the architect-filled response Excel.
+    """Parse the architect-filled response Excel produced by excel_export.py.
 
-    Expects the same column layout as excel_export.py:
-      col 6  (0-based idx 5)  — נושא              (topic / finding name)
-      col 7  (0-based idx 6)  — סטטוס ממצא        (original finding status)
-      col 8  (0-based idx 7)  — תיאור/פעולה נדרשת (description / required action)
-      col 9  (0-based idx 8)  — סטטוס טיפול        (treatment status — architect fills)
-      col 10 (0-based idx 9)  — הערות האדריכל      (architect notes — architect fills)
-      col 11 (0-based idx 10) — source_id           (hidden round-trip key)
+    Layout (from excel_export.COLUMNS):
+      Row 1 — read-only warning banner (merged, skipped)
+      Row 2 — column headers (validated before any data is read)
+      Row 3+ — data rows
 
-    Row 1 is the header; data starts at row 2. Rows without a source_id
-    (empty or None) are skipped — they are section-separator / header rows
-    inserted by the exporter.
+    Expected 0-based column indices:
+      5  נושא
+      6  סטטוס ממצא
+      7  תיאור / פעולה נדרשת
+      8  סטטוס טיפול        (architect-editable)
+      9  הערות האדריכל       (architect-editable)
+      10 source_id           (hidden round-trip key — critical)
+
+    Raises ValueError with a Hebrew message when:
+      - the header row is missing entirely
+      - source_id column cannot be found
+      - any other critical column (סטטוס טיפול, הערות האדריכל) is missing
+
+    If columns are found but at different positions than expected (i.e. an
+    architect shifted a column), the found positions are used and a warning
+    is logged — no data is silently mis-mapped.
     """
     import openpyxl
 
+    # Expected 0-based column indices, keyed by the exact header text.
+    _EXPECTED: dict[str, int] = {
+        "נושא": 5,
+        "סטטוס ממצא": 6,
+        "תיאור / פעולה נדרשת": 7,
+        "סטטוס טיפול": 8,
+        "הערות האדריכל": 9,
+        "source_id": 10,
+    }
+    _CRITICAL = {"source_id", "סטטוס טיפול", "הערות האדריכל"}
+
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
     ws = wb.active
+
+    # ── Step 1: read and validate the header row (row 2) ──────────────
+    header_row = next(ws.iter_rows(min_row=2, max_row=2, values_only=True), None)
+    if header_row is None:
+        wb.close()
+        raise ValueError("מבנה הקובץ אינו תואם — לא נמצאה שורת כותרת")
+
+    # Map header text → 0-based column index; try exact match first,
+    # then strip-normalised match (handles stray spaces or BOM).
+    actual: dict[str, int] = {}
+    for idx, cell in enumerate(header_row):
+        if cell is not None:
+            actual[str(cell).strip()] = idx
+
+    col_map: dict[str, int] = {}
+    shifted: list[str] = []
+    missing: list[str] = []
+
+    for name, expected_idx in _EXPECTED.items():
+        if name in actual:
+            found_idx = actual[name]
+            col_map[name] = found_idx
+            if found_idx != expected_idx:
+                shifted.append(name)
+        else:
+            # Fuzzy fallback: case-insensitive + whitespace-normalised search.
+            name_norm = " ".join(name.lower().split())
+            match = next(
+                (k for k in actual if " ".join(k.lower().split()) == name_norm), None
+            )
+            if match is not None:
+                found_idx = actual[match]
+                col_map[name] = found_idx
+                if found_idx != expected_idx:
+                    shifted.append(name)
+            else:
+                missing.append(name)
+
+    if "source_id" in missing:
+        wb.close()
+        raise ValueError(
+            "עמודת מזהה (source_id) חסרה. "
+            "נא להשתמש בקובץ האקסל המקורי שהופק מהמערכת."
+        )
+
+    critical_missing = [m for m in missing if m in _CRITICAL]
+    if critical_missing:
+        wb.close()
+        raise ValueError(
+            "מבנה הקובץ אינו תואם. ודאי שלא שונו עמודות באקסל. "
+            f"העמודות הבאות חסרות: {', '.join(critical_missing)}"
+        )
+
+    if shifted:
+        log.warning(
+            "response xlsx: %d column(s) at unexpected positions: %s — "
+            "using found positions",
+            len(shifted), shifted,
+        )
+
+    # Resolve final indices (fall back to expected if a non-critical column was missing).
+    i_sid = col_map["source_id"]
+    i_topic = col_map.get("נושא", _EXPECTED["נושא"])
+    i_status = col_map.get("סטטוס ממצא", _EXPECTED["סטטוס ממצא"])
+    i_desc = col_map.get("תיאור / פעולה נדרשת", _EXPECTED["תיאור / פעולה נדרשת"])
+    i_treatment = col_map["סטטוס טיפול"]
+    i_notes = col_map["הערות האדריכל"]
+
+    min_cols = max(i_sid, i_topic, i_status, i_desc, i_treatment, i_notes) + 1
+
+    # ── Step 2: parse data rows (row 3 onward) ────────────────────────
+    def _cell(row: tuple, idx: int) -> str | None:
+        if idx < len(row) and row[idx] is not None:
+            return str(row[idx]).strip() or None
+        return None
+
     result: list[dict] = []
-    for row in ws.iter_rows(min_row=2, values_only=True):
-        if len(row) < 11:
+    for row in ws.iter_rows(min_row=3, values_only=True):
+        if len(row) < min_cols:
             continue
-        raw_sid = row[10]
+        raw_sid = row[i_sid]
         source_id = str(raw_sid).strip() if raw_sid is not None else ""
         if not source_id or source_id.lower() == "none":
             continue
         result.append({
             "source_id": source_id,
-            "topic_he": str(row[5]).strip() if row[5] is not None else None or None,
-            "finding_status": str(row[6]).strip() if row[6] is not None else None or None,
-            "description": str(row[7]).strip() if row[7] is not None else None or None,
-            "treatment_status": str(row[8]).strip() if row[8] is not None else None or None,
-            "architect_notes": str(row[9]).strip() if row[9] is not None else None or None,
+            "topic_he": _cell(row, i_topic),
+            "finding_status": _cell(row, i_status),
+            "description": _cell(row, i_desc),
+            "treatment_status": _cell(row, i_treatment),
+            "architect_notes": _cell(row, i_notes),
         })
     wb.close()
     return result
