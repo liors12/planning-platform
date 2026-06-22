@@ -282,6 +282,36 @@ class ResponseRow(Base):
                                                           back_populates="rows")
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# SubmissionAttachment — A1: arbitrary file attachments per submission
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SubmissionAttachment(Base):
+    __tablename__ = "submission_attachments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    submission_id: Mapped[int] = mapped_column(
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    filename: Mapped[str] = mapped_column(String(512), nullable=False)
+    file_path: Mapped[str] = mapped_column(String(1024), nullable=False)
+    file_size: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.datetime("now"), nullable=False,
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "submission_id": self.submission_id,
+            "filename": self.filename,
+            "file_size": self.file_size,
+            "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
+        }
+
+
 class DisciplineComment(Base):
     __tablename__ = "discipline_comments"
 

@@ -565,6 +565,53 @@ export async function uploadArchitectResponse(
   );
 }
 
+// ── Submission attachments (A1) ───────────────────────────────────────────
+
+export interface AttachmentOut {
+  id: number;
+  submission_id: number;
+  filename: string;
+  file_size: number;
+  uploaded_at: string;
+}
+
+export async function listAttachments(submissionId: number): Promise<AttachmentOut[]> {
+  return jsonOrThrow<AttachmentOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/attachments`),
+    `GET /submissions/${submissionId}/attachments`,
+  );
+}
+
+export async function uploadAttachment(
+  submissionId: number,
+  file: File,
+): Promise<AttachmentOut> {
+  const fd = new FormData();
+  fd.append("file", file, file.name);
+  return jsonOrThrow<AttachmentOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/submissions/${submissionId}/attachments`, {
+      method: "POST",
+      body: fd,
+    }),
+    `POST /submissions/${submissionId}/attachments`,
+  );
+}
+
+export async function deleteAttachment(
+  submissionId: number,
+  attachmentId: number,
+): Promise<void> {
+  const res = await fetchOrThrow(
+    `${SIDECAR_BASE}/submissions/${submissionId}/attachments/${attachmentId}`,
+    { method: "DELETE" },
+  );
+  if (!res.ok) {
+    throw new Error(
+      `DELETE /submissions/${submissionId}/attachments/${attachmentId} → HTTP ${res.status}`,
+    );
+  }
+}
+
 // ── Settings (Group C2) ───────────────────────────────────────────────────
 
 export interface SettingsOut {

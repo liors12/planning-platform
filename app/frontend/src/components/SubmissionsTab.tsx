@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  deleteSubmission, exportExcel, getArchitectResponse, listSubmissions,
-  openOutput, openUrl, pollJobUntilDone, renderSubmission, revealOutput,
-  runEngine, setWorkflowStage, uploadArchitectResponse, uploadSubmission,
-  type ArchitectResponseRow, type ProjectOut, type SubmissionOut, type WorkflowStage,
+  deleteAttachment, deleteSubmission, exportExcel, getArchitectResponse,
+  listAttachments, listSubmissions, openOutput, openUrl, pollJobUntilDone,
+  renderSubmission, revealOutput, runEngine, setWorkflowStage,
+  uploadArchitectResponse, uploadAttachment, uploadSubmission,
+  type ArchitectResponseRow, type AttachmentOut, type ProjectOut,
+  type SubmissionOut, type WorkflowStage,
 } from "../api";
 import { EngineStatus } from "./EngineStatus";
 
@@ -103,6 +105,12 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   const [responseRows, setResponseRows] = useState<Record<number, ArchitectResponseRow[] | null>>({});
   const [responseRowsLoading, setResponseRowsLoading] = useState<Record<number, boolean>>({});
   const [verifyLoading, setVerifyLoading] = useState<Record<number, boolean>>({});
+
+  // A1 attachment state per submission.
+  const [attachments, setAttachments] = useState<Record<number, AttachmentOut[] | null>>({});
+  const [attachmentsLoading, setAttachmentsLoading] = useState<Record<number, boolean>>({});
+  const [attachmentUploading, setAttachmentUploading] = useState<Record<number, boolean>>({});
+  const [attachmentDeleting, setAttachmentDeleting] = useState<Record<number, Set<number>>>({});
 
   // Upload form state
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -295,6 +303,56 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       setErr(String(e));
     } finally {
       setVerifyLoading((p) => ({ ...p, [submissionId]: false }));
+    }
+  }
+
+  async function onLoadAttachments(submissionId: number) {
+    if (attachments[submissionId] !== undefined) return;
+    setAttachmentsLoading((p) => ({ ...p, [submissionId]: true }));
+    try {
+      const list = await listAttachments(submissionId);
+      setAttachments((p) => ({ ...p, [submissionId]: list }));
+    } catch {
+      setAttachments((p) => ({ ...p, [submissionId]: [] }));
+    } finally {
+      setAttachmentsLoading((p) => ({ ...p, [submissionId]: false }));
+    }
+  }
+
+  async function onUploadAttachment(submissionId: number, file: File) {
+    setAttachmentUploading((p) => ({ ...p, [submissionId]: true }));
+    try {
+      const att = await uploadAttachment(submissionId, file);
+      setAttachments((p) => ({
+        ...p,
+        [submissionId]: [...(p[submissionId] ?? []), att],
+      }));
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setAttachmentUploading((p) => ({ ...p, [submissionId]: false }));
+    }
+  }
+
+  async function onDeleteAttachment(submissionId: number, attachmentId: number) {
+    setAttachmentDeleting((p) => ({
+      ...p,
+      [submissionId]: new Set([...(p[submissionId] ?? []), attachmentId]),
+    }));
+    try {
+      await deleteAttachment(submissionId, attachmentId);
+      setAttachments((p) => ({
+        ...p,
+        [submissionId]: (p[submissionId] ?? []).filter((a) => a.id !== attachmentId),
+      }));
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setAttachmentDeleting((p) => {
+        const next = new Set(p[submissionId] ?? []);
+        next.delete(attachmentId);
+        return { ...p, [submissionId]: next };
+      });
     }
   }
 
@@ -507,6 +565,16 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   )}
                 </div>
               )}
+
+              <AttachmentSection
+                attachments={attachments[sub.id]}
+                loading={attachmentsLoading[sub.id]}
+                uploading={attachmentUploading[sub.id]}
+                deleting={attachmentDeleting[sub.id]}
+                onLoad={() => onLoadAttachments(sub.id)}
+                onUpload={(f) => onUploadAttachment(sub.id, f)}
+                onDelete={(id) => onDeleteAttachment(sub.id, id)}
+              />
 
               <div className="submission-actions">
                 <button
@@ -787,6 +855,98 @@ function OutputBanner({
 // session). When has_report_pdf / has_report_xlsx come back true on list
 // refresh, these buttons let the user open a report generated in a prior
 // session — without having to regenerate it.
+
+// ─── A1: Attachment section ───────────────────────────────────────────────────
+
+function AttachmentSection({
+  attachments, loading, uploading, deleting, onLoad, onUpload, onDelete,
+}: {
+  attachments: AttachmentOut[] | null | undefined;
+  loading: boolean | undefined;
+  uploading: boolean | undefined;
+  deleting: Set<number> | undefined;
+  onLoad: () => void;
+  onUpload: (f: File) => void;
+  onDelete: (id: number) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const isLoaded = attachments !== null && attachments !== undefined;
+
+  if (!isLoaded && !loading) {
+    return (
+      <div className="attachment-section">
+        <button type="button" className="ghost-btn small att-toggle-btn" onClick={onLoad}>
+          📎 קבצים מצורפים ▼
+        </button>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="attachment-section">
+        <span className="spinner" aria-hidden="true" />{" "}
+        <span className="muted">טוענת קבצים...</span>
+      </div>
+    );
+  }
+
+  const list = attachments ?? [];
+
+  function _formatBytes(n: number): string {
+    if (n < 1024) return `${n} B`;
+    if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+    return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  return (
+    <div className="attachment-section">
+      <div className="att-header">
+        <span className="att-title">קבצים מצורפים</span>
+        <span className="muted att-count">{list.length} קבצים</span>
+        <label className={`ghost-btn small att-upload-label${uploading ? " disabled" : ""}`}>
+          {uploading
+            ? <><span className="spinner" aria-hidden="true" />מעלה...</>
+            : "+ הוסיפי קובץ"}
+          <input
+            ref={inputRef}
+            type="file"
+            className="sr-only"
+            disabled={uploading}
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) { onUpload(f); e.target.value = ""; }
+            }}
+          />
+        </label>
+      </div>
+      {list.length === 0 ? (
+        <p className="muted att-empty">אין קבצים מצורפים.</p>
+      ) : (
+        <ul className="att-list" dir="rtl">
+          {list.map((a) => {
+            const isDel = deleting?.has(a.id);
+            return (
+              <li key={a.id} className="att-item">
+                <span className="att-filename">{a.filename}</span>
+                <span className="muted att-size">{_formatBytes(a.file_size)}</span>
+                <button
+                  type="button"
+                  className="att-delete-btn"
+                  disabled={isDel}
+                  aria-label={`מחיקת ${a.filename}`}
+                  onClick={() => onDelete(a.id)}
+                >
+                  {isDel ? <span className="spinner" aria-hidden="true" /> : "×"}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function LastReportSection({
   hasPdf, hasXlsx, onOpen,

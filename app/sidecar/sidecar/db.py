@@ -142,6 +142,10 @@ def initialize(engine: Engine) -> dict:
             ))
             log.info("migration: added workflow_stage column to submissions")
 
+    # A1 migration — submission_attachments table (handled by create_all for
+    # fresh installs; for existing DBs create_all is idempotent via IF NOT EXISTS).
+    # No ALTER TABLE needed: create_all only creates missing tables.
+
     # B3 migration — add topic_he/finding_status/description to response_rows
     # for existing DBs that were created under the B2 schema.
     with engine.begin() as conn:

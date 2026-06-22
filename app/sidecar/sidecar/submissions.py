@@ -32,7 +32,7 @@ from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import has_schema
-from .models import ArchitectResponse, Project, ResponseRow, Submission
+from .models import ArchitectResponse, Project, ResponseRow, Submission, SubmissionAttachment
 from .queue_worker import EngineQueue, engine_run_available
 from .storage import StorageError, sanitize_upload_filename, submission_dir
 
@@ -626,6 +626,113 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 uploaded_at=arch.uploaded_at.isoformat(),
                 rows=rows,
             )
+
+    # ── POST /submissions/{id}/attachments ─────────────────────────────
+    # Upload an arbitrary file attachment to a submission. Files are stored
+    # under <data_dir>/projects/{tava}/submissions/v{bare}/attachments/.
+
+    class _AttachmentOut(BaseModel):
+        id: int
+        submission_id: int
+        filename: str
+        file_size: int
+        uploaded_at: str
+
+    @_subs_router.post(
+        "/{submission_id}/attachments",
+        response_model=_AttachmentOut,
+        status_code=201,
+    )
+    async def upload_attachment(
+        submission_id: int,
+        file: UploadFile = File(...),
+    ) -> _AttachmentOut:
+        fname = file.filename or "attachment"
+        try:
+            safe_name = sanitize_upload_filename(fname)
+        except StorageError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            tava = sub.project.tava_number
+            version = sub.version_string
+
+        att_dir = submission_dir(cfg, tava, version) / "attachments"
+        att_dir.mkdir(parents=True, exist_ok=True)
+        dest = att_dir / safe_name
+        # Avoid silent overwrites: suffix the name if a file already exists.
+        counter = 1
+        stem = dest.stem
+        suffix = dest.suffix
+        while dest.exists():
+            dest = att_dir / f"{stem}_{counter}{suffix}"
+            counter += 1
+
+        _stream_upload_to_disk(file, dest)
+        file_size = dest.stat().st_size
+
+        with _session() as sess:
+            att = SubmissionAttachment(
+                submission_id=submission_id,
+                filename=dest.name,
+                file_path=str(dest),
+                file_size=file_size,
+            )
+            sess.add(att)
+            sess.commit()
+            sess.refresh(att)
+            return _AttachmentOut(
+                id=att.id,
+                submission_id=att.submission_id,
+                filename=att.filename,
+                file_size=att.file_size,
+                uploaded_at=att.uploaded_at.isoformat(),
+            )
+
+    # ── GET /submissions/{id}/attachments ──────────────────────────────
+
+    @_subs_router.get("/{submission_id}/attachments", response_model=list[_AttachmentOut])
+    def list_attachments(submission_id: int) -> list[_AttachmentOut]:
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            atts = (
+                sess.query(SubmissionAttachment)
+                .filter_by(submission_id=submission_id)
+                .order_by(SubmissionAttachment.uploaded_at.asc())
+                .all()
+            )
+            return [
+                _AttachmentOut(
+                    id=a.id,
+                    submission_id=a.submission_id,
+                    filename=a.filename,
+                    file_size=a.file_size,
+                    uploaded_at=a.uploaded_at.isoformat(),
+                )
+                for a in atts
+            ]
+
+    # ── DELETE /submissions/{id}/attachments/{att_id} ──────────────────
+
+    @_subs_router.delete("/{submission_id}/attachments/{att_id}", status_code=204)
+    def delete_attachment(submission_id: int, att_id: int) -> None:
+        with _session() as sess:
+            att = sess.get(SubmissionAttachment, att_id)
+            if att is None or att.submission_id != submission_id:
+                raise HTTPException(404, f"attachment {att_id} not found")
+            file_path = Path(att.file_path)
+            sess.delete(att)
+            sess.commit()
+        if file_path.exists():
+            try:
+                file_path.unlink()
+            except OSError:
+                log.warning("could not delete attachment file %s", file_path)
 
     # ── POST /submissions/{id}/run-engine ──────────────────────────────
 

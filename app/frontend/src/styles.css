@@ -1669,3 +1669,19 @@ code, .path {
   clip: rect(0,0,0,0);
   white-space: nowrap;
 }
+
+/* ── A1: Attachment section ──────────────────────────────────────────────── */
+.attachment-section { margin-block: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; background: var(--surface-card); }
+.att-toggle-btn { font-size: 12px; }
+.att-header { display: flex; align-items: center; gap: 10px; margin-block-end: 8px; flex-wrap: wrap; }
+.att-title { font-weight: 600; font-size: 13px; }
+.att-count { font-size: 11.5px; }
+.att-upload-label { cursor: pointer; display: inline-flex; align-items: center; gap: 5px; margin-inline-start: auto; }
+.att-upload-label.disabled { opacity: 0.5; pointer-events: none; cursor: default; }
+.att-empty { font-size: 12px; margin: 0; }
+.att-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.att-item { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: 5px; background: var(--surface-raised); font-size: 12.5px; }
+.att-filename { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.att-size { font-size: 11px; white-space: nowrap; }
+.att-delete-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0 4px; font-size: 16px; line-height: 1; border-radius: 3px; }
+.att-delete-btn:hover:not(:disabled) { color: var(--danger, #dc2626); background: rgba(220,38,38,0.08); }
