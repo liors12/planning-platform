@@ -544,6 +544,12 @@ jobs:
             if ($subDetail.engine_run_available -ne $true) {
               Fail "engine_run_available should be true — V0.2 runs full audit in-process on frozen Windows"
             }
+            # The seeded v24.3 submission records pdf_path = .../v24.3.pdf but
+            # the seed only ships metadata.json (the PDF is too large to commit).
+            # Stage the dummy PDF at the expected location so the endpoint's
+            # pdf_path.exists() pre-flight passes and returns 202 instead of 409.
+            $seedPdfDest = Join-Path $smokeData "projects\407-1048248\submissions\v24.3\v24.3.pdf"
+            Copy-Item $dummyPdf $seedPdfDest -Force
             $respEngine = Invoke-WebRequest -UseBasicParsing -Method Post `
               -SkipHttpErrorCheck `
               -Uri "http://127.0.0.1:17321/submissions/$subId/run-engine"
