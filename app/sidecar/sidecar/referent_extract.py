@@ -72,21 +72,32 @@ _EXTRACT_SCHEMA: dict = {
     "required": ["comments"],
 }
 
-_MAX_TEXT_FOR_CLAUDE = 20_000
+# Claude claude-sonnet-4-6 supports 200K context; 50K gives a comfortable margin
+# while fitting ~80-100 pages of dense referent text.
+_MAX_TEXT_FOR_CLAUDE = 50_000
+
+# PDFs with fewer than this many non-whitespace characters across all pages
+# are treated as scanned/image-only — no text to analyse.
+_SCAN_MIN_CHARS = 50
 
 
 def extract_text(pdf_bytes: bytes) -> str:
-    """Extract raw text from all PDF pages using PyMuPDF."""
+    """Extract RTL-cleaned text from all PDF pages using PyMuPDF."""
     try:
         import fitz  # noqa: PLC0415 — lazy import; PyMuPDF
     except ImportError:
         log.warning("PyMuPDF not installed — cannot extract PDF text")
         return ""
     try:
+        from compliance_engine.text_utils import patch_rtl_artifacts  # noqa: PLC0415
+    except ImportError:
+        patch_rtl_artifacts = lambda t: t  # noqa: E731 — fallback if not available
+
+    try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         pages = []
         for page in doc:
-            text = page.get_text()
+            text = patch_rtl_artifacts(page.get_text())
             if text.strip():
                 pages.append(text)
         doc.close()
@@ -108,8 +119,6 @@ def _call_claude(raw_text: str) -> list[dict[str, str]] | None:
         return None
 
     snippet = raw_text[:_MAX_TEXT_FOR_CLAUDE]
-    if len(raw_text) > _MAX_TEXT_FOR_CLAUDE:
-        log.info("PDF text truncated to %d chars before Claude call", _MAX_TEXT_FOR_CLAUDE)
 
     try:
         client = anthropic.Anthropic(api_key=api_key)
@@ -158,22 +167,52 @@ def extract_referent_comments(pdf_bytes: bytes) -> dict[str, Any]:
     """Main entry point — returns the extraction result dict.
 
     Shape:
-      {comments: [...], raw_text: str, used_ai: bool, error?: "scan"}
+      {comments: [...], raw_text: str, used_ai: bool,
+       error?: "scan", error_message?: str, truncation_warning?: str}
 
-    "scan" error means the PDF yielded no text (likely a scanned image).
-    When error is absent and used_ai is False, Claude was unavailable and
-    a single catch-all row was produced for Ellen to fill in manually.
+    "scan" error means the PDF yielded no extractable text (likely a scanned image).
+    When present, error_message contains a user-facing Hebrew explanation.
+    truncation_warning is set when the PDF text exceeded _MAX_TEXT_FOR_CLAUDE chars
+    and only the first portion was sent to Claude.
     """
     raw_text = extract_text(pdf_bytes)
-    if not raw_text.strip():
-        return {"comments": [], "raw_text": "", "used_ai": False, "error": "scan"}
+    if len(raw_text.strip()) < _SCAN_MIN_CHARS:
+        return {
+            "comments": [],
+            "raw_text": raw_text,
+            "used_ai": False,
+            "error": "scan",
+            "error_message": (
+                "הקובץ סרוק ואינו מכיל טקסט מחלץ. "
+                "נא להעלות קובץ PDF טקסטואלי (לא סריקה)."
+            ),
+        }
+
+    truncation_warning: str | None = None
+    if len(raw_text) > _MAX_TEXT_FOR_CLAUDE:
+        truncation_warning = (
+            f"הקובץ מכיל {len(raw_text):,} תווים. "
+            f"רק 50,000 הראשונים נותחו. "
+            "ייתכן שהערות מעמודים אחרונים חסרות."
+        )
+        log.info(
+            "PDF text truncated from %d to %d chars before Claude call",
+            len(raw_text),
+            _MAX_TEXT_FOR_CLAUDE,
+        )
 
     ai_rows = _call_claude(raw_text)
     if ai_rows is not None:
-        return {"comments": ai_rows, "raw_text": raw_text, "used_ai": True}
+        result: dict[str, Any] = {"comments": ai_rows, "raw_text": raw_text, "used_ai": True}
+        if truncation_warning:
+            result["truncation_warning"] = truncation_warning
+        return result
 
-    return {
+    result = {
         "comments": _fallback_row(raw_text),
         "raw_text": raw_text,
         "used_ai": False,
     }
+    if truncation_warning:
+        result["truncation_warning"] = truncation_warning
+    return result

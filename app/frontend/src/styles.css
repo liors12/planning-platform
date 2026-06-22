@@ -685,6 +685,7 @@ code, .path {
   color: #ccc;
 }
 .error { padding: 8px 12px; background: var(--red-bg); color: var(--red); border-radius: 4px; margin-block: 8px; font-size: 14px; }
+.warning-banner { padding: 8px 12px; background: #FFF8E1; color: #7B5E00; border: 1px solid #FFD54F; border-radius: 4px; margin-block: 8px; font-size: 14px; }
 
 /* ─── Findings list (structured rows + drawer) ──────────────────────── */
 

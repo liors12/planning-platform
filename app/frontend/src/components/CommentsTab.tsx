@@ -106,6 +106,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
   // ── PDF-extraction flow ───────────────────────────────────────────────
   const [extracting, setExtracting] = useState(false);
   const [extractErr, setExtractErr] = useState<string | null>(null);
+  const [truncWarn, setTruncWarn] = useState<string | null>(null);
   const [preview, setPreview] = useState<ExtractedPreviewRow[] | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState<string | null>(null);
@@ -210,17 +211,20 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     }
     setExtracting(true);
     setExtractErr(null);
+    setTruncWarn(null);
     setPreview(null);
     setSaveErr(null);
     try {
       const result = await extractReferentPdf(submission.id, file);
       if (result.error === "scan") {
         setExtractErr(
-          "לא ניתן לחלץ טקסט מה-PDF — ייתכן שהוא סרוק. המרי לפורמט טקסט ונסי שוב.",
+          result.error_message ??
+            "לא ניתן לחלץ טקסט מה-PDF — ייתכן שהוא סרוק. המרי לפורמט טקסט ונסי שוב.",
         );
       } else if (result.comments.length === 0) {
         setExtractErr("לא נמצאו הערות ב-PDF. ניתן להוסיף הערות ידנית בטופס למטה.");
       } else {
+        if (result.truncation_warning) setTruncWarn(result.truncation_warning);
         setPreview(
           result.comments.map((c) => ({ ...c, rowId: crypto.randomUUID() })),
         );
@@ -372,12 +376,13 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
             <button
               type="button"
               className="ghost-btn small"
-              onClick={() => { setPreview(null); setExtractErr(null); setSaveErr(null); }}
+              onClick={() => { setPreview(null); setExtractErr(null); setTruncWarn(null); setSaveErr(null); }}
             >
               סגרי ✕
             </button>
           </div>
           {extractErr && <div className="error">{extractErr}</div>}
+          {truncWarn && <div className="warning-banner">{truncWarn}</div>}
           {saveErr && <div className="error">{saveErr}</div>}
           {preview !== null && preview.length === 0 && (
             <p className="muted">לא נמצאו הערות לשמירה.</p>

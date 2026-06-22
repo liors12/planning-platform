@@ -18,6 +18,7 @@ import json
 from pathlib import Path
 
 import fitz  # PyMuPDF
+from compliance_engine.text_utils import patch_rtl_artifacts
 
 from .discipline_findings import find_finding, load_discipline_findings
 
@@ -75,7 +76,10 @@ def run_discipline_checks(
 def _extract_text(pdf_path: Path) -> tuple[dict[int, str], int]:
     doc = fitz.open(str(pdf_path))
     try:
-        return ({i + 1: (p.get_text("text") or "") for i, p in enumerate(doc)}, doc.page_count)
+        return (
+            {i + 1: patch_rtl_artifacts(p.get_text("text") or "") for i, p in enumerate(doc)},
+            doc.page_count,
+        )
     finally:
         doc.close()
 

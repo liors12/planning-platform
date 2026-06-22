@@ -47,6 +47,7 @@ hidden_imports = [
     # Full-audit chain (V0.2 in-process path)
     "compliance_engine.audit",
     "compliance_engine.constants",
+    "compliance_engine.text_utils",
     "compliance_engine.content_compliance_checker",
     "compliance_engine.discipline_findings",
     "compliance_engine.discipline_policy_checker",

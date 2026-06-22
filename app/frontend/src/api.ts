@@ -662,6 +662,10 @@ export interface ReferentExtractResult {
   used_ai: boolean;
   /** "scan" when the PDF is scanned/image-only and yielded no text. */
   error?: string;
+  /** Hebrew explanation shown when error === "scan". */
+  error_message?: string;
+  /** Hebrew warning shown when the PDF text was truncated before Claude analysis. */
+  truncation_warning?: string;
 }
 
 export async function extractReferentPdf(

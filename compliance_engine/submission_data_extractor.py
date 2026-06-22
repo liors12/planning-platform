@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 import fitz  # PyMuPDF
+from compliance_engine.text_utils import patch_rtl_artifacts
 
 from .extraction_cache import get_or_extract, pdf_sha256
 
@@ -163,7 +164,7 @@ def _extract_text_by_page(pdf_path: Path) -> tuple[dict[int, str], int]:
     try:
         per_page: dict[int, str] = {}
         for i, page in enumerate(doc, start=1):
-            per_page[i] = page.get_text("text") or ""
+            per_page[i] = patch_rtl_artifacts(page.get_text("text") or "")
         return per_page, len(per_page)
     finally:
         doc.close()
