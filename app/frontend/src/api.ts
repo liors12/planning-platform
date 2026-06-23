@@ -736,6 +736,57 @@ export async function extractReferentPdf(
   );
 }
 
+// ── Meeting notes PDF extraction ─────────────────────────────────────────
+
+export interface MeetingRow {
+  id: number;
+  extraction_id: number;
+  row_type: "decision" | "action_item" | "open_issue";
+  topic_he: string;
+  decision_he: string;
+  responsible_he: string | null;
+  deadline_he: string | null;
+}
+
+export interface MeetingExtractionResult {
+  id: number;
+  submission_id: number;
+  row_count: number;
+  used_ai: boolean;
+  uploaded_at: string;
+  rows: MeetingRow[];
+  raw_text?: string;
+  error?: string;
+  error_message?: string;
+  truncation_warning?: string;
+}
+
+export async function uploadMeetingPdf(
+  submissionId: number,
+  pdfFile: File,
+): Promise<MeetingExtractionResult> {
+  const form = new FormData();
+  form.append("pdf", pdfFile, pdfFile.name);
+  return jsonOrThrow<MeetingExtractionResult>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/upload-meeting-pdf`,
+      { method: "POST", body: form },
+    ),
+    `POST /submissions/${submissionId}/upload-meeting-pdf`,
+  );
+}
+
+export async function getMeetingNotes(
+  submissionId: number,
+): Promise<MeetingExtractionResult> {
+  return jsonOrThrow<MeetingExtractionResult>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/meeting-notes`,
+    ),
+    `GET /submissions/${submissionId}/meeting-notes`,
+  );
+}
+
 // ── Phase 1 demo: subprocess-isolation echo ──────────────────────────────
 
 export interface EchoResponse {

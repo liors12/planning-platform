@@ -1324,6 +1324,129 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 rows=rows_out,
             )
 
+    # ── POST /submissions/{id}/upload-meeting-pdf ──────────────────────
+
+    _MAX_MEETING_PDF_BYTES = 20 * 1024 * 1024  # 20 MB
+
+    class _MeetingRowOut(BaseModel):
+        id: int
+        extraction_id: int
+        row_type: str
+        topic_he: str
+        decision_he: str
+        responsible_he: str | None = None
+        deadline_he: str | None = None
+
+    class _MeetingExtractionOut(BaseModel):
+        id: int
+        submission_id: int
+        row_count: int
+        used_ai: bool
+        uploaded_at: str
+        rows: list[_MeetingRowOut]
+        raw_text: str | None = None
+        error: str | None = None
+        error_message: str | None = None
+        truncation_warning: str | None = None
+
+    @_subs_router.post(
+        "/{submission_id}/upload-meeting-pdf",
+        response_model=_MeetingExtractionOut,
+        status_code=201,
+    )
+    async def upload_meeting_pdf(
+        submission_id: int,
+        pdf: UploadFile = File(...),
+    ) -> _MeetingExtractionOut:
+        """Extract action items and decisions from a meeting-notes PDF."""
+        from .meeting_extract import extract_meeting_notes  # noqa: PLC0415
+        from .models import MeetingExtraction, MeetingRow  # noqa: PLC0415
+
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+
+        content = await pdf.read(_MAX_MEETING_PDF_BYTES + 1)
+        if len(content) > _MAX_MEETING_PDF_BYTES:
+            raise HTTPException(
+                413,
+                f"קובץ ה-PDF גדול מדי — מקסימום {_MAX_MEETING_PDF_BYTES // (1024*1024)} MB",
+            )
+
+        result = extract_meeting_notes(content)
+
+        with _session() as sess:
+            existing = sess.query(MeetingExtraction).filter_by(
+                submission_id=submission_id
+            ).first()
+            if existing:
+                sess.delete(existing)
+                sess.flush()
+
+            extraction = MeetingExtraction(
+                submission_id=submission_id,
+                raw_text=result.get("raw_text"),
+                row_count=len(result.get("items", [])),
+                used_ai=bool(result.get("used_ai")),
+            )
+            sess.add(extraction)
+            sess.flush()
+
+            for item in result.get("items", []):
+                row = MeetingRow(
+                    extraction_id=extraction.id,
+                    row_type=item.get("row_type", "action_item"),
+                    topic_he=item.get("topic_he", ""),
+                    decision_he=item.get("decision_he", ""),
+                    responsible_he=item.get("responsible_he"),
+                    deadline_he=item.get("deadline_he"),
+                )
+                sess.add(row)
+            sess.flush()
+
+            rows_out = [_MeetingRowOut(**r.to_dict()) for r in extraction.rows]
+            return _MeetingExtractionOut(
+                id=extraction.id,
+                submission_id=submission_id,
+                row_count=extraction.row_count,
+                used_ai=bool(extraction.used_ai),
+                uploaded_at=extraction.uploaded_at.isoformat(),
+                rows=rows_out,
+                raw_text=result.get("raw_text"),
+                error=result.get("error"),
+                error_message=result.get("error_message"),
+                truncation_warning=result.get("truncation_warning"),
+            )
+
+    # ── GET /submissions/{id}/meeting-notes ────────────────────────────
+
+    @_subs_router.get(
+        "/{submission_id}/meeting-notes",
+        response_model=_MeetingExtractionOut,
+    )
+    def get_meeting_notes(submission_id: int) -> _MeetingExtractionOut:
+        from .models import MeetingExtraction  # noqa: PLC0415
+
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            extraction = sess.query(MeetingExtraction).filter_by(
+                submission_id=submission_id
+            ).first()
+            if extraction is None:
+                raise HTTPException(404, "לא נמצא סיכום ישיבה עבור הגשה זו")
+            rows_out = [_MeetingRowOut(**r.to_dict()) for r in extraction.rows]
+            return _MeetingExtractionOut(
+                id=extraction.id,
+                submission_id=submission_id,
+                row_count=extraction.row_count,
+                used_ai=bool(extraction.used_ai),
+                uploaded_at=extraction.uploaded_at.isoformat(),
+                rows=rows_out,
+            )
+
     # ── POST /submissions/{id}/verify-claims ───────────────────────────
 
     class _VerifyClaimIn(BaseModel):

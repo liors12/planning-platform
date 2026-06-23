@@ -21,8 +21,10 @@ import {
   pollJobUntilDone,
   renderSubmission,
   revealOutput,
+  uploadMeetingPdf,
   type CommentOut,
   type DisciplineDef,
+  type MeetingRow,
   type ProjectOut,
   type ReferentExtractRow,
   type SubmissionOut,
@@ -111,6 +113,13 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState<string | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  // ── Meeting-notes extraction flow ─────────────────────────────────────
+  const [meetingUploading, setMeetingUploading] = useState(false);
+  const [meetingErr, setMeetingErr] = useState<string | null>(null);
+  const [meetingRows, setMeetingRows] = useState<MeetingRow[] | null>(null);
+  const [meetingTruncWarn, setMeetingTruncWarn] = useState<string | null>(null);
+  const meetingInputRef = useRef<HTMLInputElement>(null);
 
   // ── Load disciplines + comments ───────────────────────────────────────
   useEffect(() => {
@@ -236,6 +245,38 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     setExtracting(false);
   }
 
+  async function handleMeetingFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    if (file.size > 20 * 1024 * 1024) {
+      setMeetingErr("הקובץ גדול מדי — העלי קובץ עד 20MB.");
+      return;
+    }
+    setMeetingUploading(true);
+    setMeetingErr(null);
+    setMeetingRows(null);
+    setMeetingTruncWarn(null);
+    try {
+      const result = await uploadMeetingPdf(submission.id, file);
+      if (result.error === "scan") {
+        setMeetingErr(
+          result.error_message ??
+            "לא ניתן לחלץ טקסט מה-PDF — ייתכן שהוא סרוק.",
+        );
+      } else if (result.rows.length === 0) {
+        setMeetingErr("לא נמצאו פריטים בסיכום הישיבה.");
+      } else {
+        if (result.truncation_warning) setMeetingTruncWarn(result.truncation_warning);
+        setMeetingRows(result.rows);
+      }
+    } catch (err) {
+      setMeetingErr("שגיאה בחילוץ סיכום הישיבה. בדקי שהקובץ תקין ונסי שוב.");
+      console.error("uploadMeetingPdf failed", err);
+    }
+    setMeetingUploading(false);
+  }
+
   async function handleSavePreview() {
     if (!preview || saving) return;
     setSaving(true);
@@ -354,6 +395,26 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           style={{ display: "none" }}
           onChange={handlePdfFileChange}
         />
+        <button
+          className="ghost-btn"
+          data-testid="meeting-extract-btn"
+          type="button"
+          onClick={() => meetingInputRef.current?.click()}
+          disabled={meetingUploading}
+        >
+          {meetingUploading ? (
+            <><span className="spinner" aria-hidden="true" /> מחלצת סיכום ישיבה...</>
+          ) : (
+            "העלי סיכום ישיבה"
+          )}
+        </button>
+        <input
+          ref={meetingInputRef}
+          type="file"
+          accept=".pdf,application/pdf"
+          style={{ display: "none" }}
+          onChange={handleMeetingFileChange}
+        />
         <span className="muted comments-meta">
           הגשה <span dir="ltr">{submission.version_string}</span> ·{" "}
           {comments?.length ?? 0} הערות
@@ -366,6 +427,49 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         onReveal={onRevealRegen}
         onDismiss={() => setRegenStatus(null)}
       />
+
+      {(meetingErr || meetingRows !== null) && (
+        <div className="card pdf-extract-card">
+          <div className="pdf-extract-header">
+            <h4 className="pdf-extract-title">
+              {meetingErr ? "שגיאת חילוץ סיכום ישיבה" : "סיכום ישיבה — פריטים שחולצו"}
+            </h4>
+            <button
+              type="button"
+              className="ghost-btn small"
+              onClick={() => { setMeetingRows(null); setMeetingErr(null); setMeetingTruncWarn(null); }}
+            >
+              סגרי ✕
+            </button>
+          </div>
+          {meetingErr && <div className="error">{meetingErr}</div>}
+          {meetingTruncWarn && <div className="warning-banner">{meetingTruncWarn}</div>}
+          {meetingRows !== null && meetingRows.length === 0 && (
+            <p className="muted">לא נמצאו פריטים לשמירה.</p>
+          )}
+          {meetingRows?.map((row) => (
+            <div key={row.id} className="pdf-extract-row">
+              <div className="pdf-extract-row-header">
+                <span className="muted" style={{ fontSize: "0.85em" }}>
+                  {row.row_type === "decision" ? "החלטה" :
+                   row.row_type === "action_item" ? "משימה" : "נושא פתוח"}
+                </span>
+                {row.topic_he && (
+                  <strong style={{ marginRight: "0.5em" }}>{row.topic_he}</strong>
+                )}
+              </div>
+              <p style={{ margin: "0.25em 0 0" }}>{row.decision_he}</p>
+              {(row.responsible_he || row.deadline_he) && (
+                <p className="muted" style={{ margin: "0.25em 0 0", fontSize: "0.85em" }}>
+                  {row.responsible_he && <>אחראי: {row.responsible_he}</>}
+                  {row.responsible_he && row.deadline_he && " · "}
+                  {row.deadline_he && <>מועד: {row.deadline_he}</>}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {(extractErr || (preview !== null)) && (
         <div className="card pdf-extract-card">

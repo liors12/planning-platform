@@ -446,6 +446,71 @@ class EmailCorrectionRow(Base):
         }
 
 
+# ─────────────────────────────────────────────────────────────────────────────
+# MeetingExtraction + MeetingRow — meeting-notes PDF extraction
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# One MeetingExtraction per submission (unique constraint). Uploading a new
+# meeting PDF replaces the old one (cascade delete of MeetingRow children).
+# MeetingRow carries one decision/action item per row.
+
+class MeetingExtraction(Base):
+    __tablename__ = "meeting_extractions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    submission_id: Mapped[int] = mapped_column(
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    raw_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    row_count: Mapped[int] = mapped_column(Integer, nullable=False,
+                                            default=0, server_default="0")
+    used_ai: Mapped[bool] = mapped_column(Integer, nullable=False,
+                                           default=0, server_default="0")
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.datetime("now"), nullable=False,
+    )
+
+    rows: Mapped[list["MeetingRow"]] = relationship(
+        "MeetingRow", back_populates="extraction", cascade="all, delete-orphan",
+    )
+
+
+class MeetingRow(Base):
+    __tablename__ = "meeting_rows"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    extraction_id: Mapped[int] = mapped_column(
+        ForeignKey("meeting_extractions.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    row_type: Mapped[str] = mapped_column(
+        String(32), nullable=False, default="action_item", server_default="action_item",
+    )
+    topic_he: Mapped[str] = mapped_column(Text, nullable=False, default="", server_default="")
+    decision_he: Mapped[str] = mapped_column(Text, nullable=False)
+    responsible_he: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    deadline_he: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+
+    extraction: Mapped["MeetingExtraction"] = relationship(
+        "MeetingExtraction", back_populates="rows"
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "extraction_id": self.extraction_id,
+            "row_type": self.row_type,
+            "topic_he": self.topic_he,
+            "decision_he": self.decision_he,
+            "responsible_he": self.responsible_he,
+            "deadline_he": self.deadline_he,
+        }
+
+
 class DisciplineComment(Base):
     __tablename__ = "discipline_comments"
 
