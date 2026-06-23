@@ -733,6 +733,14 @@ def check_table_detection(extraction: dict, rule: dict) -> dict:
 
 def check_pdf_image_detection(extraction: dict, rule: dict) -> dict:
     """Image presence + minimum-size check using image bbox area / page area."""
+    pdf_path = extraction.get("pdf_path")
+    if pdf_path is not None and Path(pdf_path).suffix.lower() == ".dwfx":
+        return _result(
+            rule,
+            VERDICT_UNEVALUABLE,
+            check_method="pdf_image_detection",
+            extracted_values={"reason": "DWFX is a vector format — embedded raster image count is not applicable"},
+        )
     spec = rule["check_spec"]
     pages = _resolve_pages(extraction, spec.get("scope"))
     if not pages:

@@ -5,10 +5,10 @@ Pulls per-תא-שטח and plan-wide values from the תכנית עיצוב PDF.
 Strategy (in order of preference per field):
   1. Direct PDF table extraction (pdfplumber)
   2. Regex on extracted text
-  3. LLM extraction (Claude Sonnet 4.6, temperature=0, structured output)
+  3. LLM extraction (Gemini 2.5 Flash, temperature=0, structured output)
 
 Outputs are cached (extraction_cache.py). Same PDF → same cache → same
-downstream verdicts. If ANTHROPIC_API_KEY is missing, fields that regex /
+downstream verdicts. If GEMINI_API_KEY is missing, fields that regex /
 table extraction cannot recover are returned as null with a clear reason; the
 checker turns those into `unevaluable` verdicts.
 """
@@ -29,7 +29,7 @@ from .extraction_cache import get_or_extract, pdf_sha256
 
 log = logging.getLogger(__name__)
 
-ANTHROPIC_MODEL = "claude-sonnet-4-6"
+_GEMINI_MODEL = "gemini-2.5-flash"
 
 
 # ---------------------------------------------------------------------------
@@ -93,8 +93,8 @@ def extract(
     """Extract submission data, using the cache when available.
 
     allow_llm: if explicitly False, never call the API. If None (default), the
-    API is used only when ANTHROPIC_API_KEY is set AND the `anthropic` package
-    imports cleanly. If True and the key/SDK are missing, falls back to
+    API is used only when GEMINI_API_KEY is set AND the `google.generativeai`
+    package imports cleanly. If True and the key/SDK are missing, falls back to
     regex/pdfplumber and notes the API absence in extraction_quality.
     """
     pdf_path = Path(pdf_path)
@@ -120,7 +120,7 @@ def extract(
             "page_count": page_count,
             "llm_available": _llm_available(),
             "llm_used": allow_llm and _llm_available(),
-            "missing_api_key": os.environ.get("ANTHROPIC_API_KEY") is None,
+            "missing_api_key": not os.environ.get("GEMINI_API_KEY", "").strip(),
             "fields_extracted_count": _count_non_null_fields(per_ta, plan_wide),
         }
         return asdict(ExtractedSubmissionData(
@@ -349,14 +349,14 @@ def _count_non_null_fields(ta_list: list[TAShetachData], plan_wide: PlanWideData
 
 
 # ---------------------------------------------------------------------------
-# LLM extraction (Claude Sonnet 4.6, temperature=0, structured output)
+# LLM extraction (Gemini 2.5 Flash, temperature=0, structured output)
 # ---------------------------------------------------------------------------
 
 def _llm_available() -> bool:
-    if os.environ.get("ANTHROPIC_API_KEY") is None:
+    if not os.environ.get("GEMINI_API_KEY", "").strip():
         return False
     try:
-        import anthropic  # noqa: F401
+        import google.generativeai  # noqa: F401
     except ImportError:
         return False
     return True
@@ -365,16 +365,16 @@ def _llm_available() -> bool:
 _PARCEL_LLM_SCHEMA = {
     "type": "object",
     "properties": {
-        "unit_count":            {"type": ["integer", "null"]},
-        "area_main_m2":          {"type": ["number", "null"]},
-        "area_service_above_m2": {"type": ["number", "null"]},
-        "area_service_below_m2": {"type": ["number", "null"]},
+        "unit_count":            {"type": "integer", "nullable": True},
+        "area_main_m2":          {"type": "number", "nullable": True},
+        "area_service_above_m2": {"type": "number", "nullable": True},
+        "area_service_below_m2": {"type": "number", "nullable": True},
         "heights_m":             {"type": "array", "items": {"type": "number"}},
-        "parking_private":       {"type": ["integer", "null"]},
-        "parking_motorcycle":    {"type": ["integer", "null"]},
-        "parking_accessible":    {"type": ["integer", "null"]},
-        "parking_bike":          {"type": ["integer", "null"]},
-        "permeable_surface_m2":  {"type": ["number", "null"]},
+        "parking_private":       {"type": "integer", "nullable": True},
+        "parking_motorcycle":    {"type": "integer", "nullable": True},
+        "parking_accessible":    {"type": "integer", "nullable": True},
+        "parking_bike":          {"type": "integer", "nullable": True},
+        "permeable_surface_m2":  {"type": "number", "nullable": True},
     },
     "required": [
         "unit_count", "area_main_m2", "area_service_above_m2", "area_service_below_m2",
@@ -393,34 +393,33 @@ _PARCEL_LLM_SYSTEM = (
 
 
 def _llm_call(system: str, user: str, schema: dict) -> dict | None:
-    """Make a single Anthropic structured-output call. Returns parsed dict or None."""
+    """Make a single Gemini structured-output call. Returns parsed dict or None."""
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        return None
     try:
-        import anthropic
+        import google.generativeai as genai
     except ImportError:
         return None
-    client = anthropic.Anthropic()
     try:
-        resp = client.messages.create(
-            model=ANTHROPIC_MODEL,
-            max_tokens=1024,
-            temperature=0,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-            # Use tool_use as the structured-output mechanism (broadly supported by the SDK)
-            tools=[{
-                "name": "emit_fields",
-                "description": "Return the extracted fields per the JSON schema.",
-                "input_schema": schema,
-            }],
-            tool_choice={"type": "tool", "name": "emit_fields"},
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            _GEMINI_MODEL,
+            system_instruction=system,
         )
+        resp = model.generate_content(
+            user,
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": schema,
+                "temperature": 0.0,
+                "max_output_tokens": 2048,
+            },
+        )
+        return json.loads(resp.text)
     except Exception as exc:  # noqa: BLE001
-        log.warning("LLM extraction failed: %s", exc)
+        log.warning("Gemini LLM extraction failed: %s", exc)
         return None
-    for block in resp.content:
-        if getattr(block, "type", "") == "tool_use":
-            return dict(block.input)
-    return None
 
 
 def _llm_fill_parcel(ta: TAShetachData, parcel_text: str, pdf_path: Path) -> None:
@@ -456,13 +455,20 @@ def _llm_fill_parcel(ta: TAShetachData, parcel_text: str, pdf_path: Path) -> Non
 _PLAN_LLM_SCHEMA = {
     "type": "object",
     "properties": {
-        "unit_count_total":          {"type": ["integer", "null"]},
+        "unit_count_total": {"type": "integer", "nullable": True},
         "apartment_size_distribution": {
-            "type": "object",
-            "additionalProperties": {"type": "integer"},
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "key":   {"type": "string"},
+                    "count": {"type": "integer"},
+                },
+                "required": ["key", "count"],
+            },
         },
-        "architect_name":  {"type": ["string", "null"]},
-        "submission_date": {"type": ["string", "null"]},
+        "architect_name":  {"type": "string", "nullable": True},
+        "submission_date": {"type": "string", "nullable": True},
     },
     "required": ["unit_count_total", "apartment_size_distribution"],
 }
@@ -475,7 +481,7 @@ def _llm_fill_plan_wide(plan: PlanWideData, full_text: str) -> None:
         return
     user_msg = (
         "Extract plan-wide values from the booklet text. "
-        "apartment_size_distribution keys MUST look like '3_rooms', '4_rooms'. "
+        "apartment_size_distribution is a list of {key, count} objects where key looks like '3_rooms', '4_rooms'. "
         "Return null for any value you cannot find verbatim.\n\n"
         f"--- טקסט החוברת (מקוצר) ---\n{full_text[:16000]}"
     )
@@ -485,10 +491,15 @@ def _llm_fill_plan_wide(plan: PlanWideData, full_text: str) -> None:
     if plan.unit_count_total is None and result.get("unit_count_total") is not None:
         plan.unit_count_total = _to_int(result["unit_count_total"])
         plan.extraction_methods["unit_count_total"] = "llm"
-    mix = result.get("apartment_size_distribution") or {}
-    if mix and not plan.apartment_size_distribution:
-        plan.apartment_size_distribution = {str(k): int(v) for k, v in mix.items() if isinstance(v, int)}
-        plan.extraction_methods["apartment_size_distribution"] = "llm"
+    mix_list = result.get("apartment_size_distribution") or []
+    if mix_list and not plan.apartment_size_distribution:
+        mix = {}
+        for item in mix_list:
+            if isinstance(item, dict) and item.get("key") and isinstance(item.get("count"), int):
+                mix[str(item["key"])] = int(item["count"])
+        if mix:
+            plan.apartment_size_distribution = mix
+            plan.extraction_methods["apartment_size_distribution"] = "llm"
     if not plan.architect_name and result.get("architect_name"):
         plan.architect_name = str(result["architect_name"])
         plan.extraction_methods["architect_name"] = "llm"
