@@ -1324,6 +1324,49 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 rows=rows_out,
             )
 
+    # ── POST /submissions/{id}/verify-claims ───────────────────────────
+
+    class _VerifyClaimIn(BaseModel):
+        page_number: int
+        claim_text: str
+        verification_question: str
+
+    class _VerifyClaimOut(BaseModel):
+        page_number: int
+        claim_text: str
+        verification_question: str
+        verified: str  # "yes" / "no" / "unclear"
+        evidence: str
+        status: str    # "תקין" / "דורש תיקון" / "דורש בירור"
+
+    class _VerifyClaimsBody(BaseModel):
+        claims: list[_VerifyClaimIn]
+
+    @_subs_router.post(
+        "/{submission_id}/verify-claims",
+        response_model=list[_VerifyClaimOut],
+    )
+    async def verify_claims(
+        submission_id: int,
+        body: _VerifyClaimsBody,
+    ) -> list[_VerifyClaimOut]:
+        """Verify architect claimed changes via Gemini vision on specific pages."""
+        from pathlib import Path as _Path  # noqa: PLC0415
+        from compliance_engine.vision_verify import verify_claimed_changes  # noqa: PLC0415
+
+        with _session() as sess:
+            sub = sess.get(Submission, submission_id)
+            if sub is None:
+                raise HTTPException(404, f"submission {submission_id} not found")
+            pdf_path = sub.pdf_path
+
+        if not pdf_path:
+            raise HTTPException(400, "להגשה זו אין קובץ PDF")
+
+        claims_dicts = [c.model_dump() for c in body.claims]
+        results = verify_claimed_changes(_Path(pdf_path), claims_dicts)
+        return [_VerifyClaimOut(**r) for r in results]
+
     return _projects_subs_router, _subs_router
 
 
