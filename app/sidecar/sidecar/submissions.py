@@ -164,42 +164,6 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
-def _convert_dwfx_to_pdf(dwfx_path: Path) -> Path | None:
-    """Render a DWFX file to a raster PDF at 100 DPI using PyMuPDF (MuPDF XPS engine).
-    Saves <stem>_converted.pdf alongside the DWFX. Returns the PDF path on success,
-    None if PyMuPDF is unavailable or the format is unsupported."""
-    try:
-        import fitz
-    except ImportError:
-        log.warning("PyMuPDF not installed — DWFX→PDF conversion skipped for %s", dwfx_path.name)
-        return None
-    pdf_path = dwfx_path.with_name(dwfx_path.stem + "_converted.pdf")
-    try:
-        doc = fitz.open(str(dwfx_path))
-        if doc.page_count == 0:
-            doc.close()
-            log.warning("DWFX→PDF: %s opened with 0 pages — skipping conversion", dwfx_path.name)
-            return None
-        out = fitz.open()
-        mat = fitz.Matrix(100 / 72, 100 / 72)  # 100 DPI (fitz default is 72 DPI)
-        for page in doc:
-            pix = page.get_pixmap(matrix=mat)
-            pg = out.new_page(width=pix.width, height=pix.height)
-            pg.insert_image(pg.rect, pixmap=pix)
-        out.save(str(pdf_path))
-        out.close()
-        doc.close()
-        log.info(
-            "DWFX→PDF converted: %s → %s (%d pages, %.1f KB)",
-            dwfx_path.name, pdf_path.name, out.page_count if hasattr(out, 'page_count') else '?',
-            pdf_path.stat().st_size / 1024,
-        )
-        return pdf_path
-    except Exception as exc:
-        log.warning("DWFX→PDF conversion failed for %s: %s", dwfx_path.name, exc)
-        return None
-
-
 _OVERLAY_NAMES = ("extracts.json", "discipline_findings.json")
 
 
@@ -312,9 +276,6 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     except Exception:
                         cad_path.unlink(missing_ok=True)
                         raise HTTPException(422, "קובץ DXF אינו תקין או פגום")
-                # DWFX→PDF auto-conversion so the engine can analyse the drawing.
-                elif cad_path.suffix.lower() == ".dwfx":
-                    _convert_dwfx_to_pdf(cad_path)
 
             # P2-A: write metadata.json so the render path always has it.
             # Originally this file was synthesized by the Phase 2a "Approach
@@ -1004,8 +965,6 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 except Exception:
                     new_cad_path.unlink(missing_ok=True)
                     raise HTTPException(422, "קובץ DXF אינו תקין או פגום")
-            elif new_cad_path.suffix.lower() == ".dwfx":
-                _convert_dwfx_to_pdf(new_cad_path)
         elif src_cad_path and src_cad_path.exists():
             new_cad_path = target_dir / src_cad_path.name
             shutil.copy2(src_cad_path, new_cad_path)
