@@ -3,10 +3,10 @@ an architect's email saved as PDF.
 
 Two-step pipeline:
   1. PyMuPDF (fitz): extract raw text from every PDF page.
-  2. Claude API (tool-use): structure text into page/change/category rows.
+  2. Gemini API: structure text into page/change/category rows.
 
-Same fallback pattern as referent_extract.py: when ANTHROPIC_API_KEY is absent
-or the API call fails, returns a single catch-all row with the full raw text.
+Fallback: when GEMINI_API_KEY is absent or the API call fails, returns a
+single catch-all row with the full raw text.
 """
 from __future__ import annotations
 
@@ -37,7 +37,10 @@ _SYSTEM_PROMPT = """\
 - אם ה-PDF אינו מכיל תיקונים ברורים, החזר רשימה ריקה.
 """
 
-_SCHEMA: dict = {
+_MODEL_NAME = "gemini-2.5-flash"
+
+# Gemini response schema (nullable integer for page_number).
+_GEMINI_SCHEMA: dict = {
     "type": "object",
     "properties": {
         "corrections": {
@@ -45,9 +48,7 @@ _SCHEMA: dict = {
             "items": {
                 "type": "object",
                 "properties": {
-                    "page_number": {
-                        "anyOf": [{"type": "integer"}, {"type": "null"}],
-                    },
+                    "page_number": {"type": "integer", "nullable": True},
                     "change_he": {"type": "string"},
                     "category": {
                         "type": "string",
@@ -85,46 +86,43 @@ def _extract_text(pdf_bytes: bytes) -> str:
         return ""
 
 
-def _call_claude(raw_text: str) -> list[dict] | None:
-    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+def _call_gemini(raw_text: str) -> list[dict] | None:
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
     if not api_key:
         return None
     try:
-        import anthropic
+        import google.generativeai as genai
     except ImportError:
-        log.warning("anthropic SDK not available")
+        log.warning("google-generativeai SDK not available")
         return None
 
     snippet = raw_text[:_MAX_TEXT_CHARS]
     try:
-        client = anthropic.Anthropic(api_key=api_key)
-        resp = client.messages.create(
-            model="claude-sonnet-4-6",
-            max_tokens=2048,
-            system=_SYSTEM_PROMPT,
-            messages=[
-                {"role": "user", "content": f"חלץ תיקונים מהדוא\"ל הבא:\n\n{snippet}"},
-            ],
-            tools=[
-                {
-                    "name": "emit_corrections",
-                    "description": "Return the structured architect corrections.",
-                    "input_schema": _SCHEMA,
-                }
-            ],
-            tool_choice={"type": "tool", "name": "emit_corrections"},
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            _MODEL_NAME,
+            system_instruction=_SYSTEM_PROMPT,
         )
-        for block in resp.content:
-            if getattr(block, "type", "") == "tool_use":
-                rows: list[dict] = list(block.input.get("corrections", []))
-                for row in rows:
-                    if len(row.get("change_he", "")) > 200:
-                        row["change_he"] = row["change_he"][:197] + "..."
-                    if row.get("category") not in _VALID_CATEGORIES:
-                        row["category"] = "drawing_change"
-                return rows
+        resp = model.generate_content(
+            f"חלץ תיקונים מהדוא\"ל הבא:\n\n{snippet}",
+            generation_config={
+                "response_mime_type": "application/json",
+                "response_schema": _GEMINI_SCHEMA,
+                "temperature": 0.0,
+                "max_output_tokens": 2048,
+            },
+        )
+        import json
+        data = json.loads(resp.text)
+        rows: list[dict] = list(data.get("corrections", []))
+        for row in rows:
+            if len(row.get("change_he", "")) > 200:
+                row["change_he"] = row["change_he"][:197] + "..."
+            if row.get("category") not in _VALID_CATEGORIES:
+                row["category"] = "drawing_change"
+        return rows
     except Exception as exc:
-        log.warning("Claude API call failed: %s", exc)
+        log.warning("Gemini API call failed: %s", exc)
     return None
 
 
@@ -158,7 +156,7 @@ def extract_email_corrections(pdf_bytes: bytes) -> dict[str, Any]:
             ),
         }
 
-    ai_rows = _call_claude(raw_text)
+    ai_rows = _call_gemini(raw_text)
     if ai_rows is not None:
         return {"corrections": ai_rows, "raw_text": raw_text, "used_ai": True}
 
