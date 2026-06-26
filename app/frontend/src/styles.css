@@ -1853,3 +1853,66 @@ code, .path {
 .primary-btn-sm { font-size: 12px; padding: 4px 10px; }
 .layer-saved-msg { font-size: 12px; color: var(--ok-color, #2e7d32); }
 .att-delete-btn:hover:not(:disabled) { color: var(--danger, #dc2626); background: rgba(220,38,38,0.08); }
+
+/* ── Settings page ──────────────────────────────────────────────────────── */
+.page-settings { max-width: 600px; }
+.settings-section { margin-block-end: 16px; }
+.settings-status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-block-end: 14px;
+  padding: 8px 12px;
+  background: var(--green-soft);
+  border-radius: 6px;
+  border: 1px solid var(--green-line);
+}
+.settings-label { font-size: 13px; color: var(--muted); }
+.settings-data-dir-note { font-size: 12px; margin-block-start: 8px; }
+
+/* ── Generic badges (badge-ok / badge-missing) ──────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-ok      { background: #e6f4ea; color: var(--ok); }
+.badge-missing { background: #eeeeee; color: var(--muted); }
+
+/* ── Form helpers (success / error / hint) ──────────────────────────────── */
+.success-msg { color: var(--ok); font-size: 13px; margin-block: 6px 0; }
+.form-error  { color: var(--red); font-size: 12.5px; margin-block-start: 3px; display: block; }
+.form-hint   { font-size: 12px; display: block; margin-block-start: 3px; }
+
+/* ── Sidebar AI-status pill ─────────────────────────────────────────────── */
+.ai-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: #e8f5e9;
+  color: var(--ok);
+  border: 1px solid #c8e6c9;
+  cursor: default;
+  text-decoration: none;
+}
+.ai-status-pill.ai-missing {
+  background: #f5f5f5;
+  color: var(--muted);
+  border-color: var(--rule);
+}
+.ai-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ai-dot-ok      { background: var(--ok); }
+.ai-dot-missing { background: #bdbdbd; }

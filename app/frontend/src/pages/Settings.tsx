@@ -66,6 +66,7 @@ function AnthropicCard({
       onSaved(result);
       setInput("");
       setSaved(true);
+      window.dispatchEvent(new CustomEvent("ai-settings-changed"));
     } catch (e) {
       setErr(String(e));
     } finally {
@@ -170,6 +171,7 @@ function GeminiCard({
       onSaved(result);
       setPrimary(""); setB1(""); setB2(""); setB3("");
       setSaved(true);
+      window.dispatchEvent(new CustomEvent("ai-settings-changed"));
     } catch (e) {
       setErr(String(e));
     } finally {

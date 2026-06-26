@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { listProjects, type ProjectOut, type ProjectStatus } from "../api";
+import { getSettings, listProjects, type ProjectOut, type ProjectStatus } from "../api";
 import { buildHash, type Route } from "../route";
 
 interface Props {
@@ -21,15 +21,24 @@ export function Sidebar({ currentRoute, refreshKey, onOpenDiagnostics }: Props) 
   const [projects, setProjects] = useState<ProjectOut[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [aiReady, setAiReady] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Clear any stale error from a previous failed attempt — otherwise a
-    // startup-race TypeError on the first fetch would linger next to the
-    // successful retry's data (see api.ts fetchOrThrow + Task #14).
     listProjects(showArchived)
       .then((p) => { setErr(null); setProjects(p); })
       .catch((e) => setErr(String(e)));
   }, [refreshKey, showArchived]);
+
+  useEffect(() => {
+    function refreshAi() {
+      getSettings()
+        .then((s) => setAiReady(s.gemini_api_key_set))
+        .catch(() => {});
+    }
+    refreshAi();
+    window.addEventListener("ai-settings-changed", refreshAi);
+    return () => window.removeEventListener("ai-settings-changed", refreshAi);
+  }, []);
 
   const grouped = STATUS_ORDER.map((s) => ({
     status: s,
@@ -91,6 +100,17 @@ export function Sidebar({ currentRoute, refreshKey, onOpenDiagnostics }: Props) 
       ))}
 
       <footer className="sidebar-footer">
+        {aiReady !== null && (
+          <a
+            className={`ai-status-pill${aiReady ? "" : " ai-missing"}`}
+            href={buildHash({ kind: "settings" })}
+            title={aiReady ? "AI מוגדר ופעיל" : "לחצי להגדרת מפתח AI"}
+            data-testid="ai-status-pill"
+          >
+            <span className={`ai-dot ${aiReady ? "ai-dot-ok" : "ai-dot-missing"}`} />
+            {aiReady ? "AI פעיל" : "חסר מפתח AI"}
+          </a>
+        )}
         <label className="archived-toggle">
           <input
             type="checkbox"
