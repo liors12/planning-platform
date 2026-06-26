@@ -675,10 +675,16 @@ export async function deleteAttachment(
 
 export interface SettingsOut {
   anthropic_api_key_set: boolean;
+  gemini_api_key_set: boolean;
+  gemini_backup_count: number;
 }
 
 export interface SettingsPutPayload {
-  anthropic_api_key: string;
+  anthropic_api_key?: string;
+  gemini_api_key?: string;
+  gemini_api_key_backup_1?: string;
+  gemini_api_key_backup_2?: string;
+  gemini_api_key_backup_3?: string;
 }
 
 export async function getSettings(): Promise<SettingsOut> {
