@@ -76,6 +76,20 @@ hidden_imports = [
     "vision_scanner.cad_ingest",
     "vision_scanner.cad_ingest.dxf_geometry",
     "compliance_engine.cad_compliance_checker",
+    # ── vision_verify — Gemini-based page verification (Build 6) ─────────
+    "compliance_engine.vision_verify",
+    # ── sidecar lazy imports — endpoint handlers use PLC0415 local imports ─
+    # PyInstaller's static analysis doesn't follow deferred `from .x import`
+    # inside async def bodies, so we list them explicitly.
+    "sidecar.meeting_extract",
+    "sidecar.email_extract",
+    "sidecar.referent_extract",
+    # ── Gemini SDK ────────────────────────────────────────────────────────
+    *collect_submodules("google.generativeai"),
+    *collect_submodules("google.ai"),
+    *collect_submodules("google.api_core"),
+    *collect_submodules("google.auth"),
+    *collect_submodules("grpc"),
     # uvicorn's [standard] extras: httptools, websockets, watchfiles, etc.
     "uvicorn.logging",
     "uvicorn.loops",
