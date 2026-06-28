@@ -857,7 +857,12 @@ jobs:
             if (Test-Path $uninstaller) {
               Write-Host "Running uninstall.exe /S"
               Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
-              Start-Sleep -Seconds 3   # NSIS uninstaller is async on disk-removal
+              # NSIS uninstaller spawns a secondary cleanup process and returns
+              # immediately; the actual dir deletion is async. Poll up to 30 s.
+              $deadline = (Get-Date).AddSeconds(30)
+              while ((Test-Path $installDir) -and ((Get-Date) -lt $deadline)) {
+                Start-Sleep -Milliseconds 500
+              }
               $stillThere = Test-Path $installDir
               Record "cleanup: install dir removed" (-not $stillThere) "$installDir"
             } else {
