@@ -154,6 +154,11 @@ a = Analysis(
         #   discipline_policy_checker.py resolves discipline_rules.json the same way
         ("../../content_rules.json", "."),
         ("../../discipline_rules.json", "."),
+        # feedback_store.py: ROOT = Path(__file__).parent.parent → _internal/
+        # MIGRATION_SQL = ROOT / "migrations" / "0001_feedback_tables.sql"
+        # The migrations/ dir must land at _internal/migrations/ so the
+        # frozen path resolves correctly. (4 KB; no size impact.)
+        ("../../migrations", "migrations"),
         ("seed", "seed"),
         # shapely bundles geos_c.dll (Windows) as package data — collect_data_files
         # ensures geos_c.dll lands next to shapely's Python extension in the bundle.
