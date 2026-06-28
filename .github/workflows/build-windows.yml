@@ -435,8 +435,10 @@ jobs:
             # a misleading "Cannot bind argument to parameter 'Path'"
             # error.
             $dummyPdf = Join-Path $env:RUNNER_TEMP "smoke-dummy.pdf"
-            [System.IO.File]::WriteAllBytes($dummyPdf, [byte[]](
-              0x25,0x50,0x44,0x46,0x2D,0x31,0x2E,0x34,0x0A,0x25,0x25,0x45,0x4F,0x46,0x0A))
+            # Generate a real 1-page PDF via PyMuPDF (already installed for the sidecar).
+            # The old 15-byte stub (%PDF-1.4\n%%EOF\n) caused fitz.FileDataError in the
+            # engine probe because it has no valid page tree or catalog object.
+            python -c "import fitz, os; p=os.path.join(os.environ['RUNNER_TEMP'],'smoke-dummy.pdf'); doc=fitz.open(); doc.new_page(); doc.save(p)"
 
             $subs = Invoke-RestMethod -Uri "http://127.0.0.1:17321/projects/$projectId/submissions"
             $subForV243 = @($subs) | Where-Object { $_.version_string -eq "v24.3" } | Select-Object -First 1
@@ -559,6 +561,24 @@ jobs:
             if (-not $engineAccepted) {
               Fail "POST /run-engine should return 202 on frozen Windows (V0.2 in-process path)"
             }
+            # Layer 2 probe: wait for the engine job to reach a terminal state.
+            # The 202 above only proves the job was enqueued. A bundle-level
+            # ImportError inside run_full_audit() (e.g. missing compliance_engine
+            # sub-module) shows up here as status="failed" rather than at enqueue.
+            $engineJob = $respEngine.Content | ConvertFrom-Json
+            $engineTerm = Wait-ForJob $engineJob.id 180
+            Record "layer2: engine job completed (run_full_audit loaded in bundle)" `
+              ($engineTerm.status -eq "completed") `
+              "status=$($engineTerm.status) error=$($engineTerm.error)"
+            if ($engineTerm.status -ne "completed") {
+              Write-Host "── engine job error ──"
+              Write-Host $engineTerm.error
+              Write-Host "── sidecar log (last 50 lines) ──"
+              Get-Content $smokeLog -Tail 50 -ErrorAction SilentlyContinue | Write-Host
+              Get-Content $smokeErr -Tail 20 -ErrorAction SilentlyContinue | Write-Host
+              # Intentionally NOT calling Fail() here — let all Layer-2 probes run
+              # so one CI pass surfaces every bundle import problem at once.
+            }
 
             # ── 6. DISCIPLINE COMMENTS ────────────────────────────────
             # Hebrew marker — written into the comment, but NOT searched
@@ -677,6 +697,104 @@ jobs:
               Fail "errors.log did not capture the missing-metadata warning"
             }
 
+            # ── 6.6b. LAYER 2 BUNDLE IMPORT PROBES ───────────────────
+            # Close the three blind spots that let prod bugs ship through CI:
+            #   Probe 1 — PATCH /stage         (Error B class: locally-scoped Pydantic model)
+            #   Probe 2 — comparison Excel job  (lazy import: compliance_engine.excel_export)
+            #   Probe 3 — meeting PDF upload    (lazy import: fitz + google.generativeai chain)
+            # PDF render is already exercised in section 4 (Wait-ForJob + size + page count).
+
+            # Helper: dump endpoint context and last sidecar log lines on failure.
+            function Show-FailContext($endpoint, $status, $body) {
+              Write-Host "── failed endpoint: $endpoint ──"
+              Write-Host "   HTTP status : $status"
+              Write-Host "   response    : $body"
+              Write-Host "── sidecar log (last 50 lines) ──"
+              Get-Content $smokeLog -Tail 50 -ErrorAction SilentlyContinue | Write-Host
+              Get-Content $smokeErr -Tail 20 -ErrorAction SilentlyContinue | Write-Host
+            }
+
+            # Probe 1: PATCH /submissions/{id}/stage ─────────────────
+            # Proves _StageUpdate lives at module scope (not inside make_routers()).
+            # A locally-scoped BaseModel makes FastAPI treat 'body' as a required
+            # Query param → 422 {"detail":[{"loc":["query","body"],"msg":"Field required"}]}.
+            $stageEndpoint = "http://127.0.0.1:17321/submissions/$subId/stage"
+            $stageRaw = Invoke-WebRequest -UseBasicParsing -Method Patch `
+              -SkipHttpErrorCheck `
+              -ContentType "application/json; charset=utf-8" `
+              -Body ([System.Text.Encoding]::UTF8.GetBytes('{"stage":"sent"}')) `
+              -Uri $stageEndpoint
+            $stageResp = $stageRaw.Content | ConvertFrom-Json
+            Record "layer2: PATCH /stage → 200" `
+              ($stageRaw.StatusCode -eq 200) "status=$($stageRaw.StatusCode)"
+            Record "layer2: PATCH /stage → workflow_stage == 'sent'" `
+              ($stageResp.workflow_stage -eq "sent") "got=$($stageResp.workflow_stage)"
+            if ($stageRaw.StatusCode -ne 200 -or $stageResp.workflow_stage -ne "sent") {
+              Show-FailContext $stageEndpoint $stageRaw.StatusCode $stageRaw.Content
+              # No Fail() — let remaining Layer-2 probes run and surface all failures at once.
+            }
+            # Reset to draft so downstream tests see a clean state.
+            # Wrapped in try/catch: if the stage endpoint is broken the reset will also fail.
+            try {
+              Invoke-RestMethod -Method Patch `
+                -ContentType "application/json; charset=utf-8" `
+                -Body ([System.Text.Encoding]::UTF8.GetBytes('{"stage":"draft"}')) `
+                -Uri $stageEndpoint | Out-Null
+            } catch { }
+
+            # Probe 2: POST /submissions/{id}/comparison-excel ────────
+            # Proves compliance_engine.excel_export (+ openpyxl) load in
+            # the bundle. The lazy import fires inside the queue worker, so
+            # a missing hiddenimport would only appear at job-completion time
+            # (status="failed"), not at the 202 enqueue.
+            # Point v99.0 (uploaded in P2-A) at v24.3 as its source so the
+            # worker finds source audit results (seeded at
+            # audit_outputs/407-1048248/v24.3/).
+            $dbPath = Join-Path $smokeData "platform.db"
+            python -c "import sqlite3,sys; db=sqlite3.connect(sys.argv[1]); db.execute('UPDATE submissions SET source_submission_id=? WHERE id=?',(int(sys.argv[2]),int(sys.argv[3]))); db.commit(); db.close()" $dbPath $subId $($newSub.id)
+            $cmpEndpoint = "http://127.0.0.1:17321/submissions/$($newSub.id)/comparison-excel"
+            $cmpEnqueue = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Uri $cmpEndpoint
+            Record "layer2: POST /comparison-excel → 202" `
+              ($cmpEnqueue.StatusCode -eq 202) "status=$($cmpEnqueue.StatusCode)"
+            if ($cmpEnqueue.StatusCode -ne 202) {
+              Show-FailContext $cmpEndpoint $cmpEnqueue.StatusCode $cmpEnqueue.Content
+              # No Fail() — record and continue to remaining probes.
+            } else {
+              $cmpJob = $cmpEnqueue.Content | ConvertFrom-Json
+              $cmpTerm = Wait-ForJob $cmpJob.id 60
+              Record "layer2: comparison-excel job completed (excel_export loaded in bundle)" `
+                ($cmpTerm.status -eq "completed") `
+                "status=$($cmpTerm.status) error=$($cmpTerm.error)"
+              if ($cmpTerm.status -ne "completed") {
+                Show-FailContext $cmpEndpoint "job=$($cmpTerm.status)" $cmpTerm.error
+              }
+            }
+
+            # Probe 3: POST /submissions/{id}/upload-meeting-pdf ──────
+            # Proves the meeting extraction chain loads without a 500:
+            #   meeting_extract.py → import fitz (PyMuPDF) + google.generativeai
+            # $dummyPdf is a real 1-page PDF generated by fitz.open()/new_page().
+            # Extraction returns sparse text; endpoint returns 201 (with rows=[]).
+            # A 500 means the module chain crashed.
+            $mtgEndpoint = "http://127.0.0.1:17321/submissions/$subId/upload-meeting-pdf"
+            $mtgRaw = Invoke-WebRequest -UseBasicParsing -Method Post `
+              -SkipHttpErrorCheck `
+              -Form @{ pdf = Get-Item $dummyPdf } `
+              -Uri $mtgEndpoint
+            Record "layer2: POST /upload-meeting-pdf → 201 (fitz + meeting chain loads in bundle)" `
+              ($mtgRaw.StatusCode -eq 201) "status=$($mtgRaw.StatusCode)"
+            if ($mtgRaw.StatusCode -ne 201) {
+              Show-FailContext $mtgEndpoint $mtgRaw.StatusCode $mtgRaw.Content
+              # No Fail() — record and continue to remaining probes.
+            } else {
+              $mtgBody = $mtgRaw.Content | ConvertFrom-Json
+              $mtgHasRows = $null -ne $mtgBody.rows
+              Record "layer2: meeting response has 'rows' field" $mtgHasRows `
+                "keys=$($mtgBody.PSObject.Properties.Name -join ',')"
+            }
+
             # ── 6.7. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
             # Ellen's flow today: bad upload → ask Lior → manual sqlite3
             # surgery. P3 replaces that with a button. Three invariants:
@@ -739,7 +857,12 @@ jobs:
             if (Test-Path $uninstaller) {
               Write-Host "Running uninstall.exe /S"
               Start-Process -FilePath $uninstaller -ArgumentList "/S" -Wait
-              Start-Sleep -Seconds 3   # NSIS uninstaller is async on disk-removal
+              # NSIS uninstaller spawns a secondary cleanup process and returns
+              # immediately; the actual dir deletion is async. Poll up to 30 s.
+              $deadline = (Get-Date).AddSeconds(30)
+              while ((Test-Path $installDir) -and ((Get-Date) -lt $deadline)) {
+                Start-Sleep -Milliseconds 500
+              }
               $stillThere = Test-Path $installDir
               Record "cleanup: install dir removed" (-not $stillThere) "$installDir"
             } else {

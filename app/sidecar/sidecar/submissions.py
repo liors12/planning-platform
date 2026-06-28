@@ -184,6 +184,10 @@ def _archive_overlays(target_dir: Path) -> None:
             log.info("archived overlay %s → %s", src.name, dst.name)
 
 
+class _StageUpdate(BaseModel):
+    stage: str
+
+
 def make_routers(get_engine, cfg: Config, queue: EngineQueue):
     def _session() -> Session:
         return Session(get_engine())
@@ -590,9 +594,6 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
 
     # ── PATCH /submissions/{id}/stage ─────────────────────────────────
 
-    class _StageUpdate(BaseModel):
-        stage: str
-
     @_subs_router.patch("/{submission_id}/stage", response_model=SubmissionOut)
     def set_workflow_stage(submission_id: int, body: _StageUpdate) -> SubmissionOut:
         """Advance or roll back the workflow stage for a submission."""
@@ -608,8 +609,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             sub.workflow_stage = body.stage
             sess.commit()
             sess.refresh(sub)
-            sess.expunge(sub)
-        return _hydrate(sub)
+            return _hydrate(sub)
 
     # ── POST /submissions/{id}/upload-response ─────────────────────────
     # Accepts the architect's filled-in Excel, parses source_id/treatment_
