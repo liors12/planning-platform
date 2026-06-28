@@ -574,7 +574,8 @@ jobs:
               Write-Host "── sidecar log (last 50 lines) ──"
               Get-Content $smokeLog -Tail 50 -ErrorAction SilentlyContinue | Write-Host
               Get-Content $smokeErr -Tail 20 -ErrorAction SilentlyContinue | Write-Host
-              Fail "engine audit job failed; possible lazy-import crash in frozen bundle"
+              # Intentionally NOT calling Fail() here — let all Layer-2 probes run
+              # so one CI pass surfaces every bundle import problem at once.
             }
 
             # ── 6. DISCIPLINE COMMENTS ────────────────────────────────
@@ -728,13 +729,16 @@ jobs:
               ($stageResp.workflow_stage -eq "sent") "got=$($stageResp.workflow_stage)"
             if ($stageRaw.StatusCode -ne 200 -or $stageResp.workflow_stage -ne "sent") {
               Show-FailContext $stageEndpoint $stageRaw.StatusCode $stageRaw.Content
-              Fail "PATCH /stage returned $($stageRaw.StatusCode) or wrong field; 422 = Error B class (locally-scoped _StageUpdate)"
+              # No Fail() — let remaining Layer-2 probes run and surface all failures at once.
             }
             # Reset to draft so downstream tests see a clean state.
-            Invoke-RestMethod -Method Patch `
-              -ContentType "application/json; charset=utf-8" `
-              -Body ([System.Text.Encoding]::UTF8.GetBytes('{"stage":"draft"}')) `
-              -Uri $stageEndpoint | Out-Null
+            # Wrapped in try/catch: if the stage endpoint is broken the reset will also fail.
+            try {
+              Invoke-RestMethod -Method Patch `
+                -ContentType "application/json; charset=utf-8" `
+                -Body ([System.Text.Encoding]::UTF8.GetBytes('{"stage":"draft"}')) `
+                -Uri $stageEndpoint | Out-Null
+            } catch { }
 
             # Probe 2: POST /submissions/{id}/comparison-excel ────────
             # Proves compliance_engine.excel_export (+ openpyxl) load in
@@ -754,16 +758,16 @@ jobs:
               ($cmpEnqueue.StatusCode -eq 202) "status=$($cmpEnqueue.StatusCode)"
             if ($cmpEnqueue.StatusCode -ne 202) {
               Show-FailContext $cmpEndpoint $cmpEnqueue.StatusCode $cmpEnqueue.Content
-              Fail "POST /comparison-excel returned $($cmpEnqueue.StatusCode) (expected 202)"
-            }
-            $cmpJob = $cmpEnqueue.Content | ConvertFrom-Json
-            $cmpTerm = Wait-ForJob $cmpJob.id 60
-            Record "layer2: comparison-excel job completed (excel_export loaded in bundle)" `
-              ($cmpTerm.status -eq "completed") `
-              "status=$($cmpTerm.status) error=$($cmpTerm.error)"
-            if ($cmpTerm.status -ne "completed") {
-              Show-FailContext $cmpEndpoint "job=$($cmpTerm.status)" $cmpTerm.error
-              Fail "comparison-excel job failed; check for ModuleNotFoundError in compliance_engine.excel_export"
+              # No Fail() — record and continue to remaining probes.
+            } else {
+              $cmpJob = $cmpEnqueue.Content | ConvertFrom-Json
+              $cmpTerm = Wait-ForJob $cmpJob.id 60
+              Record "layer2: comparison-excel job completed (excel_export loaded in bundle)" `
+                ($cmpTerm.status -eq "completed") `
+                "status=$($cmpTerm.status) error=$($cmpTerm.error)"
+              if ($cmpTerm.status -ne "completed") {
+                Show-FailContext $cmpEndpoint "job=$($cmpTerm.status)" $cmpTerm.error
+              }
             }
 
             # Probe 3: POST /submissions/{id}/upload-meeting-pdf ──────
@@ -781,14 +785,12 @@ jobs:
               ($mtgRaw.StatusCode -eq 201) "status=$($mtgRaw.StatusCode)"
             if ($mtgRaw.StatusCode -ne 201) {
               Show-FailContext $mtgEndpoint $mtgRaw.StatusCode $mtgRaw.Content
-              Fail "POST /upload-meeting-pdf returned $($mtgRaw.StatusCode); expected 201 — check for ImportError in frozen bundle"
-            }
-            $mtgBody = $mtgRaw.Content | ConvertFrom-Json
-            $mtgHasItems = $null -ne $mtgBody.items
-            Record "layer2: meeting response has 'items' field" $mtgHasItems `
-              "keys=$($mtgBody.PSObject.Properties.Name -join ',')"
-            if (-not $mtgHasItems) {
-              Fail "meeting response missing 'items' field — endpoint response schema broken"
+              # No Fail() — record and continue to remaining probes.
+            } else {
+              $mtgBody = $mtgRaw.Content | ConvertFrom-Json
+              $mtgHasItems = $null -ne $mtgBody.items
+              Record "layer2: meeting response has 'items' field" $mtgHasItems `
+                "keys=$($mtgBody.PSObject.Properties.Name -join ',')"
             }
 
             # ── 6.7. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
