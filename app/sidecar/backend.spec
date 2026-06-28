@@ -59,7 +59,11 @@ hidden_imports = [
     # and submission_data_extractor. Previously excluded; needed for full audit.
     "fitz",
     # pdfplumber — used by format_rules_checker and submission_data_extractor.
+    # pdfminer.six (imported as pdfminer) is pdfplumber's core dep; it has many
+    # dynamic sub-modules (codec loaders, converter registries) that PyInstaller's
+    # static analysis misses. collect_submodules ensures all are in the PYZ.
     *collect_submodules("pdfplumber"),
+    *collect_submodules("pdfminer"),
     # openpyxl is excel_export's hard dependency. Lazy-imported inside
     # excel_export's body — PyInstaller's static analysis doesn't follow
     # transitively into deferred imports, so make it explicit.

@@ -16,3 +16,12 @@ PyMuPDF>=1.24
 # installed at PyInstaller analysis time — missing entries here cause CI to fail.
 ezdxf>=0.18
 shapely>=2.0
+# pdfplumber — top-level import in compliance_engine/format_rules_checker.py.
+# NOT being here means PyInstaller can't collect it → No module named 'pdfplumber'
+# in the frozen bundle. pdfminer.six is pulled in transitively by pdfplumber.
+pdfplumber>=0.10
+# google-generativeai — lazy-imported (try/except) in submission_data_extractor,
+# meeting_extract, email_extract, referent_extract, vision_verify. Not in CI before
+# this means collect_submodules("google.generativeai") in backend.spec was a no-op
+# and those paths fell back silently. Must be installed for PyInstaller to collect it.
+google-generativeai>=0.5
