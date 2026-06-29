@@ -676,11 +676,11 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
             sub.workflow_stage = "response_received"
             sess.commit()
             sess.refresh(sub)
-            sess.expunge(sub)
+            result = _hydrate(sub, has_arch_response=True)
 
         log.info("response uploaded for submission %s: %d rows parsed", submission_id,
                  len(parsed_rows))
-        return _hydrate(sub, has_arch_response=True)
+        return result
 
     # ── GET /submissions/{id}/response ─────────────────────────────────
 
