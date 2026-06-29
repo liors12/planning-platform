@@ -677,7 +677,27 @@ jobs:
               Fail "errors.log did not capture the missing-metadata warning"
             }
 
-            # ── 6.7. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
+            # ── 6.7. AI-SDK IMPORT PROBE ─────────────────────────────
+            # Hits GET /diag/ai-sdk on the running frozen sidecar.
+            # The endpoint attempts `import google.generativeai` inside
+            # the frozen Python interpreter and returns {sdk_importable:true/false}.
+            # This is the ONLY reliable proof that the SDK is bundled —
+            # the existing meeting-PDF probe cannot provide this because
+            # the 15-byte dummy PDF short-circuits via the scan-error
+            # path before _call_gemini() is ever reached.
+            # No API key needed. No network call. Pure import test.
+            $sdkProbeResp = Invoke-RestMethod -Uri "http://127.0.0.1:17321/diag/ai-sdk"
+            $sdkOk = $sdkProbeResp.sdk_importable -eq $true
+            if (-not $sdkOk) {
+              Write-Host "AI-SDK probe returned: $($sdkProbeResp | ConvertTo-Json -Compress)"
+            }
+            Record "ai-sdk: google.generativeai importable in frozen bundle" `
+              $sdkOk "sdk_importable=$($sdkProbeResp.sdk_importable)"
+            if (-not $sdkOk) {
+              Fail "google.generativeai NOT bundled — import failed inside frozen sidecar. Ellen's meeting-notes AI will silently fall back to non-AI mode."
+            }
+
+            # ── 6.8. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
             # Ellen's flow today: bad upload → ask Lior → manual sqlite3
             # surgery. P3 replaces that with a button. Three invariants:
             #   (a) DELETE returns 204

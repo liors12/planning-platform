@@ -562,6 +562,21 @@ def diagnostics() -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# /diag/ai-sdk — confirms google.generativeai is importable inside the
+# frozen PyInstaller bundle.  No API key needed, no network call made.
+# Used by the CI Layer-2 probe (and by Ellen/Lior for field diagnosis).
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/diag/ai-sdk")
+def diag_ai_sdk() -> dict:
+    try:
+        import google.generativeai  # noqa: F401, PLC0415
+        return {"sdk_importable": True}
+    except ImportError as exc:
+        return {"sdk_importable": False, "error": str(exc)}
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # /jobs/echo — Phase 1 proof of subprocess isolation (ADR-001)
 # Declared BEFORE the /jobs router so the literal "echo" path wins over the
 # parameterized "/{job_id}" route.
