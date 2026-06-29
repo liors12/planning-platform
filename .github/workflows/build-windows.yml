@@ -810,7 +810,40 @@ jobs:
                 "keys=$($mtgBody.PSObject.Properties.Name -join ',')"
             }
 
-            # ── 6.7. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
+            # ── 6.7. AI PIPELINE HEALTH PROBE ────────────────────────
+            # GET /diag/ai — tests the frozen bundle directly.
+            # Reports: gemini_sdk_importable, gemini_key_present, pymupdf_importable.
+            # gemini_key_present will be false in CI (no key stored) — expected.
+            # The import checks run inside the frozen interpreter, so a missing
+            # module (e.g. google.generativeai not collected by PyInstaller)
+            # will show false here even if it's present on the CI host's Python.
+            $diagResp = Invoke-RestMethod -Uri "http://127.0.0.1:17321/diag/ai"
+            $diagJson = $diagResp | ConvertTo-Json -Compress
+            Write-Host "/diag/ai response: $diagJson"
+
+            $sdkOk  = $diagResp.gemini_sdk_importable -eq $true
+            $fitzOk = $diagResp.pymupdf_importable    -eq $true
+            # gemini_key_present is expected false in CI — no assertion on it
+            if (-not $sdkOk) {
+              Write-Host "FAIL: gemini_sdk_importable=false — google.generativeai NOT in bundle"
+              Write-Host "Full /diag/ai: $diagJson"
+            }
+            if (-not $fitzOk) {
+              Write-Host "FAIL: pymupdf_importable=false — PyMuPDF (fitz) NOT in bundle"
+              Write-Host "Full /diag/ai: $diagJson"
+            }
+            Record "diag/ai: gemini_sdk_importable == true" `
+              $sdkOk  "sdk=$($diagResp.gemini_sdk_importable) fitz=$($diagResp.pymupdf_importable) key_present=$($diagResp.gemini_key_present)"
+            Record "diag/ai: pymupdf_importable == true" `
+              $fitzOk "sdk=$($diagResp.gemini_sdk_importable) fitz=$($diagResp.pymupdf_importable)"
+            if (-not $sdkOk) {
+              Fail "google.generativeai NOT bundled — Ellen's AI features would be broken. Full /diag/ai: $diagJson"
+            }
+            if (-not $fitzOk) {
+              Fail "PyMuPDF (fitz) NOT bundled — PDF text extraction would fail. Full /diag/ai: $diagJson"
+            }
+
+            # ── 6.8. PRIORITY 3 — DELETE SUBMISSION (self-recovery) ───
             # Ellen's flow today: bad upload → ask Lior → manual sqlite3
             # surgery. P3 replaces that with a button. Three invariants:
             #   (a) DELETE returns 204

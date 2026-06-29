@@ -562,6 +562,45 @@ def diagnostics() -> dict:
 
 
 # ─────────────────────────────────────────────────────────────────────────────
+# /diag/ai — read-only AI pipeline health probe.
+# Reports whether the SDK and PyMuPDF import inside the frozen bundle, and
+# whether a non-blank Gemini key is stored.  Never returns the key value,
+# length, prefix, or any substring — only a boolean presence flag.
+# Used by (a) the CI smoke gate, (b) Ellen/Lior to diagnose issues without
+# digging through logs.  No API calls, no side effects.
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/diag/ai")
+def diag_ai() -> dict:
+    try:
+        import google.generativeai  # noqa: F401, PLC0415
+        sdk_ok = True
+    except ImportError:
+        sdk_ok = False
+
+    try:
+        import fitz  # noqa: F401, PLC0415
+        fitz_ok = True
+    except ImportError:
+        fitz_ok = False
+
+    key_present = False
+    try:
+        with Session(ENGINE) as _sess:
+            from .models import Settings  # noqa: PLC0415
+            row = _sess.get(Settings, "gemini_api_key")
+            key_present = row is not None and bool(row.value and row.value.strip())
+    except Exception:
+        pass
+
+    return {
+        "gemini_sdk_importable": sdk_ok,
+        "gemini_key_present": key_present,
+        "pymupdf_importable": fitz_ok,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
 # /jobs/echo — Phase 1 proof of subprocess isolation (ADR-001)
 # Declared BEFORE the /jobs router so the literal "echo" path wins over the
 # parameterized "/{job_id}" route.
