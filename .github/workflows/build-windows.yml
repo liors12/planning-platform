@@ -397,6 +397,51 @@ jobs:
             Record "install: shell exe present"      ($null -ne $shellExe)   $shellExe
             if (-not $sidecarExe) { Fail "sidecar.exe not installed" }
 
+            # ── 1b. OVER-INSTALL SAFETY CHECK ────────────────────────────
+            # Gates shipping Ellen a new build: over-install of build N+1 over
+            # build N must NOT delete or modify user data that lives in the
+            # same directory as the install dir (%LOCALAPPDATA%\Planning Platform\).
+            #
+            # Ellen has no PLATFORM_DATA_DIR override, so her platform.db sits
+            # directly in $INSTDIR. This test plants a sentinel + fake db there,
+            # re-runs the same installer /S on top, then asserts both survive
+            # byte-for-byte unchanged. Failure = the installer wiped her data.
+            #
+            # We use $installDir (the real NSIS $INSTDIR) not $smokeData — the
+            # sidecar's PLATFORM_DATA_DIR override is set later in step 2 and
+            # does not affect what the installer reads or writes here.
+            $sentinelPath   = Join-Path $installDir "upgrade_sentinel.txt"
+            $fakePlatformDb = Join-Path $installDir "platform.db"
+            Set-Content -Path $sentinelPath   -Value "sentinel-upgrade-test" -Encoding utf8
+            Set-Content -Path $fakePlatformDb -Value "fake-platform-db-for-upgrade-test" -Encoding utf8
+            $sentBefore = Get-Content -Raw $sentinelPath
+            $dbHashBefore = (Get-FileHash -Algorithm SHA256 -Path $fakePlatformDb).Hash
+
+            # Mirror NSIS_HOOK_PREINSTALL so the installer can overwrite locked binaries
+            & taskkill /f /im sidecar.exe 2>$null; $true
+            & taskkill /f /im "Planning Platform.exe" 2>$null; $true
+
+            Write-Host "Over-install: running installer /S a second time over existing install"
+            Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+            Record "over-install: second NSIS /S completed" $true
+
+            $sentAfter    = Get-Content -Raw $sentinelPath -ErrorAction SilentlyContinue
+            $dbHashAfter  = if (Test-Path $fakePlatformDb) {
+                              (Get-FileHash -Algorithm SHA256 -Path $fakePlatformDb).Hash
+                            } else { "<DELETED>" }
+            Record "over-install: sentinel file survived" `
+              ($sentAfter -eq $sentBefore) `
+              "before=[$($sentBefore.Trim())] after=[$($sentAfter?.Trim() ?? '<DELETED>')]"
+            Record "over-install: platform.db survived unchanged" `
+              ($dbHashAfter -eq $dbHashBefore) `
+              "sha256_before=$dbHashBefore sha256_after=$dbHashAfter"
+
+            # Remove test artifacts before sidecar boot — they're in $installDir, not
+            # $smokeData, so they won't interfere with the sidecar (PLATFORM_DATA_DIR
+            # is set in step 2), but cleaning up keeps the uninstall check honest.
+            Remove-Item $sentinelPath   -Force -ErrorAction SilentlyContinue
+            Remove-Item $fakePlatformDb -Force -ErrorAction SilentlyContinue
+
             # ── 2. BOOT ───────────────────────────────────────────────
             # Isolate to a tempdir so cleanup is local; avoids polluting
             # whatever the installer wrote to %LOCALAPPDATA%.
