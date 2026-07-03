@@ -425,16 +425,23 @@ jobs:
             Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
             Record "over-install: second NSIS /S completed" $true
 
-            $sentAfter    = Get-Content -Raw $sentinelPath -ErrorAction SilentlyContinue
-            $dbHashAfter  = if (Test-Path $fakePlatformDb) {
-                              (Get-FileHash -Algorithm SHA256 -Path $fakePlatformDb).Hash
-                            } else { "<DELETED>" }
+            $sentAfter   = Get-Content -Raw $sentinelPath -ErrorAction SilentlyContinue
+            $dbHashAfter = if (Test-Path $fakePlatformDb) {
+                             (Get-FileHash -Algorithm SHA256 -Path $fakePlatformDb).Hash
+                           } else { $null }
+
+            # Explicit null guards — ?./?? inside $() string interpolation crashes the
+            # runner's PowerShell when the value is null. Use plain variables instead.
+            $sentBeforeStr = if ($null -ne $sentBefore) { $sentBefore.Trim() } else { "<NULL>" }
+            $sentAfterStr  = if ($null -ne $sentAfter)  { $sentAfter.Trim()  } else { "<DELETED>" }
+            $dbAfterStr    = if ($null -ne $dbHashAfter) { $dbHashAfter       } else { "<DELETED>" }
+
             Record "over-install: sentinel file survived" `
-              ($sentAfter -eq $sentBefore) `
-              "before=[$($sentBefore.Trim())] after=[$($sentAfter?.Trim() ?? '<DELETED>')]"
+              ($null -ne $sentAfter -and $sentAfter -eq $sentBefore) `
+              "before=[$sentBeforeStr] after=[$sentAfterStr]"
             Record "over-install: platform.db survived unchanged" `
-              ($dbHashAfter -eq $dbHashBefore) `
-              "sha256_before=$dbHashBefore sha256_after=$dbHashAfter"
+              ($null -ne $dbHashAfter -and $dbHashAfter -eq $dbHashBefore) `
+              "sha256_before=$dbHashBefore sha256_after=$dbAfterStr"
 
             # Remove test artifacts before sidecar boot — they're in $installDir, not
             # $smokeData, so they won't interfere with the sidecar (PLATFORM_DATA_DIR
