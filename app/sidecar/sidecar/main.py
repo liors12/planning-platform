@@ -37,7 +37,8 @@ from sqlalchemy.orm import Session
 from .comments import make_routers as make_comment_routers
 from .settings_routes import load_settings, make_router as make_settings_router
 from .config import VERSION, Config, load
-from .db import build_engine, initialize
+from .db import build_engine, initialize, seed_guidelines
+from .guidelines import make_router as make_guidelines_router
 from .jobs.dispatch import JobError, run_job
 from .jobs_routes import make_router as make_jobs_router
 from .layer_mappings import make_router as make_layer_mappings_router
@@ -320,6 +321,7 @@ async def lifespan(app: FastAPI):
     seed_report = _seed_data_dir(CFG)
     discovery_report = _discover_projects(CFG, ENGINE)
     submission_report = _discover_submissions(CFG, ENGINE)
+    seed_guidelines(ENGINE)
     log.info("sidecar starting on http://%s:%d "
              "(data_dir=%s, db=%s, seed=%s, projects=%s, submissions=%s)",
              CFG.bind_host, CFG.bind_port, CFG.data_dir,
@@ -660,6 +662,9 @@ app.include_router(make_settings_router(lambda: ENGINE))
 
 # DXF layer mapping — per-project layer → semantic role table.
 app.include_router(make_layer_mappings_router(lambda: ENGINE, cfg=CFG))
+
+# Guidelines editor — editable thresholds with versioning + PDF export.
+app.include_router(make_guidelines_router(ENGINE))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

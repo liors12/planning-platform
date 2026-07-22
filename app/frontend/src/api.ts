@@ -903,3 +903,60 @@ export async function updateLayerMapping(
     `PATCH /projects/${projectId}/layer-mappings/${layerName}`,
   );
 }
+
+// ── Global guidelines (הנחיות) ─────────────────────────────────────────────
+// City-wide submission rules — deliberately NOT project-keyed.
+
+export interface GuidelineOut {
+  id: number;
+  discipline: string;
+  title: string;
+  body_text: string | null;
+  guideline_type: "checkable" | "manual";
+  check_key: string | null;
+  check_value: number | null;
+  unit: string | null;
+  version: number;
+  is_active: boolean;
+  edited_by: string | null;
+  edited_at: string | null;
+}
+
+export interface GuidelineEditPayload {
+  title?: string;
+  body_text?: string;
+  check_value?: number;
+  edited_by?: string;
+}
+
+export async function listGuidelines(): Promise<GuidelineOut[]> {
+  return jsonOrThrow<GuidelineOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/guidelines`),
+    "GET /guidelines",
+  );
+}
+
+export async function editGuideline(
+  gid: number,
+  payload: GuidelineEditPayload,
+): Promise<GuidelineOut> {
+  return jsonOrThrow<GuidelineOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/guidelines/${gid}/edit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    }),
+    `POST /guidelines/${gid}/edit`,
+  );
+}
+
+export async function guidelineHistory(gid: number): Promise<GuidelineOut[]> {
+  return jsonOrThrow<GuidelineOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/guidelines/${gid}/history`),
+    `GET /guidelines/${gid}/history`,
+  );
+}
+
+export function guidelinesPdfUrl(): string {
+  return `${SIDECAR_BASE}/guidelines/export-pdf`;
+}

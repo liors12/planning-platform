@@ -13,6 +13,7 @@ from .content_compliance_checker import run_content_compliance
 from .discipline_policy_checker import run_discipline_checks
 from .feedback_store import ensure_db_initialized, get_feedback_for_audit, merge_with_feedback
 from .format_rules_checker import check_submission_format
+from .guideline_checker import run_guideline_checks
 from .submission_data_extractor import extract as extract_submission_data
 from .submission_extracts import load_extracts
 
@@ -37,6 +38,7 @@ def run_full_audit(
     allow_llm: bool | None = None,
     cad_path: Path | None = None,
     layer_mapping: dict[str, str] | None = None,
+    guidelines: list[dict] | None = None,
 ) -> dict:
     pdf_path = Path(pdf_path)
     if content_rules_path is None:
@@ -107,10 +109,14 @@ def run_full_audit(
     else:
         cad_results = run_cad_compliance(None, project_schema)
 
+    # --- editable global guidelines (sidecar reads active set from DB) ---
+    guideline_results = run_guideline_checks(guidelines or [], extracts=extracts_overlay)
+
     return {
         "format": format_results,
         "content": content_results,
         "disciplines": discipline_results,
+        "guidelines": guideline_results,
         "cad": cad_results,
         "extraction_cache": asdict(extracted),
         "extracts_overlay": extracts_overlay,

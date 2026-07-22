@@ -17,7 +17,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text, UniqueConstraint, func
+from sqlalchemy import DateTime, Float, ForeignKey, Integer, String, Text, UniqueConstraint, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -547,3 +547,57 @@ class DisciplineComment(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Guideline + audit snapshot
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Guidelines are GLOBAL (city-wide submission rules), deliberately NOT
+# project-keyed — one rulebook applies to every תכנית עיצוב. Editing never
+# overwrites: it inserts a new row with version+1 and flips is_active, so
+# history stays queryable and audit snapshots can pin exact versions.
+
+class Guideline(Base):
+    __tablename__ = "guidelines"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    discipline: Mapped[str] = mapped_column(String(64), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    body_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    guideline_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    check_key: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    check_value: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    unit: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    is_active: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    edited_by: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
+    edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "discipline": self.discipline,
+            "title": self.title,
+            "body_text": self.body_text,
+            "guideline_type": self.guideline_type,
+            "check_key": self.check_key,
+            "check_value": self.check_value,
+            "unit": self.unit,
+            "version": self.version,
+            "is_active": bool(self.is_active),
+            "edited_by": self.edited_by,
+            "edited_at": self.edited_at.isoformat() if self.edited_at else None,
+        }
+
+
+class AuditGuidelineSnapshot(Base):
+    __tablename__ = "audit_guideline_snapshots"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    audit_run_id: Mapped[str] = mapped_column(String(128), nullable=False, index=True)
+    guideline_id: Mapped[int] = mapped_column(
+        ForeignKey("guidelines.id"),
+        nullable=False,
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False)

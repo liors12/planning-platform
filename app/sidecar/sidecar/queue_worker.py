@@ -29,7 +29,7 @@ from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import resolve_schema
-from .models import ArchitectResponse, DisciplineComment, Job, Submission
+from .models import ArchitectResponse, AuditGuidelineSnapshot, DisciplineComment, Job, Submission
 from .storage import findings_path
 from sqlalchemy import select
 
@@ -337,11 +337,16 @@ class EngineQueue:
         try:
             schema_path = resolve_schema(project_tava_number)
             job_dir = Path(job_dir_str)
+            # Active GLOBAL guidelines, read from the DB at audit time so an
+            # edit by Ellen affects the very next run. Engine stays DB-free —
+            # the values travel via job_input.json.
+            from .guidelines import load_active_guidelines
             job_input = {
                 "pdf_path": submission_pdf_path,
                 "schema_path": str(schema_path),
                 "project_key": project_tava_number,
                 "submission_version": _normalize_submission_version(submission_version_string),
+                "guidelines": load_active_guidelines(self._engine),
             }
             # Phase 2b: the Cowork-extracted overlays (extracts.json +
             # discipline_findings.json) live at the canonical repo location for
@@ -484,6 +489,41 @@ class EngineQueue:
             job.completed_at = now
             sess.commit()
             log.info("job %s finished: status=%s", job_id, job.status)
+        if error_payload is None:
+            self._record_guideline_snapshot(job_id, Path(job_dir_str))
+
+    def _record_guideline_snapshot(self, job_id: str, job_dir: Path) -> None:
+        """Pin the (guideline_id, version) set this run enforced.
+
+        Keyed by the Job UUID — the unique identifier of ONE run. (The
+        engine's audit_run_id "<tava>/v<version>" is stable across re-runs of
+        the same submission, so it can't distinguish run1 from run2; the
+        comparison feature needs exactly that distinction to tell "the plan
+        changed" apart from "Ellen changed a city rule".)
+        Reads the snapshot the engine actually used from job_output.json —
+        ground truth over whatever was loaded at enqueue time.
+        """
+        try:
+            output = json.loads(
+                (job_dir / "job_output.json").read_text(encoding="utf-8")
+            )
+            entries = (output.get("guidelines") or {}).get("snapshot") or []
+            if not entries:
+                return
+            with Session(self._engine) as sess:
+                for e in entries:
+                    sess.add(AuditGuidelineSnapshot(
+                        audit_run_id=job_id,
+                        guideline_id=e["guideline_id"],
+                        version=e["version"],
+                    ))
+                sess.commit()
+            log.info("job %s: recorded %d guideline snapshot rows",
+                     job_id, len(entries))
+        except Exception:
+            # Snapshot is bookkeeping — never fail a completed audit over it,
+            # but leave a loud trail.
+            log.exception("job %s: failed to record guideline snapshot", job_id)
 
     def _process_run_audit_inproc(
         self,
@@ -525,6 +565,9 @@ class EngineQueue:
 
             from compliance_engine.audit import run_full_audit
 
+            from .guidelines import load_active_guidelines
+            active_guidelines = load_active_guidelines(self._engine)
+
             _stderr_buf = io.StringIO()
             result_holder: list[dict | None] = [None]
             exc_holder: list[BaseException | None] = [None]
@@ -543,6 +586,7 @@ class EngineQueue:
                             submission_version=normalized_version,
                             cad_path=Path(submission_cad_path) if submission_cad_path else None,
                             layer_mapping=layer_mapping if layer_mapping else None,
+                            guidelines=active_guidelines,
                         )
                 except Exception as exc:
                     exc_holder[0] = exc
@@ -608,6 +652,8 @@ class EngineQueue:
             job.completed_at = now
             sess.commit()
             log.info("job %s finished: status=%s", job_id, job.status)
+        if error_payload is None:
+            self._record_guideline_snapshot(job_id, Path(job_dir_str))
 
     def _process_render_pdf(
         self,

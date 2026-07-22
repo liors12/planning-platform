@@ -122,6 +122,15 @@ export function Sidebar({ currentRoute, refreshKey, onOpenDiagnostics }: Props) 
         <div className="sidebar-footer-actions">
           <a
             className="diag-trigger"
+            href={buildHash({ kind: "guidelines" })}
+            title="הנחיות עירוניות"
+            aria-label="הנחיות עירוניות"
+            data-testid="sidebar-guidelines-link"
+          >
+            <span aria-hidden="true">📋</span> הנחיות
+          </a>
+          <a
+            className="diag-trigger"
             href={buildHash({ kind: "settings" })}
             title="הגדרות מערכת"
             aria-label="הגדרות מערכת"
