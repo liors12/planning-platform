@@ -153,11 +153,19 @@ def _resolve_font_dir() -> Path:
     return Path(__file__).resolve().parent.parent.parent.parent / "assets" / "fonts"
 
 
+# Style spec: Ellen's approved municipal look — black-on-white only. Black bold
+# headings (16/14/12pt), full 0.5pt black table grid, bold white header row, no
+# shading/banding, no colored accents, hyphens (never em-dash) in template text.
 _PDF_CSS = """
 @font-face {
     font-family: "Heebo";
     src: url("Heebo-Regular.ttf");
-    font-weight: 100 900;
+    font-weight: normal;
+}
+@font-face {
+    font-family: "Heebo";
+    src: url("Heebo-Bold.ttf");
+    font-weight: bold;
 }
 @page {
     size: A4;
@@ -170,26 +178,39 @@ body {
     direction: rtl;
     text-align: right;
     font-size: 11pt;
-    color: #1a1a1a;
+    color: #000000;
 }
-h1 { font-size: 18pt; margin-bottom: 4pt; }
-.meta { color: #555; font-size: 9pt; margin-bottom: 16pt; }
-.pdf-footer { position: running(pdf-footer); font-size: 8pt; color: #777;
+h1 { font-size: 16pt; font-weight: bold; color: #000000; margin-bottom: 4pt; }
+h2 { font-size: 14pt; font-weight: bold; color: #000000;
+     margin-top: 16pt; margin-bottom: 6pt; }
+.meta { color: #000000; font-size: 9pt; margin-bottom: 14pt; }
+.pdf-footer { position: running(pdf-footer); font-size: 8pt; color: #000000;
               direction: rtl; }
-h2 { font-size: 13pt; border-bottom: 1.5px solid #333; padding-bottom: 3pt;
-     margin-top: 18pt; margin-bottom: 6pt; }
-.guideline { margin-bottom: 10pt; padding: 6pt 10pt 6pt 6pt;
-             border-right: 3px solid #ccc; page-break-inside: avoid; }
-.guideline.checkable { border-right-color: #1a73e8; }
-.title { font-weight: bold; font-size: 11pt; }
-.badge { display: inline-block; font-size: 8pt; padding: 1pt 5pt;
-         border-radius: 3pt; margin-right: 6pt; }
-.badge-auto { background: #e8f0fe; color: #1a73e8; }
-.badge-manual { background: #f1f3f4; color: #666; }
-.value-line { color: #1a73e8; font-size: 10pt; margin-top: 3pt; }
-.body-text { color: #333; font-size: 10pt; margin-top: 4pt; white-space: pre-wrap; }
-.version { color: #999; font-size: 8pt; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 12pt;
+}
+th, td {
+    border: 0.5pt solid #000000;
+    padding: 4pt 6pt;
+    text-align: right;
+    vertical-align: top;
+    font-size: 10pt;
+    color: #000000;
+    background: #ffffff;
+}
+th { font-weight: bold; }
+td { font-weight: normal; }
+.body-text { white-space: pre-wrap; }
 """
+
+
+def _dash(s: str) -> str:
+    """Ellen's dash convention: regular hyphen, never em/en-dash. Applied at
+    render time so DB content is displayed per the approved style without
+    being mutated in storage."""
+    return s.replace("—", "-").replace("–", "-")
 
 
 def _build_guidelines_html(rows: list[dict]) -> str:
@@ -208,30 +229,32 @@ def _build_guidelines_html(rows: list[dict]) -> str:
     for r in rows:
         by_discipline.setdefault(r["discipline"], []).append(r)
 
+    header = (
+        "<thead><tr>"
+        "<th>הנחיה</th><th>תיאור</th><th>סוג בדיקה</th><th>ערך נדרש</th><th>גרסה</th>"
+        "</tr></thead>"
+    )
     for disc, items in by_discipline.items():
         parts.append(f"<h2>{escape(disc)}</h2>")
+        parts.append(f"<table>{header}<tbody>")
         for g in items:
             checkable = g["guideline_type"] == "checkable"
-            badge_cls = "badge-auto" if checkable else "badge-manual"
-            badge_label = "נבדקת אוטומטית" if checkable else "ידנית"
-            parts.append(f"<div class='guideline {g['guideline_type']}'>")
-            parts.append(
-                f"<div class='title'>{escape(g['title'])}"
-                f"<span class='badge {badge_cls}'>{badge_label}</span></div>"
-            )
+            type_label = "נבדקת אוטומטית" if checkable else "ידנית"
             if checkable and g["check_value"] is not None:
-                unit = escape(g["unit"] or "")
-                value = g["check_value"]
-                value_str = f"{value:g}"
-                parts.append(
-                    f"<div class='value-line'>ערך נדרש: {value_str} {unit} "
-                    f"<span class='version'>(גרסה {g['version']})</span></div>"
-                )
-            if g["body_text"]:
-                parts.append(f"<div class='body-text'>{escape(g['body_text'])}</div>")
-            if not checkable:
-                parts.append(f"<div class='version'>גרסה {g['version']}</div>")
-            parts.append("</div>")
+                value_cell = f"{g['check_value']:g} {escape(g['unit'] or '')}"
+            else:
+                value_cell = "-"
+            body = escape(_dash(g["body_text"] or "-"))
+            parts.append(
+                "<tr>"
+                f"<td>{escape(_dash(g['title']))}</td>"
+                f"<td class='body-text'>{body}</td>"
+                f"<td>{type_label}</td>"
+                f"<td>{value_cell}</td>"
+                f"<td>{g['version']}</td>"
+                "</tr>"
+            )
+        parts.append("</tbody></table>")
 
     parts.append("</body></html>")
     return "\n".join(parts)
