@@ -104,6 +104,7 @@ def _run_with_job_dir(job_dir: Path) -> int:
             project_key=project_key,
             submission_version=submission_version,
             feedback_db_path=feedback_db_path,
+            guidelines=payload.get("guidelines"),
         )
 
         # Serialize with the same conventions as the v8j-era output:

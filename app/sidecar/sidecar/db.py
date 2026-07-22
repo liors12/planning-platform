@@ -227,3 +227,120 @@ def initialize(engine: Engine) -> dict:
         "cipher_version": cipher_version,
         "sqlite_version": sqlite_version,
     }
+
+
+_SEED_GUIDELINES = [
+    {
+        "discipline": "בטיחות ומעקות",
+        "title": "גובה מינימלי לגדר זכוכית",
+        "body_text": 'גובה מינימלי של גדר זכוכית בכל המרפסות, גגות ומקומות גבוהים יהיה 105 ס"מ מפני הרצפה.',
+        "guideline_type": "checkable",
+        "check_key": "glass_railing_min_height_cm",
+        "check_value": 105.0,
+        "unit": 'ס"מ',
+    },
+    {
+        "discipline": "חזית בניין",
+        "title": "הגבלת בוהק זיגוג חיצוני",
+        "body_text": "שיעור הבוהק של זיגוג חיצוני לא יעלה על 70% מהשטח הכולל של חזית הבניין.",
+        "guideline_type": "checkable",
+        "check_key": "glazing_reflectivity_max_pct",
+        "check_value": 70.0,
+        "unit": "%",
+    },
+    {
+        "discipline": "גינון ועיצוב נוף",
+        "title": "מסך כביסה — רוחב מינימלי",
+        "body_text": "רוחב אזור מסך כביסה לא יפחת מ-1.8 מ'.",
+        "guideline_type": "checkable",
+        "check_key": "laundry_screen_width_m",
+        "check_value": 1.8,
+        "unit": "מ'",
+    },
+    {
+        "discipline": "גינון ועיצוב נוף",
+        "title": "מסך כביסה — גובה מינימלי",
+        "body_text": "גובה אזור מסך כביסה לא יפחת מ-1.5 מ'.",
+        "guideline_type": "checkable",
+        "check_key": "laundry_screen_height_m",
+        "check_value": 1.5,
+        "unit": "מ'",
+    },
+    {
+        "discipline": "תשתיות ונגישות",
+        "title": "רוחב מינימלי — שביל ראשי",
+        "body_text": "שביל תנועה ראשי לא יפחת מ-3 מ'.",
+        "guideline_type": "checkable",
+        "check_key": "path_main_min_m",
+        "check_value": 3.0,
+        "unit": "מ'",
+    },
+    {
+        "discipline": "תשתיות ונגישות",
+        "title": "רוחב מינימלי — שביל משני",
+        "body_text": "שביל תנועה משני לא יפחת מ-2.5 מ'.",
+        "guideline_type": "checkable",
+        "check_key": "path_secondary_min_m",
+        "check_value": 2.5,
+        "unit": "מ'",
+    },
+    {
+        "discipline": "בטיחות אש",
+        "title": "מרחק מינימלי — מיכל גז",
+        "body_text": "מיכל גז לא יוצב במרחק פחות מ-2 מ' מכל מבנה קיים.",
+        "guideline_type": "checkable",
+        "check_key": "gas_tank_setback_min_m",
+        "check_value": 2.0,
+        "unit": "מ'",
+    },
+    {
+        "discipline": "ארכיטקטורה",
+        "title": "חומרי גמר חיצוניים",
+        "body_text": "חומרי גמר חיצוניים יהיו בהירים, בצבעים ניטרליים ויתאימו לאופי הסביבתי.",
+        "guideline_type": "manual",
+        "check_key": None,
+        "check_value": None,
+        "unit": None,
+    },
+    {
+        "discipline": "ארכיטקטורה",
+        "title": "שימור קו בניין",
+        "body_text": 'יש לשמר קו בניין אחיד לאורך הרחוב בהתאם לתב"ע.',
+        "guideline_type": "manual",
+        "check_key": None,
+        "check_value": None,
+        "unit": None,
+    },
+    {
+        "discipline": "גינון ועיצוב נוף",
+        "title": "עצים ממין ילידי",
+        "body_text": "עצים חדשים יהיו ממין ילידי או מותאם לאקלים ים-תיכוני.",
+        "guideline_type": "manual",
+        "check_key": None,
+        "check_value": None,
+        "unit": None,
+    },
+]
+
+
+def seed_guidelines(engine: Engine) -> None:
+    """Seed version-1 GLOBAL guidelines once (idempotent: no-op if table non-empty).
+
+    Guidelines are city-wide submission rules — deliberately not project-keyed.
+    """
+    from sqlalchemy.orm import Session
+
+    with Session(engine) as sess:
+        existing = sess.execute(text("SELECT COUNT(*) FROM guidelines")).scalar()
+        if existing:
+            return
+        from .models import Guideline
+        for g in _SEED_GUIDELINES:
+            sess.add(Guideline(
+                version=1,
+                is_active=1,
+                edited_by="seed",
+                **g,
+            ))
+        sess.commit()
+        log.info("seeded %d global guidelines", len(_SEED_GUIDELINES))

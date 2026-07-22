@@ -7,6 +7,7 @@ export type Route =
   | { kind: "home" }
   | { kind: "new_project" }
   | { kind: "project"; projectId: number }
+  | { kind: "guidelines" }
   | { kind: "settings" };
 
 export function parseHash(hash: string): Route {
@@ -15,6 +16,7 @@ export function parseHash(hash: string): Route {
   if (s === "" || s === "/") return { kind: "home" };
   if (s === "projects/new") return { kind: "new_project" };
   if (s === "settings") return { kind: "settings" };
+  if (s === "guidelines") return { kind: "guidelines" };
   const m = /^projects\/(\d+)$/.exec(s);
   if (m) return { kind: "project", projectId: Number(m[1]) };
   return { kind: "home" };  // fallback for unknown
@@ -25,6 +27,7 @@ export function buildHash(route: Route): string {
     case "home": return "#/";
     case "new_project": return "#/projects/new";
     case "settings": return "#/settings";
+    case "guidelines": return "#/guidelines";
     case "project": return `#/projects/${route.projectId}`;
   }
 }

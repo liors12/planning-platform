@@ -1916,3 +1916,36 @@ code, .path {
 }
 .ai-dot-ok      { background: var(--ok); }
 .ai-dot-missing { background: #bdbdbd; }
+
+/* ── Global guidelines page (הנחיות) ───────────────────────────────────── */
+.page-guidelines .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.guidelines-group { margin-bottom: 18px; }
+.guidelines-list { list-style: none; margin: 0; padding: 0; }
+.guideline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border, #e3e3e3);
+}
+.guideline-row:last-child { border-bottom: none; }
+.guideline-title-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.guideline-version { font-size: 12px; }
+.guideline-value { margin-top: 4px; font-size: 13.5px; }
+.guideline-body { margin: 6px 0 0; white-space: pre-wrap; font-size: 13px; }
+.guideline-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.badge-auto   { background: #e8f0fe; color: #1a5dd8; }
+.badge-manual { background: #eeeeee; color: var(--muted, #666); }
+.guideline-history-list { list-style: none; margin: 0; padding: 0; }
+.guideline-history-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border, #e3e3e3);
+}
+.guideline-history-list li:last-child { border-bottom: none; }
+.guideline-history-list .badge { margin-inline-start: 8px; }

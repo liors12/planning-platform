@@ -1338,6 +1338,9 @@ def generate_audit_pdf(
     ))
     parts.append(_render_section_2(content_results, residential_parcels, plan_number))
     parts.append(_render_section_3(discipline_results, amenity_inventory=amenity_inventory))
+    guideline_results = audit_results.get("guidelines") or {}
+    if guideline_results:
+        parts.append(_render_guidelines_section(guideline_results))
 
     html_doc = (
         '<!DOCTYPE html>'
@@ -2068,6 +2071,69 @@ def _render_section_3(
     <div class="chapter" id="sec-3">
       {_chapter_open("3", "בדיקה רב-תחומית", intro)}
       {''.join(subs)}
+    </div>
+    """
+
+
+def _render_guidelines_section(guideline_results: dict) -> str:
+    """Editable global guidelines (הנחיות) — checkable findings + the honest
+    "לבדיקה ידנית" list of manual guidelines that were NOT auto-checked.
+
+    Threshold values and versions come from the platform DB via the audit-time
+    guidelines handoff; nothing here is hardcoded.
+    """
+    checks = guideline_results.get("checks") or []
+    manual = guideline_results.get("manual") or []
+    if not checks and not manual:
+        return ""
+
+    intro = (
+        'פרק זה בוחן את ההגשה מול ההנחיות העירוניות כפי שהן מוגדרות במערכת. '
+        'ההנחיות ניתנות לעריכה, וכל בדיקה מציינת את גרסת ההנחיה שנאכפה.'
+    )
+
+    verdict_map = {
+        "pass": ("v-ok", "תקין"),
+        "fail": ("v-fail", "לא תקין"),
+        "requires_review": ("v-rev", "נדרשת השלמה"),
+        "unevaluable": ("v-rev", "נדרשת השלמה"),
+    }
+    check_rows = []
+    for c in checks:
+        cls, label = verdict_map.get(c.get("verdict"), ("v-rev", "נדרשת השלמה"))
+        check_rows.append(
+            '<tr>'
+            f'<td><b>{_esc(c.get("rule_name_he", ""))}</b></td>'
+            f'<td><span class="{cls}">{label}</span></td>'
+            f'<td>{_esc(c.get("notes_he", ""))}</td>'
+            '</tr>'
+        )
+    checks_html = ""
+    if check_rows:
+        checks_html = (
+            '<table><thead><tr>'
+            '<th>הנחיה</th><th>סטטוס</th><th>הערה</th>'
+            '</tr></thead><tbody>' + "".join(check_rows) + '</tbody></table>'
+        )
+
+    manual_html = ""
+    if manual:
+        items = "".join(
+            f'<li>{_esc(m.get("title", ""))}'
+            f' <span class="referent-tag">(גרסה {_esc(m.get("version", ""))})</span></li>'
+            for m in manual
+        )
+        manual_html = (
+            '<h3>לבדיקה ידנית</h3>'
+            '<p>ההנחיות הבאות אינן נבדקות אוטומטית ונדרשת עבורן בדיקה של הצוות:</p>'
+            f'<ul>{items}</ul>'
+        )
+
+    return f"""
+    <div class="chapter" id="sec-guidelines">
+      {_chapter_open("4", "הנחיות עירוניות", intro)}
+      {checks_html}
+      {manual_html}
     </div>
     """
 

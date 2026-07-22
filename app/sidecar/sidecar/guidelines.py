@@ -1,0 +1,280 @@
+"""Global guidelines editor — city-wide submission rules with versioning + PDF export.
+
+Guidelines are GLOBAL (not project-keyed): one municipal rulebook applies to
+every תכנית עיצוב. Routes live at /guidelines, deliberately not under
+/projects/.
+
+Pattern: all Pydantic models at MODULE scope (required to avoid the FastAPI
+422 bug where locally-scoped models get treated as query params).
+"""
+from __future__ import annotations
+
+import io
+import logging
+import os
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel
+from sqlalchemy import select
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import Session
+
+from .models import Guideline
+
+log = logging.getLogger(__name__)
+
+# ── Pydantic models (MODULE scope — must stay here) ──────────────────────────
+
+class GuidelineOut(BaseModel):
+    id: int
+    discipline: str
+    title: str
+    body_text: Optional[str]
+    guideline_type: str
+    check_key: Optional[str]
+    check_value: Optional[float]
+    unit: Optional[str]
+    version: int
+    is_active: bool
+    edited_by: Optional[str]
+    edited_at: Optional[str]
+
+
+class GuidelineEditIn(BaseModel):
+    title: Optional[str] = None
+    body_text: Optional[str] = None
+    check_value: Optional[float] = None
+    edited_by: str = "user"
+
+
+# ── DB helpers (reused by queue_worker for audit-time reads) ─────────────────
+
+def load_active_guidelines(engine: Engine) -> list[dict]:
+    """The active global guideline set, as plain dicts (engine handoff shape)."""
+    with Session(engine) as sess:
+        rows = sess.execute(
+            select(Guideline)
+            .where(Guideline.is_active == 1)
+            .order_by(Guideline.discipline, Guideline.id)
+        ).scalars().all()
+        return [r.to_dict() for r in rows]
+
+
+# ── Router factory ────────────────────────────────────────────────────────────
+
+def make_router(engine: Engine) -> APIRouter:
+    router = APIRouter(prefix="/guidelines", tags=["guidelines"])
+
+    def _session() -> Session:
+        return Session(engine)
+
+    # ── GET /guidelines — active set ──────────────────────────────────────────
+    @router.get("", response_model=list[GuidelineOut])
+    def list_guidelines():
+        return [GuidelineOut(**g) for g in load_active_guidelines(engine)]
+
+    # ── GET /guidelines/export-pdf ────────────────────────────────────────────
+    # Declared before /{gid} routes so the literal path wins.
+    @router.get("/export-pdf")
+    def export_guidelines_pdf():
+        rows = load_active_guidelines(engine)
+        html = _build_guidelines_html(rows)
+        pdf_bytes = _render_pdf(html)
+        return StreamingResponse(
+            io.BytesIO(pdf_bytes),
+            media_type="application/pdf",
+            headers={"Content-Disposition": 'attachment; filename="guidelines.pdf"'},
+        )
+
+    # ── POST /guidelines/{gid}/edit — insert version+1, flip is_active ────────
+    @router.post("/{gid}/edit", response_model=GuidelineOut, status_code=201)
+    def edit_guideline(gid: int, body: GuidelineEditIn):
+        with _session() as sess:
+            old = sess.get(Guideline, gid)
+            if old is None:
+                raise HTTPException(status_code=404, detail="הנחיה לא נמצאה")
+            if not old.is_active:
+                raise HTTPException(status_code=409, detail="ניתן לערוך רק את הגרסה הפעילה")
+
+            new_row = Guideline(
+                discipline=old.discipline,
+                title=body.title if body.title is not None else old.title,
+                body_text=body.body_text if body.body_text is not None else old.body_text,
+                guideline_type=old.guideline_type,
+                check_key=old.check_key,
+                check_value=body.check_value if body.check_value is not None else old.check_value,
+                unit=old.unit,
+                version=old.version + 1,
+                is_active=1,
+                edited_by=body.edited_by,
+                edited_at=datetime.now(timezone.utc),
+            )
+            old.is_active = 0
+            sess.add(new_row)
+            sess.commit()
+            sess.refresh(new_row)
+            return GuidelineOut(**new_row.to_dict())
+
+    # ── GET /guidelines/{gid}/history — all versions of this guideline ────────
+    @router.get("/{gid}/history", response_model=list[GuidelineOut])
+    def guideline_history(gid: int):
+        with _session() as sess:
+            anchor = sess.get(Guideline, gid)
+            if anchor is None:
+                raise HTTPException(status_code=404, detail="הנחיה לא נמצאה")
+            # Versions of one guideline share (discipline, title-lineage). The
+            # title itself is editable, so lineage is traced via check_key when
+            # present, else via (discipline, title).
+            if anchor.check_key:
+                cond = (Guideline.check_key == anchor.check_key,)
+            else:
+                cond = (Guideline.discipline == anchor.discipline,
+                        Guideline.title == anchor.title)
+            rows = sess.execute(
+                select(Guideline).where(*cond).order_by(Guideline.version.desc())
+            ).scalars().all()
+            return [GuidelineOut(**r.to_dict()) for r in rows]
+
+    return router
+
+
+# ── PDF helpers ───────────────────────────────────────────────────────────────
+
+def _resolve_font_dir() -> Path:
+    if getattr(sys, "frozen", False):
+        meipass = getattr(sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "assets" / "fonts"
+    return Path(__file__).resolve().parent.parent.parent.parent / "assets" / "fonts"
+
+
+_PDF_CSS = """
+@font-face {
+    font-family: "Heebo";
+    src: url("Heebo-Regular.ttf");
+    font-weight: 100 900;
+}
+@page {
+    size: A4;
+    margin: 2cm 2cm 2.5cm 2cm;
+    @bottom-right { content: element(pdf-footer); }
+}
+html { direction: rtl; }
+body {
+    font-family: "Heebo", "Arial Hebrew", sans-serif;
+    direction: rtl;
+    text-align: right;
+    font-size: 11pt;
+    color: #1a1a1a;
+}
+h1 { font-size: 18pt; margin-bottom: 4pt; }
+.meta { color: #555; font-size: 9pt; margin-bottom: 16pt; }
+.pdf-footer { position: running(pdf-footer); font-size: 8pt; color: #777;
+              direction: rtl; }
+h2 { font-size: 13pt; border-bottom: 1.5px solid #333; padding-bottom: 3pt;
+     margin-top: 18pt; margin-bottom: 6pt; }
+.guideline { margin-bottom: 10pt; padding: 6pt 10pt 6pt 6pt;
+             border-right: 3px solid #ccc; page-break-inside: avoid; }
+.guideline.checkable { border-right-color: #1a73e8; }
+.title { font-weight: bold; font-size: 11pt; }
+.badge { display: inline-block; font-size: 8pt; padding: 1pt 5pt;
+         border-radius: 3pt; margin-right: 6pt; }
+.badge-auto { background: #e8f0fe; color: #1a73e8; }
+.badge-manual { background: #f1f3f4; color: #666; }
+.value-line { color: #1a73e8; font-size: 10pt; margin-top: 3pt; }
+.body-text { color: #333; font-size: 10pt; margin-top: 4pt; white-space: pre-wrap; }
+.version { color: #999; font-size: 8pt; }
+"""
+
+
+def _build_guidelines_html(rows: list[dict]) -> str:
+    from html import escape
+
+    now_str = datetime.now().strftime("%d/%m/%Y")
+    max_version = max((g["version"] for g in rows), default=1)
+    parts = [
+        "<html><head><meta charset='utf-8'></head><body>",
+        f"<div class='pdf-footer'>הנחיות עירוניות · גרסה {max_version} · {now_str}</div>",
+        "<h1>הנחיות עירוניות להגשת תכנית עיצוב</h1>",
+        f"<p class='meta'>הופק: {now_str}</p>",
+    ]
+
+    by_discipline: dict[str, list[dict]] = {}
+    for r in rows:
+        by_discipline.setdefault(r["discipline"], []).append(r)
+
+    for disc, items in by_discipline.items():
+        parts.append(f"<h2>{escape(disc)}</h2>")
+        for g in items:
+            checkable = g["guideline_type"] == "checkable"
+            badge_cls = "badge-auto" if checkable else "badge-manual"
+            badge_label = "נבדקת אוטומטית" if checkable else "ידנית"
+            parts.append(f"<div class='guideline {g['guideline_type']}'>")
+            parts.append(
+                f"<div class='title'>{escape(g['title'])}"
+                f"<span class='badge {badge_cls}'>{badge_label}</span></div>"
+            )
+            if checkable and g["check_value"] is not None:
+                unit = escape(g["unit"] or "")
+                value = g["check_value"]
+                value_str = f"{value:g}"
+                parts.append(
+                    f"<div class='value-line'>ערך נדרש: {value_str} {unit} "
+                    f"<span class='version'>(גרסה {g['version']})</span></div>"
+                )
+            if g["body_text"]:
+                parts.append(f"<div class='body-text'>{escape(g['body_text'])}</div>")
+            if not checkable:
+                parts.append(f"<div class='version'>גרסה {g['version']}</div>")
+            parts.append("</div>")
+
+    parts.append("</body></html>")
+    return "\n".join(parts)
+
+
+def _render_pdf(html: str) -> bytes:
+    font_dir = _resolve_font_dir()
+    base_url = str(font_dir) + os.sep
+
+    if sys.platform == "win32" and getattr(sys, "frozen", False):
+        # Frozen Windows bundle deliberately does NOT include the weasyprint
+        # Python package — it ships Kozea's weasyprint.exe alongside the
+        # sidecar instead (same split as compliance_engine/report_generator).
+        import subprocess
+        import tempfile
+
+        exe = _resolve_weasyprint_exe()
+        with tempfile.TemporaryDirectory() as tmp:
+            html_path = Path(tmp) / "guidelines.html"
+            css_path = Path(tmp) / "style.css"
+            out_path = Path(tmp) / "out.pdf"
+            html_path.write_text(html, encoding="utf-8")
+            css_path.write_text(_PDF_CSS, encoding="utf-8")
+            subprocess.run(
+                [str(exe), "--stylesheet", str(css_path),
+                 "--base-url", base_url, str(html_path), str(out_path)],
+                check=True, capture_output=True,
+            )
+            return out_path.read_bytes()
+
+    from weasyprint import CSS as WeasyCSS, HTML as WeasyHTML
+    from weasyprint.text.fonts import FontConfiguration
+
+    font_config = FontConfiguration()
+    css_obj = WeasyCSS(string=_PDF_CSS, base_url=base_url, font_config=font_config)
+    buf = io.BytesIO()
+    WeasyHTML(string=html, base_url=base_url).write_pdf(
+        buf, stylesheets=[css_obj], font_config=font_config,
+    )
+    return buf.getvalue()
+
+
+def _resolve_weasyprint_exe() -> Path:
+    """Same lookup order as compliance_engine.report_generator."""
+    from compliance_engine.report_generator import _resolve_weasyprint_exe as _r
+    return _r()

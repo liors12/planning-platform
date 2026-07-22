@@ -17,7 +17,9 @@ interface Props {
   onProjectChanged: () => void;
 }
 
-type TabKey = "overview" | "submissions" | "findings" | "comments" | "cad_layers" | "guidelines" | "history" | "final";
+// "guidelines" was dropped from the per-project tabs — guidelines are GLOBAL
+// (city-wide) and live in their own top-level screen (#/guidelines).
+type TabKey = "overview" | "submissions" | "findings" | "comments" | "cad_layers" | "history" | "final";
 
 const TAB_LABELS: Record<TabKey, string> = {
   overview: "סקירה",
@@ -25,12 +27,11 @@ const TAB_LABELS: Record<TabKey, string> = {
   findings: "ממצאים",
   comments: "הערות רפרנטים",
   cad_layers: "שכבות CAD",
-  guidelines: "הנחיות",
   history: "היסטוריה",
   final: "חוות דעת",
 };
 
-const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "cad_layers", "guidelines", "history", "final"];
+const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "cad_layers", "history", "final"];
 
 export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Props) {
   const [project, setProject] = useState<ProjectOut | null>(null);
@@ -157,7 +158,6 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
         {tab === "cad_layers" && (
           <LayerMappingTab project={project} />
         )}
-        {tab === "guidelines" && <Placeholder badge="בקרוב" title="עורך הנחיות" desc="עריכת ערכי הסף של בדיקות התוכנה + יצירת גרסת מסמך דרישות מעודכן לאדריכל. יתווסף בעדכון הבא." />}
         {tab === "history" && <Placeholder badge="בקרוב" title="היסטוריה" desc="ציר זמן של כל הפעולות בפרויקט — יצירה, הגשות, ריצות בדיקה, עריכת הנחיות, החלטות מנהלי דיסציפלינה." />}
         {tab === "final" && <Placeholder badge="בקרוב" title="חוות דעת" desc="הפקת חוות הדעת הסופית עם שילוב משוב מנהלי הדיסציפלינות וחתימת מהנדס/ת המינהלת." />}
       </section>

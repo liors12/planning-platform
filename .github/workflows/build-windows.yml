@@ -855,6 +855,44 @@ jobs:
                 "keys=$($mtgBody.PSObject.Properties.Name -join ',')"
             }
 
+            # Probe 4: global guidelines (הנחיות) ────────────────────
+            # Proves the guidelines table seeded + router mounted in the
+            # PACKAGED bundle, and that export-pdf works via the bundled
+            # weasyprint.exe subprocess path (bundle-gap class of bugs).
+            $glRaw = Invoke-WebRequest -UseBasicParsing -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/guidelines"
+            Record "layer2: GET /guidelines → 200" `
+              ($glRaw.StatusCode -eq 200) "status=$($glRaw.StatusCode)"
+            if ($glRaw.StatusCode -eq 200) {
+              $glBody = [System.Text.Encoding]::UTF8.GetString($glRaw.RawContentStream.ToArray()) | ConvertFrom-Json
+              $glCount = if ($null -ne $glBody) { @($glBody).Count } else { 0 }
+              $glRailing = @($glBody) | Where-Object { $_.check_key -eq "glass_railing_min_height_cm" }
+              $railingCount = @($glRailing).Count
+              Record "layer2: guidelines seeded (non-empty, has glass railing)" `
+                ($glCount -gt 0 -and $railingCount -eq 1) "count=$glCount railing_rows=$railingCount"
+            } else {
+              Show-FailContext "http://127.0.0.1:17321/guidelines" $glRaw.StatusCode $glRaw.Content
+            }
+
+            $glPdfPath = Join-Path $env:RUNNER_TEMP "guidelines_export.pdf"
+            $glPdfRaw = Invoke-WebRequest -UseBasicParsing -SkipHttpErrorCheck `
+              -Uri "http://127.0.0.1:17321/guidelines/export-pdf" -OutFile $glPdfPath -PassThru
+            $glPdfOk = $false
+            $glPdfDetail = "status=$($glPdfRaw.StatusCode)"
+            if ($glPdfRaw.StatusCode -eq 200 -and (Test-Path $glPdfPath)) {
+              $glPdfBytes = [System.IO.File]::ReadAllBytes($glPdfPath)
+              $glPdfMagic = if ($glPdfBytes.Length -ge 4) {
+                [System.Text.Encoding]::ASCII.GetString($glPdfBytes[0..3])
+              } else { "" }
+              $glPdfOk = ($glPdfMagic -eq "%PDF") -and ($glPdfBytes.Length -gt 1000)
+              $glPdfDetail = "status=$($glPdfRaw.StatusCode) bytes=$($glPdfBytes.Length) magic=[$glPdfMagic]"
+            }
+            Record "layer2: GET /guidelines/export-pdf → valid PDF (weasyprint.exe path in bundle)" `
+              $glPdfOk $glPdfDetail
+            if (-not $glPdfOk) {
+              Show-FailContext "http://127.0.0.1:17321/guidelines/export-pdf" $glPdfRaw.StatusCode "<binary>"
+            }
+
             # ── 6.7. AI PIPELINE HEALTH PROBE ────────────────────────
             # GET /diag/ai — tests the frozen bundle directly.
             # Reports: gemini_sdk_importable, gemini_key_present, pymupdf_importable.
