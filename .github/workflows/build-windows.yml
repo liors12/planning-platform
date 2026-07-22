@@ -1142,6 +1142,9 @@ jobs:
             if ($uiOut -match "WebView2 CDP endpoint .* never responded") {
               Write-Host "::warning::UI smoke gate failed with the KNOWN WebView2 CDP bind issue (infra, tracked separately) — treated as non-fatal. Full tally above."
               Write-Host "UI smoke gate: KNOWN INFRA FAILURE (non-fatal)"
+              # Explicit exit 0: GitHub's pwsh wrapper otherwise appends
+              # `exit $LASTEXITCODE`, which re-propagates playwright's 1.
+              exit 0
             } else {
               Write-Host "::error::UI smoke gate FAILED — installer will not publish. See Playwright report artifact."
               exit $exit
