@@ -17,9 +17,10 @@ interface Props {
   onProjectChanged: () => void;
 }
 
-// "guidelines" was dropped from the per-project tabs — guidelines are GLOBAL
-// (city-wide) and live in their own top-level screen (#/guidelines).
-type TabKey = "overview" | "submissions" | "findings" | "comments" | "cad_layers" | "history" | "final";
+// Removed tabs: "guidelines" (now the GLOBAL top-level #/guidelines screen),
+// and the "history" / "final" placeholders — stubs confused non-technical
+// users; the report itself is produced from הגשות → "הפיקי דו״ח".
+type TabKey = "overview" | "submissions" | "findings" | "comments" | "cad_layers";
 
 const TAB_LABELS: Record<TabKey, string> = {
   overview: "סקירה",
@@ -27,11 +28,9 @@ const TAB_LABELS: Record<TabKey, string> = {
   findings: "ממצאים",
   comments: "הערות רפרנטים",
   cad_layers: "שכבות CAD",
-  history: "היסטוריה",
-  final: "חוות דעת",
 };
 
-const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "cad_layers", "history", "final"];
+const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "cad_layers"];
 
 export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Props) {
   const [project, setProject] = useState<ProjectOut | null>(null);
@@ -158,8 +157,6 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
         {tab === "cad_layers" && (
           <LayerMappingTab project={project} />
         )}
-        {tab === "history" && <Placeholder badge="בקרוב" title="היסטוריה" desc="ציר זמן של כל הפעולות בפרויקט — יצירה, הגשות, ריצות בדיקה, עריכת הנחיות, החלטות מנהלי דיסציפלינה." />}
-        {tab === "final" && <Placeholder badge="בקרוב" title="חוות דעת" desc="הפקת חוות הדעת הסופית עם שילוב משוב מנהלי הדיסציפלינות וחתימת מהנדס/ת המינהלת." />}
       </section>
       <DebugOverlay findings={findings} />
     </article>
@@ -271,12 +268,3 @@ function FindingsTabContent({
   );
 }
 
-function Placeholder({ badge, title, desc }: { badge: string; title: string; desc: string }) {
-  return (
-    <div className="card placeholder-card">
-      <span className="placeholder-phase">{badge}</span>
-      <h3>{title}</h3>
-      <p className="muted">{desc}</p>
-    </div>
-  );
-}
