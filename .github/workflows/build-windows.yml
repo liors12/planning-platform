@@ -1083,6 +1083,25 @@ jobs:
       # rollout plan — failures here surface but don't block publishing.
       # Promoted to a hard gate once it's stayed green across several
       # builds with no flaky failures. See tests/e2e-ui/README.md.
+      - name: Log WebView2 / Edge runtime versions
+        # QA campaign Attempt A: every attach attempt must record which
+        # runtime it ran against (the runner image auto-updates Edge/WebView2;
+        # the CDP bind regression appeared between Jun 29 and Jul 22).
+        shell: pwsh
+        run: |
+          $wv2Key = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+          $wv2 = (Get-ItemProperty -Path $wv2Key -ErrorAction SilentlyContinue).pv
+          Write-Host "WebView2 Evergreen runtime version: $wv2"
+          $edgeKey = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{56EB18F8-B008-4CBD-B6D2-8C97FE7E9062}"
+          $edge = (Get-ItemProperty -Path $edgeKey -ErrorAction SilentlyContinue).pv
+          Write-Host "Edge (stable) version: $edge"
+          Get-AppxPackage -Name "*WebView2*" -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host "Appx: $($_.Name) $($_.Version)" }
+          $exe = "C:\Program Files (x86)\Microsoft\EdgeWebView\Application"
+          if (Test-Path $exe) {
+            Get-ChildItem $exe -Directory | ForEach-Object { Write-Host "EdgeWebView folder: $($_.Name)" }
+          }
+
       - name: UI smoke gate (real WebView2)
         id: ui_smoke
         # Promoted to hard gate after 12+ green runs across P1→P5 with
