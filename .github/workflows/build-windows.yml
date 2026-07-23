@@ -1292,19 +1292,32 @@ jobs:
               -RedirectStandardOutput "$env:RUNNER_TEMP\msedgedriver.out.log" `
               -RedirectStandardError "$env:RUNNER_TEMP\msedgedriver.err.log"
             Start-Sleep -Seconds 2
+            # Correct WebView2-mode capability shape per Microsoft docs:
+            # browserName "webview2" + ms:edgeOptions.webviewOptions ({}) +
+            # binary = packaged exe. Log the exact JSON sent + any response
+            # body so a 400 is diagnosable.
             $caps2 = @{ capabilities = @{ alwaysMatch = @{
               browserName = "webview2"
-              "ms:edgeOptions" = @{ webview = "msWebView2"; binary = $exe }
-            } } } | ConvertTo-Json -Depth 6
+              "ms:edgeOptions" = @{
+                webviewOptions = @{}
+                binary = $exe
+              }
+            } } } | ConvertTo-Json -Depth 8
+            Write-Host "ATTEMPT-D-DIRECT: capabilities JSON:"
+            Write-Host $caps2
             try {
               $sess2 = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:9515/session" `
                 -ContentType "application/json" -Body $caps2 -TimeoutSec 120
               $sid2 = $sess2.value.sessionId
+              Write-Host "ATTEMPT-D-DIRECT: session created: $sid2"
               $title2 = (Invoke-RestMethod -Uri "http://127.0.0.1:9515/session/$sid2/title" -TimeoutSec 30).value
-              Write-Host "ATTEMPT-D-DIRECT: ATTACH OK — window title = [$title2]"
+              Write-Host "ATTEMPT-D-DIRECT: WEBVIEW2-DIRECT-WORKS — window title = [$title2]"
               Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:9515/session/$sid2" -TimeoutSec 30 | Out-Null
             } catch {
-              Write-Host "ATTEMPT-D-DIRECT: FAILED — $($_.Exception.Message)"
+              Write-Host "ATTEMPT-D-DIRECT: WEBVIEW2-DIRECT-DEAD — $($_.Exception.Message)"
+              if ($_.ErrorDetails -and $_.ErrorDetails.Message) {
+                Write-Host "ATTEMPT-D-DIRECT: response body: $($_.ErrorDetails.Message)"
+              }
               Get-Content "$env:RUNNER_TEMP\msedgedriver.out.log" -Tail 15 -ErrorAction SilentlyContinue | Write-Host
             }
             Stop-Process -Id $md.Id -Force -ErrorAction SilentlyContinue
