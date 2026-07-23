@@ -1184,6 +1184,9 @@ jobs:
           if-no-files-found: error
 
       - name: Compute release tag + title
+        # Release steps are gated to main/tags: a branch dispatch (e.g. the
+        # QA campaign) must never delete/replace the released installer.
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         # Tag form: v<version>-<UTC-date>-<short-sha>, e.g.
         # v0.1.0-20260612-4dee986. We pull <version> from tauri.conf.json so
         # bumping the app version in one place flows through to the tag.
@@ -1204,6 +1207,7 @@ jobs:
           echo "Title: ${title}"
 
       - name: Delete previous v0.1.0-* pre-releases
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         # Each successful build cuts a new prerelease tagged
         # v0.1.0-<date>-<sha>. Without cleanup the releases page grows
         # one entry per build — confusing for Ellen, who only ever wants
@@ -1232,6 +1236,7 @@ jobs:
           done <<< "$tags"
 
       - name: Create GitHub Release (pre-release)
+        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
         # Pre-release while we're still iterating on the pilot — the badge on
         # the releases page reads "Pre-release" so Ellen knows this isn't a
         # stamped 1.0. softprops/action-gh-release creates the git tag for
