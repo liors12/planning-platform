@@ -22,7 +22,7 @@ file first** — every phase updates the status table and findings log below.
 |-------|--------|------|---------|
 | 0 — infra | DONE | 2026-07-22 | Branch + this file + release steps gated to main/tags (branch dispatches must not clobber Ellen's release) |
 | 1 — attach | **GATE 1: BLOCKED** | 2026-07-23 | All sanctioned attempts exhausted; see verdict + fallback below |
-| 2 — suite | **GATE 2: DONE** | 2026-07-23 | Split-UI harness + 6 specs, all green, all red-green-proven (see Phase 2 section) |
+| 2 — suite | **GATE 2 (UPGRADED): DONE** | 2026-07-23 | Permanent 5-layer suite: Layer-0 gates (em-dash + jargon lexicon), Layer-1 states/affordances/DOM-leakage, Layer-2 viewport matrix, Layer-3 screenshots + codified judgment, F1-F6 flows — 17/17 green, gates self-tested (see Phase 2 upgraded section) |
 | 3 — run+triage | not started | | |
 | 4 — fix loop | not started | | |
 | 5 — skill | not started | | |
@@ -138,3 +138,83 @@ completion of that run.
 - **F-3 · sidecar teardown noise** — `sqlcipher3 ProgrammingError: SQLite
   objects created in a thread can only be used in that same thread` in sidecar
   logs during engine runs (non-fatal, worker-thread connection cleanup).
+
+## Phase 2 UPGRADED — permanent 5-layer suite (Gate 2, 2026-07-23)
+
+Prereq honored: fix/first-look-round1 merged to main (bd7d3d5) and this
+branch rebased onto it. CI: `.github/workflows/qa-suite.yml` runs Layer-0
+gates (ubuntu, pytest) + the full Playwright suite with screenshot artifacts
+on every push/PR to main.
+
+### Inventory (17/17 PASS locally; specs 4+5 skip honestly on CI - the 100MB
+pilot PDF is not committed, so real-audit flows run locally only)
+
+- **Layer 0a** em-dash gate `tests/test_no_emdash.py` - PASS. Self-test:
+  planted `—` in App.tsx → gate failed; removed → passed.
+- **Layer 0b** jargon lexicon `qa/jargon-lexicon.txt` + `tests/test_jargon_lexicon.py`
+  (+ whitelist `qa/jargon-whitelist.txt`) - PASS. On first run it caught 4 REAL
+  violations, all fixed: EngineStatus worker/MAX_CONCURRENT + subprocess/ADR
+  explainers → plain Hebrew; stderr label → פרטים טכניים; run-engine tooltip
+  'אין סכמה' → plain wording; Diagnostics 'סכמת פרויקט' label + '(sidecar)'
+  suffix; cad_compliance 'בסכמה' finding note → 'בנתוני התב"ע'. Self-test:
+  planted 'סכמה' → failed; removed → passed.
+- **Layer 1a/1b** `00-layer1-states.spec.ts` (6 tests) - dashboard seeded
+  render + pill emphasis; findings friendly empty state; CAD scan disabled +
+  hint; comments gated pre-audit; run-engine disabled without schema data;
+  guidelines+settings load. All PASS.
+- **Layer 1c** DOM-leakage afterEach (`fixtures.ts`) wired into EVERY spec -
+  markers: HTTP 4/5, "GET /", "POST /", "PATCH /", '"detail"', "→ HTTP".
+  Self-test: planted raw HTTP text into the home title → dashboard test
+  failed with "raw API text leaked"; removed → passed.
+- **Layer 2** `01-layer2-viewports.spec.ts` - 1024x700 + 1280x800 across
+  home/overview/submissions/findings/cad/guidelines/settings: no horizontal
+  overflow, no clipped button labels, sidebar footer in viewport. PASS.
+  Self-test: planted max-width:40px on action buttons → clipped-label
+  assertion failed; removed → passed.
+- **Layer 3a** `02-layer3-screenshots.spec.ts` - 10 screens x 2 viewports,
+  stable filenames under screenshots/, uploaded as CI artifacts. PASS.
+- **Layer 3b** codified judgment - dashboard counter emphasis (nonzero =
+  stage color, zero = ps-zero muted) asserted in layer1 dashboard test.
+- **F1-F6** flows - F1 guidelines edit+history (+ NEW export-pdf download
+  assertion, red-green: broke the export URL → download never fired → red;
+  restored → green), F2 create, F3 upload, F4 audit (הושלם), F5 findings
+  drawer, F6 report banner. Red-green proofs for F2-F6 recorded in the
+  earlier Phase-2 section; ordering fixed so layer specs run before flows
+  mutate the seed (screenshots capture pristine state).
+
+### Untestable in the split model (honest list)
+- Tauri shell / WebView2 packaging behavior (window creation, sidecar spawn
+  wiring, installer layout) - covered only by the 49 API probes + Layer 4
+  manual checklist.
+- Native OS dialogs (file-picker interactions beyond setInputFiles, shell
+  open/reveal of generated files).
+- Real-audit flows on CI (pilot PDF not committed) - run locally.
+
+## Layer 4 - packaged-app manual checklist (placeholder)
+
+10-minute pre-release walkthrough on the packaged Windows app. CONTENT TO BE
+DRAFTED BY LIOR AT RELEASE TIME. Slots: install/over-install, first boot,
+guidelines edit→audit→report cycle, one upload, findings + report open,
+window resize sanity, uninstall-data-survival.
+
+## Layer 5 - standing process rules
+
+1. **Every FLAG / AMBIGUOUS in any agent report becomes a numbered backlog
+   item in this file.** No verbal-only caveats.
+2. The jargon lexicon grows on every new finding (see qa/jargon-lexicon.txt).
+
+### Backlog (from prior FLAG/AMBIGUOUS items)
+
+- B-1 (AMBIGUOUS, UI audit 2026-07-22): "צפי בתכנון זמין ↗" mavat link relies
+  on the Tauri opener capability - verify one manual click on Windows.
+- B-2 (AMBIGUOUS, UI audit 2026-07-22): comparison badge "X/Y תוקנו" not yet
+  observed populated end-to-end on real architect-response data.
+- B-3 (PARTIAL, UI audit 2026-07-22): Anthropic key card removed from UI, but
+  the /settings backend still stores a key nothing consumes - decide drop/use.
+- B-4 (F-2): dev-mode render writes into the repo's audit_outputs/ instead of
+  the data dir.
+- B-5 (F-3): sqlcipher cross-thread teardown noise in sidecar logs during
+  engine runs (non-fatal).
+- B-6: WebView2-150 attach block (Phase 1) - revisit when a new runner image
+  or WebView2 fix ships; the harness pieces (tauri-driver probe steps) remain
+  on this branch's workflow for a quick retest.

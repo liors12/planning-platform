@@ -748,7 +748,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                     !sub.engine_run_available
                       ? "פעולה זו אינה זמינה בגרסה הנוכחית"
                       : !project.has_schema
-                      ? `לא ניתן להריץ - אין סכמה לתב"ע ${project.tava_number}`
+                      ? 'לא ניתן להריץ - נתוני התב"ע טרם נטענו לפרויקט זה'
                       : ""
                   }
                 >

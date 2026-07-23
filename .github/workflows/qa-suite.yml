@@ -1,0 +1,86 @@
+# QA campaign — permanent 5-layer suite (split model).
+# Layer 0 gates (em-dash + jargon) + Layers 1-3 (state/error, viewport
+# matrix, screenshots) + core flows F1-F6, against the Vite dev server and
+# the real sidecar with a fresh seeded DB. The packaged bundle stays covered
+# by build-windows.yml's API probes.
+name: QA Suite (dev-server UI)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'compliance_engine/**'
+      - 'tests/**'
+      - 'qa/**'
+      - '.github/workflows/qa-suite.yml'
+  pull_request:
+    branches: [main]
+
+jobs:
+  layer0-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Run convention gates (em-dash + jargon lexicon)
+        run: |
+          pip install --quiet pytest
+          python -m pytest tests/test_no_emdash.py tests/test_jargon_lexicon.py -q
+
+  ui-suite:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12', cache: 'pip' }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm', cache-dependency-path: app/frontend/package-lock.json }
+
+      - name: System deps (WeasyPrint pango stack + fonts)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-noto-core
+
+      - name: Python deps (sidecar + engine, no sqlcipher on CI)
+        run: |
+          grep -v "^sqlcipher3" app/sidecar/requirements.txt > /tmp/reqs.txt
+          pip install --quiet -r /tmp/reqs.txt weasyprint pypdf pytest
+
+      - name: Frontend deps
+        run: npm --prefix app/frontend ci --no-audit --no-fund
+
+      - name: Playwright
+        working-directory: tests/ui-dev
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Run the 5-layer suite
+        working-directory: tests/ui-dev
+        env:
+          PLATFORM_PYTHON: python3
+          QA_SUITE_PYTHON: python3
+        run: npx playwright test
+
+      - name: Upload screenshots (Layer 3 artifacts)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-suite-screenshots
+          path: tests/ui-dev/screenshots/**
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Upload traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-suite-traces
+          path: tests/ui-dev/test-results/**
+          if-no-files-found: ignore
+          retention-days: 14

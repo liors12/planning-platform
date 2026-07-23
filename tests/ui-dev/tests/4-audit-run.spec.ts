@@ -1,10 +1,11 @@
-import { test, expect } from "@playwright/test";
-import { stagePilotPdf } from "./helpers";
+import { test, expect } from "./fixtures";
+import { pilotPdfAvailable, stagePilotPdf } from "./helpers";
 
 // Test 4: run the engine on the seeded pilot submission (real PDF staged)
 // and wait for the הושלם status. Real audit ≈ 60-120s locally.
 
 test("audit run: pilot v24.3 completes", async ({ page }) => {
+  test.skip(!pilotPdfAvailable(), "pilot PDF not available (CI) - real-audit flow runs locally only");
   test.setTimeout(300_000);
   stagePilotPdf();
 

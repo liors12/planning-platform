@@ -1,0 +1,15 @@
+# Forbidden jargon in user-facing (Hebrew) strings — Layer 0b of the QA suite.
+# GROWS ON EVERY NEW FINDING: when a review or user session surfaces a new
+# jargon leak, add the term here; the gate (tests/test_jargon_lexicon.py)
+# fails CI on any occurrence in a Hebrew-containing string literal.
+# Whitelisting false positives: qa/jargon-whitelist.txt, lines of
+#   <path-substring>:<line-substring>
+סכמה
+schema
+subprocess
+ADR
+sidecar
+endpoint
+worker
+MAX_CONCURRENT
+stderr

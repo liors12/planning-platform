@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { stagePilotPdf } from "./helpers";
 
 // Test 6: generate the audit report PDF from the seeded pilot submission

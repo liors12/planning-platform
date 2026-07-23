@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 import { MIN_PDF } from "./helpers";
 
 // Test 3: create a project, upload a PDF, verify the submission card renders.

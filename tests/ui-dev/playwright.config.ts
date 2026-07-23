@@ -14,6 +14,9 @@ import path from "path";
 
 const REPO = path.resolve(__dirname, "../..");
 export const DATA_DIR = path.join(__dirname, ".qa-ui-data");
+// CI passes QA_SUITE_PYTHON=python3; local default is the Homebrew build
+// (WeasyPrint needs the Homebrew Pango stack on macOS).
+const PY = process.env.QA_SUITE_PYTHON ?? "/opt/homebrew/bin/python3.13";
 
 export default defineConfig({
   testDir: "./tests",
@@ -35,13 +38,13 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: `bash -c 'rm -rf "${DATA_DIR}" && mkdir -p "${DATA_DIR}" && cd ${REPO}/app/sidecar && exec /opt/homebrew/bin/python3.13 -m sidecar.main'`,
+      command: `bash -c 'rm -rf "${DATA_DIR}" && mkdir -p "${DATA_DIR}" && cd ${REPO}/app/sidecar && exec "${PY}" -m sidecar.main'`,
       url: "http://127.0.0.1:17321/health",
       reuseExistingServer: false,
       timeout: 60_000,
       env: {
         PLATFORM_DATA_DIR: DATA_DIR,
-        PLATFORM_PYTHON: "/opt/homebrew/bin/python3.13",
+        PLATFORM_PYTHON: PY,
       },
     },
   ],

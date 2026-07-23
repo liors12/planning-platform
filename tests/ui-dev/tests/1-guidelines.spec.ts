@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 // Test 1 (Ellen's new feature, highest priority): edit a guideline value
 // 105→110, verify version bump to 2, verify history shows both versions.
@@ -31,4 +31,17 @@ test("guidelines: edit 105→110 creates version 2; history shows both", async (
   await expect(history).toBeVisible();
   await expect(history).toContainText("110");
   await expect(history).toContainText("105");
+});
+
+test("guidelines: export-pdf downloads a real PDF", async ({ page }) => {
+  await page.goto("/#/guidelines");
+  const downloadPromise = page.waitForEvent("download");
+  await page.getByTestId("guidelines-pdf-download").click();
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const c of stream) chunks.push(c as Buffer);
+  const buf = Buffer.concat(chunks);
+  expect(buf.length).toBeGreaterThan(1000);
+  expect(buf.subarray(0, 4).toString("ascii")).toBe("%PDF");
 });
