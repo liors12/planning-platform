@@ -1121,12 +1121,13 @@ jobs:
           # msi -> setup exe / cab -> MSEDGE.7z -> Application\<ver>\msedge.exe
           New-Item -ItemType Directory -Force -Path $dst | Out-Null
           & 7z x $msi -o"$dst\l0" -y | Select-Object -Last 2 | Write-Host
-          for ($depth = 0; $depth -lt 3; $depth++) {
+          for ($depth = 0; $depth -lt 4; $depth++) {
             if (Get-ChildItem -Path $dst -Recurse -Filter msedge.exe -ErrorAction SilentlyContinue) { break }
             # The MSI stores the setup exe extension-less in the Binary table
             # (Binary.MicrosoftEdgeInstaller) — match any large file, not just
             # known archive extensions; 7z sniffs the format from content.
-            $archives = Get-ChildItem -Path "$dst\l$depth" -Recurse -File -ErrorAction SilentlyContinue |
+            # Level dirs are l0, l1-0, l1-1, l2-0... — match by prefix glob.
+            $archives = Get-ChildItem -Path "$dst\l$depth*" -Recurse -File -ErrorAction SilentlyContinue |
               Where-Object { $_.Length -gt 10MB }
             $i = 0
             foreach ($a in $archives) {
