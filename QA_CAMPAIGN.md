@@ -236,3 +236,23 @@ window resize sanity, uninstall-data-survival.
 - B-6: WebView2-150 attach block (Phase 1) - revisit when a new runner image
   or WebView2 fix ships; the harness pieces (tauri-driver probe steps) remain
   on this branch's workflow for a quick retest.
+- B-7 (Phase 3, 2026-07-23, dev-only): 3 pytest failures in
+  tests/test_content_compliance_determinism.py (unit_count_missing_data,
+  parking_deferred_when_status_is_deferred, no_api_key_yields_unevaluable) -
+  engine determinism expectations without an API key; do not block releases.
+- B-8 (Phase 3, 2026-07-23, dev-only): tests/ui-dev/.qa-ui-data/platform.db-shm
+  and .db-wal were accidentally committed in PR #17; the test data dir is
+  wiped each run so they churn git status on every suite run. Remove from the
+  index + gitignore.
+- B-9 (Phase 3, 2026-07-23, dev-only): Layer-3 screenshots contain upload
+  timestamps, so submissions/overview screenshots churn on every fresh-seed
+  run even with no UI change. Consider masking timestamps at capture time.
+
+## Phase 3 — full systematic run (2026-07-23, post F-1 fix, main 6c4fea3)
+
+Fresh wipe+seed on main. Results: pytest 103 passed / 3 failed (B-7, known
+dev-only); ui-dev 18/18; ui-fixes 4/4; layer-0 gates 3/3; frontend build +
+tsc clean; real engine audit on the pilot completed inside spec 4 (1.6m).
+Zero blocks-Ellen failures. Screenshot refresh committed (findings tab now
+renders findings on fresh seed - the F-1 truth change); B-7/B-8/B-9 logged,
+not fixed, per triage policy.
