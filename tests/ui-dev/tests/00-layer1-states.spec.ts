@@ -58,7 +58,7 @@ test("run-engine affordance: disabled without schema data", async ({ page, reque
 
 test("guidelines + settings: load without errors", async ({ page }) => {
   await page.goto("/#/guidelines");
-  await expect(page.getByTestId("guideline-row-1")).toBeVisible();
+  await expect(page.locator('[data-check-key="glass_railing_min_height_cm"]')).toBeVisible();
   await page.goto("/#/settings");
   await expect(page.getByTestId("gemini-key-missing").or(page.getByTestId("gemini-key-set"))).toBeVisible();
 });

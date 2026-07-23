@@ -57,5 +57,5 @@ test("G: guidelines route renders via sidebar link", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("sidebar-guidelines-link").click();
   await expect(page).toHaveURL(/#\/guidelines$/);
-  await expect(page.getByTestId("guideline-row-1")).toBeVisible();
+  await expect(page.locator('[data-check-key="glass_railing_min_height_cm"]')).toBeVisible();
 });

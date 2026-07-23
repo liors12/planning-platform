@@ -46,7 +46,7 @@ for (const vp of VIEWPORTS) {
     await assertLayoutIntegrity(page, "cad");
 
     await page.goto("/#/guidelines");
-    await expect(page.getByTestId("guideline-row-1")).toBeVisible();
+    await expect(page.locator('[data-check-key="glass_railing_min_height_cm"]')).toBeVisible();
     await assertLayoutIntegrity(page, "guidelines");
 
     await page.goto("/#/settings");

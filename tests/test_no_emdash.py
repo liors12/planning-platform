@@ -28,6 +28,7 @@ def _frontend_files():
 def _python_files():
     yield from (ROOT / "app/sidecar/sidecar").rglob("*.py")
     yield from (ROOT / "compliance_engine").glob("*.py")
+    yield ROOT / "app/sidecar/seed/guidelines_seed.json"
 
 
 def test_no_emdash_in_frontend_sources():
