@@ -126,7 +126,14 @@ completion of that run.
 
 ### Findings for Gate 3/4 (not fixed in Phase 2)
 
-- **F-1 · fresh-install ממצאים tab errors** — the seed ships `audit_outputs`
+- **F-1 · FIXED (fix/f1-seed-findings, 2026-07-23)** — (b) was fixed by
+  round-1 item 6 (friendly Hebrew empty state on the exact 409 signature);
+  (a) fixed at the seed layer: `_discover_submissions` now stages
+  `findings.json` from the bundled audit_results on insert AND heals
+  pre-existing complete rows whose findings are unrecorded or missing on
+  disk. Fresh install renders findings immediately; the 409 empty-state
+  contract stays pinned by a route-interception test. Original finding:
+  the seed ships `audit_outputs`
   (`has_audit_results=true`, report generation works) but NOT `findings.json`,
   so `GET /submissions/1/findings` 409s until an engine run — and the UI
   surfaces the raw English error string ("Error: GET /submissions/1/findings →

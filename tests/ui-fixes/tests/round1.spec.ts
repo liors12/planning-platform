@@ -13,11 +13,14 @@ async function assertNoRawApiText(page: Page) {
   }
 }
 
-test("item 6: findings tab shows friendly empty state, no raw 409", async ({ page }) => {
+test("item 6: findings tab renders without raw API text", async ({ page }) => {
+  // Post-F-1: the seed stages findings.json, so the tab shows real findings
+  // (not the empty state). The invariant under test is unchanged - no raw
+  // English API error ever reaches the screen.
   await page.goto("/");
   await page.getByTestId("home-project-link-407-1048248").click();
   await page.getByTestId("tab-findings").click();
-  await expect(page.getByTestId("findings-empty-state")).toBeVisible();
+  await expect(page.locator('[data-section="disciplines"]')).toBeVisible();
   await assertNoRawApiText(page);
 });
 

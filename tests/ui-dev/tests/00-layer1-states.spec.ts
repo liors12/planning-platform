@@ -14,7 +14,30 @@ test("dashboard: renders seeded pilot; zero-count pills muted, nonzero emphasize
   }
 });
 
-test("findings: fresh seed shows the friendly no-findings state", async ({ page }) => {
+test("findings: fresh seed renders findings immediately (F-1 fix)", async ({ page }) => {
+  // The seed stages findings.json from the bundled audit_results, so a
+  // fresh install shows real findings with no engine run and no 409.
+  await page.goto("/");
+  await page.getByTestId("home-project-link-407-1048248").click();
+  await page.getByTestId("tab-findings").click();
+  await expect(page.locator('[data-section="disciplines"]')).toBeVisible();
+  await expect(page.locator('[data-section="content"]')).toBeVisible();
+  await expect(page.locator('[data-section="format"]')).toBeVisible();
+});
+
+test("findings: a no-findings 409 still renders the friendly empty state", async ({ page }) => {
+  // The 409 path no longer occurs on a fresh seed, but it remains reachable
+  // (e.g. findings deleted on disk between engine runs). Pin the UI contract
+  // by intercepting the findings request with the exact sidecar signature.
+  await page.route("**/submissions/*/findings", (route) =>
+    route.fulfill({
+      status: 409,
+      contentType: "application/json",
+      body: JSON.stringify({
+        detail: "submission 1 has no findings yet (status='complete'). POST /submissions/{id}/run-engine first.",
+      }),
+    }),
+  );
   await page.goto("/");
   await page.getByTestId("home-project-link-407-1048248").click();
   await page.getByTestId("tab-findings").click();
