@@ -244,6 +244,11 @@ window resize sanity, uninstall-data-survival.
   and .db-wal were accidentally committed in PR #17; the test data dir is
   wiped each run so they churn git status on every suite run. Remove from the
   index + gitignore.
+- B-10 (release v0.1.1, 2026-07-23): the release-upload glob
+  ("Planning Platform*x64-setup.exe") also matched the previous version's
+  exe restored from the actions cache, attaching a stale 0.1.0 asset to the
+  v0.1.1 release (removed manually). Pin the glob to the current version
+  from tauri.conf.json or clean bundle/nsis before building.
 - B-9 (Phase 3, 2026-07-23, dev-only): Layer-3 screenshots contain upload
   timestamps, so submissions/overview screenshots churn on every fresh-seed
   run even with no UI change. Consider masking timestamps at capture time.
