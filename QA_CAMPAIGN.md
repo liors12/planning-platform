@@ -22,7 +22,7 @@ file first** — every phase updates the status table and findings log below.
 |-------|--------|------|---------|
 | 0 — infra | DONE | 2026-07-22 | Branch + this file + release steps gated to main/tags (branch dispatches must not clobber Ellen's release) |
 | 1 — attach | **GATE 1: BLOCKED** | 2026-07-23 | All sanctioned attempts exhausted; see verdict + fallback below |
-| 2 — suite | not started | | |
+| 2 — suite | **GATE 2: DONE** | 2026-07-23 | Split-UI harness + 6 specs, all green, all red-green-proven (see Phase 2 section) |
 | 3 — run+triage | not started | | |
 | 4 — fix loop | not started | | |
 | 5 — skill | not started | | |
@@ -95,3 +95,46 @@ route can work against it.
 fallback options (owner decision): (1) runner-image pin / windows-2022 try;
 (2) split UI QA — dev-server Playwright for UI logic + existing 49 API
 probes for the bundle; (3) wait out a runtime fix / file upstream issue.
+
+## Phase 2 — split-UI test suite (Gate 2, 2026-07-23)
+
+Harness: `tests/ui-dev/` — Playwright (Chromium) against the Vite dev server
+(1420) + real sidecar (17321) with a FRESH wiped+seeded data dir per run
+(`playwright.config.ts` webServer array). Selectors are data-testid only.
+Suite runs serially (workers=1); spec 5 arranges its own precondition via
+API when run standalone.
+
+**Accepted gap:** does NOT cover Tauri shell / WebView2 packaging. The
+packaged bundle stays covered by the 49 CI API-level probes.
+
+| # | Spec | Covers | Status | RED proof (feature broken → test fails) | GREEN |
+|---|------|--------|--------|------------------------------------------|-------|
+| 1 | 1-guidelines | Edit 105→110 → גרסה 2 + history shows both | PASS | Sabotaged `version=old.version` (no bump) in guidelines.py → `toContainText` failed on version marker | 1 passed |
+| 2 | 2-create-project | Manual create → redirect to workspace | PASS | Removed post-create `navigate()` → `toHaveURL` failed | 1 passed |
+| 3 | 3-upload | New project + PDF upload → card renders | PASS | Removed post-upload `refresh()` → card `element(s) not found` | 1 passed |
+| 4 | 4-audit-run | הפעילי את התוכנה → analyzing → הושלם (real engine) | PASS | Sabotaged run_audit job (exit 2) → `Expected "complete", Received "failed"` | 1 passed (1.6m) |
+| 5 | 5-findings | 3 sections render + drawer opens | PASS | Removed the format section from FindingsView → `element(s) not found` | 1 passed |
+| 6 | 6-report | הפיקי דו״ח → success banner | PASS | Sabotaged --render-only (exit 2) → success banner never appeared | 1 passed |
+
+Tests that couldn't be written: none of the six scoped flows was blocked.
+
+**Red-green byproduct — a real test bug caught and fixed:** spec 4 originally
+asserted `data-status == "complete"` directly and PASSED against a sabotaged
+engine in 2.5s — the seed ships the pilot as status=complete, so the assert
+raced the click. Fixed to require the `analyzing` transition first, then
+completion of that run.
+
+### Findings for Gate 3/4 (not fixed in Phase 2)
+
+- **F-1 · fresh-install ממצאים tab errors** — the seed ships `audit_outputs`
+  (`has_audit_results=true`, report generation works) but NOT `findings.json`,
+  so `GET /submissions/1/findings` 409s until an engine run — and the UI
+  surfaces the raw English error string ("Error: GET /submissions/1/findings →
+  HTTP 409: …"). Two sub-issues: (a) seed inconsistency, (b) raw technical
+  English leaked to Ellen (violates the Hebrew-only rule).
+- **F-2 · dev-mode render writes into the repo** — the render job's legacy
+  positional path writes `audit_outputs/` at the REPO root in dev (frozen
+  Windows uses the data dir). Dev-only annoyance; noted.
+- **F-3 · sidecar teardown noise** — `sqlcipher3 ProgrammingError: SQLite
+  objects created in a thread can only be used in that same thread` in sidecar
+  logs during engine runs (non-fatal, worker-thread connection cleanup).

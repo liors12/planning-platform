@@ -17,6 +17,10 @@ test("audit run: pilot v24.3 completes", async ({ page }) => {
   await runBtn.click();
 
   const status = page.getByTestId("submission-status-v24.3");
-  // analyzing first, then complete. Poll the data-status attribute.
+  // The seed ships the pilot as status=complete, so asserting "complete"
+  // directly races the click (red-cycle proof caught this). Require the
+  // analyzing transition FIRST — proves a new run actually started — then
+  // completion of THAT run.
+  await expect(status).toHaveAttribute("data-status", "analyzing", { timeout: 30_000 });
   await expect(status).toHaveAttribute("data-status", "complete", { timeout: 280_000 });
 });
