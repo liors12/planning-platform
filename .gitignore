@@ -55,6 +55,8 @@ submissions/
 projects/*
 !projects/407-1048248/
 projects/407-1048248/*
+!projects/407-1048248/project-schema-407-1048248-v2.json
+!projects/407-1048248/_project.json
 !projects/407-1048248/submissions/
 projects/407-1048248/submissions/*
 !projects/407-1048248/submissions/v24.3/
