@@ -45,7 +45,8 @@ from .layer_mappings import make_router as make_layer_mappings_router
 from .models import Project, Submission
 from .projects import make_router as make_projects_router
 from .queue_worker import EngineQueue
-from .submissions import make_routers as make_submission_routers
+from .storage import findings_path
+from .submissions import _audit_results_path, make_routers as make_submission_routers
 
 logging.basicConfig(
     level=logging.INFO,
@@ -108,6 +109,25 @@ def _seed_data_dir(cfg: Config) -> dict:
         copied += 1
     return {"seed_dir": str(seed_dir), "copied": copied,
             "skipped_existing": skipped}
+
+
+def _stage_seed_findings(cfg: Config, tava: str, version_string: str) -> str | None:
+    """F-1 consistency: the bundled seed ships audit_results for the pilot but
+    historically NOT findings.json, so a fresh install's ממצאים tab 409'd
+    until the first engine run. The seeded audit_results file has the same
+    shape the findings endpoint serves (format/content/disciplines lists), so
+    materialize it as the canonical findings.json and return the path to
+    record on the Submission row. Returns None when the seed shipped no
+    audit results for this submission. Idempotent — never overwrites an
+    existing findings.json (which is always a real engine run's output)."""
+    src = _audit_results_path(cfg, tava, version_string)
+    if src is None:
+        return None
+    dest = findings_path(cfg, tava, version_string)
+    if not dest.exists():
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+    return str(dest)
 
 
 def _discover_projects(cfg: Config, engine: Engine) -> dict:
@@ -220,7 +240,7 @@ def _discover_submissions(cfg: Config, engine: Engine) -> dict:
     if not projects_root.exists():
         return {"discovered": 0, "inserted": 0, "skipped_existing": 0}
 
-    discovered = inserted = skipped = 0
+    discovered = inserted = skipped = healed = 0
     with Session(engine) as sess:
         for proj_dir in sorted(projects_root.iterdir()):
             if not proj_dir.is_dir():
@@ -274,6 +294,16 @@ def _discover_submissions(cfg: Config, engine: Engine) -> dict:
                                         Submission.version_string.in_([version_string, bare]))
                                 .first())
                 if existing is not None:
+                    # Heal pre-existing rows (e.g. Ellen's install from
+                    # before the F-1 fix): complete but with no findings
+                    # recorded, while the seeded audit_results sit on disk.
+                    if (existing.status == "complete"
+                            and (existing.findings_json_path is None
+                                 or not Path(existing.findings_json_path).exists())):
+                        staged = _stage_seed_findings(cfg, tava, version_string)
+                        if staged is not None:
+                            existing.findings_json_path = staged
+                            healed += 1
                     skipped += 1
                     continue
                 pdf_leaf = meta.get("file_name") or f"{version_string}.pdf"
@@ -285,7 +315,8 @@ def _discover_submissions(cfg: Config, engine: Engine) -> dict:
                 #   - report buttons gate on has_audit_results (audit_outputs
                 #     are seeded), not on pdf_path existing
                 #   - comments tab gates on has_audit_results
-                #   - findings tab gates on status (set below to "complete")
+                #   - findings tab reads findings.json, staged below from
+                #     the seeded audit_results (F-1 consistency fix)
                 # The one degraded surface is the in-app PDF side viewer,
                 # which 404s until the original plan PDF gets onto disk at
                 # this path. The user-side path to repair: delete the
@@ -305,12 +336,14 @@ def _discover_submissions(cfg: Config, engine: Engine) -> dict:
                     version_string=version_string,
                     status="complete",
                     pdf_path=str(pdf_path),
+                    findings_json_path=_stage_seed_findings(
+                        cfg, tava, version_string),
                 ))
                 inserted += 1
-        if inserted:
+        if inserted or healed:
             sess.commit()
     return {"discovered": discovered, "inserted": inserted,
-            "skipped_existing": skipped}
+            "skipped_existing": skipped, "healed_findings": healed}
 
 
 @asynccontextmanager
