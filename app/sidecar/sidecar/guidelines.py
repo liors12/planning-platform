@@ -43,6 +43,9 @@ class GuidelineOut(BaseModel):
     is_active: bool
     edited_by: Optional[str]
     edited_at: Optional[str]
+    section_key: Optional[str] = None
+    section_title: Optional[str] = None
+    sort_order: Optional[int] = None
 
 
 class GuidelineEditIn(BaseModel):
@@ -60,7 +63,7 @@ def load_active_guidelines(engine: Engine) -> list[dict]:
         rows = sess.execute(
             select(Guideline)
             .where(Guideline.is_active == 1)
-            .order_by(Guideline.discipline, Guideline.id)
+            .order_by(Guideline.sort_order.is_(None), Guideline.sort_order, Guideline.id)
         ).scalars().all()
         return [r.to_dict() for r in rows]
 
@@ -113,6 +116,9 @@ def make_router(engine: Engine) -> APIRouter:
                 is_active=1,
                 edited_by=body.edited_by,
                 edited_at=datetime.now(timezone.utc),
+                section_key=old.section_key,
+                section_title=old.section_title,
+                sort_order=old.sort_order,
             )
             old.is_active = 0
             sess.add(new_row)
@@ -227,7 +233,8 @@ def _build_guidelines_html(rows: list[dict]) -> str:
 
     by_discipline: dict[str, list[dict]] = {}
     for r in rows:
-        by_discipline.setdefault(r["discipline"], []).append(r)
+        group = r.get("section_title") or r["discipline"]
+        by_discipline.setdefault(group, []).append(r)
 
     header = (
         "<thead><tr>"

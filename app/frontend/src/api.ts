@@ -920,6 +920,9 @@ export interface GuidelineOut {
   is_active: boolean;
   edited_by: string | null;
   edited_at: string | null;
+  section_key: string | null;
+  section_title: string | null;
+  sort_order: number | null;
 }
 
 export interface GuidelineEditPayload {

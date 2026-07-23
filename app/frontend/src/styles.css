@@ -2008,3 +2008,5 @@ code, .path {
 .ps-verified:not(.ps-zero) .ps-count { color: #15803d; }
 .layer-mapping-scan { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
 .layer-mapping-scan-hint { font-size: 12px; }
+.guidelines-section-summary { cursor: pointer; list-style-position: inside; }
+details.guidelines-group > summary::-webkit-details-marker { margin-inline-start: 4px; }

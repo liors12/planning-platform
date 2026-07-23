@@ -573,11 +573,19 @@ class Guideline(Base):
     is_active: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
     edited_by: Mapped[Optional[str]] = mapped_column(String(128), nullable=True)
     edited_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    # Document-structure fields (full-seed): the guidelines screen mirrors the
+    # approved municipal document - its own parts, in its own order.
+    section_key: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    section_title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    sort_order: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     def to_dict(self) -> dict:
         return {
             "id": self.id,
             "discipline": self.discipline,
+            "section_key": self.section_key,
+            "section_title": self.section_title,
+            "sort_order": self.sort_order,
             "title": self.title,
             "body_text": self.body_text,
             "guideline_type": self.guideline_type,
