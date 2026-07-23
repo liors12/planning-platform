@@ -50,7 +50,18 @@ app/tauri/binaries/
 # The canonical regression baseline tests/regression/v8j_baseline_v24.3.json
 # IS committed — it lives outside these dirs.
 submissions/
-projects/
+# Pilot metadata + overlays (small JSONs) are committed so the QA suite's
+# report-render flow (spec 6) runs on CI; the 100MB PDF stays untracked.
+projects/*
+!projects/407-1048248/
+projects/407-1048248/*
+!projects/407-1048248/submissions/
+projects/407-1048248/submissions/*
+!projects/407-1048248/submissions/v24.3/
+projects/407-1048248/submissions/v24.3/*
+!projects/407-1048248/submissions/v24.3/metadata.json
+!projects/407-1048248/submissions/v24.3/extracts.json
+!projects/407-1048248/submissions/v24.3/discipline_findings.json
 # Sidecar pilot-seed descriptors — small JSONs (≤350 KB total) bundled into
 # the installer + copied to %LOCALAPPDATA% on first run so the app boots
 # with the pilot project visible. Whitelisted explicitly so we don't open
