@@ -488,6 +488,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               <input
                 type="text"
                 value={version}
+                data-testid="upload-version"
                 onChange={(e) => {
                   setVersion(e.target.value);
                   if (validationErr && e.target.value.trim()) setValidationErr(null);
@@ -502,6 +503,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               <input
                 ref={fileInputRef}
                 type="file"
+                data-testid="upload-pdf"
                 accept=".pdf,application/pdf"
                 onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                 disabled={uploading}
@@ -531,6 +533,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
             <button
               type="submit"
               className="primary-btn"
+              data-testid="upload-submit"
               disabled={uploading}
             >
               {uploading ? (
@@ -651,9 +654,11 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   </div>
                 </div>
                 <div className="submission-header-right">
-                  <Pill kind={SUB_STATUS_KIND[sub.status] ?? "queued"}>
-                    {SUB_STATUS_LABEL_HE[sub.status] ?? sub.status}
-                  </Pill>
+                  <span data-testid={`submission-status-${sub.version_string}`} data-status={sub.status}>
+                    <Pill kind={SUB_STATUS_KIND[sub.status] ?? "queued"}>
+                      {SUB_STATUS_LABEL_HE[sub.status] ?? sub.status}
+                    </Pill>
+                  </span>
                   {/* Trash button: lets Ellen self-recover from a bad
                       upload without needing dev SQL surgery. Disabled
                       mid-analysis so we don't delete a row whose job
@@ -736,6 +741,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               <div className="submission-actions">
                 <button
                   className="primary-btn"
+                  data-testid={`run-engine-${sub.version_string}`}
                   onClick={() => onRunEngine(sub.id)}
                   disabled={!canRunEngine || !!activeJobId || sub.status === "analyzing"}
                   title={

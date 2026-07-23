@@ -342,7 +342,9 @@ function FindingRow({
   const displayName = (rule.rule_name_he ?? "").trim() || "סעיף ללא שם";
 
   return (
-    <li className={"finding-row" + (expanded ? " expanded" : "")} onClick={onRowClick}>
+    <li className={"finding-row" + (expanded ? " expanded" : "")}
+        data-testid={`finding-row-${rule.rule_code}${rule.ta_shetach_id ? "-" + rule.ta_shetach_id : ""}`}
+        onClick={onRowClick}>
       <div className="finding-row-main">
         <span className={"verdict-badge " + verdictClass}>{verdictLabel}</span>
         <div className="finding-row-body">
@@ -374,6 +376,7 @@ function FindingRow({
           className="row-expand-btn"
           onClick={(e) => { e.stopPropagation(); setExpanded((x) => !x); }}
           aria-label={expanded ? "סגרי פרטים" : "פתחי פרטים"}
+          data-testid={`finding-expand-${rule.rule_code}${rule.ta_shetach_id ? "-" + rule.ta_shetach_id : ""}`}
           aria-expanded={expanded}
         >
           {expanded ? "⌄" : "›"}

@@ -103,9 +103,6 @@ audit_outputs/*/
 # Exception: per-project takanon CAD source files are the system-of-record
 # for plot geometry (Phase 7.1). Whitelist the small canonical DWGs while
 # keeping derived DXFs ignored (they regenerate from the DWGs in ~1.4 s).
-!data/projects/*/takanon_cad/
-!data/projects/*/takanon_cad/*.dwg
-!data/projects/*/takanon_cad/*.DWG
 !tests/fixtures/*.dxf
 
 # ── Fonts ─────────────────────────────────────────────────────────────
@@ -141,3 +138,7 @@ Thumbs.db
 tests/ui-fixes/.qa-fixes-data/
 tests/ui-fixes/node_modules/
 tests/ui-fixes/test-results/
+tests/ui-dev/.qa-ui-data/
+tests/ui-dev/node_modules/
+tests/ui-dev/test-results/
+tests/ui-dev/playwright-report/
