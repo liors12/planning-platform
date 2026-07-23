@@ -23,7 +23,7 @@ MIGRATION_SQL = ROOT / "migrations" / "0001_feedback_tables.sql"
 
 SEED_DISCIPLINES: list[tuple[str, str, str]] = [
     # (discipline_code, discipline_name_he, manager_name_he)
-    ("shafa",    "שפ\"ע — אשפה ופינוי פסולת",       "אגף שפ\"ע"),
+    ("shafa",    "שפ\"ע - אשפה ופינוי פסולת",       "אגף שפ\"ע"),
     ("gardens",  "גנים ונוף",                        "אגף גנים ונוף"),
     ("infra",    "תשתיות",                           "אגף בינוי פיתוח ותשתיות (אברהם הורן)"),
     ("fire",     "רחבות כיבוי אש",                    "תאגיד מים וביוב"),

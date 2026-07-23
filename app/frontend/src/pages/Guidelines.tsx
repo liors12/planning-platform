@@ -6,8 +6,9 @@ import {
   listGuidelines,
   type GuidelineOut,
 } from "../api";
+import { MaybeApiError } from "../components/ErrorNotice";
 
-// Global guidelines editor — city-wide submission rules (NOT project-keyed).
+// Global guidelines editor - city-wide submission rules (NOT project-keyed).
 // Editing creates version+1; history stays queryable.
 
 export function Guidelines() {
@@ -38,7 +39,7 @@ export function Guidelines() {
           <h1>הנחיות עירוניות</h1>
           <p className="muted">
             הנחיות ההגשה החלות על כל תכניות העיצוב בעיר. עריכת ערך יוצרת גרסה
-            חדשה — הבדיקה האוטומטית הבאה תשתמש בערך המעודכן.
+            חדשה - הבדיקה האוטומטית הבאה תשתמש בערך המעודכן.
           </p>
         </div>
         <a
@@ -51,7 +52,7 @@ export function Guidelines() {
         </a>
       </header>
 
-      {err && <div className="error">{err}</div>}
+      {err && <MaybeApiError error={err} title="לא ניתן לטעון את ההנחיות" />}
       {!rows && !err && <p className="muted">טוענת...</p>}
       {rows && rows.length === 0 && (
         <p className="muted">אין הנחיות מוגדרות עדיין.</p>
@@ -177,7 +178,7 @@ function EditDialog({
                    data-testid="guideline-edit-value" />
           </label>
         )}
-        {err && <div className="error">{err}</div>}
+        {err && <MaybeApiError error={err} title="לא ניתן לטעון את ההנחיות" />}
         <div className="modal-actions">
           <button type="button" className="primary-btn" disabled={saving}
                   onClick={onSave} data-testid="guideline-edit-save">
@@ -211,8 +212,8 @@ function HistoryDialog({
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box" onClick={(e) => e.stopPropagation()}>
-        <h2 className="card-title">היסטוריית גרסאות — {guideline.title}</h2>
-        {err && <div className="error">{err}</div>}
+        <h2 className="card-title">היסטוריית גרסאות - {guideline.title}</h2>
+        {err && <MaybeApiError error={err} title="לא ניתן לטעון את ההנחיות" />}
         {!versions && !err && <p className="muted">טוענת...</p>}
         {versions && (
           <ul className="guideline-history-list" data-testid="guideline-history-list">

@@ -39,7 +39,7 @@ VALID_ROLES = {
     "AREA_ZONES",           # RZ_AREA — polygons tagged with USAGE_TYPE
     "FLOOR_DEFINITION",     # RZ_FLOOR
     "PRINT_FRAME",          # RZ_FRAME
-    "BUILDING_COVERAGE",    # RZ_LANCOVER — ground coverage (תכסית)
+    "BUILDING_COVERAGE",    # RZ_LANCOVER - ground coverage (תכסית)
     "GEOGRAPHIC_ANCHOR",    # RZ_ANCHOR
     # Geometric roles (used by compliance checks)
     "PLOT_BOUNDARY",
@@ -277,7 +277,7 @@ def make_router(get_engine, cfg: Config):
             dxf_path = _latest_cad_path(sess, project_id)
             if dxf_path is None:
                 raise HTTPException(
-                    422, "אין קובץ DXF שהועלה לפרויקט זה — העלי קובץ DXF תחילה"
+                    422, "אין קובץ DXF שהועלה לפרויקט זה - העלי קובץ DXF תחילה"
                 )
 
             _seed_mappings(sess, project_id, dxf_path)

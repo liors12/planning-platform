@@ -102,7 +102,7 @@ class SubmissionOut(BaseModel):
     uploaded_at: str
     # True iff audit_results.m4.sanitized.json (or .m4.json fallback)
     # exists on disk under cfg.data_dir/audit_outputs/<tava>/v<ver>/.
-    # Frontend uses this to show "הפיקי דו״ח" / "הפיקי אקסל" — independent
+    # Frontend uses this to show "הפיקי דו״ח" / "הפיקי אקסל" - independent
     # of DB status, so seeded pilots without findings_json_path still
     # surface the buttons.
     has_audit_results: bool = False
@@ -1245,7 +1245,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
         if len(content) > _MAX_EMAIL_PDF_BYTES:
             raise HTTPException(
                 413,
-                f"קובץ ה-PDF גדול מדי — מקסימום {_MAX_EMAIL_PDF_BYTES // (1024*1024)} MB",
+                f"קובץ ה-PDF גדול מדי - מקסימום {_MAX_EMAIL_PDF_BYTES // (1024*1024)} MB",
             )
 
         result = extract_email_corrections(content)
@@ -1371,7 +1371,7 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
         if len(content) > _MAX_MEETING_PDF_BYTES:
             raise HTTPException(
                 413,
-                f"קובץ ה-PDF גדול מדי — מקסימום {_MAX_MEETING_PDF_BYTES // (1024*1024)} MB",
+                f"קובץ ה-PDF גדול מדי - מקסימום {_MAX_MEETING_PDF_BYTES // (1024*1024)} MB",
             )
 
         result = extract_meeting_notes(content)
@@ -1590,7 +1590,7 @@ def _parse_response_xlsx(path: Path) -> list[dict]:
     header_row = next(ws.iter_rows(min_row=2, max_row=2, values_only=True), None)
     if header_row is None:
         wb.close()
-        raise ValueError("מבנה הקובץ אינו תואם — לא נמצאה שורת כותרת")
+        raise ValueError("מבנה הקובץ אינו תואם - לא נמצאה שורת כותרת")
 
     # Map header text → 0-based column index; try exact match first,
     # then strip-normalised match (handles stray spaces or BOM).

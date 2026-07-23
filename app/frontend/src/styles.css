@@ -80,9 +80,18 @@ code, .path {
   border-inline-start: 1px solid var(--rule);  /* line on the visual left edge */
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
+  /* Round-1 item 9: the sidebar itself never scrolls — the project list
+     scrolls independently and the footer stays pinned at any height. */
+  height: 100vh;
+  overflow: hidden;
   padding: 0;
 }
+.sidebar-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.sidebar-footer { flex-shrink: 0; }
 
 .content {
   flex: 1 1 auto;
@@ -435,7 +444,8 @@ code, .path {
 
 .upload-grid {
   display: grid;
-  grid-template-columns: 1fr 2fr 2fr;
+  /* Round-1 item 4: wrap instead of overflowing at narrow window widths. */
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 14px;
 }
 .upload-progress {
@@ -492,7 +502,10 @@ code, .path {
   margin-block-start: 12px;
   display: flex;
   gap: 10px;
+  /* Round-1 item 5: never clip button labels at narrow widths. */
+  flex-wrap: wrap;
 }
+.submission-actions button { white-space: nowrap; }
 
 /* ─── Status badges ─────────────────────────────────────────────────── */
 
@@ -1949,3 +1962,49 @@ code, .path {
 }
 .guideline-history-list li:last-child { border-bottom: none; }
 .guideline-history-list .badge { margin-inline-start: 8px; }
+
+/* ── Shared error notice (round-1 item 8) ─────────────────────────────── */
+.error-notice {
+  background: var(--red-bg, #fdecea);
+  border: 1px solid #f2c0bd;
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-block: 10px;
+  font-size: 14px;
+}
+.error-notice-compact { padding: 10px 12px; margin-block: 6px; }
+.error-notice-title { font-weight: 700; color: var(--red, #b3261e); margin-bottom: 4px; }
+.error-notice-body { margin: 0 0 6px; color: var(--text-primary, #333); }
+.error-notice-steps-title { font-weight: 600; font-size: 13px; }
+.error-notice-steps { margin: 4px 0 6px; padding-inline-start: 18px; font-size: 13px; }
+.error-notice-details summary { cursor: pointer; font-size: 12px; color: var(--muted, #777); }
+.error-notice-details pre {
+  direction: ltr; text-align: left; font-size: 11px; overflow-x: auto;
+  background: rgba(0,0,0,0.04); padding: 8px; border-radius: 4px; white-space: pre-wrap;
+}
+
+/* ── Findings empty state (round-1 item 6) ────────────────────────────── */
+.findings-empty-state {
+  background: var(--surface-card, #fafafa);
+  border: 1px dashed var(--border, #ddd);
+  border-radius: 10px;
+  padding: 24px;
+  text-align: center;
+}
+.findings-empty-state h3 { margin: 0 0 6px; }
+.findings-empty-state p { color: var(--muted, #666); margin: 0 0 10px; }
+.findings-empty-state ol {
+  display: inline-block; text-align: right; margin: 0; padding-inline-start: 20px;
+  color: var(--text-primary, #333); font-size: 14px;
+}
+
+/* ── Pipeline pill emphasis (round-1 item 1) ──────────────────────────── */
+.pipeline-card.ps-zero { opacity: 0.45; }
+.pipeline-card.ps-zero .ps-count { color: var(--text-secondary, #888); font-weight: 600; }
+.pipeline-card:not(.ps-zero) .ps-count { font-weight: 800; }
+.ps-draft:not(.ps-zero) .ps-count   { color: #64748b; }
+.ps-sent:not(.ps-zero) .ps-count    { color: #1d4ed8; }
+.ps-response_received:not(.ps-zero) .ps-count { color: #b45309; }
+.ps-verified:not(.ps-zero) .ps-count { color: #15803d; }
+.layer-mapping-scan { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.layer-mapping-scan-hint { font-size: 12px; }

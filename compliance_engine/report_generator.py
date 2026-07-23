@@ -80,8 +80,8 @@ FONT_DIR = _resolve_font_dir()
 # Constants
 # ─────────────────────────────────────────────────────────────────────────────
 
-EYEBROW = "המינהלת להתחדשות עירונית — עיריית נס ציונה"
-DOC_TYPE_LABEL = "טיוטה לסקירה — לא לחתימה"
+EYEBROW = "המינהלת להתחדשות עירונית - עיריית נס ציונה"
+DOC_TYPE_LABEL = "טיוטה לסקירה - לא לחתימה"
 
 from .constants import DISCIPLINE_NAME_HE, DISCIPLINE_ORDER, STATUS_MAP  # noqa: E402
 
@@ -157,7 +157,7 @@ body {
   size: A4;
   margin: 20mm 22mm 22mm 22mm;
   @bottom-right {
-    content: "מינהלת התחדשות עירונית נס ציונה — סקירת תוכנית עיצוב";
+    content: "מינהלת התחדשות עירונית נס ציונה - סקירת תוכנית עיצוב";
     font-family: 'Heebo', 'Simple CLM', sans-serif;
     font-size: 8.5pt;
     color: #8A8A8A;
@@ -738,7 +738,7 @@ table.signature-table td.signature-cell { width: 32%; }
 }
 
 /* ============================================
-   SECTION 2ב — CAD-evidence section (Phase 7.1)
+   SECTION 2ב - CAD-evidence section (Phase 7.1)
    Visual identity: blue accent (vs red/amber for sidecar). Signals
    "geometric source of truth from the planning authority's own CAD."
    ============================================ */
@@ -819,7 +819,7 @@ table.cad-missing-plots td.area-cell {
 }
 
 /* ============================================
-   SECTION 2ג — Chatakhim (cross-section) height-audit findings (Phase 7.2)
+   SECTION 2ג - Chatakhim (cross-section) height-audit findings (Phase 7.2)
    Visual identity: purple accent (#5D3A9B border + lavender background)
    distinct from 2א (red/amber sidecars) and 2ב (blue CAD).
    ============================================ */
@@ -1443,7 +1443,7 @@ def _inject_discipline_comments(html: str, comments: list[dict]) -> str:
 
 
 def _render_to_pdf(html_str: str, output_path: Path) -> None:
-    # M7.5.1 — defensive belt-and-braces: rewrite any remaining "§" to "סעיף "
+    # M7.5.1 - defensive belt-and-braces: rewrite any remaining "§" to "סעיף "
     # in the assembled HTML before WeasyPrint sees it. Catches stray clause
     # refs from upstream JSON or future code that forgot the source-level fix.
     html_str = _normalize_he_text(html_str)
@@ -1560,7 +1560,7 @@ def _render_to_pdf_via_subprocess(
             pass
 
 
-# M7.5.1 — § → סעיף normalize.  Architect can't accept § (regulatory section
+# M7.5.1 - § → סעיף normalize.  Architect can't accept § (regulatory section
 # symbol) in the document; this helper rewrites every occurrence to "סעיף ".
 # Source-level fixes were applied in 5 modules; this is the belt-and-braces.
 _SECTION_SIGN_RE = re.compile(r"§\s*")
@@ -1667,7 +1667,7 @@ def _render_cover_with_signatures(
         <div class="brand-name">נס ציונה</div>
         <hr class="rule">
         <h1 class="title">סקירת תוכנית עיצוב</h1>
-        <div class="subtitle">תכנית בינוי ופיתוח — מתחם הטייסים-ההסתדרות</div>
+        <div class="subtitle">תכנית בינוי ופיתוח - מתחם הטייסים-ההסתדרות</div>
         <div class="subtitle">תכנית עיצוב גרסה {_esc(version)} · {_esc(sub_month_year)}</div>
         <div class="pill">{_esc(DOC_TYPE_LABEL)}</div>
       </div>
@@ -1678,7 +1678,7 @@ def _render_cover_with_signatures(
           <div><span class="label">תאריך הסקירה:</span> {_today_he()}</div>
         </div>
         <div class="cover-note">{_esc(_COVER_STRUCTURAL_NOTE_HE)}</div>
-        <h2 class="cover-sig-title">טבלת חתימות — חוות דעת רב-תחומית</h2>
+        <h2 class="cover-sig-title">טבלת חתימות - חוות דעת רב-תחומית</h2>
         <p class="cover-sig-sub">לאישור הדוח על-ידי בעלי התפקידים במינהלת ההתחדשות העירונית בעיריית נס ציונה.</p>
         <table class="signature-table">
           <thead>
@@ -1714,7 +1714,7 @@ def _render_toc(plan_number: str, residential_parcels: list[dict],
                 discipline_results: list[dict],
                 *,
                 has_amenity_inventory: bool = False) -> str:
-    # M8.2 migration 1/4 — TOC rows for §1, §2א/2ב/2ג, §4, §5, נספח א removed
+    # M8.2 migration 1/4 - TOC rows for §1, §2א/2ב/2ג, §4, §5, נספח א removed
     # at the same time as their renderers. The kwargs that gated them
     # (has_sidecar / has_cad / has_chatakhim / has_section_5) went with them.
     rows: list[str] = []
@@ -1778,7 +1778,7 @@ def _chapter_open(num_label: str, title: str, intro: str) -> str:
 def _render_section_2(content_results, residential_parcels, plan_number) -> str:
     intro = (
         f'פרק זה משווה את ערכי ההגשה (יח"ד, שטחים, גובה, חניה, תמהיל, שטחים מחלחלים) מול '
-        f'התקרות והדרישות המוגדרות בתב"ע {plan_number}. בכל סעיף — ההגשה הנוכחית, הדרישה, והפעולה הנדרשת.'
+        f'התקרות והדרישות המוגדרות בתב"ע {plan_number}. בכל סעיף - ההגשה הנוכחית, הדרישה, והפעולה הנדרשת.'
     )
     sec2_title = f'בדיקת תאימות תוכן לתב"ע {plan_number}'
 
@@ -1845,7 +1845,7 @@ def _parcel_headline_he(label: str, unit_result: dict | None, units_max: int | N
         if sub is not None:
             return f'{sub} יח"ד מוצעות ב{label}'
     if units_max is not None:
-        return f'{label} — עד {units_max} יח"ד לפי תב"ע'
+        return f'{label} - עד {units_max} יח"ד לפי תב"ע'
     return label
 
 
@@ -1943,16 +1943,16 @@ def _schema_value_for(code: str, parcel: dict) -> str:
     u = parcel.get("units") or {}
     if code == "CONTENT_UNIT_COUNT":
         m = u.get("max_units")
-        return f'{m} יח"ד' if m is not None else "—"
+        return f'{m} יח"ד' if m is not None else "-"
     if code == "CONTENT_BUILDING_AREA_MAIN":
         v = br.get("primary_sqm")
-        return f'{_format_int(v)} מ"ר' if v is not None else "—"
+        return f'{_format_int(v)} מ"ר' if v is not None else "-"
     if code == "CONTENT_BUILDING_AREA_SERVICE_ABOVE":
         v = br.get("service_above_sqm")
-        return f'{_format_int(v)} מ"ר' if v is not None else "—"
+        return f'{_format_int(v)} מ"ר' if v is not None else "-"
     if code == "CONTENT_BUILDING_AREA_SERVICE_BELOW":
         v = br.get("service_below_sqm")
-        return f'{_format_int(v)} מ"ר' if v is not None else "—"
+        return f'{_format_int(v)} מ"ר' if v is not None else "-"
     if code == "CONTENT_BUILDING_HEIGHT":
         v = h.get("max_height_m")
         f = h.get("max_floors_above_entry")
@@ -2024,7 +2024,7 @@ def _plan_wide_subsection(num: str, anchor_id: str, plan_wide: list[dict]) -> st
     return f"""
     <div class="subsection" id="{anchor_id}">
       <h3 class="subsection-num">{_esc(num)} בדיקות ברמת תכנית</h3>
-      <div class="subsection-meta">בדיקות שאינן ייחודיות לתא שטח מסוים — תמהיל יח"ד, שטחים מחלחלים כוללים.</div>
+      <div class="subsection-meta">בדיקות שאינן ייחודיות לתא שטח מסוים - תמהיל יח"ד, שטחים מחלחלים כוללים.</div>
       {table}
     </div>
     """
@@ -2037,7 +2037,7 @@ def _render_section_3(
 ) -> str:
     intro = (
         'פרק זה בוחן את ההגשה מול חוברת ההנחיות העירונית של נס ציונה (407-0730606, פברואר 2026). '
-        'הבדיקה מאורגנת בעשר דיסציפלינות. במקום בו התקבל פידבק ממנהל הדיסציפלינה — הוא משולב בתא ההערה.'
+        'הבדיקה מאורגנת בעשר דיסציפלינות. במקום בו התקבל פידבק ממנהל הדיסציפלינה - הוא משולב בתא ההערה.'
     )
 
     by_disc: dict[str, list[dict]] = {}
@@ -2076,7 +2076,7 @@ def _render_section_3(
 
 
 def _render_guidelines_section(guideline_results: dict) -> str:
-    """Editable global guidelines (הנחיות) — checkable findings + the honest
+    """Editable global guidelines (הנחיות) - checkable findings + the honest
     "לבדיקה ידנית" list of manual guidelines that were NOT auto-checked.
 
     Threshold values and versions come from the platform DB via the audit-time
@@ -2141,10 +2141,10 @@ def _render_guidelines_section(guideline_results: dict) -> str:
 def _render_amenity_inventory_subsection(
     num: str, anchor_id: str, inventory: dict,
 ) -> str:
-    """Phase 7.4 — §3.N "שירותים לדיירים" inventory table (no verdicts).
+    """Phase 7.4 - §3.N "שירותים לדיירים" inventory table (no verdicts).
 
     Visual identity: inherits §3's standard sub-section styling. NOT a new
-    evidence source (cf. §2א/2ב/2ג which have their own accent colors) — this
+    evidence source (cf. §2א/2ב/2ג which have their own accent colors) - this
     is a soft-policy inventory whose role is to surface what the architect
     drew without claiming compliance.
     """
@@ -2281,7 +2281,7 @@ def _discipline_row_html(r: dict) -> str:
 
 
 def _submission_state_he(r: dict) -> str:
-    # M7.6 Part A (A2) — "מצב בהגשה" must be terse: ≤1 sentence, no narrative
+    # M7.6 Part A (A2) - "מצב בהגשה" must be terse: ≤1 sentence, no narrative
     # explanation, no method framing (no "בדיקה ויזואלית"/"אוטומטית"). The
     # surviving long visual descriptions get trimmed to their first clause.
     ev = r.get("evidence", {}) or {}

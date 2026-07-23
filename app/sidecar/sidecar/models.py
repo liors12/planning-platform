@@ -33,7 +33,7 @@ class Base(DeclarativeBase):
 # SQLite's enum support is half-baked):
 #   active            — default; project being actively reviewed
 #   awaiting_review   — submission uploaded, waiting on Ellen / discipline mgrs
-#   signed            — final חוות דעת signed and dispatched
+#   signed            - final חוות דעת signed and dispatched
 #   archived          — soft-deleted; hidden from default views
 
 class Project(Base):
@@ -339,7 +339,7 @@ class SubmissionAttachment(Base):
 #   SETBACK_FRONT    — front setback line / zone
 #   SETBACK_SIDE     — side setback line / zone
 #   SETBACK_REAR     — rear setback line / zone
-#   PUBLIC_SPACE     — public open-space polygon (שצ"פ)
+#   PUBLIC_SPACE     - public open-space polygon (שצ"פ)
 #   PARKING          — parking stall polygon
 #   OTHER            — present in file, no compliance role
 #   UNKNOWN          — not yet classified
@@ -554,7 +554,7 @@ class DisciplineComment(Base):
 # ─────────────────────────────────────────────────────────────────────────────
 #
 # Guidelines are GLOBAL (city-wide submission rules), deliberately NOT
-# project-keyed — one rulebook applies to every תכנית עיצוב. Editing never
+# project-keyed - one rulebook applies to every תכנית עיצוב. Editing never
 # overwrites: it inserts a new row with version+1 and flips is_active, so
 # history stays queryable and audit snapshots can pin exact versions.
 

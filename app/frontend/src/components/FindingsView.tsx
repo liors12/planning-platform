@@ -24,13 +24,13 @@ type SectionFilter = Record<Verdict, boolean>;
 type AllFilters = Record<SectionKey, SectionFilter>;
 
 const DEFAULT_FILTER: SectionFilter = {
-  // ON by default — problem-shaped + pass_with_note (these all need attention)
+  // ON by default - problem-shaped + pass_with_note (these all need attention)
   fail: true,
   fail_borderline: true,
   not_submitted: true,
   requires_review: true,
   pass_with_note: true,
-  // OFF by default — passing / not-applicable / unevaluable
+  // OFF by default - passing / not-applicable / unevaluable
   pass: false,
   not_applicable: false,
   unevaluable: false,
@@ -46,7 +46,7 @@ function filterStorageKey(projectId: number): string {
   return `filters:project_${projectId}`;
 }
 
-// Defensive load — if anything looks off (parse error, missing key,
+// Defensive load - if anything looks off (parse error, missing key,
 // shape drift after a future schema change), fall back to defaults
 // rather than blowing up the Findings tab for the user.
 function loadFilters(projectId: number): AllFilters {
@@ -72,7 +72,7 @@ function loadFilters(projectId: number): AllFilters {
 
 function saveFilters(projectId: number, f: AllFilters) {
   try { localStorage.setItem(filterStorageKey(projectId), JSON.stringify(f)); }
-  catch { /* localStorage full / disabled — silently degrade */ }
+  catch { /* localStorage full / disabled - silently degrade */ }
 }
 
 // ── Verdict taxonomy (Hebrew labels + CSS class) ──────────────────────
@@ -116,7 +116,7 @@ interface Rule {
 }
 
 const DISCIPLINE_LABEL_HE: Record<string, string> = {
-  shafa: 'שפ"ע — אשפה ופינוי פסולת',
+  shafa: 'שפ"ע - אשפה ופינוי פסולת',
   gardens: "גנים ונוף",
   infra: "תשתיות",
   fire: "רחבות כיבוי",
@@ -159,7 +159,7 @@ export function FindingsView({ findings, onJumpToPage, projectId }: Props) {
 
   // Per-project, per-section verdict toggles. Re-loaded when projectId
   // changes (e.g. user switches projects). Writes are debounced through
-  // React's normal render cadence — on each toggle we both update state
+  // React's normal render cadence - on each toggle we both update state
   // AND persist to localStorage so a reload restores the exact view.
   const [filters, setFilters] = useState<AllFilters>(() => loadFilters(projectId));
   useEffect(() => {
@@ -211,13 +211,13 @@ function FindingsSection({
   onJumpToPage?: (n: number) => void;
 }) {
   // Counts always reflect ALL rules in the section, regardless of which
-  // filters are on — the count beside each pill is what the user is
+  // filters are on - the count beside each pill is what the user is
   // showing/hiding, not just what's currently visible.
   const counts = countVerdicts(rules);
   const [collapsed, setCollapsed] = useState(false);
   // Apply filters: keep only rules whose verdict is currently enabled.
   const visibleRules = rules.filter((r) => enabled[r.verdict as Verdict]);
-  // Three distinct empty cases (engine vs filter vs collapsed) — the
+  // Three distinct empty cases (engine vs filter vs collapsed) - the
   // UX message differs.
   const noRulesAtAll = rules.length === 0;
   const allFiltered = !noRulesAtAll && visibleRules.length === 0;
@@ -270,7 +270,7 @@ function FindingsSection({
             </li>
           )}
           {/*
-            Composite React key — `${rule_code}::${ta_shetach_id ?? idx}`.
+            Composite React key - `${rule_code}::${ta_shetach_id ?? idx}`.
 
             Why: 7 content rules (CONTENT_UNIT_COUNT, CONTENT_BUILDING_
             AREA_MAIN/SERVICE_ABOVE/SERVICE_BELOW, CONTENT_BUILDING_
@@ -281,7 +281,7 @@ function FindingsSection({
             distinguished by `ta_shetach_id` ("plot_1", "plot_2", …).
             Keying React rows by `rule_code` alone collides (the
             "Encountered two children with the same key" warning) and
-            lets React drop/duplicate row identity across re-renders —
+            lets React drop/duplicate row identity across re-renders -
             drawer state can flicker, page-pill highlights can stick to
             the wrong row.
 
@@ -290,7 +290,7 @@ function FindingsSection({
             `?? idx` fallback covers rules that aren't per-plot (where
             rule_code is already unique within the section).
 
-            Invariant: `rule_code` MUST NOT contain "::" — see
+            Invariant: `rule_code` MUST NOT contain "::" - see
             docs/architecture/engine_output_contract.md §"rule_code
             invariants". If that ever changes, the separator here has
             to change too.

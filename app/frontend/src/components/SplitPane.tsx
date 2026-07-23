@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 interface Props {
   /** Children: exactly [start (RTL: right), end (RTL: left)]. */
   children: [React.ReactNode, React.ReactNode];
-  /** localStorage key — typically `splitter:project_{id}`. Persists the
+  /** localStorage key - typically `splitter:project_{id}`. Persists the
    * START-pane (visual right under RTL) fraction in [minFraction..maxFraction]. */
   storageKey: string;
   /** Default fraction for the start (right) pane. 0.55 = 55%. */
@@ -46,7 +46,7 @@ export function SplitPane({
     return defaultStartFraction;
   });
 
-  // Persist on change (debounced via React batching is fine — writes are cheap).
+  // Persist on change (debounced via React batching is fine - writes are cheap).
   useEffect(() => {
     try { window.localStorage.setItem(storageKey, String(fraction)); } catch { /* ignore */ }
   }, [storageKey, fraction]);

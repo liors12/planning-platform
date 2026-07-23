@@ -12,10 +12,10 @@ from __future__ import annotations
 # Ellen reviewed and approved. Order in this dict IS the canonical section
 # order used by the HTML report (§3.1 = shafa, §3.2 = gardens, …).
 DISCIPLINE_NAME_HE: dict[str, str] = {
-    "shafa":            'שפ"ע — אשפה ופינוי פסולת',
+    "shafa":            'שפ"ע - אשפה ופינוי פסולת',
     "gardens":          "גנים ונוף",
     "infra":            "תשתיות",
-    "fire":             "תנועה — רחבות כיבוי אש",
+    "fire":             "תנועה - רחבות כיבוי אש",
     "drainage":         "ניקוז וחלחול",
     "roofs":            "גגות וגינון על גג",
     "arch":             "אדריכלות וחזיתות",

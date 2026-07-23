@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import {
   discoverLayerMappings,
   listLayerMappings,
+  listSubmissions,
   updateLayerMapping,
   LAYER_ROLES,
   LAYER_ROLE_LABELS,
   type LayerMappingOut,
   type ProjectOut,
 } from "../api";
+import { ErrorNotice } from "./ErrorNotice";
 
 interface Props {
   project: ProjectOut;
@@ -23,6 +25,8 @@ const CONFIDENCE_LABELS: Record<string, string> = {
 export function LayerMappingTab({ project }: Props) {
   const [rows, setRows] = useState<LayerMappingOut[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  // Round-1 item 7: scan needs an uploaded DXF; null = still checking.
+  const [hasDxf, setHasDxf] = useState<boolean | null>(null);
   const [discovering, setDiscovering] = useState(false);
   // Per-row saving state: layer_name → "saving" | "saved" | null
   const [saving, setSaving] = useState<Record<string, "saving" | "saved" | null>>({});
@@ -33,6 +37,10 @@ export function LayerMappingTab({ project }: Props) {
     listLayerMappings(project.id)
       .then((data) => { setRows(data); setErr(null); })
       .catch((e) => setErr(String(e)));
+    listSubmissions(project.id)
+      .then((subs) => setHasDxf(subs.some(
+        (s) => (s.cad_path ?? "").toLowerCase().endsWith(".dxf"))))
+      .catch(() => setHasDxf(false));
   }, [project.id]);
 
   async function onDiscover() {
@@ -78,19 +86,26 @@ export function LayerMappingTab({ project }: Props) {
             הגדירי את התפקיד של כל שכבה בקובץ DXF כדי לאפשר בדיקות גיאומטריות אוטומטיות.
           </p>
         </div>
-        <button
-          className="ghost-btn"
-          onClick={onDiscover}
-          disabled={discovering}
-          data-testid="layer-mapping-discover-btn"
-        >
-          {discovering ? (
-            <><span className="spinner" aria-hidden="true" /> סורקת...</>
-          ) : "סרקי שכבות מחדש"}
-        </button>
+        <div className="layer-mapping-scan">
+          <button
+            className="ghost-btn"
+            onClick={onDiscover}
+            disabled={discovering || hasDxf !== true}
+            data-testid="layer-mapping-discover-btn"
+          >
+            {discovering ? (
+              <><span className="spinner" aria-hidden="true" /> סורקת...</>
+            ) : "סרקי שכבות מחדש"}
+          </button>
+          {hasDxf === false && (
+            <span className="muted layer-mapping-scan-hint" data-testid="layer-mapping-no-dxf-hint">
+              העלי קובץ DXF בלשונית "הגשות" כדי לאפשר סריקה
+            </span>
+          )}
+        </div>
       </div>
 
-      {err && <div className="error">{err}</div>}
+      {err && <ErrorNotice error={err} title="לא ניתן לטעון את שכבות ה-CAD" />}
 
       {rows === null && !err && (
         <div className="muted">טוענת שכבות...</div>
@@ -106,7 +121,7 @@ export function LayerMappingTab({ project }: Props) {
         <>
           {pendingCount > 0 && (
             <div className="banner banner-warn" data-testid="layer-mapping-pending-banner">
-              {pendingCount} שכבות טרם אושרו — בדיקות גיאומטריות לא יופעלו עד לאישור שכבת גבול המגרש לפחות.
+              {pendingCount} שכבות טרם אושרו - בדיקות גיאומטריות לא יופעלו עד לאישור שכבת גבול המגרש לפחות.
             </div>
           )}
 

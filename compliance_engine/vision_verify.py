@@ -37,7 +37,7 @@ _VERIFY_SCHEMA: dict = {
 
 _SYSTEM_PROMPT = """\
 אתה מוודא שינויים של אדריכל בתוכנית בנייה. תקבל תמונה של עמוד מהתוכנית ושאלה ספציפית.
-ענה רק על סמך מה שאתה רואה בתמונה — אל תשער ואל תניח.
+ענה רק על סמך מה שאתה רואה בתמונה - אל תשער ואל תניח.
 החזר:
 - verified: "yes" אם השינוי קיים ומאושר, "no" אם השינוי לא קיים, "unclear" אם לא ניתן לקבוע
 - evidence: תיאור קצר של מה שראית (עד 200 תווים)
@@ -118,7 +118,7 @@ def _no_key_result(claim: dict) -> dict:
         "claim_text": claim.get("claim_text", ""),
         "verification_question": claim.get("verification_question", ""),
         "verified": "unclear",
-        "evidence": "מפתח API חסר — לא ניתן לבצע אימות חזותי",
+        "evidence": "מפתח API חסר - לא ניתן לבצע אימות חזותי",
         "status": "דורש בירור",
     }
 
@@ -140,7 +140,7 @@ def verify_claimed_changes(
       - status: "תקין" / "דורש תיקון" / "דורש בירור"
     """
     if not os.environ.get("GEMINI_API_KEY", "").strip():
-        log.warning("GEMINI_API_KEY not set — returning דורש בירור for all claims")
+        log.warning("GEMINI_API_KEY not set - returning דורש בירור for all claims")
         return [_no_key_result(c) for c in claims]
 
     file_path = Path(file_path)

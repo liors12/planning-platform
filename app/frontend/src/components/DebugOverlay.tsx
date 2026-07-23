@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
  * on Windows/Linux). When open, shows the raw findings JSON for the
  * currently-displayed findings, plus a tiny system-status block.
  *
- * Deliberately not discoverable from the regular UI — meant for Lior +
+ * Deliberately not discoverable from the regular UI - meant for Lior +
  * Claude Code, not for Ellen or discipline managers.
  */
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { archiveProject, getProject, getFindings, listSubmissions, type ProjectOut, type SubmissionOut } from "../api";
 import { CommentsTab } from "../components/CommentsTab";
+import { ErrorNotice } from "../components/ErrorNotice";
 import { DebugOverlay } from "../components/DebugOverlay";
 import { LayerMappingTab } from "../components/LayerMappingTab";
 import { SubmissionsTab } from "../components/SubmissionsTab";
@@ -18,7 +19,7 @@ interface Props {
 }
 
 // Removed tabs: "guidelines" (now the GLOBAL top-level #/guidelines screen),
-// and the "history" / "final" placeholders — stubs confused non-technical
+// and the "history" / "final" placeholders - stubs confused non-technical
 // users; the report itself is produced from הגשות → "הפיקי דו״ח".
 type TabKey = "overview" | "submissions" | "findings" | "comments" | "cad_layers";
 
@@ -41,7 +42,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
   const [findings, setFindings] = useState<unknown | null>(null);
   const [findingsErr, setFindingsErr] = useState<string | null>(null);
   const [latestCompleteSub, setLatestCompleteSub] = useState<SubmissionOut | null>(null);
-  // Targeted PDF page — set by FindingsView when user clicks a row / page pill.
+  // Targeted PDF page - set by FindingsView when user clicks a row / page pill.
   // Wrapped in {page, nonce} so clicking the SAME page twice still triggers a
   // re-jump (useful when the user scrolled away and wants to come back).
   const [pdfTarget, setPdfTarget] = useState<{ page: number; nonce: number } | null>(null);
@@ -72,7 +73,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
       .then((subs) => {
         // Comments tab: pick the newest submission that has analyzed
         // data on disk, regardless of stuck status labels. Findings tab
-        // keeps the stricter rule — needs the engine's "complete"
+        // keeps the stricter rule - needs the engine's "complete"
         // verdict before showing the structured findings UI.
         const picked = tab === "comments"
           ? subs.find((s) => s.has_audit_results)
@@ -97,7 +98,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
     }
   }
 
-  if (err) return <div className="error error-block">{err}</div>;
+  if (err) return <ErrorNotice error={err} title="לא ניתן לטעון את הפרויקט" />;
   if (!project) return <div className="muted">טוענת...</div>;
 
   return (
@@ -126,6 +127,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
           <button
             key={t}
             className={"tab" + (t === tab ? " active" : "")}
+            data-testid={`tab-${t}`}
             onClick={() => setTab(t)}
           >
             {TAB_LABELS[t]}
@@ -185,15 +187,15 @@ function OverviewTab({ project }: { project: ProjectOut }) {
         <dt>שם הפרויקט</dt><dd>{project.name_he}</dd>
         {project.name_en && <><dt>שם באנגלית</dt><dd dir="ltr">{project.name_en}</dd></>}
         <dt>מספר תב"ע</dt><dd dir="ltr">{project.tava_number}</dd>
-        <dt>כתובת</dt><dd>{project.address ?? "—"}</dd>
+        <dt>כתובת</dt><dd>{project.address ?? "-"}</dd>
         <dt>סטטוס</dt><dd>{PROJECT_STATUS_HE[project.status] ?? project.status}</dd>
         <dt>נוצר</dt><dd>{project.created_at.replace("T", " ").slice(0, 16)}</dd>
-        <dt>סכמת בדיקה</dt>
+        <dt>בדיקה אוטומטית</dt>
         <dd>
           {project.has_schema ? (
-            <span className="ok">קיימת — ניתן להריץ בדיקה אוטומטית</span>
+            <span className="ok">זמינה - נתוני התב"ע טעונים במערכת</span>
           ) : (
-            <span className="warn">חסרה — לא ניתן להריץ בדיקה אוטומטית. הוספת סכמות תהיה זמינה בעדכון הבא.</span>
+            <span className="warn">לא זמינה - נתוני התב"ע טרם נטענו לפרויקט זה</span>
           )}
         </dd>
         <dt>מספר הגשות</dt><dd>{project.submission_count ?? 0}</dd>
@@ -229,7 +231,23 @@ function FindingsTabContent({
   pdfTarget: { page: number; nonce: number } | null;
   onJumpToPdfPage: (page: number) => void;
 }) {
-  if (err) return <div className="error error-block">{err}</div>;
+  // Round-1 item 6: "no findings yet" is a NORMAL state, not an error -
+  // the seed (and any fresh upload) has no findings until an engine run.
+  if (err && /HTTP 409/.test(err) && /no findings yet/.test(err)) {
+    return (
+      <div className="findings-empty-state" data-testid="findings-empty-state">
+        <h3>עדיין אין ממצאים בגרסה זו</h3>
+        <p>כדי לראות את ממצאי הבדיקה, יש להריץ תחילה את הבדיקה על ההגשה.</p>
+        <ol>
+          <li>עברי ללשונית "הגשות"</li>
+          <li>מצאי את ההגשה</li>
+          <li>לחצי על "הפעילי את התוכנה"</li>
+          <li>חזרי לכאן כשהבדיקה תסתיים.</li>
+        </ol>
+      </div>
+    );
+  }
+  if (err) return <ErrorNotice error={err} title="לא ניתן לטעון את הממצאים" />;
   if (findings === null && sub === null) {
     return (
       <div className="card">

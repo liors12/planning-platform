@@ -68,7 +68,7 @@ export interface SubmissionOut {
   has_report_xlsx: boolean;
   /** True iff an architect response Excel has been uploaded and parsed (B2). */
   has_architect_response: boolean;
-  /** False on win32+frozen — the subprocess that runs the full audit
+  /** False on win32+frozen - the subprocess that runs the full audit
    * can't spawn an external Python in the packaged build. UI disables
    * the "הפעילי את התוכנה" button when false. */
   engine_run_available: boolean;
@@ -98,7 +98,7 @@ export interface JobOut {
 // Wraps fetch() with retry+backoff for transport failures (ATS block,
 // CORS preflight refused, connection refused, DNS, CSP, etc.). Native
 // fetch() rejects with the opaque "TypeError: Load failed" for all of
-// those — same string for every cause. This wrapper:
+// those - same string for every cause. This wrapper:
 //
 //   1. Retries up to 3 times on transport failure with backoff
 //      200ms → 500ms → 1500ms (~2.2s total wait before giving up).
@@ -107,10 +107,10 @@ export interface JobOut {
 //      1-3s to import FastAPI + bind 17321.
 //
 //   2. On final failure, throws an Error whose message includes the
-//      URL, the retry count, and the first stack frame — so we can
+//      URL, the retry count, and the first stack frame - so we can
 //      debug from the UI without opening DevTools.
 //
-// HTTP 4xx/5xx are NOT retried here — fetch() resolves for those (it only
+// HTTP 4xx/5xx are NOT retried here - fetch() resolves for those (it only
 // rejects on transport failure). They flow through jsonOrThrow below.
 // AbortError (user cancellation) is also not retried.
 //
@@ -131,7 +131,7 @@ async function fetchOrThrow(url: string, init?: RequestInit): Promise<Response> 
       return await fetch(url, init);
     } catch (e) {
       lastErr = e as Error;
-      // User cancellation — don't keep retrying.
+      // User cancellation - don't keep retrying.
       if (lastErr.name === "AbortError") break;
     }
   }
@@ -561,7 +561,7 @@ export async function revealOutput(submissionId: number, kind: "pdf" | "xlsx"): 
 }
 
 /** Open an external URL in the OS default browser via the sidecar.
- * Used for Mavat links — the Tauri webview ignores target="_blank". */
+ * Used for Mavat links - the Tauri webview ignores target="_blank". */
 export async function openUrl(url: string): Promise<void> {
   await fetchOrThrow(
     `${SIDECAR_BASE}/submissions/open-url?url=${encodeURIComponent(url)}`,
@@ -819,7 +819,7 @@ export async function postEcho(message: string): Promise<EchoResponse> {
   );
 }
 
-// ── Layer mappings — DXF layer → semantic role ────────────────────────────
+// ── Layer mappings - DXF layer → semantic role ────────────────────────────
 
 export interface LayerMappingOut {
   id: number;
@@ -905,7 +905,7 @@ export async function updateLayerMapping(
 }
 
 // ── Global guidelines (הנחיות) ─────────────────────────────────────────────
-// City-wide submission rules — deliberately NOT project-keyed.
+// City-wide submission rules - deliberately NOT project-keyed.
 
 export interface GuidelineOut {
   id: number;

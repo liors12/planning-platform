@@ -58,7 +58,7 @@ def _result(
 
 
 _RULE_NAMES: dict[str, str] = {
-    "CAD_SETBACK":           "קווי בניין — מרחק מגבול המגרש",
+    "CAD_SETBACK":           "קווי בניין - מרחק מגבול המגרש",
     "CAD_BUILDING_COVERAGE": "תכסית בנייה",
     "CAD_PUBLIC_SPACE":      'חפיפה עם שטח ציבורי פתוח (שצ"פ)',
     "CAD_PARKING_COUNT":     "ספירת מקומות חנייה",
@@ -82,7 +82,7 @@ def _no_cad(rule_code: str) -> dict:
         rule_code, _REVIEW,
         failure_mode=_MISSING,
         confidence="HIGH",
-        notes_he="קובץ CAD לא הועלה — הבדיקה הגיאומטרית לא הופעלה.",
+        notes_he="קובץ CAD לא הועלה - הבדיקה הגיאומטרית לא הופעלה.",
         remediation_he='העלי קובץ DXF בלשונית "הגשות" והפעילי מחדש את הבדיקה.',
     )
 
@@ -92,7 +92,7 @@ def _no_mapping(rule_code: str) -> dict:
         rule_code, _REVIEW,
         failure_mode=_MISSING,
         confidence="HIGH",
-        notes_he="מיפוי שכבות CAD לא הושלם — נדרש אישור שכבת גבול המגרש לפחות.",
+        notes_he="מיפוי שכבות CAD לא הושלם - נדרש אישור שכבת גבול המגרש לפחות.",
         remediation_he='עברי ללשונית "שכבות CAD" ואשרי את מיפוי השכבות.',
     )
 
@@ -141,7 +141,7 @@ def check_setback(
     if front_req is None and side_req is None and rear_req is None:
         return _result(
             rule_code, _NA,
-            notes_he="קווי בניין לא הוגדרו כמספרים בסכמת הפרויקט — בדיקת קו הבניין אינה ישימה.",
+            notes_he="קווי בניין לא הוגדרו כמספרים בסכמת הפרויקט - בדיקת קו הבניין אינה ישימה.",
         )
 
     # Use setback lines from the DXF if available, otherwise use the
@@ -194,7 +194,7 @@ def check_setback(
         return _result(
             rule_code, _UNEVALUABLE,
             evidence={"error": str(exc)},
-            notes_he="שגיאה בחישוב קווי הבניין — נדרשת בדיקה ידנית.",
+            notes_he="שגיאה בחישוב קווי הבניין - נדרשת בדיקה ידנית.",
         )
 
 
@@ -234,7 +234,7 @@ def check_building_coverage(
         return _result(
             rule_code, _NA,
             evidence={"footprint_sqm": footprint_sqm, "plot_sqm": plot_sqm},
-            notes_he="אחוז תכסית מרבי לא הוגדר בסכמת הפרויקט — הבדיקה אינה ישימה.",
+            notes_he="אחוז תכסית מרבי לא הוגדר בסכמת הפרויקט - הבדיקה אינה ישימה.",
         )
 
     if plot_sqm is None or plot_sqm <= 0:
@@ -261,7 +261,7 @@ def check_building_coverage(
         failure_mode=_OVERRUN,
         confidence="MEDIUM",
         evidence=evidence,
-        notes_he=f"תכסית: {actual_pct:.1f}% — חורגת מהמותר של {max_pct}%.",
+        notes_he=f"תכסית: {actual_pct:.1f}% - חורגת מהמותר של {max_pct}%.",
         remediation_he="יש לצמצם את תכסית הבנייה להתאמה לדרישות התב\"ע.",
     )
 
@@ -283,7 +283,7 @@ def check_public_space_overlap(
     if not geometry.public_space_polygons:
         return _result(
             rule_code, _NA,
-            notes_he="לא זוהו שכבות שטח ציבורי פתוח בקובץ ה-DXF — הבדיקה אינה ישימה.",
+            notes_he="לא זוהו שכבות שטח ציבורי פתוח בקובץ ה-DXF - הבדיקה אינה ישימה.",
         )
     if not geometry.has_building_footprint:
         return _no_mapping(rule_code)
@@ -319,7 +319,7 @@ def check_public_space_overlap(
         return _result(
             rule_code, _UNEVALUABLE,
             evidence={"error": str(exc)},
-            notes_he="שגיאה בבדיקת חפיפה עם שצ\"פ — נדרשת בדיקה ידנית.",
+            notes_he="שגיאה בבדיקת חפיפה עם שצ\"פ - נדרשת בדיקה ידנית.",
         )
 
 
@@ -343,7 +343,7 @@ def check_parking_count(
     if not geometry.parking_polygons:
         return _result(
             rule_code, _NA,
-            notes_he="לא זוהו שכבות חנייה בקובץ ה-DXF — הבדיקה אינה ישימה.",
+            notes_he="לא זוהו שכבות חנייה בקובץ ה-DXF - הבדיקה אינה ישימה.",
         )
 
     parcels = _path(project_schema, "project.parcels") or []
@@ -363,7 +363,7 @@ def check_parking_count(
         return _result(
             rule_code, _NA,
             evidence={"detected_parking_polygons": detected},
-            notes_he=f"מינימום מקומות חנייה לא הוגדר בסכמה — זוהו {detected} פוליגוני חנייה (בדיקה אינה ישימה).",
+            notes_he=f"מינימום מקומות חנייה לא הוגדר בסכמה - זוהו {detected} פוליגוני חנייה (בדיקה אינה ישימה).",
         )
 
     evidence = {"detected_parking_polygons": detected, "min_required": min_count}
@@ -380,7 +380,7 @@ def check_parking_count(
         failure_mode=_UNDERRUN,
         confidence="MEDIUM",
         evidence=evidence,
-        notes_he=f"זוהו {detected} מקומות חנייה — מתחת לנדרש ({min_count}).",
+        notes_he=f"זוהו {detected} מקומות חנייה - מתחת לנדרש ({min_count}).",
         remediation_he="יש לוודא שמקומות החנייה מצוינים בשכבה הנכונה ושמספרם עומד בדרישה.",
     )
 

@@ -1,3 +1,4 @@
+import { MaybeApiError } from "../components/ErrorNotice";
 import { useEffect, useState } from "react";
 import { getSettings, putSettings, SettingsOut } from "../api";
 import { buildHash } from "../route";
@@ -19,9 +20,9 @@ export function Settings() {
         <h1>הגדרות מערכת</h1>
       </header>
 
-      {err && <div className="error">{err}</div>}
+      {err && <MaybeApiError error={err} />}
 
-      {/* The Anthropic key card was removed from the UI — nothing in the
+      {/* The Anthropic key card was removed from the UI - nothing in the
           pipeline consumes the key. The /settings backend endpoints and any
           stored anthropic_api_key row remain intact and readable via the API. */}
       <GeminiCard settings={settings} onSaved={setSettings} />
@@ -149,7 +150,7 @@ function GeminiCard({
 
         <span className="form-hint muted">המפתחות נשמרים בבסיס הנתונים ללא הצפנה.</span>
 
-        {err && <div className="error">{err}</div>}
+        {err && <MaybeApiError error={err} />}
         {saved && (
           <div className="success-msg" data-testid="gemini-saved-msg">המפתחות נשמרו בהצלחה.</div>
         )}
