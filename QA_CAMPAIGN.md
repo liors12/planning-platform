@@ -182,6 +182,17 @@ pilot PDF is not committed, so real-audit flows run locally only)
   earlier Phase-2 section; ordering fixed so layer specs run before flows
   mutate the seed (screenshots capture pristine state).
 
+### CI proof (run 30001507704 on 8ea9fb4, PR #16)
+- layer0-gates job: 3 passed (em-dash x2 + jargon).
+- ui-suite job: **15 passed, 2 skipped** (specs 4+5 skip on CI - the 100MB
+  pilot PDF is local-only; spec 6 report-render now RUNS on CI after
+  committing the small pilot schema/metadata/overlay JSONs).
+- Screenshot artifacts uploaded (qa-suite-screenshots, 10 screens x 2
+  viewports).
+- First CI run also caught F-4 (see findings): the dev render path resolves
+  repo-root projects/ files - fixed for CI by committing them; the underlying
+  path coupling remains backlog B-4.
+
 ### Untestable in the split model (honest list)
 - Tauri shell / WebView2 packaging behavior (window creation, sidecar spawn
   wiring, installer layout) - covered only by the 49 API probes + Layer 4
