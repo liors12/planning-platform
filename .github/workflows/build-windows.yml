@@ -1116,9 +1116,17 @@ jobs:
           $dst = Join-Path $env:RUNNER_TEMP "edge-149-extract"
           Invoke-WebRequest -Uri $msiUrl -OutFile $msi
           Write-Host "Downloaded: $((Get-Item $msi).Length) bytes"
-          Start-Process msiexec -ArgumentList "/a", "`"$msi`"", "/qn", "TARGETDIR=`"$dst`"" -Wait
-          $exe = Get-ChildItem -Path $dst -Recurse -Filter msedge.exe | Select-Object -First 1
-          if (-not $exe) { throw "msedge.exe not found in extracted MSI" }
+          $msiLog = Join-Path $env:RUNNER_TEMP "edge-149-msiexec.log"
+          $p = Start-Process msiexec -ArgumentList "/a `"$msi`" /qn TARGETDIR=`"$dst`" /L*V `"$msiLog`"" -Wait -PassThru
+          Write-Host "msiexec exit code: $($p.ExitCode)"
+          $exe = Get-ChildItem -Path $dst -Recurse -Filter msedge.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $exe) {
+            Write-Host "── msiexec log tail ──"
+            Get-Content $msiLog -Tail 30 -ErrorAction SilentlyContinue | Write-Host
+            Write-Host "── extracted tree (top) ──"
+            Get-ChildItem -Path $dst -Recurse -Depth 3 -ErrorAction SilentlyContinue | Select-Object -First 30 -ExpandProperty FullName | Write-Host
+            throw "msedge.exe not found in extracted MSI (msiexec exit $($p.ExitCode))"
+          }
           $runtimeDir = $exe.DirectoryName
           Write-Host "Pinned runtime folder: $runtimeDir"
           Get-ChildItem $runtimeDir -Filter "msedgewebview2.exe" | ForEach-Object { Write-Host "webview2 exe present: $($_.Name)" }
