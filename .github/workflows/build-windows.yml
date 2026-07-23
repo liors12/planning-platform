@@ -1110,6 +1110,7 @@ jobs:
         # binaries instead of the machine's Evergreen install. The env var
         # reaches the app through the harness's `...process.env` spread.
         shell: pwsh
+        continue-on-error: true
         run: |
           $msiUrl = "https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/82374039-b772-4d0a-a9a9-ee311dabec12/MicrosoftEdgeEnterpriseX64.msi"
           $msi = Join-Path $env:RUNNER_TEMP "edge-149.msi"
@@ -1121,18 +1122,20 @@ jobs:
           # msi -> setup exe / cab -> MSEDGE.7z -> Application\<ver>\msedge.exe
           New-Item -ItemType Directory -Force -Path $dst | Out-Null
           & 7z x $msi -o"$dst\l0" -y | Select-Object -Last 2 | Write-Host
-          for ($depth = 0; $depth -lt 4; $depth++) {
+          # Recursive unpack: each round, scan the WHOLE tree for large files
+          # not yet extracted (the MSI's payload is extension-less; wildcard
+          # -Path + -File + -Recurse silently returns nothing — avoid globs).
+          $seen = @{}
+          for ($round = 0; $round -lt 4; $round++) {
             if (Get-ChildItem -Path $dst -Recurse -Filter msedge.exe -ErrorAction SilentlyContinue) { break }
-            # The MSI stores the setup exe extension-less in the Binary table
-            # (Binary.MicrosoftEdgeInstaller) — match any large file, not just
-            # known archive extensions; 7z sniffs the format from content.
-            # Level dirs are l0, l1-0, l1-1, l2-0... — match by prefix glob.
-            $archives = Get-ChildItem -Path "$dst\l$depth*" -Recurse -File -ErrorAction SilentlyContinue |
-              Where-Object { $_.Length -gt 10MB }
+            $archives = @(Get-ChildItem -Path $dst -Recurse -File -ErrorAction SilentlyContinue |
+              Where-Object { $_.Length -gt 10MB -and -not $seen.ContainsKey($_.FullName) })
+            if ($archives.Count -eq 0) { break }
             $i = 0
             foreach ($a in $archives) {
-              Write-Host "extracting l$($depth+1): $($a.Name) ($([math]::Round($a.Length/1MB))MB)"
-              & 7z x $a.FullName -o"$dst\l$($depth+1)-$i" -y | Select-Object -Last 1 | Write-Host
+              $seen[$a.FullName] = $true
+              Write-Host "extracting r$round-$i : $($a.Name) ($([math]::Round($a.Length/1MB))MB)"
+              & 7z x $a.FullName -o"$dst\r$round-$i" -y | Select-Object -Last 1 | Write-Host
               $i++
             }
           }
@@ -1217,6 +1220,71 @@ jobs:
             }
           } else {
             Write-Host "UI smoke gate PASSED ✓"
+          }
+
+      - name: Attempt D — tauri-driver WebDriver probe
+        # QA campaign Attempt D: official Tauri v2 e2e path. Sidesteps CDP
+        # entirely — tauri-driver (WebDriver) + msedgedriver matched to the
+        # runner's WebView2 version. Raw WebDriver REST probe: create a
+        # session against the installed app, read the window title. Runs
+        # UNPINNED (fresh env, no WEBVIEW2_BROWSER_EXECUTABLE_FOLDER) so the
+        # result is attributable independently of Attempt C. Non-fatal: this
+        # is a diagnostic; verdict lines are ATTEMPT-D: ...
+        if: always()
+        shell: pwsh
+        env:
+          WEBVIEW2_BROWSER_EXECUTABLE_FOLDER: ""
+        run: |
+          $ErrorActionPreference = "Stop"
+          try {
+            & taskkill /f /im sidecar.exe 2>$null
+            & taskkill /f /im "planning-platform.exe" 2>$null
+            & taskkill /f /im msedgedriver.exe 2>$null
+            $true | Out-Null
+
+            $exe = Join-Path $env:LOCALAPPDATA "Planning Platform\planning-platform.exe"
+            if (-not (Test-Path $exe)) { throw "app not installed at $exe" }
+
+            # msedgedriver matching the machine WebView2 version (Attempt A key)
+            $wv2Key = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+            $wv2 = (Get-ItemProperty -Path $wv2Key).pv
+            Write-Host "ATTEMPT-D: WebView2 runtime = $wv2"
+            $drvZip = Join-Path $env:RUNNER_TEMP "edgedriver.zip"
+            $drvDir = Join-Path $env:RUNNER_TEMP "edgedriver"
+            Invoke-WebRequest -Uri "https://msedgedriver.microsoft.com/$wv2/edgedriver_win64.zip" -OutFile $drvZip
+            Expand-Archive -Path $drvZip -DestinationPath $drvDir -Force
+            $drv = Join-Path $drvDir "msedgedriver.exe"
+            & $drv --version | Write-Host
+
+            cargo binstall tauri-driver -y --disable-telemetry 2>&1 | Select-Object -Last 3 | Write-Host
+            $probeData = Join-Path $env:RUNNER_TEMP "wd-probe-data"
+            New-Item -ItemType Directory -Force -Path $probeData | Out-Null
+            $env:PLATFORM_DATA_DIR = $probeData
+            $td = Start-Process -FilePath "$env:USERPROFILE\.cargo\bin\tauri-driver.exe" `
+              -ArgumentList "--native-driver", $drv -PassThru `
+              -RedirectStandardOutput "$env:RUNNER_TEMP\tauri-driver.out.log" `
+              -RedirectStandardError "$env:RUNNER_TEMP\tauri-driver.err.log"
+            Start-Sleep -Seconds 3
+
+            $caps = @{ capabilities = @{ alwaysMatch = @{
+              "tauri:options" = @{ application = $exe }
+              browserName = "wry"
+            } } } | ConvertTo-Json -Depth 6
+            $sess = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:4444/session" `
+              -ContentType "application/json" -Body $caps -TimeoutSec 60
+            $sid = $sess.value.sessionId
+            Write-Host "ATTEMPT-D: session created: $sid"
+            $title = (Invoke-RestMethod -Uri "http://127.0.0.1:4444/session/$sid/title" -TimeoutSec 30).value
+            Write-Host "ATTEMPT-D: ATTACH OK — window title = [$title]"
+            Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:4444/session/$sid" -TimeoutSec 30 | Out-Null
+            Stop-Process -Id $td.Id -Force -ErrorAction SilentlyContinue
+            exit 0
+          } catch {
+            Write-Host "ATTEMPT-D: FAILED — $($_.Exception.Message)"
+            Get-Content "$env:RUNNER_TEMP\tauri-driver.out.log" -Tail 20 -ErrorAction SilentlyContinue | Write-Host
+            Get-Content "$env:RUNNER_TEMP\tauri-driver.err.log" -Tail 20 -ErrorAction SilentlyContinue | Write-Host
+            Write-Host "::warning::Attempt D probe failed (diagnostic, non-fatal)"
+            exit 0
           }
 
       - name: UI smoke — uninstall app after test
