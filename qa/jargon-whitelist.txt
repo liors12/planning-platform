@@ -1,0 +1,9 @@
+# False-positive whitelist for the jargon gate. Format per line:
+#   <path-substring>:<line-substring>
+# A flagged line is allowed iff some whitelist entry's path-substring is in
+# the file path AND its line-substring is in the line.
+content_compliance_checker.py:schema_min_pct
+content_compliance_checker.py:schema_max_m
+report_generator.py:red/amber sidecars
+DiagnosticsPanel.tsx:d.sidecar.uptime_seconds
+DiagnosticsPanel.tsx:d.seed.schema_file

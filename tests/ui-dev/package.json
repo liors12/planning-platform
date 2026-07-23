@@ -1,0 +1,11 @@
+{
+  "name": "ui-dev-tests",
+  "private": true,
+  "description": "Split-UI QA harness: Playwright (Chromium) against the Vite dev server + real sidecar with a fresh seeded DB. Covers Ellen-facing flows; packaged-bundle coverage stays with the CI API probes.",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

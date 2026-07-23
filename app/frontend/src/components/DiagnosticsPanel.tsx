@@ -64,7 +64,7 @@ function DiagnosticsBody({ d }: { d: DiagnosticsResponse }) {
   // Seed files: derive a single "found / missing" row that lists which
   // specific files (if any) are missing - matches the user-facing spec.
   const seedFiles: Array<[string, FileCheck]> = [
-    ["סכמת פרויקט",     d.seed.schema_file],
+    ["נתוני תב\"ע",     d.seed.schema_file],
     ["מטא-נתוני הגשה",  d.seed.metadata_file],
     ["תוצאות סקירה",    d.seed.audit_results_file],
   ];
@@ -81,7 +81,7 @@ function DiagnosticsBody({ d }: { d: DiagnosticsResponse }) {
       </div>
 
       <dl className="diag-list">
-        <CheckRow label="שרת רקע (sidecar)"
+        <CheckRow label="שרת רקע"
                   ok={d.sidecar.running}
                   yes="פעיל" no="לא פעיל" />
         <CheckRow label="מסד נתונים"

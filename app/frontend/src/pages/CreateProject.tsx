@@ -189,6 +189,7 @@ export function CreateProject({ navigate, onCreated }: Props) {
               type="text"
               value={nameHe}
               onChange={(e) => setNameHe(e.target.value)}
+              data-testid="create-name-he"
               placeholder="לדוגמה: מתחם הטייסים-ההסתדרות"
               disabled={submitting}
               autoFocus
@@ -204,6 +205,7 @@ export function CreateProject({ navigate, onCreated }: Props) {
               type="text"
               value={tava}
               onChange={(e) => setTava(e.target.value)}
+              data-testid="create-tava"
               placeholder="לדוגמה: 407-1048248"
               disabled={submitting}
               dir="ltr"
@@ -239,7 +241,7 @@ export function CreateProject({ navigate, onCreated }: Props) {
 
           <div className="form-actions">
             <a className="ghost-btn" href={buildHash({ kind: "home" })}>ביטול</a>
-            <button type="submit" className="primary-btn" disabled={!canSubmitManual}>
+            <button type="submit" className="primary-btn" disabled={!canSubmitManual} data-testid="create-submit">
               {submitting ? "שומרת..." : "צרי פרויקט"}
             </button>
           </div>

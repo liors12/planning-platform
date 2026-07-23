@@ -87,11 +87,11 @@ export function EngineStatus({ jobId, submissionId, projectId, onTerminal }: Pro
       </header>
 
       {job.status === "queued" && (
-        <p className="muted">התוכנה תתחיל ברגע ש-worker יתפנה (MAX_CONCURRENT_JOBS=1).</p>
+        <p className="muted">הבדיקה תתחיל ברגע שהבדיקה הקודמת תסתיים.</p>
       )}
       {job.status === "running" && (
         <p className="muted">
-          התוכנה רצה ב-subprocess מבודד לפי ADR-001 - לוקח כ-60-90 שניות לתב"ע 407-1048248.
+          הבדיקה רצה כעת - בדרך כלל אורכת כדקה-שתיים.
         </p>
       )}
 
@@ -102,7 +102,7 @@ export function EngineStatus({ jobId, submissionId, projectId, onTerminal }: Pro
           <div className="error-message">{parsedError.error_message}</div>
           {parsedError.stderr_tail && (
             <details>
-              <summary>stderr (פלט שגיאה של התוכנה)</summary>
+              <summary>פרטים טכניים</summary>
               <pre dir="ltr">{parsedError.stderr_tail}</pre>
             </details>
           )}

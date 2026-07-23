@@ -64,7 +64,7 @@ export function CommentsTab({ project, submission }: Props) {
   if (!submission || !submission.has_audit_results) {
     return (
       <div className="card placeholder-card">
-        <span className="placeholder-phase">לא זמין</span>
+        <span className="placeholder-phase" data-testid="comments-gated">לא זמין</span>
         <h3>הערות רפרנטים</h3>
         <p className="muted">
           יש להריץ את התוכנה תחילה לפני הכנסת הערות רפרנטים.

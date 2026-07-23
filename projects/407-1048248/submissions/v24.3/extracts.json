@@ -1,0 +1,244 @@
+{
+  "_note": "Hand-extracted values from Kika Braz architects submission v24.3 (March 2025). Used by the compliance engine instead of attempting auto-extraction from the rasterized PDF. Filled by Claude on 2026-05-17 via per-page PNG rendering + visual reading of the rasterized tables in the submission. To be replaced by v8a-2 vision-LLM extraction later.",
+  "submission_id": "kika-braz-v24.3",
+  "submission_version": "24.3",
+  "submission_date": "2025-03-23",
+  "architect": "אדריכלים קיקה ברא\"ז",
+  "extraction_method": "vision_assisted_hand_extract",
+  "extracted_by": "Lior Levin (Claude-assisted)",
+  "extraction_date": "2026-05-17",
+  "tb_plan_number": "407-1048248",
+
+  "_structural_notes": [
+    "PDF TOC structure differs from the user's brief: plots 1, 2, 3, 4, 5 only. NO plot 9 anywhere in this submission.",
+    "Plots 2 and 4 share pages 34-38 in the TOC, but the architect actually shows them as SEPARATE tables side-by-side on the same pages — so they can be extracted independently.",
+    "Plots 3 and 5 each have 4 pages (no separate פיתוח, no מעונות יום page); they share a development page at p.39.",
+    "Plot 1 has 10 pages (24-33) including מעונות יום (27-28) and renderings (31-33).",
+    "The unit-mix tables use חדרים-based bands (2 / 2.5 קטנה / 3 גדולה / 4 / 5 / 6 / מיוחדות) with overlapping area ranges. Mapping cleanly to the תב\"ע's strict ≤55/56-75/76-99/≥100 buckets is NOT possible for plots where the 2.5-חד' band spans 62-81m² or the 4-חד' band spans 96-109m². Definite values are filled in, ambiguous ones left null with notes."
+  ],
+
+  "plots": {
+
+    "plot_1": {
+      "_source_pages": "PDF pages 24-33 (10-page block for תא שטח 1). Parking table: page 29 (מרתף). Unit-mix table: page 30 (קומה טיפוסית). Heights: pages 49, 52, 53, 61 (חזיתות + חתכים).",
+      "_status": "FULL — parking + units + heights all verified from v24.3 drawings. Height value differs from v6 reference (39.55) — see _note_height.",
+
+      "units_proposed": 232,
+      "height_m": 45.45,
+      "_note_height": "OVERRIDE: v6 ref / pre-populated value was 39.55m, but v24.3 elevations (pages 49, 52, 61) clearly show B1/C1 tallest buildings reaching +45.45 m above ground (floor 14 label = top of structure / technical roof above 13 residential floors). The 39.55m figure does not appear anywhere in v24.3 drawings. Smaller A1/D1 buildings reach +32.85m only.",
+      "floors_above_ground": 13,
+      "floors_technical_roof": 1,
+
+      "primary_area_sqm": null,
+      "service_area_above_sqm": null,
+      "service_area_below_sqm": null,
+      "_note_areas": "No שטח עיקרי / שטח שירות table is present in this submission. Architect's submission is a design plan (תכנית עיצוב), not a quantitative areas table.",
+
+      "parking": {
+        "private": 330,
+        "motorcycle": 23,
+        "accessible": 7,
+        "bicycle": 232,
+        "_note": "Verified visually from page 29 architect's parking table. Accessible = 4 רגיל + 3 גבוה = 7. סה\"כ row: 330 רכב פרטי, 4+3 גישות, 23 אופנועים, 232 אופניים. Matches v6 reference."
+      },
+
+      "unit_mix": {
+        "_note": "Architect's table (page 30) shows חדרים-based bands with overlapping area ranges, NOT the תב\"ע's clean ≤55/56-75/76-99/≥100 buckets. Definite values filled, ambiguous left null. Raw architect bands (סה\"כ דירות): 2 חדרים 57-61=17 | 2.5 חד'/קטנה 62-81=35 | 3 חדרים 82-94=23 | 4 חדרים 96-109=55 | 5 חדרים 110-135=74 | 6 חדרים 136-153=12 | מיוחדות 155+=16 | total=232. Of these, 72 are דירות תמורה (existing residents) + 160 are דירות יזם (new).",
+        "count_le_55sqm": 0,
+        "count_56_to_75sqm": null,
+        "_note_56_75": "AMBIGUOUS. At minimum 17 (the 2 חדרים 57-61 row, all ≤75). Plus an unknown portion of the 35 apartments in the 2.5 חד' 62-81m² range that are ≤75. Cannot split without per-unit areas.",
+        "count_76_to_99sqm": null,
+        "_note_76_99": "AMBIGUOUS. At minimum 23 (the 3 חדרים 82-94 row). Plus part of the 2.5-חד' band (75-81m² portion) + part of the 4 חדרים 96-109 band (96-99m² portion).",
+        "count_ge_100sqm": null,
+        "_note_ge_100": "AMBIGUOUS. At minimum 102 (5 חדרים 74 + 6 חדרים 12 + מיוחדות 16 = 102). Plus part of the 4 חדרים 96-109 band (100-109m² portion).",
+        "average_sqm": null,
+        "_note_avg": "Not shown explicitly. Rough estimate using bin midpoints: ~107 m². Not reliable enough to commit to a single value."
+      }
+    },
+
+    "plot_2": {
+      "_source_pages": "Bundled with plot 4 in TOC (pages 34-38) but actually presented as SEPARATE tables on the same pages. Plot 2 parking table: left side of page 37. Plot 2 unit-mix: left side of page 38. Plot 2 has a single building A2.",
+      "_status": "FULL — all visible fields extracted. Parking total private differs from v6 ref (63 vs 65) — see _note in parking.",
+
+      "units_proposed": 44,
+      "height_m": 32.85,
+      "floors_above_ground": 9,
+      "floors_technical_roof": 1,
+      "_note_technical": "Elevation drawings (e.g. page 56) label the level above 'ק 09+' (= 9 residential floors above ground) as floor 10 = technical roof at +32.85 m. So technical=1.",
+
+      "primary_area_sqm": null,
+      "service_area_above_sqm": null,
+      "service_area_below_sqm": null,
+
+      "parking": {
+        "private": 65,
+        "motorcycle": 4,
+        "accessible": 2,
+        "bicycle": 44,
+        "_note": "Read from architect's סה\"כ row on page 37 (left table, תא שטח 02). The 'private=65' overrides v6 reference's 63 (the row data shows 58 דיירים + 5 אורחים = 63, plus +2 from a small additional row not fully visible in my crop — total comes to 65 in the architect's סה\"כ row). Accessible = 1 רגיל + 1 גבוה. Motorcycle total row shows 4 (sub-row shows 5 — small inconsistency in the architect's own table)."
+      },
+
+      "unit_mix": {
+        "_note": "Raw architect bands (סה\"כ דירות): 2 חדרים 57-61=3 | 2.5 חד' קטנה 78-81=6 | 3 חד' גדולה 82-94=2 | 4 חדרים 95-109=0 | 5 חדרים 110-135=22 | 6 חדרים 136-153=5 | מיוחדות 155+=5 | total=44 (architect's totals row says 44 — visible breakdown sums to 43, so there may be an off-by-1 in the architect's table).",
+        "count_le_55sqm": 0,
+        "count_56_to_75sqm": 3,
+        "_note_56_75": "Clean: only the 2 חדרים 57-61 row falls in this band (3 apts). The 2.5 חד' 78-81 row is entirely above 75.",
+        "count_76_to_99sqm": 8,
+        "_note_76_99": "Clean: 2.5 חד' 78-81 (6 apts) + 3 גדולה 82-94 (2 apts) = 8. The 4 חדרים 95-109 row has 0 apartments in plot 2, so no ambiguity.",
+        "count_ge_100sqm": 32,
+        "_note_ge_100": "Clean: 5 חדרים 110-135 (22) + 6 חדרים 136-153 (5) + מיוחדות 155+ (5) = 32.",
+        "average_sqm": null
+      }
+    },
+
+    "plot_3": {
+      "_source_pages": "4-page block pages 40-43 (אשפה, פונקציות, מרתף, קומה טיפוסית). NO separate פיתוח page — plots 3+5 share development page 39. NO מעונות יום page. Parking table: page 42. Unit-mix: page 43. Plot 3 has 3 buildings (A3, B3, C3) per page 9. Heights: pages 48 (חתך), 58 (חזית דרומית 3+5), 60 (חזית צפונית 3).",
+      "_status": "FULL — extracted from v24.3 drawings. Was ALL NULL in pre-populated JSON.",
+
+      "units_proposed": 130,
+      "height_m": 32.85,
+      "floors_above_ground": 9,
+      "floors_technical_roof": 1,
+      "_note_heights": "All three plot 3 buildings (A3, B3, C3) show 'ק 09+' notation with top at +32.85m residential. Floor 10 label = technical roof. Page 60 (חזית צפונית תא שטח 3) confirms 9 residential floors.",
+
+      "primary_area_sqm": null,
+      "service_area_above_sqm": null,
+      "service_area_below_sqm": null,
+
+      "parking": {
+        "private": 186,
+        "motorcycle": 13,
+        "accessible": 4,
+        "bicycle": 130,
+        "_note": "Read from architect's parking table on page 42 (תא שטח 03). Row breakdown: דיירים 169 private + אורחים 13 private = 182, with +4 grand-total = 186 (extra from commerce/daycare rows). Accessible = 2 רגיל + 2 גבוה = 4."
+      },
+
+      "unit_mix": {
+        "_note": "Raw architect bands (סה\"כ דירות) read from page 43, total=130. Some intermediate values were hard to read at PNG resolution — total verified at 130. Best reading: 2 חדרים 57-61=7 | 2 חד' קטנה 61-81=31 | 3 חד' גדולה 82-94=33 | 4 חדרים 96-109=17 | 5 חדרים 110-135=~20 | 6 חדרים 142-153=~11 | מיוחדות 155+=~15. תמורה total=52 ✓, יזם total=78 ✓ (these were clearly readable).",
+        "count_le_55sqm": 0,
+        "count_56_to_75sqm": null,
+        "_note_56_75": "AMBIGUOUS. At minimum 7 (the 2 חדרים 57-61 row). Plus an unknown portion of the 2 קטנה 61-81 range that's ≤75 (out of 31 apts).",
+        "count_76_to_99sqm": null,
+        "_note_76_99": "AMBIGUOUS. At minimum 33 (3 גדולה 82-94). Plus part of 2 קטנה 61-81 (76-81m² portion) + part of 4 חדרים 96-109 (96-99m² portion).",
+        "count_ge_100sqm": null,
+        "_note_ge_100": "AMBIGUOUS. At minimum 46 (5 חדרים + 6 חדרים + מיוחדות, approx). Plus part of 4 חדרים (100-109m² portion).",
+        "average_sqm": null
+      }
+    },
+
+    "plot_4": {
+      "_source_pages": "Bundled with plot 2 in TOC (pages 34-38) but presented as separate right-side tables on the same pages. Plot 4 parking: right side of page 37. Plot 4 unit-mix: right side of page 38. Plot 4 has 2 buildings (A4, B4). Heights: pages 49 (חתך ב-ב), 54 (חזית מתוך שצ\"פ), 56-57 (חזית 2+4).",
+      "_status": "FULL — all fields extracted from v24.3.",
+
+      "units_proposed": 98,
+      "height_m": 42.30,
+      "floors_above_ground": 12,
+      "floors_technical_roof": 1,
+      "_note_heights": "A4 (tallest building) labeled 'ק 12+' with top of structure at +42.30m (page 56 elevation). B4 is smaller at 'ק 08+' with top +29.70m. Reported values are the maximum across the plot (A4). Floor 13 label = technical roof above 12 residential floors.",
+
+      "primary_area_sqm": null,
+      "service_area_above_sqm": null,
+      "service_area_below_sqm": null,
+
+      "parking": {
+        "private": 138,
+        "motorcycle": 10,
+        "accessible": 3,
+        "bicycle": 98,
+        "_note": "Read from architect's parking table on page 37 (right side, תא שטח 04). Breakdown: דיירים 128 + אורחים 10 = 138 private. Accessible = 1 רגיל + 2 גבוה = 3. Matches v6 reference's 138 for private."
+      },
+
+      "unit_mix": {
+        "_note": "Raw architect bands (סה\"כ דירות) from page 38 right-side table: 2 חדרים 57-61=4 | 2.5 חד' קטנה 78-81=18 | 3 חד' גדולה 82-94=21 | 4 חדרים 95-109=12 | 5 חדרים 110-135=23 | 6 חדרים 136-153=16 | מיוחדות 154+=4 | total=98 ✓. תמורה total=28, יזם total=70.",
+        "count_le_55sqm": 0,
+        "count_56_to_75sqm": 4,
+        "_note_56_75": "Clean: only the 2 חדרים 57-61 row (4 apts). The 2.5 חד' 78-81 row is entirely above 75.",
+        "count_76_to_99sqm": null,
+        "_note_76_99": "AMBIGUOUS. At minimum 39 (2.5 קטנה 78-81 = 18 + 3 גדולה 82-94 = 21). Plus part of 4 חדרים 95-109 (95-99m² portion, out of 12 apts).",
+        "count_ge_100sqm": null,
+        "_note_ge_100": "AMBIGUOUS. At minimum 43 (5 חדרים 23 + 6 חדרים 16 + מיוחדות 4). Plus part of 4 חדרים (100-109m² portion).",
+        "average_sqm": null
+      }
+    },
+
+    "plot_5": {
+      "_source_pages": "4-page block pages 44-47 (אשפה, פונקציות, מרתף, קומה טיפוסית). NO separate פיתוח or מעונות יום page. Parking table: page 46. Unit-mix: page 47. Plot 5 has 4 buildings (A5, B5, C5, D5). Heights: pages 49, 50, 54, 55, 58, 59.",
+      "_status": "FULL — extracted from v24.3 drawings. Was ALL NULL in pre-populated JSON.",
+
+      "units_proposed": 196,
+      "height_m": 42.30,
+      "floors_above_ground": 12,
+      "floors_technical_roof": 1,
+      "_note_heights": "Tallest buildings (A5, D5, possibly B5) labeled 'ק 12+' with top of structure at +42.30m. Smaller C5 labeled 'ק 08+' at +32.85m. B5 in page 59 shown at 'ק 08+' at +29.70m. Reported max is A5/D5 = 12 residential floors + 1 technical = 42.30m top.",
+
+      "primary_area_sqm": null,
+      "service_area_above_sqm": null,
+      "service_area_below_sqm": null,
+
+      "parking": {
+        "private": 280,
+        "motorcycle": 20,
+        "accessible": 5,
+        "bicycle": 196,
+        "_note": "Read from architect's parking table on page 46 (תא שטח 05). Breakdown: דיירים 255 + אורחים 20 = 275, with grand-total 280 (extra +5 from commerce/daycare rows). Accessible = 3 רגיל + 2 גבוה = 5."
+      },
+
+      "unit_mix": {
+        "_note": "Raw architect bands (סה\"כ דירות) from page 47, fully verified: 2 חדרים 57-61=10 | 3 חד' קטנה 78-81=16 | 3 חד' גדולה 82-94=63 | 4 חדרים 96-109=44 | 5 חדרים 117-135=44 | 6 חדרים 142-153=10 | מיוחדות 155+=9 | total=196 ✓. תמורה total=56 ✓, יזם total=140 ✓. All row sums verified.",
+        "count_le_55sqm": 0,
+        "count_56_to_75sqm": 10,
+        "_note_56_75": "Clean: only the 2 חדרים 57-61 row (10 apts). The 3 קטנה 78-81 row is entirely above 75.",
+        "count_76_to_99sqm": null,
+        "_note_76_99": "AMBIGUOUS. At minimum 79 (3 קטנה 78-81 = 16 + 3 גדולה 82-94 = 63). Plus part of 4 חדרים 96-109 (96-99m² portion, out of 44 apts).",
+        "count_ge_100sqm": null,
+        "_note_ge_100": "AMBIGUOUS. At minimum 63 (5 חדרים 44 + 6 חדרים 10 + מיוחדות 9). Plus part of 4 חדרים (100-109m² portion).",
+        "average_sqm": null
+      }
+    },
+
+    "plot_9": {
+      "_source_pages": "N/A — plot 9 is NOT present in this submission (v24.3). The PDF TOC and the general data page (page 9) enumerate only plots 1, 2, 3, 4, 5. Zero mentions of 'תא שטח 9' anywhere in the document.",
+      "_status": "NOT_IN_SUBMISSION — kept in JSON per user instruction so the compliance engine emits 'לא הוגש' for each check. If the תב\"ע 407 requires a plot 9 (public buildings + 150 m² commercial per the original pre-populated note), this absence is itself a compliance finding worth flagging upstream.",
+
+      "primary_area_sqm": null,
+      "service_area_above_sqm": null,
+      "height_m": null,
+      "floors_above_ground": null,
+
+      "uses": {
+        "daycare_sqm": null,
+        "synagogue_sqm": null,
+        "commercial_sqm": null,
+        "_note": "Per תב\"ע: 1,020 m² total + 150 m² commercial. NOT confirmable from this submission — plot 9 absent."
+      }
+    }
+  },
+
+  "plan_wide": {
+    "total_units_proposed": 700,
+    "_note_total": "Architect's general data page (page 8) explicitly states '700 יח\"ד מוצעות'. Sum of per-plot extractions: 232 + 44 + 130 + 98 + 196 = 700 ✓ (exact match).",
+
+    "small_apartments_count": 147,
+    "small_apartments_percent_calculated": 21.0,
+    "_note_small_apts": "147/700 = 21.0%. Uses ARCHITECT'S definition of 'small' = 2 חדרים + 2.5/3 חד' קטנה rows (areas ≤81 m²). Breakdown: plot 1 (17+35=52) + plot 2 (3+6=9) + plot 3 (7+31=38) + plot 4 (4+18=22) + plot 5 (10+16=26) = 147. WARNING: under the תב\"ע 407 strict ≤75 m² definition, only the 2 חדרים rows (57-61 m²) qualify cleanly: 17+3+7+4+10 = 41 apts = 5.86% — well below 21%. Reconciling this requires per-unit areas, which are not present in this submission. The architect's page 8 also claims 'לפחות 20% דירות קטנות', matching the architect's own definition.",
+
+    "infiltration_area_total_sqm": null,
+    "infiltration_area_percent": null,
+    "_note_infiltration": "NOT FOUND. תב\"ע 407 requires ≥15% infiltrating surfaces plan-wide, but no explicit 'שטחים מחלחלים' summary table appears in this submission's text or visible tables. Permeable surfaces may be indicated graphically on the פיתוח pages but are not quantified.",
+
+    "stormwater_retention_cubic_m": null,
+    "_note_stormwater": "NOT FOUND. No נספח ניקוז / השהיית מי נגר reference in the submission text. תב\"ע requires 450 m³ retention; this submission does not document it."
+  },
+
+  "documents_submitted": {
+    "_note": "Boolean checklist for required ancillary annexes. The full PDF text was searched for keywords: נספח (0 hits), חומריות (0), הידרולוגי (0), אקוסטי (0), קיימות (0), 5281 (0), פוטו (0), פנלים (0). No annexes are bundled inside this design-plan submission. The architect may have submitted them separately, but they are NOT in this PDF.",
+    "materials_annex": false,
+    "hydrology_annex": false,
+    "acoustic_annex": false,
+    "green_building_annex": false,
+    "environmental_sustainability_annex": false,
+    "energy_analysis": false,
+    "renderings_colored": true,
+    "_note_renderings": "Colored urban-context renderings ARE present: page 1 (cover), pages 4-5 (מבט כללי), pages 16-19 (הדמיות לשצ\"פ), pages 31-33 (הדמיות לפיתוח תא שטח 1), page 63 (final הדמיה). Renderings_colored = true."
+  }
+}

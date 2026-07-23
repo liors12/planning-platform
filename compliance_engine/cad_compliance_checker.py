@@ -363,7 +363,7 @@ def check_parking_count(
         return _result(
             rule_code, _NA,
             evidence={"detected_parking_polygons": detected},
-            notes_he=f"מינימום מקומות חנייה לא הוגדר בסכמה - זוהו {detected} פוליגוני חנייה (בדיקה אינה ישימה).",
+            notes_he=f"מינימום מקומות חנייה לא הוגדר בנתוני התב\"ע - זוהו {detected} פוליגוני חנייה (בדיקה אינה ישימה).",
         )
 
     evidence = {"detected_parking_polygons": detected, "min_required": min_count}
