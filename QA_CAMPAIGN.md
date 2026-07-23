@@ -62,7 +62,7 @@ binds; tauri-driver/WebDriver (exact driver↔runtime match) fails the session
 handshake on both release and debug builds — while demonstrably able to
 LAUNCH the app. The block is in the attach handshake, runner-side.
 
-**Phase-2 harness style: undecided** — pending the one un-exhausted probe.
+**Phase-2 harness style: undecided — awaiting fallback decision (see below).**
 
 **Most promising fallback (cheap):** fix the D-DIRECT capability shape.
 Its 400 Bad Request in 2s is a CLIENT error (malformed capabilities — likely
@@ -75,3 +75,23 @@ aging image. Last resort: split UI QA — frontend logic via plain
 Playwright+Chromium against the dev server (high fidelity for UI logic,
 loses packaged-shell integration), packaged bundle stays covered by the 49
 API-level probes.
+
+## Gate 1 addendum (2026-07-23, run 29993523783) — Attempt D FINAL
+
+**WEBVIEW2-DIRECT-DEAD.** With the CORRECT capability shape (browserName
+"webview2" + ms:edgeOptions.webviewOptions {} + binary = packaged exe —
+accepted, no 400), msedgedriver launched the app, waited 60s, and returned:
+
+    session not created: DevToolsActivePort file doesn't exist
+
+This is the smoking gun unifying every failure: msedgedriver's own official
+WebView2 attach waits for the runtime to open its DevTools interface — and
+the 150.0.4078.65 runtime never opens it. Same root cause as the raw-CDP
+"port never binds" and the tauri-driver hang. The block is IN the WebView2
+150 runtime (or a policy applied to it on the runner image); no client-side
+route can work against it.
+
+**Attempt D is FINAL. Phase 1 closed: BLOCKED at the runtime.** Remaining
+fallback options (owner decision): (1) runner-image pin / windows-2022 try;
+(2) split UI QA — dev-server Playwright for UI logic + existing 49 API
+probes for the bundle; (3) wait out a runtime fix / file upstream issue.
