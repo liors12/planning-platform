@@ -63,6 +63,8 @@ export function Sidebar({ currentRoute, refreshKey, onOpenDiagnostics }: Props) 
         </a>
       </header>
 
+      {/* Round-1 item 9: only this region scrolls; the footer stays pinned. */}
+      <div className="sidebar-scroll">
       {err && <div className="error">{err}</div>}
 
       {grouped.length === 0 && !err && (
@@ -98,6 +100,7 @@ export function Sidebar({ currentRoute, refreshKey, onOpenDiagnostics }: Props) 
           </ul>
         </section>
       ))}
+      </div>
 
       <footer className="sidebar-footer">
         {aiReady !== null && (

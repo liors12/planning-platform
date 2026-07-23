@@ -138,3 +138,6 @@ Thumbs.db
 
 # ── Agent harness state ───────────────────────────────────────────────
 .claude/
+tests/ui-fixes/.qa-fixes-data/
+tests/ui-fixes/node_modules/
+tests/ui-fixes/test-results/

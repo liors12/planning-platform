@@ -1,3 +1,4 @@
+import { MaybeApiError } from "./ErrorNotice";
 import { useEffect, useRef, useState } from "react";
 import {
   createRevision, deleteAttachment, deleteSubmission, exportExcel,
@@ -11,7 +12,7 @@ import {
 import { EngineStatus } from "./EngineStatus";
 
 // One-of state per submission's output. Drives the WORKING / SUCCESS /
-// FAILURE banner that today is missing — Ellen clicks a button and
+// FAILURE banner that today is missing - Ellen clicks a button and
 // sees nothing change in the UI, even though the file silently lands
 // on disk. This makes every step of the flow visible.
 type OutputStatus =
@@ -26,7 +27,7 @@ type OutputStatus =
 // English / module names / "סכמה" / "מנוע" in the UI.
 //
 // `rawError` is the stringified JSON.parse of job.error from the
-// sidecar — usually shaped {error_type, error_message, stderr_tail?}.
+// sidecar - usually shaped {error_type, error_message, stderr_tail?}.
 // We grep across the WHOLE string (incl. stderr_tail) because the
 // engine's actual cause sometimes only appears in stderr while
 // error_message is just "returned 1" / "render exit code 1".
@@ -37,25 +38,25 @@ function friendlyError(rawError: string | undefined | null): string {
     const parsed = JSON.parse(haystack);
     haystack = [parsed.error_message, parsed.stderr_tail, parsed.stdout_tail]
       .filter(Boolean).join("\n");
-  } catch { /* not JSON — search rawError as-is */ }
+  } catch { /* not JSON - search rawError as-is */ }
 
   if (/EngineNotAvailable|sidecar_python|WinError 2/i.test(haystack)) {
     return "פעולה זו אינה זמינה בגרסה הנוכחית. " +
            "להפקת הדוח עבור גרסה קיימת, השתמשי בכפתור \"הפיקי דו״ח\".";
   }
   if (/metadata not found/i.test(haystack)) {
-    return "לא ניתן ליצור דוח עבור גרסה זו — חסר קובץ מידע על הגרסה. " +
+    return "לא ניתן ליצור דוח עבור גרסה זו - חסר קובץ מידע על הגרסה. " +
            "נסי למחוק את הגרסה ולהעלות אותה מחדש.";
   }
   if (/schema not found/i.test(haystack)) {
-    return "לא ניתן ליצור דוח עבור הפרויקט — חסר קובץ הגדרות. " +
+    return "לא ניתן ליצור דוח עבור הפרויקט - חסר קובץ הגדרות. " +
            "פני לתמיכה.";
   }
   if (/audit_results.*needs|Run a full audit/i.test(haystack)) {
     return "אין עדיין תוצאות סקירה לגרסה זו. " +
            "יש להריץ את התוכנה תחילה לפני הפקת דוח.";
   }
-  // Generic safe fallback — never expose the raw technical text.
+  // Generic safe fallback - never expose the raw technical text.
   return "אירעה תקלה ביצירת הדוח. הפרטים נשמרו לקובץ יומן.";
 }
 
@@ -91,7 +92,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   // Active engine job per submission. Keyed by submission_id.
   const [activeJobs, setActiveJobs] = useState<Record<number, string>>({});
 
-  // Per-submission output state — one of: null, working, success, error.
+  // Per-submission output state - one of: null, working, success, error.
   // Drives a visible banner under the action buttons so Ellen sees what
   // the app is doing at every step.
   const [outputStatus, setOutputStatus] = useState<Record<number, OutputStatus>>({});
@@ -150,7 +151,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
   async function onUpload(e: React.FormEvent) {
     e.preventDefault();
-    // Inline validation rather than disabling the button — so the user
+    // Inline validation rather than disabling the button - so the user
     // gets feedback explaining WHY the click didn't do anything.
     if (!version.trim()) {
       setValidationErr("יש להזין מספר גרסה");
@@ -174,7 +175,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       refresh();
       onSubmissionsChanged();
     } catch (e) {
-      // 409 = duplicate version — show as an inline validation message
+      // 409 = duplicate version - show as an inline validation message
       // (red text under the button), not as a top-level error banner.
       // Real failures (500, network, …) still go to the error banner so
       // they don't look like user mistakes.
@@ -329,7 +330,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   async function onOpenMavat() {
     const url = `https://mavat.iplan.gov.il/SV4/1/1001/${encodeURIComponent(project.tava_number)}`;
     try { await openUrl(url); }
-    catch { /* silently ignore — worst case the browser doesn't open */ }
+    catch { /* silently ignore - worst case the browser doesn't open */ }
   }
 
   async function onUploadResponse(submissionId: number, file: File) {
@@ -476,9 +477,8 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
         </div>
         {!project.has_schema && (
           <div className="warning-block">
-            <strong>אזהרה:</strong> לא נמצא קובץ סכמה (project-schema) לתב"ע{" "}
-            <code dir="ltr">{project.tava_number}</code>. ניתן להעלות את ה-PDF, אך כפתור
-            "הפעילי את התוכנה" יהיה מושבת. הוספת סכמות תהיה זמינה בעדכון הבא.
+            לא ניתן להריץ בדיקה אוטומטית - נתוני התב"ע טרם נטענו לפרויקט זה.
+            ניתן להעלות קבצים; הבדיקה תופעל לאחר טעינת הנתונים.
           </div>
         )}
         <form onSubmit={onUpload}>
@@ -509,7 +509,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               />
             </label>
             <label className="form-field">
-              <span className="form-label">קובץ CAD (DXF / DWG / DWFX) — אופציונלי</span>
+              <span className="form-label">קובץ CAD (DXF / DWG / DWFX) - אופציונלי</span>
               <input
                 ref={cadFileInputRef}
                 type="file"
@@ -551,7 +551,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
         </form>
       </section>
 
-      {err && <div className="error">{err}</div>}
+      {err && <MaybeApiError error={err} />}
 
       {/* ── Submissions list ────────────────────────────────────────── */}
       <section className="submissions-list">
@@ -568,7 +568,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
               <p className="muted">
                 גרסה חדשה על בסיס{" "}
                 <span dir="ltr">{revisionDialog.sourceName}</span>.
-                ניתן להעלות קבצים חדשים — אם לא תבחרי, הקבצים הקיימים יועתקו.
+                ניתן להעלות קבצים חדשים - אם לא תבחרי, הקבצים הקיימים יועתקו.
               </p>
               <form onSubmit={onSubmitRevision} className="revision-form">
                 <label className="form-label">
@@ -601,7 +601,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                     onChange={(e) => setRevisionCad(e.target.files?.[0] ?? null)}
                   />
                 </label>
-                {revisionErr && <div className="error">{revisionErr}</div>}
+                {revisionErr && <MaybeApiError error={revisionErr} />}
                 <div className="modal-actions">
                   <button type="submit" className="primary-btn" disabled={revisionUploading}>
                     {revisionUploading
@@ -621,7 +621,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
         {subs?.map((sub) => {
           const activeJobId = activeJobs[sub.id];
-          // engine_run_available is False in the Windows-frozen package — the
+          // engine_run_available is False in the Windows-frozen package - the
           // worker can't spawn cfg.sidecar_python in that environment. Until
           // _process_one gets an in-process branch (V0.2), the button stays
           // disabled with a Hebrew "feature not available" tooltip so Ellen
@@ -644,7 +644,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                     {sub.cad_path && (() => {
                       const ext = sub.cad_path.split(".").pop()?.toLowerCase();
                       if (ext === "dxf") return <span className="cad-badge cad-dxf">{" · "}DXF צורף</span>;
-                      if (ext === "dwg") return <span className="cad-badge cad-dwg">{" · "}DWG צורף — לניתוח נדרש DXF</span>;
+                      if (ext === "dwg") return <span className="cad-badge cad-dwg">{" · "}DWG צורף - לניתוח נדרש DXF</span>;
                       if (ext === "dwfx") return <span className="cad-badge cad-dwfx">{" · "}DWFX צורף (לצפייה בלבד)</span>;
                       return null;
                     })()}
@@ -742,7 +742,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                     !sub.engine_run_available
                       ? "פעולה זו אינה זמינה בגרסה הנוכחית"
                       : !project.has_schema
-                      ? `לא ניתן להריץ — אין סכמה לתב"ע ${project.tava_number}`
+                      ? `לא ניתן להריץ - אין סכמה לתב"ע ${project.tava_number}`
                       : ""
                   }
                 >
@@ -796,7 +796,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
 
                 {sub.has_audit_results && (() => {
                   const st = outputStatus[sub.id];
-                  // Disable BOTH output buttons while EITHER is working —
+                  // Disable BOTH output buttons while EITHER is working -
                   // a stray click on the other one during a running job
                   // queues a second job that can corrupt state.
                   const busy = st?.kind === "working";
@@ -931,15 +931,15 @@ function ResponseReviewSection({
               {(rows ?? []).map((r, i) => (
                 <tr key={i}
                     className={r.treatment_status || r.architect_notes ? "" : "rt-empty"}>
-                  <td>{r.topic_he ?? "—"}</td>
-                  <td>{r.finding_status ?? "—"}</td>
-                  <td className="rt-desc rt-divider-col">{r.description ?? "—"}</td>
+                  <td>{r.topic_he ?? "-"}</td>
+                  <td>{r.finding_status ?? "-"}</td>
+                  <td className="rt-desc rt-divider-col">{r.description ?? "-"}</td>
                   <td>
                     {r.treatment_status
                       ? <span className="rt-treatment">{r.treatment_status}</span>
-                      : <span className="muted">—</span>}
+                      : <span className="muted">-</span>}
                   </td>
-                  <td className="rt-notes">{r.architect_notes ?? "—"}</td>
+                  <td className="rt-notes">{r.architect_notes ?? "-"}</td>
                 </tr>
               ))}
             </tbody>
@@ -1068,7 +1068,7 @@ function OutputBanner({
 // OutputBanner (which only appears right after generating in the current
 // session). When has_report_pdf / has_report_xlsx come back true on list
 // refresh, these buttons let the user open a report generated in a prior
-// session — without having to regenerate it.
+// session - without having to regenerate it.
 
 // ─── A1: Attachment section ───────────────────────────────────────────────────
 

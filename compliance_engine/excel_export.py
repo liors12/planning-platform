@@ -9,9 +9,9 @@ reference file:
   תיאור / פעולה נדרשת | סטטוס טיפול | הערות האדריכל
 
 Row sources:
-  • בדיקה רב-תחומית      — audit_results["disciplines"]
-  • בדיקת תאימות לתב"ע  — audit_results["content"] + m4 sidecar findings
-  • הערות מפגישות        — discipline_comments rows (marked ✓ חדש, blue fill)
+  • בדיקה רב-תחומית      - audit_results["disciplines"]
+  • בדיקת תאימות לתב"ע  - audit_results["content"] + m4 sidecar findings
+  • הערות מפגישות        - discipline_comments rows (marked ✓ חדש, blue fill)
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ COLOR_ALT_ROW = "FFF5F5F5"          # --gray-bg
 COLOR_ARCHITECT_BG = "FFFCE4D6"     # peach — architect input columns
 COLOR_WARNING_BG = "FFFFF2CC"       # light yellow — read-only banner
 COLOR_WARNING_TEXT = "FFC62828"     # --red
-COLOR_NEW_ROW_BG = "FFD9EAF7"       # light blue — ✓ חדש meeting-notes rows
+COLOR_NEW_ROW_BG = "FFD9EAF7"       # light blue - ✓ חדש meeting-notes rows
 
 FONT_FAMILY = "Arial"
 
@@ -56,7 +56,7 @@ _DISC_SORT_IDX = {DISCIPLINE_NAME_HE.get(k, k): i for i, k in enumerate(DISCIPLI
 
 # Sidecar discipline keys → Hebrew labels (mirrors app/sidecar/sidecar/disciplines.py).
 _SIDECAR_DISC_HE: dict[str, str] = {
-    "sec-3-1":          'שפ"ע — אשפה ופינוי פסולת',
+    "sec-3-1":          'שפ"ע - אשפה ופינוי פסולת',
     "sec-3-2":          "גנים ונוף",
     "sec-3-3":          "תשתיות",
     "sec-3-4":          DISCIPLINE_NAME_HE["fire"],
@@ -519,7 +519,7 @@ def generate_comparison_xlsx(
 
         values = [
             i,
-            "",  # חדש? — not used in comparison sheet
+            "",  # חדש? - not used in comparison sheet
             row["report_section"],
             row["discipline"],
             row["plot"],

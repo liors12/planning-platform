@@ -9,7 +9,7 @@ matches `discipline_key` against the same id in the rendered HTML.
 from __future__ import annotations
 
 DISCIPLINES: list[dict] = [
-    {"key": "sec-3-1",        "label": 'שפ"ע — אשפה ופינוי פסולת'},
+    {"key": "sec-3-1",        "label": 'שפ"ע - אשפה ופינוי פסולת'},
     {"key": "sec-3-2",        "label": "גנים ונוף"},
     {"key": "sec-3-3",        "label": "תשתיות"},
     {"key": "sec-3-4",        "label": "תנועה"},

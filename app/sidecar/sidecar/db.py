@@ -250,7 +250,7 @@ _SEED_GUIDELINES = [
     },
     {
         "discipline": "גינון ועיצוב נוף",
-        "title": "מסך כביסה — רוחב מינימלי",
+        "title": "מסך כביסה - רוחב מינימלי",
         "body_text": "רוחב אזור מסך כביסה לא יפחת מ-1.8 מ'.",
         "guideline_type": "checkable",
         "check_key": "laundry_screen_width_m",
@@ -259,7 +259,7 @@ _SEED_GUIDELINES = [
     },
     {
         "discipline": "גינון ועיצוב נוף",
-        "title": "מסך כביסה — גובה מינימלי",
+        "title": "מסך כביסה - גובה מינימלי",
         "body_text": "גובה אזור מסך כביסה לא יפחת מ-1.5 מ'.",
         "guideline_type": "checkable",
         "check_key": "laundry_screen_height_m",
@@ -268,7 +268,7 @@ _SEED_GUIDELINES = [
     },
     {
         "discipline": "תשתיות ונגישות",
-        "title": "רוחב מינימלי — שביל ראשי",
+        "title": "רוחב מינימלי - שביל ראשי",
         "body_text": "שביל תנועה ראשי לא יפחת מ-3 מ'.",
         "guideline_type": "checkable",
         "check_key": "path_main_min_m",
@@ -277,7 +277,7 @@ _SEED_GUIDELINES = [
     },
     {
         "discipline": "תשתיות ונגישות",
-        "title": "רוחב מינימלי — שביל משני",
+        "title": "רוחב מינימלי - שביל משני",
         "body_text": "שביל תנועה משני לא יפחת מ-2.5 מ'.",
         "guideline_type": "checkable",
         "check_key": "path_secondary_min_m",
@@ -286,7 +286,7 @@ _SEED_GUIDELINES = [
     },
     {
         "discipline": "בטיחות אש",
-        "title": "מרחק מינימלי — מיכל גז",
+        "title": "מרחק מינימלי - מיכל גז",
         "body_text": "מיכל גז לא יוצב במרחק פחות מ-2 מ' מכל מבנה קיים.",
         "guideline_type": "checkable",
         "check_key": "gas_tank_setback_min_m",

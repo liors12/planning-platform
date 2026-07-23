@@ -17,12 +17,12 @@ interface Props {
 type FitMode = "fit-page" | "fit-width" | { kind: "scale"; value: number };
 
 /**
- * PDF viewer — single-page rendering with prev/next/jump + zoom controls.
+ * PDF viewer - single-page rendering with prev/next/jump + zoom controls.
  *
- * Default mode: "fit-page" — scales the page so it fits the available
+ * Default mode: "fit-page" - scales the page so it fits the available
  * pane both horizontally AND vertically without scrollbars. Other modes:
- *   - "fit-width" — fit horizontally (vertical scroll allowed)
- *   - {kind: "scale", value: N} — explicit zoom factor
+ *   - "fit-width" - fit horizontally (vertical scroll allowed)
+ *   - {kind: "scale", value: N} - explicit zoom factor
  *
  * Strict single-page virtualization (only the current page rendered) keeps
  * memory bounded regardless of file size. Thumbnail strip is later work.
@@ -72,7 +72,7 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
 
   const onDocumentLoadError = useCallback((_err: Error) => {
     setLoadError(
-      "התכנית אינה זמינה לתצוגה — ההערות והפקת הדו״ח פועלות כרגיל."
+      "התכנית אינה זמינה לתצוגה - ההערות והפקת הדו״ח פועלות כרגיל."
     );
   }, []);
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { getHealth, isSidecarUnreachable, listProjects, type ProjectOut, type WorkflowStage } from "./api";
 import { DiagnosticsPanel } from "./components/DiagnosticsPanel";
+import { MaybeApiError } from "./components/ErrorNotice";
 import { Sidebar } from "./components/Sidebar";
 import { CreateProject } from "./pages/CreateProject";
 import { Guidelines } from "./pages/Guidelines";
@@ -107,7 +108,7 @@ function Home({ refreshKey, onOpenDiagnostics }: { refreshKey: number; onOpenDia
       {hasAny && (
         <section className="pipeline-summary" aria-label="סיכום שלבי הגשה">
           {PIPELINE_STAGES.map((stage) => (
-            <div key={stage} className={`pipeline-card ps-${stage}`}>
+            <div key={stage} className={`pipeline-card ps-${stage}${stageCounts[stage] === 0 ? " ps-zero" : ""}`}>
               <span className="ps-count">{stageCounts[stage]}</span>
               <span className="ps-label">{STAGE_LABEL_HE[stage]}</span>
             </div>
@@ -131,7 +132,7 @@ function Home({ refreshKey, onOpenDiagnostics }: { refreshKey: number; onOpenDia
             בתחתית המסך.
           </div>
         )}
-        {err && <div className="error">{err}</div>}
+        {err && <MaybeApiError error={err} title="לא ניתן לטעון את רשימת הפרויקטים" />}
         {!projects && !err && !unreachable && <p className="muted">טוענת...</p>}
         {projects && recent.length === 0 && (
           <p className="muted">אין עדיין פרויקטים. פתחי פרויקט ראשון כדי להתחיל.</p>

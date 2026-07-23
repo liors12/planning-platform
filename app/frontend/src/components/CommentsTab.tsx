@@ -1,4 +1,4 @@
-// Phase 2b Module D — "הערות רפרנטים" tab.
+// Phase 2b Module D - "הערות רפרנטים" tab.
 //
 // Two-panel layout via SplitPane: left = grouped comment list + add form,
 // right = current submission's PDF. Top button triggers --render-only via
@@ -8,6 +8,7 @@
 // extra §3 table rows tagged "(הערת רפרנט)". The engine's audit_results
 // JSON is never touched, so re-running the engine never clobbers them.
 
+import { MaybeApiError } from "./ErrorNotice";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createComment,
@@ -55,8 +56,8 @@ export function CommentsTab({ project, submission }: Props) {
   // ── Gate ──────────────────────────────────────────────────────────────
   // Gate on has_audit_results, not status === "complete". A stuck status
   // label (e.g. left "failed" by an earlier render error) used to lock
-  // the tab even though all downstream data — audit_results.m4.json,
-  // PDF, Excel — was present and the comments render path was healthy.
+  // the tab even though all downstream data - audit_results.m4.json,
+  // PDF, Excel - was present and the comments render path was healthy.
   // Today Ellen hit exactly that on v24.3: status="failed",
   // has_audit_results=true. The presence of analyzed data is the real
   // precondition for adding referent comments.
@@ -89,7 +90,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
   // easy to miss + offered no path to the produced files. The persistent
   // banner here matches the P1 success state from the submissions tab:
   // working → success-with-open-links → error. "Success" includes both
-  // the PDF and the Excel — the regenerate flow now produces BOTH, since
+  // the PDF and the Excel - the regenerate flow now produces BOTH, since
   // the user expects updated comments to show up in either output.
   //
   // partial means one of the two jobs failed; we still surface the one
@@ -102,7 +103,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     | null;
   const [regenStatus, setRegenStatus] = useState<RegenStatus>(null);
 
-  // PdfViewer reload via URL nonce — bumped after each successful render.
+  // PdfViewer reload via URL nonce - bumped after each successful render.
   const [pdfNonce, setPdfNonce] = useState(0);
 
   // ── PDF-extraction flow ───────────────────────────────────────────────
@@ -156,7 +157,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     return () => clearTimeout(t);
   }, [toast]);
 
-  // ── Regenerate handler — PDF + Excel together ────────────────────────
+  // ── Regenerate handler - PDF + Excel together ────────────────────────
   // Both outputs are produced in parallel so the user gets a single
   // "done" moment rather than two staggered ones. Each call enqueues
   // its own job; we await both before declaring success. If only one
@@ -171,8 +172,8 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         exportExcel(submission.id),
       ]);
       // 90s for PDF (WeasyPrint can be slow on large reports), 60s for
-      // Excel (always fast — pure openpyxl). No per-poll progress
-      // callback — the working banner is sufficient feedback.
+      // Excel (always fast - pure openpyxl). No per-poll progress
+      // callback - the working banner is sufficient feedback.
       const noProgress = () => { /* no-op */ };
       const [pdfTerm, xlsxTerm] = await Promise.allSettled([
         pollJobUntilDone(pdfJob.id, noProgress, 1000, 90_000),
@@ -215,7 +216,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     if (!file) return;
     e.target.value = ""; // allow re-selecting same file
     if (file.size > 20 * 1024 * 1024) {
-      setExtractErr("הקובץ גדול מדי — העלי קובץ עד 20MB.");
+      setExtractErr("הקובץ גדול מדי - העלי קובץ עד 20MB.");
       return;
     }
     setExtracting(true);
@@ -228,7 +229,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
       if (result.error === "scan") {
         setExtractErr(
           result.error_message ??
-            "לא ניתן לחלץ טקסט מה-PDF — ייתכן שהוא סרוק. המרי לפורמט טקסט ונסי שוב.",
+            "לא ניתן לחלץ טקסט מה-PDF - ייתכן שהוא סרוק. המרי לפורמט טקסט ונסי שוב.",
         );
       } else if (result.comments.length === 0) {
         setExtractErr("לא נמצאו הערות ב-PDF. ניתן להוסיף הערות ידנית בטופס למטה.");
@@ -250,7 +251,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     if (!file) return;
     e.target.value = "";
     if (file.size > 20 * 1024 * 1024) {
-      setMeetingErr("הקובץ גדול מדי — העלי קובץ עד 20MB.");
+      setMeetingErr("הקובץ גדול מדי - העלי קובץ עד 20MB.");
       return;
     }
     setMeetingUploading(true);
@@ -262,7 +263,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
       if (result.error === "scan") {
         setMeetingErr(
           result.error_message ??
-            "לא ניתן לחלץ טקסט מה-PDF — ייתכן שהוא סרוק.",
+            "לא ניתן לחלץ טקסט מה-PDF - ייתכן שהוא סרוק.",
         );
       } else if (result.rows.length === 0) {
         setMeetingErr("לא נמצאו פריטים בסיכום הישיבה.");
@@ -313,7 +314,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     try {
       await openOutput(submission.id, kind);
     } catch (e) {
-      setToast({ kind: "error", text: 'לא ניתן לפתוח את הקובץ — נסי "פתחי תיקייה".' });
+      setToast({ kind: "error", text: 'לא ניתן לפתוח את הקובץ - נסי "פתחי תיקייה".' });
       console.error("openOutput failed", e);
     }
   }
@@ -432,7 +433,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         <div className="card pdf-extract-card">
           <div className="pdf-extract-header">
             <h4 className="pdf-extract-title">
-              {meetingErr ? "שגיאת חילוץ סיכום ישיבה" : "סיכום ישיבה — פריטים שחולצו"}
+              {meetingErr ? "שגיאת חילוץ סיכום ישיבה" : "סיכום ישיבה - פריטים שחולצו"}
             </h4>
             <button
               type="button"
@@ -475,7 +476,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         <div className="card pdf-extract-card">
           <div className="pdf-extract-header">
             <h4 className="pdf-extract-title">
-              {extractErr ? "שגיאת חילוץ PDF" : "תצוגה מקדימה — הערות שחולצו"}
+              {extractErr ? "שגיאת חילוץ PDF" : "תצוגה מקדימה - הערות שחולצו"}
             </h4>
             <button
               type="button"
@@ -522,7 +523,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
                   title={
                     row.confidence === "high"
                       ? "המודל זיהה את הדיסציפלינה והסטטוס בביטחון גבוה"
-                      : "הסיווג אינו ודאי — מומלץ לבדוק"
+                      : "הסיווג אינו ודאי - מומלץ לבדוק"
                   }
                 >
                   {row.confidence === "high" ? "ודאות גבוהה" : "ודאות נמוכה"}
@@ -572,7 +573,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         </div>
       )}
 
-      {loadErr && <div className="error error-block">{loadErr}</div>}
+      {loadErr && <MaybeApiError error={loadErr} title="לא ניתן לטעון את ההערות" />}
 
       <SplitPane
         storageKey={`splitter:comments_project_${project.id}`}
@@ -612,7 +613,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
 // ── Persistent regenerate-status banner (P1 pattern from SubmissionsTab) ──
 // Stays visible until the user dismisses it (no auto-fade like the old
 // 3-second toast). The success state exposes the same actions the
-// submissions-tab banner does — open PDF, open Excel, open folder.
+// submissions-tab banner does - open PDF, open Excel, open folder.
 type RegenBannerStatus =
   | { kind: "working" }
   | { kind: "success" }
@@ -665,15 +666,15 @@ function RegenBanner({
   if (status.kind === "partial") {
     // One succeeded, one failed. Show what worked + a calm note about
     // the other. The "failed" half is recoverable by clicking the
-    // regenerate button again — common cause is a transient lock on
+    // regenerate button again - common cause is a transient lock on
     // the output file.
     return (
       <div className="output-banner output-success" role="status" aria-live="polite"
            data-testid="regen-banner-partial">
         <span className="output-icon" aria-hidden="true">⚠</span>
         <span className="output-msg">
-          {status.pdfOk && !status.xlsxOk && "הדו״ח עודכן ✓ • האקסל לא נוצר — לחצי שוב על הכפתור."}
-          {!status.pdfOk && status.xlsxOk && "האקסל עודכן ✓ • הדו״ח לא נוצר — לחצי שוב על הכפתור."}
+          {status.pdfOk && !status.xlsxOk && "הדו״ח עודכן ✓ • האקסל לא נוצר - לחצי שוב על הכפתור."}
+          {!status.pdfOk && status.xlsxOk && "האקסל עודכן ✓ • הדו״ח לא נוצר - לחצי שוב על הכפתור."}
         </span>
         {status.pdfOk && (
           <button className="ghost-btn small" type="button"
@@ -701,7 +702,7 @@ function RegenBanner({
   );
 }
 
-// ─── Left panel — list + add form ────────────────────────────────────────
+// ─── Left panel - list + add form ────────────────────────────────────────
 
 interface GroupedItem {
   key: string;
@@ -860,7 +861,7 @@ function CommentRow({
             rows={3}
           />
         </div>
-        {err && <div className="error">{err}</div>}
+        {err && <MaybeApiError error={err} />}
         <div className="comment-row-actions">
           <button className="primary-btn small" onClick={save}>שמרי</button>
           <button className="ghost-btn small" onClick={() => setMode("view")}>
@@ -918,7 +919,7 @@ function CommentRow({
           </button>
         </div>
       )}
-      {err && <div className="error">{err}</div>}
+      {err && <MaybeApiError error={err} />}
     </div>
   );
 }
@@ -1015,7 +1016,7 @@ function AddCommentForm({
           rows={3}
         />
       </div>
-      {err && <div className="error">{err}</div>}
+      {err && <MaybeApiError error={err} />}
       <div className="add-comment-actions">
         <button
           type="submit"

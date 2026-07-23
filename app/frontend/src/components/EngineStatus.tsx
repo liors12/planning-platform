@@ -91,7 +91,7 @@ export function EngineStatus({ jobId, submissionId, projectId, onTerminal }: Pro
       )}
       {job.status === "running" && (
         <p className="muted">
-          התוכנה רצה ב-subprocess מבודד לפי ADR-001 — לוקח כ-60-90 שניות לתב"ע 407-1048248.
+          התוכנה רצה ב-subprocess מבודד לפי ADR-001 - לוקח כ-60-90 שניות לתב"ע 407-1048248.
         </p>
       )}
 

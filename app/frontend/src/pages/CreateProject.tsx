@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { createProject, importSchema } from "../api";
+import { MaybeApiError } from "../components/ErrorNotice";
 import { buildHash, type Route } from "../route";
 
 interface Props {
@@ -233,7 +234,7 @@ export function CreateProject({ navigate, onCreated }: Props) {
             />
           </label>
 
-          {err && <div className="error">{err}</div>}
+          {err && <MaybeApiError error={err} />}
           <DupeBlock dupe={dupe} tavaHint={tava.trim()} />
 
           <div className="form-actions">
@@ -280,7 +281,7 @@ export function CreateProject({ navigate, onCreated }: Props) {
             </div>
           )}
 
-          {err && <div className="error">{err}</div>}
+          {err && <MaybeApiError error={err} />}
           <DupeBlock dupe={dupe} tavaHint={preview?.tava ?? ""} />
 
           <div className="form-actions">

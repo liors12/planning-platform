@@ -1187,7 +1187,7 @@ def check_logos_footer(extraction: dict, rule: dict) -> dict:
                 "footer_band_ratio": band,
                 "deficient_pages": skinny[:20],
                 "deficient_page_count": len(skinny),
-                "note_he": "ספירת תמונות בלבד — אימות זהות הלוגואים דורש קבצי ייחוס.",
+                "note_he": "ספירת תמונות בלבד - אימות זהות הלוגואים דורש קבצי ייחוס.",
             },
             pages_checked=pages_checked,
         )

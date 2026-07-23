@@ -300,15 +300,15 @@ def _check_height(rule: dict, ta: TAShetachData, parcel: dict) -> dict:
         failure_mode = FAILURE_NONE
         headroom = float(schema_max_m) - submission_max
         if headroom < border:
-            note += f' חריגה של עד {border} מ\' מהתקרה ({schema_max_m} מ\') — נדרש תיקון גבולי.'
+            note += f' חריגה של עד {border} מ\' מהתקרה ({schema_max_m} מ\') - נדרש תיקון גבולי.'
     elif overrun_m <= border and overrun_m <= fail_above:
         verdict = rule.get("verdict_on_borderline", VERDICT_FAIL_BORDERLINE)
         failure_mode = FAILURE_OVERRUN
-        note += f' חריגה של {overrun_m:.2f} מ\' מהתקרה ({schema_max_m} מ\') — נדרש תיקון גבולי.'
+        note += f' חריגה של {overrun_m:.2f} מ\' מהתקרה ({schema_max_m} מ\') - נדרש תיקון גבולי.'
     else:
         verdict = rule.get("verdict_on_fail", VERDICT_FAIL)
         failure_mode = FAILURE_OVERRUN
-        note += f' חריגה של {overrun_m:.2f} מ\' מהתקרה ({schema_max_m} מ\') — נדרש תיקון.'
+        note += f' חריגה של {overrun_m:.2f} מ\' מהתקרה ({schema_max_m} מ\') - נדרש תיקון.'
 
     return _result(rule, verdict, ta.ta_shetach_id, failure_mode=failure_mode, evidence={
         "submission_max_height_m": submission_max,
@@ -369,10 +369,10 @@ def _check_parking(rule: dict, ta: TAShetachData, parcel: dict) -> dict:
     }
     transparent_note = (
         f'יחס חניה פרטית מחושב: {actual_ratio:.2f} ({ta.parking_private}/{ta.unit_count} יח"ד). '
-        f'מעל בסיס איכותי של {baseline_ratio} — תקין על בדיקה ראשונית. '
+        f'מעל בסיס איכותי של {baseline_ratio} - תקין על בדיקה ראשונית. '
         'תקן חניה לאומי 3.1 (ינואר 2023, בתוקף בעת ההיתר) דורש 1.0-1.5 חניות פר יח"ד לפי גודל הדירה '
         '(עד 120 מ"ר: 1.0-1.3; 120-200 מ"ר: 1.5), בתוספת 20% חניות אורחים. '
-        'אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור — לא קיימת בהגשה זו.'
+        'אימות התאמה מדויקת לתקן דורש טבלת שטחים פר יחידת דיור - לא קיימת בהגשה זו.'
     )
     if actual_ratio >= baseline_ratio:
         return _result(rule, rule.get("verdict_on_pass", VERDICT_PASS), ta.ta_shetach_id,
@@ -455,12 +455,12 @@ def _check_apartment_mix(rule: dict, extracted: ExtractedSubmissionData, project
         body += (
             f' ההפרש נובע מטווחי שטח חופפים בטבלת התמהיל (62-81 מ"ר) בתאי שטח {ambig_str}, '
             f'שלא ניתן לפצל ללא שטחי דירות פרטניים. יש לבקש מהאדריכל טבלת תמהיל מפורטת עם שטח '
-            f'לכל יחידת דיור כדי לסגור את הספק. אם הדרישה היא {int(schema_min_pct)}% — עלולה ההגשה לא לעמוד בה.'
+            f'לכל יחידת דיור כדי לסגור את הספק. אם הדרישה היא {int(schema_min_pct)}% - עלולה ההגשה לא לעמוד בה.'
         )
         return _result(
             rule, VERDICT_REQUIRES_REVIEW, None,
             evidence={
-                "submission_value": f'לפחות {strict_count} ({strict_pct:.2f}%) — לפי הגדרה מחמירה ≤{int(threshold_m2)} מ"ר',
+                "submission_value": f'לפחות {strict_count} ({strict_pct:.2f}%) - לפי הגדרה מחמירה ≤{int(threshold_m2)} מ"ר',
                 "schema_min_pct": schema_min_pct,
                 "threshold_m2": threshold_m2,
                 "strict_count_lower_bound": strict_count,

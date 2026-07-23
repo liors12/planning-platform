@@ -62,7 +62,7 @@ function DiagnosticsBody({ d }: { d: DiagnosticsResponse }) {
                               "שגיאה";
 
   // Seed files: derive a single "found / missing" row that lists which
-  // specific files (if any) are missing — matches the user-facing spec.
+  // specific files (if any) are missing - matches the user-facing spec.
   const seedFiles: Array<[string, FileCheck]> = [
     ["סכמת פרויקט",     d.seed.schema_file],
     ["מטא-נתוני הגשה",  d.seed.metadata_file],

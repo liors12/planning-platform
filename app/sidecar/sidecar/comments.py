@@ -261,7 +261,7 @@ def make_routers(engine: Engine, queue: EngineQueue, cfg) -> tuple[APIRouter, AP
             _require_submission(sess, submission_id)
         content = await pdf_file.read()
         if len(content) > _MAX_PDF_BYTES:
-            raise HTTPException(413, "הקובץ גדול מדי — העלי קובץ עד 20MB")
+            raise HTTPException(413, "הקובץ גדול מדי - העלי קובץ עד 20MB")
         from .referent_extract import extract_referent_comments  # noqa: PLC0415
         return extract_referent_comments(content)
 
