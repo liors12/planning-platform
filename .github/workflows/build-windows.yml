@@ -1116,16 +1116,29 @@ jobs:
           $dst = Join-Path $env:RUNNER_TEMP "edge-149-extract"
           Invoke-WebRequest -Uri $msiUrl -OutFile $msi
           Write-Host "Downloaded: $((Get-Item $msi).Length) bytes"
-          $msiLog = Join-Path $env:RUNNER_TEMP "edge-149-msiexec.log"
-          $p = Start-Process msiexec -ArgumentList "/a `"$msi`" /qn TARGETDIR=`"$dst`" /L*V `"$msiLog`"" -Wait -PassThru
-          Write-Host "msiexec exit code: $($p.ExitCode)"
-          $exe = Get-ChildItem -Path $dst -Recurse -Filter msedge.exe -ErrorAction SilentlyContinue | Select-Object -First 1
+          # msiexec /a yields no payload for the Edge enterprise MSI (embedded
+          # archive, custom-action install). Recursive 7z extraction instead:
+          # msi -> setup exe / cab -> MSEDGE.7z -> Application\<ver>\msedge.exe
+          New-Item -ItemType Directory -Force -Path $dst | Out-Null
+          & 7z x $msi -o"$dst\l0" -y | Select-Object -Last 2 | Write-Host
+          for ($depth = 0; $depth -lt 3; $depth++) {
+            if (Get-ChildItem -Path $dst -Recurse -Filter msedge.exe -ErrorAction SilentlyContinue) { break }
+            $archives = Get-ChildItem -Path "$dst\l$depth" -Recurse -ErrorAction SilentlyContinue |
+              Where-Object { $_.Extension -in ".exe", ".cab", ".7z" -and $_.Length -gt 10MB }
+            $i = 0
+            foreach ($a in $archives) {
+              Write-Host "extracting l$($depth+1): $($a.Name) ($([math]::Round($a.Length/1MB))MB)"
+              & 7z x $a.FullName -o"$dst\l$($depth+1)-$i" -y | Select-Object -Last 1 | Write-Host
+              $i++
+            }
+          }
+          $exe = Get-ChildItem -Path $dst -Recurse -Filter msedge.exe -ErrorAction SilentlyContinue |
+            Sort-Object Length -Descending | Select-Object -First 1
           if (-not $exe) {
-            Write-Host "── msiexec log tail ──"
-            Get-Content $msiLog -Tail 30 -ErrorAction SilentlyContinue | Write-Host
-            Write-Host "── extracted tree (top) ──"
-            Get-ChildItem -Path $dst -Recurse -Depth 3 -ErrorAction SilentlyContinue | Select-Object -First 30 -ExpandProperty FullName | Write-Host
-            throw "msedge.exe not found in extracted MSI (msiexec exit $($p.ExitCode))"
+            Write-Host "── extracted tree sample ──"
+            Get-ChildItem -Path $dst -Recurse -ErrorAction SilentlyContinue |
+              Sort-Object Length -Descending | Select-Object -First 30 -ExpandProperty FullName | Write-Host
+            throw "msedge.exe not found after recursive extraction"
           }
           $runtimeDir = $exe.DirectoryName
           Write-Host "Pinned runtime folder: $runtimeDir"
