@@ -1270,20 +1270,101 @@ jobs:
               "tauri:options" = @{ application = $exe }
               browserName = "wry"
             } } } | ConvertTo-Json -Depth 6
-            $sess = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:4444/session" `
-              -ContentType "application/json" -Body $caps -TimeoutSec 60
-            $sid = $sess.value.sessionId
-            Write-Host "ATTEMPT-D: session created: $sid"
-            $title = (Invoke-RestMethod -Uri "http://127.0.0.1:4444/session/$sid/title" -TimeoutSec 30).value
-            Write-Host "ATTEMPT-D: ATTACH OK — window title = [$title]"
-            Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:4444/session/$sid" -TimeoutSec 30 | Out-Null
+            try {
+              $sess = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:4444/session" `
+                -ContentType "application/json" -Body $caps -TimeoutSec 120
+              $sid = $sess.value.sessionId
+              Write-Host "ATTEMPT-D: session created: $sid"
+              $title = (Invoke-RestMethod -Uri "http://127.0.0.1:4444/session/$sid/title" -TimeoutSec 30).value
+              Write-Host "ATTEMPT-D: ATTACH OK — window title = [$title]"
+              Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:4444/session/$sid" -TimeoutSec 30 | Out-Null
+            } catch {
+              Write-Host "ATTEMPT-D(tauri-driver): FAILED — $($_.Exception.Message)"
+            }
             Stop-Process -Id $td.Id -Force -ErrorAction SilentlyContinue
+            & taskkill /f /im "planning-platform.exe" 2>$null; $true | Out-Null
+            & taskkill /f /im msedgedriver.exe 2>$null; $true | Out-Null
+
+            # D-variant: DIRECT msedgedriver in Microsoft's documented
+            # WebView2 mode (no tauri-driver) — isolates whether the
+            # wrapper or the runtime itself blocks the attach.
+            $md = Start-Process -FilePath $drv -ArgumentList "--port=9515" -PassThru `
+              -RedirectStandardOutput "$env:RUNNER_TEMP\msedgedriver.out.log" `
+              -RedirectStandardError "$env:RUNNER_TEMP\msedgedriver.err.log"
+            Start-Sleep -Seconds 2
+            $caps2 = @{ capabilities = @{ alwaysMatch = @{
+              browserName = "webview2"
+              "ms:edgeOptions" = @{ webview = "msWebView2"; binary = $exe }
+            } } } | ConvertTo-Json -Depth 6
+            try {
+              $sess2 = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:9515/session" `
+                -ContentType "application/json" -Body $caps2 -TimeoutSec 120
+              $sid2 = $sess2.value.sessionId
+              $title2 = (Invoke-RestMethod -Uri "http://127.0.0.1:9515/session/$sid2/title" -TimeoutSec 30).value
+              Write-Host "ATTEMPT-D-DIRECT: ATTACH OK — window title = [$title2]"
+              Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:9515/session/$sid2" -TimeoutSec 30 | Out-Null
+            } catch {
+              Write-Host "ATTEMPT-D-DIRECT: FAILED — $($_.Exception.Message)"
+              Get-Content "$env:RUNNER_TEMP\msedgedriver.out.log" -Tail 15 -ErrorAction SilentlyContinue | Write-Host
+            }
+            Stop-Process -Id $md.Id -Force -ErrorAction SilentlyContinue
             exit 0
           } catch {
             Write-Host "ATTEMPT-D: FAILED — $($_.Exception.Message)"
             Get-Content "$env:RUNNER_TEMP\tauri-driver.out.log" -Tail 20 -ErrorAction SilentlyContinue | Write-Host
             Get-Content "$env:RUNNER_TEMP\tauri-driver.err.log" -Tail 20 -ErrorAction SilentlyContinue | Write-Host
             Write-Host "::warning::Attempt D probe failed (diagnostic, non-fatal)"
+            exit 0
+          }
+
+      - name: Attempt E — debug build + WebDriver probe
+        # QA campaign Attempt E (authorized because D failed on the release
+        # bundle): community reports release builds can refuse WebDriver/debug
+        # attach while debug builds accept it. Build the shell in debug
+        # (--no-bundle; the window is enough for a title probe — sidecar
+        # spawn may fail, irrelevant here) and retry the tauri-driver attach.
+        if: always()
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          try {
+            Push-Location app\tauri
+            cargo tauri build --debug --no-bundle 2>&1 | Select-Object -Last 5 | Write-Host
+            Pop-Location
+            $dexe = "app\tauri\target\debug\planning-platform.exe"
+            if (-not (Test-Path $dexe)) { throw "debug exe not found at $dexe" }
+            $dexe = (Resolve-Path $dexe).Path
+            Write-Host "ATTEMPT-E: debug exe = $dexe"
+
+            & taskkill /f /im "planning-platform.exe" 2>$null
+            & taskkill /f /im msedgedriver.exe 2>$null
+            $true | Out-Null
+            $drv = Join-Path $env:RUNNER_TEMP "edgedriver\msedgedriver.exe"
+            $probeData = Join-Path $env:RUNNER_TEMP "wd-probe-data-e"
+            New-Item -ItemType Directory -Force -Path $probeData | Out-Null
+            $env:PLATFORM_DATA_DIR = $probeData
+            $td = Start-Process -FilePath "$env:USERPROFILE\.cargo\bin\tauri-driver.exe" `
+              -ArgumentList "--native-driver", $drv -PassThru `
+              -RedirectStandardOutput "$env:RUNNER_TEMP\tauri-driver-e.out.log" `
+              -RedirectStandardError "$env:RUNNER_TEMP\tauri-driver-e.err.log"
+            Start-Sleep -Seconds 3
+            $caps = @{ capabilities = @{ alwaysMatch = @{
+              "tauri:options" = @{ application = $dexe }
+              browserName = "wry"
+            } } } | ConvertTo-Json -Depth 6
+            $sess = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:4444/session" `
+              -ContentType "application/json" -Body $caps -TimeoutSec 120
+            $sid = $sess.value.sessionId
+            $title = (Invoke-RestMethod -Uri "http://127.0.0.1:4444/session/$sid/title" -TimeoutSec 30).value
+            Write-Host "ATTEMPT-E: ATTACH OK — window title = [$title]"
+            Invoke-RestMethod -Method Delete -Uri "http://127.0.0.1:4444/session/$sid" -TimeoutSec 30 | Out-Null
+            Stop-Process -Id $td.Id -Force -ErrorAction SilentlyContinue
+            exit 0
+          } catch {
+            Write-Host "ATTEMPT-E: FAILED — $($_.Exception.Message)"
+            Get-Content "$env:RUNNER_TEMP\tauri-driver-e.out.log" -Tail 15 -ErrorAction SilentlyContinue | Write-Host
+            Get-Content "$env:RUNNER_TEMP\tauri-driver-e.err.log" -Tail 15 -ErrorAction SilentlyContinue | Write-Host
+            Write-Host "::warning::Attempt E probe failed (diagnostic, non-fatal)"
             exit 0
           }
 
