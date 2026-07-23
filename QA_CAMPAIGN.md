@@ -41,7 +41,7 @@ change is the prime suspect.
 | Attempt | What | Result | Run | Notes |
 |---------|------|--------|-----|-------|
 | A — runtime visibility | Log WebView2/Edge runtime version in the UI-gate step | pending | | |
-| B — pipe transport | `--remote-debugging-pipe` instead of port | pending | | |
+| B — pipe transport | `--remote-debugging-pipe` instead of port | **N/A by design** | — | Three independent blockers, no run needed: (1) `--remote-debugging-pipe` serves CDP over file descriptors 3/4 **of the browser process**, which must be created by the parent with those fds pre-opened — but the browser process here is spawned by the WebView2 loader inside Tauri, three process layers away from the test harness; the harness cannot pre-open fds on a process it doesn't spawn. (2) `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` can pass the flag but nothing inherits the pipe ends, so the browser would write CDP into nowhere. (3) Playwright's `connectOverCDP` accepts only an HTTP/WS endpoint URL — it has no pipe transport for attach (pipe is used internally only for browsers Playwright itself launches). |
 | C — pinned runtime | `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` → downloaded fixed-version runtime | pending | | |
 | D — tauri-driver | Official Tauri v2 WebDriver path (tauri-driver + msedgedriver) | pending | | |
 
