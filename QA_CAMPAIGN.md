@@ -40,10 +40,11 @@ change is the prime suspect.
 
 | Attempt | What | Result | Run | Notes |
 |---------|------|--------|-----|-------|
-| A — runtime visibility | Log WebView2/Edge runtime version in the UI-gate step | pending | | |
+| A — runtime visibility | Log WebView2/Edge runtime version in the UI-gate step | **DONE** | 29987110063 | Runner WebView2 Evergreen = **150.0.4078.65** (150 line shipped 2026-07-02; last green run June 29 ran on 149.0.4022.x). CDP still dead on every port — regression window confirmed |
 | B — pipe transport | `--remote-debugging-pipe` instead of port | **N/A by design** | — | Three independent blockers, no run needed: (1) `--remote-debugging-pipe` serves CDP over file descriptors 3/4 **of the browser process**, which must be created by the parent with those fds pre-opened — but the browser process here is spawned by the WebView2 loader inside Tauri, three process layers away from the test harness; the harness cannot pre-open fds on a process it doesn't spawn. (2) `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` can pass the flag but nothing inherits the pipe ends, so the browser would write CDP into nowhere. (3) Playwright's `connectOverCDP` accepts only an HTTP/WS endpoint URL — it has no pipe transport for attach (pipe is used internally only for browsers Playwright itself launches). |
 | C — pinned runtime | `WEBVIEW2_BROWSER_EXECUTABLE_FOLDER` → downloaded fixed-version runtime | pending | | |
-| D — tauri-driver | Official Tauri v2 WebDriver path (tauri-driver + msedgedriver) | pending | | |
+| D — tauri-driver | Official Tauri v2 WebDriver path via **WebdriverIO tauri service** (`services: [['tauri', {application: <exe>}]]`, `autoDownloadEdgeDriver: true` solves driver↔runtime version matching structurally); log BOTH Edge/WebView2 and msedgedriver versions | pending | | Addendum: driver/runtime version mismatch produces exactly our hang symptom — matching is mandatory, prefer auto-download over manual |
+| E — debug build (only if D fails on release bundle) | `tauri build --debug` diagnostic: community reports release builds can refuse WebDriver/debug attach while debug builds accept it | pending | | If debug attaches and release doesn't → decision point: UI QA on debug builds (same frontend code), release bundle stays API-tested |
 
 ## Findings log
 

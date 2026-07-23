@@ -1102,6 +1102,28 @@ jobs:
             Get-ChildItem $exe -Directory | ForEach-Object { Write-Host "EdgeWebView folder: $($_.Name)" }
           }
 
+      - name: Pin WebView2 runtime to 149.0.4022.98 (Attempt C)
+        # QA campaign Attempt C: the CDP bind regression appeared with the
+        # Edge/WebView2 150 line (runner now on 150.0.4078.65; last green run
+        # June 29 was on 149.0.4022.x). Pin the June-era runtime via
+        # WEBVIEW2_BROWSER_EXECUTABLE_FOLDER — the loader uses the pinned
+        # binaries instead of the machine's Evergreen install. The env var
+        # reaches the app through the harness's `...process.env` spread.
+        shell: pwsh
+        run: |
+          $msiUrl = "https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/82374039-b772-4d0a-a9a9-ee311dabec12/MicrosoftEdgeEnterpriseX64.msi"
+          $msi = Join-Path $env:RUNNER_TEMP "edge-149.msi"
+          $dst = Join-Path $env:RUNNER_TEMP "edge-149-extract"
+          Invoke-WebRequest -Uri $msiUrl -OutFile $msi
+          Write-Host "Downloaded: $((Get-Item $msi).Length) bytes"
+          Start-Process msiexec -ArgumentList "/a", "`"$msi`"", "/qn", "TARGETDIR=`"$dst`"" -Wait
+          $exe = Get-ChildItem -Path $dst -Recurse -Filter msedge.exe | Select-Object -First 1
+          if (-not $exe) { throw "msedge.exe not found in extracted MSI" }
+          $runtimeDir = $exe.DirectoryName
+          Write-Host "Pinned runtime folder: $runtimeDir"
+          Get-ChildItem $runtimeDir -Filter "msedgewebview2.exe" | ForEach-Object { Write-Host "webview2 exe present: $($_.Name)" }
+          "WEBVIEW2_BROWSER_EXECUTABLE_FOLDER=$runtimeDir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
       - name: UI smoke gate (real WebView2)
         id: ui_smoke
         # Promoted to hard gate after 12+ green runs across P1→P5 with
