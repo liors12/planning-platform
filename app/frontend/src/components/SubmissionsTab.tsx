@@ -60,6 +60,18 @@ function friendlyError(rawError: string | undefined | null): string {
   return "אירעה תקלה ביצירת הדוח. הפרטים נשמרו לקובץ יומן.";
 }
 
+/** Round-2 addendum: comparison failures are usually an EXPECTED state
+ * (nothing revised to diff against) - never surface the generic
+ * "אירעה תקלה" for them. Version-availability messages stay as-is. */
+function comparisonFriendly(rawError: string | undefined | null): string {
+  const f = friendlyError(rawError);
+  if (/פעולה זו אינה זמינה/.test(f)) return f;
+  if (/אירעה תקלה|אין עדיין תוצאות|חסר קובץ/.test(f)) {
+    return "לא ניתן ליצור השוואה - ודאי שהועלתה גרסה מתוקנת עם ממצאי בדיקה.";
+  }
+  return f;
+}
+
 interface Props {
   project: ProjectOut;
   onSubmissionsChanged: () => void;
@@ -370,7 +382,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
           ...p,
           [submissionId]: {
             kind: "error", what: "xlsx",
-            friendly: friendlyError(terminal.error),
+            friendly: comparisonFriendly(terminal.error),
           },
         }));
       } else {
@@ -380,7 +392,7 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
     } catch (e) {
       setComparisonStatus((p) => ({
         ...p,
-        [submissionId]: { kind: "error", what: "xlsx", friendly: friendlyError(String(e)) },
+        [submissionId]: { kind: "error", what: "xlsx", friendly: comparisonFriendly(String(e)) },
       }));
     }
   }
@@ -765,16 +777,20 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   העלאת גרסה מתוקנת ↑
                 </button>
 
-                {sub.source_submission_id !== null && sub.has_audit_results && (() => {
+                {sub.has_audit_results && (() => {
                   const cmpSt = comparisonStatus[sub.id];
                   const cmpBusy = cmpSt?.kind === "working";
+                  // No source submission = nothing revised to diff against -
+                  // the button is visible but disabled with a hint.
+                  const noRevision = sub.source_submission_id == null;
                   return (
                     <>
                       <button
                         className="ghost-btn"
                         data-testid={`generate-comparison-${sub.version_string}`}
                         onClick={() => onGenerateComparison(sub.id)}
-                        disabled={cmpBusy || !!activeJobId}
+                        disabled={noRevision || cmpBusy || !!activeJobId}
+                        title={noRevision ? "אין גרסה מתוקנת להשוואה" : ""}
                       >
                         {cmpBusy
                           ? <><span className="spinner" aria-hidden="true" />מפיקה השוואה…</>

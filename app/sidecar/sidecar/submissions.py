@@ -100,6 +100,11 @@ class SubmissionOut(BaseModel):
     cad_path: str | None
     findings_json_path: str | None
     uploaded_at: str
+    # The submission this one revises (revision chain). None for originals.
+    # Was silently DROPPED from responses until round-2: to_dict() carries it
+    # but pydantic ignores undeclared kwargs, so the frontend saw `undefined`
+    # and the "no revision to compare" affordance never engaged.
+    source_submission_id: int | None = None
     # True iff audit_results.m4.sanitized.json (or .m4.json fallback)
     # exists on disk under cfg.data_dir/audit_outputs/<tava>/v<ver>/.
     # Frontend uses this to show "הפיקי דו״ח" / "הפיקי אקסל" - independent

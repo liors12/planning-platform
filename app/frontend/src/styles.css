@@ -1110,8 +1110,12 @@ code, .path {
   padding: 24px;
 }
 .modal-box {
-  background: var(--bg-secondary, #1e1e1e);
-  border: 1px solid var(--border-color, #333);
+  /* --bg-secondary was never defined, so every modal fell back to the dark
+   * #1e1e1e — the "black history modal" bug. Use the design-system vars. */
+  background: var(--card-bg);
+  color: var(--fg);
+  border: 1px solid var(--rule);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
   border-radius: 8px;
   padding: 28px 32px;
   width: 100%;
@@ -1693,15 +1697,15 @@ code, .path {
   gap: 4px;
   padding: 16px 8px;
   border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface-card);
+  border: 1px solid var(--rule);
+  background: var(--card-bg);
   text-align: center;
 }
 .ps-count {
   font-size: 28px;
   font-weight: 700;
   line-height: 1;
-  color: var(--text-primary);
+  color: var(--fg);
 }
 .ps-label {
   font-size: 12px;
@@ -2000,9 +2004,11 @@ code, .path {
 
 /* ── Pipeline pill emphasis (round-1 item 1) ──────────────────────────── */
 .pipeline-card.ps-zero { opacity: 0.45; }
-.pipeline-card.ps-zero .ps-count { color: var(--text-secondary, #888); font-weight: 600; }
+.pipeline-card.ps-zero .ps-count { color: var(--muted); font-weight: 600; }
 .pipeline-card:not(.ps-zero) .ps-count { font-weight: 800; }
-.ps-draft:not(.ps-zero) .ps-count   { color: #64748b; }
+/* Draft's original nonzero color (#64748b slate) read almost the same as the
+ * dimmed zero pills - use full-strength ink so "1" is unmistakably active. */
+.ps-draft:not(.ps-zero) .ps-count   { color: var(--fg); }
 .ps-sent:not(.ps-zero) .ps-count    { color: #1d4ed8; }
 .ps-response_received:not(.ps-zero) .ps-count { color: #b45309; }
 .ps-verified:not(.ps-zero) .ps-count { color: #15803d; }

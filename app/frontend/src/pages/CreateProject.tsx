@@ -65,7 +65,16 @@ export function CreateProject({ navigate, onCreated }: Props) {
   const [err, setErr] = useState<string | null>(null);
   const [dupe, setDupe] = useState<DuplicateTavaInfo | null>(null);
 
-  const canSubmitManual = nameHe.trim().length > 0 && tava.trim().length > 0 && !submitting;
+  // ── Inline validation ─────────────────────────────────────────────────
+  // תב"ע: digits, hyphens, slash, double-quotes (תמ"א style) and Hebrew
+  // letters only - Latin letters and other specials are blocked.
+  const tavaCharsOk = /^[0-9\-/"״א-ת]*$/.test(tava);
+  const tavaValid = tava.trim().length > 0 && tavaCharsOk;
+  // Project name: at least 2 Hebrew letters.
+  const hebrewLetterCount = (nameHe.match(/[א-ת]/g) ?? []).length;
+  const nameValid = hebrewLetterCount >= 2;
+
+  const canSubmitManual = nameValid && tavaValid && !submitting;
   const canSubmitImport = schemaFile !== null && preview !== null && !previewErr && !submitting;
 
   // ── Schema file selection + preview ──────────────────────────────────
@@ -195,6 +204,11 @@ export function CreateProject({ navigate, onCreated }: Props) {
               autoFocus
               required
             />
+            {nameHe.length > 0 && !nameValid && (
+              <span className="small-error" data-testid="create-name-hint">
+                שם הפרויקט חייב להכיל לפחות 2 אותיות בעברית
+              </span>
+            )}
           </label>
 
           <label className="form-field">
@@ -211,6 +225,11 @@ export function CreateProject({ navigate, onCreated }: Props) {
               dir="ltr"
               required
             />
+            {tava.length > 0 && !tavaCharsOk && (
+              <span className="small-error" data-testid="create-tava-hint">
+                מספר תב"ע יכול להכיל ספרות, מקפים ואותיות בעברית בלבד
+              </span>
+            )}
           </label>
 
           <label className="form-field">
