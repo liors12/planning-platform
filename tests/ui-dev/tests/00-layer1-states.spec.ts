@@ -79,6 +79,18 @@ test("run-engine affordance: disabled without schema data", async ({ page, reque
   await expect(page.getByTestId("run-engine-v1.0")).toBeDisabled();
 });
 
+test("comparison affordance: disabled when no revised version exists", async ({ page }) => {
+  // The seeded pilot has audit results but is not a revision of anything -
+  // the comparison button must be visible-but-disabled with the hint.
+  await page.goto("/");
+  await page.getByTestId("home-project-link-407-1048248").click();
+  await page.getByTestId("tab-submissions").click();
+  const btn = page.getByTestId("generate-comparison-v24.3");
+  await expect(btn).toBeVisible();
+  await expect(btn).toBeDisabled();
+  await expect(btn).toHaveAttribute("title", "אין גרסה מתוקנת להשוואה");
+});
+
 test("guidelines + settings: load without errors", async ({ page }) => {
   await page.goto("/#/guidelines");
   await expect(page.locator('[data-check-key="glass_railing_min_height_cm"]')).toBeVisible();
