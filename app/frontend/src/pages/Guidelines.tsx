@@ -25,11 +25,14 @@ export function Guidelines() {
 
   useEffect(() => { refresh(); }, []);
 
-  const byDiscipline = new Map<string, GuidelineOut[]>();
+  // Group by DOCUMENT SECTION in document order (rows arrive sorted by
+  // sort_order from the API); fall back to discipline for unplaced rows.
+  const bySection = new Map<string, GuidelineOut[]>();
   for (const g of rows ?? []) {
-    const list = byDiscipline.get(g.discipline) ?? [];
+    const group = g.section_title ?? g.discipline;
+    const list = bySection.get(group) ?? [];
     list.push(g);
-    byDiscipline.set(g.discipline, list);
+    bySection.set(group, list);
   }
 
   return (
@@ -58,12 +61,13 @@ export function Guidelines() {
         <p className="muted">אין הנחיות מוגדרות עדיין.</p>
       )}
 
-      {[...byDiscipline.entries()].map(([discipline, items]) => (
-        <section key={discipline} className="card guidelines-group">
-          <h2 className="card-title">{discipline}</h2>
-          <ul className="guidelines-list" data-testid={`guidelines-group-${discipline}`}>
+      {[...bySection.entries()].map(([sectionTitle, items]) => (
+        <details key={sectionTitle} className="card guidelines-group" open>
+          <summary className="card-title guidelines-section-summary">{sectionTitle}</summary>
+          <ul className="guidelines-list" data-testid={`guidelines-group-${sectionTitle}`}>
             {items.map((g) => (
-              <li key={g.id} className="guideline-row" data-testid={`guideline-row-${g.id}`}>
+              <li key={g.id} className="guideline-row" data-testid={`guideline-row-${g.id}`}
+                  data-check-key={g.check_key ?? undefined}>
                 <div className="guideline-main">
                   <div className="guideline-title-line">
                     <b>{g.title}</b>
@@ -94,7 +98,7 @@ export function Guidelines() {
               </li>
             ))}
           </ul>
-        </section>
+        </details>
       ))}
 
       {editing && (

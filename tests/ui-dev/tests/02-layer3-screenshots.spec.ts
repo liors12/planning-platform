@@ -15,8 +15,8 @@ const SCREENS: Array<{ name: string; go: (page: import("@playwright/test").Page)
   { name: "findings", go: async (p) => { await p.getByTestId("tab-findings").click(); } },
   { name: "comments", go: async (p) => { await p.getByTestId("tab-comments").click(); } },
   { name: "cad-layers", go: async (p) => { await p.getByTestId("tab-cad_layers").click(); } },
-  { name: "guidelines", go: async (p) => { await p.goto("/#/guidelines"); await p.getByTestId("guideline-row-1").waitFor(); } },
-  { name: "guidelines-edit-dialog", go: async (p) => { await p.getByTestId("guideline-edit-1").click(); await p.getByTestId("guideline-edit-value").waitFor(); } },
+  { name: "guidelines", go: async (p) => { await p.goto("/#/guidelines"); await p.locator('[data-check-key="glass_railing_min_height_cm"]').waitFor(); } },
+  { name: "guidelines-edit-dialog", go: async (p) => { await p.locator('[data-check-key="glass_railing_min_height_cm"] [data-testid^="guideline-edit-"]').click(); await p.getByTestId("guideline-edit-value").waitFor(); } },
   { name: "create-project", go: async (p) => { await p.goto("/#/projects/new"); await p.getByTestId("create-name-he").waitFor(); } },
   { name: "settings", go: async (p) => { await p.goto("/#/settings"); } },
 ];

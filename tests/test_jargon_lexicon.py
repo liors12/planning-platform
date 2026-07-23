@@ -33,6 +33,7 @@ def _files():
     yield from (ROOT / "app/frontend/src").rglob("*.ts")
     yield from (ROOT / "app/sidecar/sidecar").rglob("*.py")
     yield from (ROOT / "compliance_engine").glob("*.py")
+    yield ROOT / "app/sidecar/seed/guidelines_seed.json"
 
 
 def test_no_jargon_in_hebrew_strings():

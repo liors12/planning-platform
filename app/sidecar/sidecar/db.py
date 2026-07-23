@@ -146,6 +146,19 @@ def initialize(engine: Engine) -> dict:
     # fresh installs; for existing DBs create_all is idempotent via IF NOT EXISTS).
     # No ALTER TABLE needed: create_all only creates missing tables.
 
+    # Full-seed migration - document-structure columns on guidelines.
+    with engine.begin() as conn:
+        g_exists = conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='guidelines'"
+        )).fetchone()
+        if g_exists:
+            g_cols = {c[1] for c in conn.execute(text("PRAGMA table_info(guidelines)")).fetchall()}
+            for col, decl in (("section_key", "TEXT"), ("section_title", "TEXT"),
+                              ("sort_order", "INTEGER")):
+                if col not in g_cols:
+                    conn.execute(text(f"ALTER TABLE guidelines ADD COLUMN {col} {decl}"))
+                    log.info("migration: added %s to guidelines", col)
+
     # re-audit prerequisites migration — add pdf_hash / cad_hash / source_submission_id.
     with engine.begin() as conn:
         cols = {c[1] for c in conn.execute(text("PRAGMA table_info(submissions)")).fetchall()}
@@ -229,118 +242,92 @@ def initialize(engine: Engine) -> dict:
     }
 
 
-_SEED_GUIDELINES = [
-    {
-        "discipline": "בטיחות ומעקות",
-        "title": "גובה מינימלי לגדר זכוכית",
-        "body_text": 'גובה מינימלי של גדר זכוכית בכל המרפסות, גגות ומקומות גבוהים יהיה 105 ס"מ מפני הרצפה.',
-        "guideline_type": "checkable",
-        "check_key": "glass_railing_min_height_cm",
-        "check_value": 105.0,
-        "unit": 'ס"מ',
-    },
-    {
-        "discipline": "חזית בניין",
-        "title": "הגבלת בוהק זיגוג חיצוני",
-        "body_text": "שיעור הבוהק של זיגוג חיצוני לא יעלה על 70% מהשטח הכולל של חזית הבניין.",
-        "guideline_type": "checkable",
-        "check_key": "glazing_reflectivity_max_pct",
-        "check_value": 70.0,
-        "unit": "%",
-    },
-    {
-        "discipline": "גינון ועיצוב נוף",
-        "title": "מסך כביסה - רוחב מינימלי",
-        "body_text": "רוחב אזור מסך כביסה לא יפחת מ-1.8 מ'.",
-        "guideline_type": "checkable",
-        "check_key": "laundry_screen_width_m",
-        "check_value": 1.8,
-        "unit": "מ'",
-    },
-    {
-        "discipline": "גינון ועיצוב נוף",
-        "title": "מסך כביסה - גובה מינימלי",
-        "body_text": "גובה אזור מסך כביסה לא יפחת מ-1.5 מ'.",
-        "guideline_type": "checkable",
-        "check_key": "laundry_screen_height_m",
-        "check_value": 1.5,
-        "unit": "מ'",
-    },
-    {
-        "discipline": "תשתיות ונגישות",
-        "title": "רוחב מינימלי - שביל ראשי",
-        "body_text": "שביל תנועה ראשי לא יפחת מ-3 מ'.",
-        "guideline_type": "checkable",
-        "check_key": "path_main_min_m",
-        "check_value": 3.0,
-        "unit": "מ'",
-    },
-    {
-        "discipline": "תשתיות ונגישות",
-        "title": "רוחב מינימלי - שביל משני",
-        "body_text": "שביל תנועה משני לא יפחת מ-2.5 מ'.",
-        "guideline_type": "checkable",
-        "check_key": "path_secondary_min_m",
-        "check_value": 2.5,
-        "unit": "מ'",
-    },
-    {
-        "discipline": "בטיחות אש",
-        "title": "מרחק מינימלי - מיכל גז",
-        "body_text": "מיכל גז לא יוצב במרחק פחות מ-2 מ' מכל מבנה קיים.",
-        "guideline_type": "checkable",
-        "check_key": "gas_tank_setback_min_m",
-        "check_value": 2.0,
-        "unit": "מ'",
-    },
-    {
-        "discipline": "ארכיטקטורה",
-        "title": "חומרי גמר חיצוניים",
-        "body_text": "חומרי גמר חיצוניים יהיו בהירים, בצבעים ניטרליים ויתאימו לאופי הסביבתי.",
-        "guideline_type": "manual",
-        "check_key": None,
-        "check_value": None,
-        "unit": None,
-    },
-    {
-        "discipline": "ארכיטקטורה",
-        "title": "שימור קו בניין",
-        "body_text": 'יש לשמר קו בניין אחיד לאורך הרחוב בהתאם לתב"ע.',
-        "guideline_type": "manual",
-        "check_key": None,
-        "check_value": None,
-        "unit": None,
-    },
-    {
-        "discipline": "גינון ועיצוב נוף",
-        "title": "עצים ממין ילידי",
-        "body_text": "עצים חדשים יהיו ממין ילידי או מותאם לאקלים ים-תיכוני.",
-        "guideline_type": "manual",
-        "check_key": None,
-        "check_value": None,
-        "unit": None,
-    },
-]
+def _seed_json_path() -> Path:
+    """Locate seed/guidelines_seed.json, PyInstaller-aware."""
+    import sys as _sys
+    if getattr(_sys, "frozen", False):
+        meipass = getattr(_sys, "_MEIPASS", None)
+        if meipass:
+            return Path(meipass) / "seed" / "guidelines_seed.json"
+    return Path(__file__).resolve().parent.parent / "seed" / "guidelines_seed.json"
 
 
 def seed_guidelines(engine: Engine) -> None:
-    """Seed version-1 GLOBAL guidelines once (idempotent: no-op if table non-empty).
+    """Seed the FULL municipal guidelines document (guidelines_seed.json).
 
-    Guidelines are city-wide submission rules — deliberately not project-keyed.
+    Collision policy (append-only, user edits sacred):
+      * A row whose check_key matches an existing ACTIVE row ADOPTS that row:
+        the existing row gets the document's section placement; its title/body
+        are updated to the document text ONLY if it is an untouched seed row
+        (version 1, edited_by='seed') - user-edited rows keep their text,
+        values, version and history.
+      * Legacy ACTIVE rows with no section placement and no match in the
+        document (old demo rows) are deactivated (superseded; history kept).
+      * Every document row not already present (identity: section_key +
+        sort_order) is inserted as version 1.
+    Fresh DBs take the same path - everything simply gets inserted.
     """
+    import json as _json
     from sqlalchemy.orm import Session
 
+    from .models import Guideline
+
+    seed_path = _seed_json_path()
+    if not seed_path.exists():
+        log.warning("guidelines seed JSON missing at %s - skipping seed", seed_path)
+        return
+    data = _json.loads(seed_path.read_text(encoding="utf-8"))
+    doc_rows = data["guidelines"]
+
     with Session(engine) as sess:
-        existing = sess.execute(text("SELECT COUNT(*) FROM guidelines")).scalar()
-        if existing:
-            return
-        from .models import Guideline
-        for g in _SEED_GUIDELINES:
+        existing = sess.query(Guideline).all()
+        active_by_key = {g.check_key: g for g in existing if g.is_active and g.check_key}
+        placed = {(g.section_key, g.sort_order) for g in existing if g.section_key}
+
+        inserted = adopted = superseded = 0
+        consumed_ids: set[int] = set()
+
+        for row in doc_rows:
+            key = row.get("check_key")
+            if key and key in active_by_key:
+                g = active_by_key[key]
+                g.section_key = row["section_key"]
+                g.section_title = row["section_title"]
+                g.sort_order = row["sort_order"]
+                if g.version == 1 and (g.edited_by or "seed") == "seed":
+                    g.title = row["title"]
+                    g.body_text = row["body_text"]
+                    g.unit = row.get("unit")
+                    g.check_value = row.get("check_value")
+                consumed_ids.add(g.id)
+                adopted += 1
+                continue
+            if (row["section_key"], row["sort_order"]) in placed:
+                continue
             sess.add(Guideline(
+                discipline=row["section_title"],
+                title=row["title"],
+                body_text=row["body_text"],
+                guideline_type=row["guideline_type"],
+                check_key=row.get("check_key"),
+                check_value=row.get("check_value"),
+                unit=row.get("unit"),
                 version=1,
                 is_active=1,
                 edited_by="seed",
-                **g,
+                section_key=row["section_key"],
+                section_title=row["section_title"],
+                sort_order=row["sort_order"],
             ))
+            inserted += 1
+
+        # Deactivate leftover demo rows: active, unplaced, unconsumed.
+        for g in existing:
+            if g.is_active and not g.section_key and g.id not in consumed_ids:
+                g.is_active = 0
+                superseded += 1
+
         sess.commit()
-        log.info("seeded %d global guidelines", len(_SEED_GUIDELINES))
+        if inserted or adopted or superseded:
+            log.info("guidelines seed: %d inserted, %d adopted, %d superseded",
+                     inserted, adopted, superseded)
