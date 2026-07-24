@@ -1482,5 +1482,7 @@ jobs:
 
             אם מופיעה הודעת "Windows protected your PC" — לחצי על "More info" ואז "Run anyway".
           files: app/tauri/target/release/bundle/nsis/*.exe
-          prerelease: true
+          # Full release (not prerelease) so /releases/latest resolves to it -
+          # that's the stable link Ellen uses.
+          prerelease: false
           fail_on_unmatched_files: true
