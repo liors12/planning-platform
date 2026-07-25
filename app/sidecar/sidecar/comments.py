@@ -265,4 +265,22 @@ def make_routers(engine: Engine, queue: EngineQueue, cfg) -> tuple[APIRouter, AP
         from .referent_extract import extract_referent_comments  # noqa: PLC0415
         return extract_referent_comments(content)
 
+    # ── POST /submissions/{id}/extract-comments-pdf (unified, addendum 6) ──
+    # ONE endpoint behind the single upload button: Gemini classifies the
+    # document (referent sheet vs meeting summary) and extracts discipline
+    # comments accordingly. The legacy endpoints above stay for backward
+    # compatibility; the UI uses only this one.
+    @comments.post("/{submission_id}/extract-comments-pdf")
+    async def extract_comments_pdf(
+        submission_id: int,
+        pdf_file: UploadFile = File(...),
+    ) -> dict:
+        with _session() as sess:
+            _require_submission(sess, submission_id)
+        content = await pdf_file.read()
+        if len(content) > _MAX_PDF_BYTES:
+            raise HTTPException(413, "הקובץ גדול מדי - העלי קובץ עד 20MB")
+        from .unified_extract import extract_comments_unified  # noqa: PLC0415
+        return extract_comments_unified(content)
+
     return comments, disciplines

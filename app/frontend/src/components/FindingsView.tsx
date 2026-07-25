@@ -6,74 +6,42 @@ interface Props {
   onJumpToPage?: (pageNumber: number) => void;
   /** Used to scope the localStorage filter persistence key. */
   projectId: number;
+  /** When false (seeded pilot without its plan file), page references
+   * render as plain text instead of jump buttons. */
+  pdfAvailable?: boolean;
 }
 
-// ── Filter taxonomy (Step 8) ──────────────────────────────────────────
-// Each section gets its own toggle map keyed by verdict. Defaults below
-// reflect the engineer's typical workflow: problem-shaped verdicts are
-// ON by default so they're visible immediately; passing/N/A verdicts
-// are OFF so they don't clutter the queue. Counts stay visible for OFF
-// pills so the user can see what they're hiding.
+// ── Filter taxonomy (Phase A) ─────────────────────────────────────────
+// ONE global filter bar for the whole tab (the per-section chip-click
+// filtering was invisible as an affordance). Default view shows only the
+// actionable statuses; a toggle reveals everything. Session-scoped
+// persistence (module variable) - a fresh app start returns to the
+// actionable-first default.
 type SectionKey = "format" | "content" | "disciplines";
 type Verdict =
   | "pass" | "pass_with_note"
   | "fail" | "fail_borderline"
   | "not_submitted" | "requires_review"
   | "unevaluable" | "not_applicable";
-type SectionFilter = Record<Verdict, boolean>;
-type AllFilters = Record<SectionKey, SectionFilter>;
 
-const DEFAULT_FILTER: SectionFilter = {
-  // ON by default - problem-shaped + pass_with_note (these all need attention)
-  fail: true,
-  fail_borderline: true,
-  not_submitted: true,
-  requires_review: true,
-  pass_with_note: true,
-  // OFF by default - passing / not-applicable / unevaluable
-  pass: false,
-  not_applicable: false,
-  unevaluable: false,
-};
+// Statuses that need Ellen's attention - the default view.
+const ACTIONABLE: Verdict[] = ["fail", "fail_borderline", "requires_review", "not_submitted"];
 
-const DEFAULT_FILTERS: AllFilters = {
-  format: { ...DEFAULT_FILTER },
-  content: { ...DEFAULT_FILTER },
-  disciplines: { ...DEFAULT_FILTER },
-};
+// Filter-bar pills: one per user-facing status label (fail and
+// fail_borderline share the "נדרש תיקון" label, so one pill drives both).
+const FILTER_PILLS: Array<{ label: string; verdicts: Verdict[] }> = [
+  { label: "נדרש תיקון", verdicts: ["fail", "fail_borderline"] },
+  { label: "נדרשת השלמה", verdicts: ["requires_review"] },
+  { label: "לא הוגש", verdicts: ["not_submitted"] },
+  { label: "תקין", verdicts: ["pass"] },
+  { label: "תקין בהערה", verdicts: ["pass_with_note"] },
+  { label: "לא ניתן לבדיקה", verdicts: ["unevaluable"] },
+  { label: "לא רלוונטי", verdicts: ["not_applicable"] },
+];
 
-function filterStorageKey(projectId: number): string {
-  return `filters:project_${projectId}`;
-}
-
-// Defensive load - if anything looks off (parse error, missing key,
-// shape drift after a future schema change), fall back to defaults
-// rather than blowing up the Findings tab for the user.
-function loadFilters(projectId: number): AllFilters {
-  try {
-    const raw = localStorage.getItem(filterStorageKey(projectId));
-    if (!raw) return structuredClone(DEFAULT_FILTERS);
-    const parsed = JSON.parse(raw);
-    const out: AllFilters = structuredClone(DEFAULT_FILTERS);
-    for (const sec of ["format", "content", "disciplines"] as SectionKey[]) {
-      if (parsed?.[sec] && typeof parsed[sec] === "object") {
-        for (const v of Object.keys(DEFAULT_FILTER) as Verdict[]) {
-          if (typeof parsed[sec][v] === "boolean") {
-            out[sec][v] = parsed[sec][v];
-          }
-        }
-      }
-    }
-    return out;
-  } catch {
-    return structuredClone(DEFAULT_FILTERS);
-  }
-}
-
-function saveFilters(projectId: number, f: AllFilters) {
-  try { localStorage.setItem(filterStorageKey(projectId), JSON.stringify(f)); }
-  catch { /* localStorage full / disabled - silently degrade */ }
-}
+// Session (in-memory) persistence for the toggle + filters.
+let sessionShowAll = false;
+let sessionActivePills: string[] | null = null;
 
 // ── Verdict taxonomy (Hebrew labels + CSS class) ──────────────────────
 // Mirrors compliance_engine/report_generator.py VERDICT_TO_VCLASS_AND_LABEL,
@@ -151,31 +119,45 @@ function countVerdicts(rules: Rule[]): Array<{ verdict: string; count: number }>
     .map((v) => ({ verdict: v, count: map[v] }));
 }
 
-export function FindingsView({ findings, onJumpToPage, projectId }: Props) {
+export function FindingsView({ findings, onJumpToPage, projectId, pdfAvailable = true }: Props) {
+  void projectId;
   const data: any = findings ?? {};
   const formatRules: Rule[] = Array.isArray(data.format) ? data.format : [];
   const contentRules: Rule[] = Array.isArray(data.content) ? data.content : [];
   const disciplineRules: Rule[] = Array.isArray(data.disciplines) ? data.disciplines : [];
 
-  // Per-project, per-section verdict toggles. Re-loaded when projectId
-  // changes (e.g. user switches projects). Writes are debounced through
-  // React's normal render cadence - on each toggle we both update state
-  // AND persist to localStorage so a reload restores the exact view.
-  const [filters, setFilters] = useState<AllFilters>(() => loadFilters(projectId));
+  // Phase A state: show-all toggle, explicit status pills, free-text search.
+  const [showAll, setShowAll] = useState(sessionShowAll);
+  const [activePills, setActivePills] = useState<string[]>(
+    () => sessionActivePills ?? [],
+  );
+  const [searchRaw, setSearchRaw] = useState("");
+  const [search, setSearch] = useState("");
   useEffect(() => {
-    setFilters(loadFilters(projectId));
-  }, [projectId]);
+    const t = setTimeout(() => setSearch(searchRaw.trim()), 200);
+    return () => clearTimeout(t);
+  }, [searchRaw]);
+  useEffect(() => { sessionShowAll = showAll; }, [showAll]);
+  useEffect(() => { sessionActivePills = activePills; }, [activePills]);
 
-  function toggle(section: SectionKey, verdict: Verdict) {
-    setFilters((prev) => {
-      const next: AllFilters = {
-        ...prev,
-        [section]: { ...prev[section], [verdict]: !prev[section][verdict] },
-      };
-      saveFilters(projectId, next);
-      return next;
-    });
-  }
+  const allRules = [...disciplineRules, ...contentRules, ...formatRules];
+  const actionableCount = allRules.filter((r) => ACTIONABLE.includes(r.verdict as Verdict)).length;
+
+  // Effective visible verdicts: explicit pills win; otherwise the
+  // actionable-first default (or everything when the toggle is on).
+  const pillVerdicts = new Set(
+    FILTER_PILLS.filter((p) => activePills.includes(p.label)).flatMap((p) => p.verdicts),
+  );
+  const visible = (r: Rule): boolean => {
+    const v = r.verdict as Verdict;
+    const statusOk = activePills.length > 0
+      ? pillVerdicts.has(v)
+      : (showAll || ACTIONABLE.includes(v));
+    if (!statusOk) return false;
+    if (!search) return true;
+    const hay = `${r.rule_name_he ?? ""} ${r.notes_he ?? ""} ${r.remediation_he ?? ""}`;
+    return hay.toLowerCase().includes(search.toLowerCase());
+  };
 
   const sections: Array<{ key: SectionKey; title: string; rules: Rule[] }> = [
     { key: "disciplines", title: "בדיקה רב-תחומית", rules: disciplineRules },
@@ -183,17 +165,68 @@ export function FindingsView({ findings, onJumpToPage, projectId }: Props) {
     { key: "format",      title: "תאימות פורמט", rules: formatRules },
   ];
 
+  const anyFilterActive = activePills.length > 0 || search !== "";
+  const nothingActionable = actionableCount === 0 && !showAll && !anyFilterActive;
+
   return (
     <div className="findings-list">
+      <div className="findings-summary-bar" data-testid="findings-summary">
+        <span className="findings-summary-counts">
+          {allRules.length} סעיפים נבדקו · <b>{actionableCount}</b> דורשים את תשומת ליבך
+        </span>
+        <button type="button" className={"ghost-btn small" + (showAll ? " pressed" : "")}
+                data-testid="findings-show-all-toggle"
+                aria-pressed={showAll}
+                onClick={() => setShowAll((s) => !s)}>
+          {showAll ? "הציגי רק סעיפים לטיפול" : "הציגי את כל הסעיפים"}
+        </button>
+      </div>
+
+      <div className="findings-filter-bar" data-testid="findings-filter-bar">
+        {FILTER_PILLS.map((p) => {
+          const on = activePills.includes(p.label);
+          return (
+            <button key={p.label} type="button"
+                    className={"filter-pill" + (on ? " pressed" : "")}
+                    aria-pressed={on}
+                    onClick={() => setActivePills((prev) =>
+                      on ? prev.filter((x) => x !== p.label) : [...prev, p.label])}>
+              {p.label}
+            </button>
+          );
+        })}
+        {anyFilterActive && (
+          <button type="button" className="ghost-btn small"
+                  data-testid="findings-clear-filters"
+                  onClick={() => { setActivePills([]); setSearchRaw(""); }}>
+            נקי סינון
+          </button>
+        )}
+        <input
+          type="search"
+          className="findings-search"
+          placeholder="חיפוש בממצאים..."
+          value={searchRaw}
+          onChange={(e) => setSearchRaw(e.target.value)}
+          data-testid="findings-search"
+        />
+      </div>
+
+      {nothingActionable && (
+        <div className="findings-all-clear" data-testid="findings-all-clear">
+          כל הסעיפים תקינים - אין ממצאים הדורשים טיפול.
+        </div>
+      )}
+
       {sections.map((sec) => (
         <FindingsSection
           key={sec.key}
           sectionKey={sec.key}
           title={sec.title}
           rules={sec.rules}
-          enabled={filters[sec.key]}
-          onToggleVerdict={(v) => toggle(sec.key, v)}
+          visible={visible}
           onJumpToPage={onJumpToPage}
+          pdfAvailable={pdfAvailable}
         />
       ))}
     </div>
@@ -201,64 +234,41 @@ export function FindingsView({ findings, onJumpToPage, projectId }: Props) {
 }
 
 function FindingsSection({
-  sectionKey, title, rules, enabled, onToggleVerdict, onJumpToPage,
+  sectionKey, title, rules, visible, onJumpToPage, pdfAvailable,
 }: {
   sectionKey: SectionKey;
   title: string;
   rules: Rule[];
-  enabled: SectionFilter;
-  onToggleVerdict: (v: Verdict) => void;
+  visible: (r: Rule) => boolean;
   onJumpToPage?: (n: number) => void;
+  pdfAvailable: boolean;
 }) {
-  // Counts always reflect ALL rules in the section, regardless of which
-  // filters are on - the count beside each pill is what the user is
-  // showing/hiding, not just what's currently visible.
+  // Counts always reflect ALL rules in the section - context for the
+  // header regardless of active filters.
   const counts = countVerdicts(rules);
   const [collapsed, setCollapsed] = useState(false);
-  // Apply filters: keep only rules whose verdict is currently enabled.
-  const visibleRules = rules.filter((r) => enabled[r.verdict as Verdict]);
-  // Three distinct empty cases (engine vs filter vs collapsed) - the
-  // UX message differs.
+  const visibleRules = rules.filter(visible);
   const noRulesAtAll = rules.length === 0;
   const allFiltered = !noRulesAtAll && visibleRules.length === 0;
 
   return (
     <section className="findings-section" data-section={sectionKey}>
+      {/* The whole header row is the collapse target - no dedicated icon
+        * (round-2 addendum: the green chevron read as a mystery button). */}
       <header className="findings-section-header"
               onClick={() => setCollapsed((c) => !c)}
               role="button"
               aria-expanded={!collapsed}>
-        <span className="section-chevron">{collapsed ? "›" : "⌄"}</span>
         <h3 className="findings-section-title">{title}</h3>
         <span className="findings-section-total">{rules.length} סעיפים</span>
         <span className="findings-section-counts">
-          {counts.map(({ verdict, count }) => {
-            const v = verdict as Verdict;
-            const on = enabled[v];
-            return (
-              <button
-                key={verdict}
-                type="button"
-                className={
-                  "verdict-pill verdict-pill-toggle " +
-                  (VERDICT_CLASS[verdict] ?? "v-na") +
-                  (on ? " is-on" : " is-off")
-                }
-                aria-pressed={on}
-                data-verdict={verdict}
-                title={(on ? "סנני החוצה: " : "הציגי: ") + (VERDICT_LABEL_HE[verdict] ?? verdict)}
-                onClick={(e) => {
-                  // Critical: pill click must NOT bubble to the header
-                  // which toggles collapse.
-                  e.stopPropagation();
-                  onToggleVerdict(v);
-                }}
-              >
-                <span className="verdict-count">{count}</span>
-                {VERDICT_LABEL_HE[verdict] ?? verdict}
-              </button>
-            );
-          })}
+          {counts.map(({ verdict, count }) => (
+            <span key={verdict}
+                  className={"verdict-pill " + (VERDICT_CLASS[verdict] ?? "v-na")}>
+              <span className="verdict-count">{count}</span>
+              {VERDICT_LABEL_HE[verdict] ?? verdict}
+            </span>
+          ))}
         </span>
       </header>
       {!collapsed && (
@@ -266,7 +276,7 @@ function FindingsSection({
           {noRulesAtAll && <li className="muted findings-empty">אין סעיפים</li>}
           {allFiltered && (
             <li className="muted findings-empty findings-empty-filtered">
-              אין סעיפים להצגה. הפעילי מסננים בכותרת.
+              אין ממצאים תואמים
             </li>
           )}
           {/*
@@ -300,6 +310,7 @@ function FindingsSection({
               key={`${r.rule_code}::${r.ta_shetach_id ?? idx}`}
               rule={r}
               onJumpToPage={onJumpToPage}
+              pdfAvailable={pdfAvailable}
             />
           ))}
         </ul>
@@ -309,8 +320,8 @@ function FindingsSection({
 }
 
 function FindingRow({
-  rule, onJumpToPage,
-}: { rule: Rule; onJumpToPage?: (n: number) => void }) {
+  rule, onJumpToPage, pdfAvailable,
+}: { rule: Rule; onJumpToPage?: (n: number) => void; pdfAvailable: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const pages = pagesOf(rule);
   const visual = visualOf(rule);
@@ -327,12 +338,27 @@ function FindingRow({
     // Ignore clicks on interactive children (page pills, expand button).
     const t = e.target as HTMLElement;
     if (t.closest(".page-pill") || t.closest(".row-expand-btn")) return;
-    if (pages.length > 0 && onJumpToPage) {
+    if (pdfAvailable && pages.length > 0 && onJumpToPage) {
       onJumpToPage(pages[0]);
     } else {
       setExpanded((x) => !x);
     }
   }
+
+  // Page references: jump buttons when the plan PDF is viewable, plain
+  // text otherwise (the reference is still valuable on paper).
+  const pagePill = (p: number) => pdfAvailable ? (
+    <button
+      key={p}
+      className="page-pill"
+      onClick={(e) => { e.stopPropagation(); onJumpToPage?.(p); }}
+      title={`קפוץ לעמוד ${p}`}
+    >
+      עמ' {p}
+    </button>
+  ) : (
+    <span key={p} className="page-pill page-pill-static">עמ' {p}</span>
+  );
 
   const discTag = rule.discipline ? DISCIPLINE_LABEL_HE[rule.discipline] : null;
   const plotTag = rule.ta_shetach_id ? rule.ta_shetach_id.replace("plot_", "תא ") : null;
@@ -356,16 +382,7 @@ function FindingRow({
           {brief && <div className="finding-row-brief">{brief}</div>}
           {pages.length > 0 && (
             <div className="page-pills">
-              {pages.slice(0, 6).map((p) => (
-                <button
-                  key={p}
-                  className="page-pill"
-                  onClick={(e) => { e.stopPropagation(); onJumpToPage?.(p); }}
-                  title={`קפוץ לעמוד ${p}`}
-                >
-                  עמ' {p}
-                </button>
-              ))}
+              {pages.slice(0, 6).map(pagePill)}
               {pages.length > 6 && (
                 <span className="page-pill-more">+{pages.length - 6}</span>
               )}
@@ -406,15 +423,7 @@ function FindingRow({
             <div className="drawer-block">
               <div className="drawer-label">הפניות לעמודים בהגשה</div>
               <div className="drawer-body drawer-pages">
-                {pages.map((p) => (
-                  <button
-                    key={p}
-                    className="page-pill"
-                    onClick={(e) => { e.stopPropagation(); onJumpToPage?.(p); }}
-                  >
-                    עמ' {p}
-                  </button>
-                ))}
+                {pages.map(pagePill)}
               </div>
             </div>
           )}

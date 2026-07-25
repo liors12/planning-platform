@@ -1,4 +1,5 @@
 import { MaybeApiError } from "./ErrorNotice";
+import { ReportFreshness } from "./ReportFreshness";
 import { useEffect, useRef, useState } from "react";
 import {
   createRevision, deleteAttachment, deleteSubmission, exportExcel,
@@ -32,6 +33,16 @@ type OutputStatus =
 // engine's actual cause sometimes only appears in stderr while
 // error_message is just "returned 1" / "render exit code 1".
 function friendlyError(rawError: string | undefined | null): string {
+  // Server details written in Hebrew are user-facing BY CONSTRUCTION
+  // (e.g. the missing-PDF and duplicate-upload 409s) - surface them as-is
+  // instead of collapsing every unrecognized error to the generic line.
+  const httpDetail = String(rawError ?? "").match(/HTTP \d+:\s*(\{.*\})/s);
+  if (httpDetail) {
+    try {
+      const detail = JSON.parse(httpDetail[1])?.detail;
+      if (typeof detail === "string" && /[א-ת]/.test(detail)) return detail;
+    } catch { /* fall through to pattern matching */ }
+  }
   // Pull out stderr_tail if present so we search the engine's prints too.
   let haystack = String(rawError ?? "");
   try {
@@ -330,12 +341,10 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
       setActiveJobs((prev) => ({ ...prev, [submissionId]: job.id }));
       refresh();
     } catch (e) {
-      // Friendly Hebrew for the 503 EngineNotAvailable response so the
-      // user never sees the raw "HTTP 503: {...}" string. Anything else
-      // still falls through to the generic detail (we route through
-      // friendlyError so the same translation logic the output buttons
-      // use applies here too).
-      setErr(friendlyError(String(e)));
+      // Keep the RAW error in state - the render site shows the friendly
+      // Hebrew cause (via friendlyError, incl. Hebrew server details) as the
+      // explanation, with the raw text collapsible under פרטים טכניים.
+      setErr(String(e));
     }
   }
 
@@ -566,7 +575,10 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
         </form>
       </section>
 
-      {err && <MaybeApiError error={err} />}
+      {err && (
+        <MaybeApiError error={err} title="לא ניתן להשלים את הפעולה"
+                       explanation={friendlyError(err)} />
+      )}
 
       {/* ── Submissions list ────────────────────────────────────────── */}
       <section className="submissions-list">
@@ -848,6 +860,8 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
                   );
                 })()}
               </div>
+
+              <ReportFreshness sub={sub} />
 
               <OutputBanner
                 status={outputStatus[sub.id]}

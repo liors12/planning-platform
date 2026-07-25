@@ -9,12 +9,13 @@
 // JSON is never touched, so re-running the engine never clobbers them.
 
 import { MaybeApiError } from "./ErrorNotice";
+import { ReportFreshness } from "./ReportFreshness";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   createComment,
   deleteComment,
   exportExcel,
-  extractReferentPdf,
+  extractCommentsPdf,
   listComments,
   listDisciplines,
   openOutput,
@@ -22,10 +23,8 @@ import {
   pollJobUntilDone,
   renderSubmission,
   revealOutput,
-  uploadMeetingPdf,
   type CommentOut,
   type DisciplineDef,
-  type MeetingRow,
   type ProjectOut,
   type ReferentExtractRow,
   type SubmissionOut,
@@ -106,21 +105,15 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
   // PdfViewer reload via URL nonce - bumped after each successful render.
   const [pdfNonce, setPdfNonce] = useState(0);
 
-  // ── PDF-extraction flow ───────────────────────────────────────────────
+  // ── PDF-extraction flow (unified button, addendum 6) ─────────────────
   const [extracting, setExtracting] = useState(false);
   const [extractErr, setExtractErr] = useState<string | null>(null);
   const [truncWarn, setTruncWarn] = useState<string | null>(null);
   const [preview, setPreview] = useState<ExtractedPreviewRow[] | null>(null);
+  const [docType, setDocType] = useState<"referent" | "meeting" | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState<string | null>(null);
   const pdfInputRef = useRef<HTMLInputElement>(null);
-
-  // ── Meeting-notes extraction flow ─────────────────────────────────────
-  const [meetingUploading, setMeetingUploading] = useState(false);
-  const [meetingErr, setMeetingErr] = useState<string | null>(null);
-  const [meetingRows, setMeetingRows] = useState<MeetingRow[] | null>(null);
-  const [meetingTruncWarn, setMeetingTruncWarn] = useState<string | null>(null);
-  const meetingInputRef = useRef<HTMLInputElement>(null);
 
   // ── Load disciplines + comments ───────────────────────────────────────
   useEffect(() => {
@@ -223,9 +216,10 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
     setExtractErr(null);
     setTruncWarn(null);
     setPreview(null);
+    setDocType(null);
     setSaveErr(null);
     try {
-      const result = await extractReferentPdf(submission.id, file);
+      const result = await extractCommentsPdf(submission.id, file);
       if (result.error === "scan") {
         setExtractErr(
           result.error_message ??
@@ -235,47 +229,29 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         setExtractErr("לא נמצאו הערות ב-PDF. ניתן להוסיף הערות ידנית בטופס למטה.");
       } else {
         if (result.truncation_warning) setTruncWarn(result.truncation_warning);
+        setDocType(result.doc_type);
         setPreview(
           result.comments.map((c) => ({ ...c, rowId: crypto.randomUUID() })),
         );
       }
     } catch (err) {
       setExtractErr("שגיאה בחילוץ ה-PDF. בדקי שהקובץ תקין ונסי שוב.");
-      console.error("extractReferentPdf failed", err);
+      console.error("extractCommentsPdf failed", err);
     }
     setExtracting(false);
   }
 
-  async function handleMeetingFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = "";
-    if (file.size > 20 * 1024 * 1024) {
-      setMeetingErr("הקובץ גדול מדי - העלי קובץ עד 20MB.");
-      return;
+  // "זוהה: סיכום ישיבה - חולצו 12 הערות מ-4 דיסציפלינות" /
+  // "זוהה: הערות רפרנט - חולצו 5 הערות (תנועה)"
+  function classificationSummary(): string | null {
+    if (!preview || preview.length === 0 || !docType) return null;
+    const distinct = [...new Set(preview.map((r) => r.discipline_key).filter(Boolean))];
+    const n = preview.length;
+    if (docType === "meeting") {
+      return `זוהה: סיכום ישיבה - חולצו ${n} הערות מ-${distinct.length} דיסציפלינות`;
     }
-    setMeetingUploading(true);
-    setMeetingErr(null);
-    setMeetingRows(null);
-    setMeetingTruncWarn(null);
-    try {
-      const result = await uploadMeetingPdf(submission.id, file);
-      if (result.error === "scan") {
-        setMeetingErr(
-          result.error_message ??
-            "לא ניתן לחלץ טקסט מה-PDF - ייתכן שהוא סרוק.",
-        );
-      } else if (result.rows.length === 0) {
-        setMeetingErr("לא נמצאו פריטים בסיכום הישיבה.");
-      } else {
-        if (result.truncation_warning) setMeetingTruncWarn(result.truncation_warning);
-        setMeetingRows(result.rows);
-      }
-    } catch (err) {
-      setMeetingErr("שגיאה בחילוץ סיכום הישיבה. בדקי שהקובץ תקין ונסי שוב.");
-      console.error("uploadMeetingPdf failed", err);
-    }
-    setMeetingUploading(false);
+    const label = disciplines.find((d) => d.key === distinct[0])?.label ?? "";
+    return `זוהה: הערות רפרנט - חולצו ${n} הערות${label ? ` (${label})` : ""}`;
   }
 
   async function handleSavePreview() {
@@ -370,12 +346,16 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           {regenStatus?.kind === "working" ? (
             <>
               <span className="spinner" aria-hidden="true" />
-              יוצרת דו״ח מעודכן + אקסל, נא להמתין...
+              מפיקה דו״ח + אקסל, נא להמתין...
             </>
           ) : (
-            'צרי דו"ח מעודכן'
+            "הפיקי דו״ח"
           )}
         </button>
+        <span className="muted report-scope-hint">
+          הדו"ח כולל את ממצאי הבדיקה ואת הערות הרפרנטים שנוספו
+        </span>
+        <ReportFreshness sub={submission} />
         <button
           className="ghost-btn"
           data-testid="pdf-extract-btn"
@@ -384,9 +364,9 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           disabled={extracting}
         >
           {extracting ? (
-            <><span className="spinner" aria-hidden="true" /> מחלצת הערות מ-PDF...</>
+            <><span className="spinner" aria-hidden="true" /> מחלצת הערות מהמסמך...</>
           ) : (
-            "העלי הערות PDF"
+            "העלי מסמך הערות (PDF)"
           )}
         </button>
         <input
@@ -395,26 +375,6 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           accept=".pdf,application/pdf"
           style={{ display: "none" }}
           onChange={handlePdfFileChange}
-        />
-        <button
-          className="ghost-btn"
-          data-testid="meeting-extract-btn"
-          type="button"
-          onClick={() => meetingInputRef.current?.click()}
-          disabled={meetingUploading}
-        >
-          {meetingUploading ? (
-            <><span className="spinner" aria-hidden="true" /> מחלצת סיכום ישיבה...</>
-          ) : (
-            "העלי סיכום ישיבה"
-          )}
-        </button>
-        <input
-          ref={meetingInputRef}
-          type="file"
-          accept=".pdf,application/pdf"
-          style={{ display: "none" }}
-          onChange={handleMeetingFileChange}
         />
         <span className="muted comments-meta">
           הגשה <span dir="ltr">{submission.version_string}</span> ·{" "}
@@ -428,49 +388,6 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
         onReveal={onRevealRegen}
         onDismiss={() => setRegenStatus(null)}
       />
-
-      {(meetingErr || meetingRows !== null) && (
-        <div className="card pdf-extract-card">
-          <div className="pdf-extract-header">
-            <h4 className="pdf-extract-title">
-              {meetingErr ? "שגיאת חילוץ סיכום ישיבה" : "סיכום ישיבה - פריטים שחולצו"}
-            </h4>
-            <button
-              type="button"
-              className="ghost-btn small"
-              onClick={() => { setMeetingRows(null); setMeetingErr(null); setMeetingTruncWarn(null); }}
-            >
-              סגרי ✕
-            </button>
-          </div>
-          {meetingErr && <div className="error">{meetingErr}</div>}
-          {meetingTruncWarn && <div className="warning-banner">{meetingTruncWarn}</div>}
-          {meetingRows !== null && meetingRows.length === 0 && (
-            <p className="muted">לא נמצאו פריטים לשמירה.</p>
-          )}
-          {meetingRows?.map((row) => (
-            <div key={row.id} className="pdf-extract-row">
-              <div className="pdf-extract-row-header">
-                <span className="muted" style={{ fontSize: "0.85em" }}>
-                  {row.row_type === "decision" ? "החלטה" :
-                   row.row_type === "action_item" ? "משימה" : "נושא פתוח"}
-                </span>
-                {row.topic_he && (
-                  <strong style={{ marginRight: "0.5em" }}>{row.topic_he}</strong>
-                )}
-              </div>
-              <p style={{ margin: "0.25em 0 0" }}>{row.decision_he}</p>
-              {(row.responsible_he || row.deadline_he) && (
-                <p className="muted" style={{ margin: "0.25em 0 0", fontSize: "0.85em" }}>
-                  {row.responsible_he && <>אחראי: {row.responsible_he}</>}
-                  {row.responsible_he && row.deadline_he && " · "}
-                  {row.deadline_he && <>מועד: {row.deadline_he}</>}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
 
       {(extractErr || (preview !== null)) && (
         <div className="card pdf-extract-card">
@@ -487,6 +404,11 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
             </button>
           </div>
           {extractErr && <div className="error">{extractErr}</div>}
+          {classificationSummary() && (
+            <p className="classification-summary" data-testid="extract-classification">
+              {classificationSummary()}
+            </p>
+          )}
           {truncWarn && <div className="warning-banner">{truncWarn}</div>}
           {saveErr && <div className="error">{saveErr}</div>}
           {preview !== null && preview.length === 0 && (
@@ -566,7 +488,16 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
                   )
                 }
               >
-                {saving ? "שומרת..." : `שמרי ${preview.length} הערות`}
+                {saving ? "שומרת..." : `אשרי ושמרי ${preview.length} הערות`}
+              </button>
+              <button
+                type="button"
+                className="ghost-btn"
+                data-testid="pdf-extract-cancel-btn"
+                disabled={saving}
+                onClick={() => { setPreview(null); setDocType(null); setExtractErr(null); setTruncWarn(null); setSaveErr(null); }}
+              >
+                בטלי
               </button>
             </div>
           )}

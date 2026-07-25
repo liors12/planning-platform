@@ -39,7 +39,7 @@ export function Guidelines() {
     <article className="page-guidelines">
       <header className="page-header">
         <div>
-          <h1>הנחיות עירוניות</h1>
+          <h1>הנחיות עירוניות לתוכנית העיצוב</h1>
           <p className="muted">
             הנחיות ההגשה החלות על כל תכניות העיצוב בעיר. עריכת ערך יוצרת גרסה
             חדשה - הבדיקה האוטומטית הבאה תשתמש בערך המעודכן.

@@ -226,8 +226,8 @@ def _build_guidelines_html(rows: list[dict]) -> str:
     max_version = max((g["version"] for g in rows), default=1)
     parts = [
         "<html><head><meta charset='utf-8'></head><body>",
-        f"<div class='pdf-footer'>הנחיות עירוניות · גרסה {max_version} · {now_str}</div>",
-        "<h1>הנחיות עירוניות להגשת תכנית עיצוב</h1>",
+        f"<div class='pdf-footer'>הנחיות עירוניות לתוכנית העיצוב · גרסה {max_version} · {now_str}</div>",
+        "<h1>הנחיות עירוניות לתוכנית העיצוב</h1>",
         f"<p class='meta'>הופק: {now_str}</p>",
     ]
 

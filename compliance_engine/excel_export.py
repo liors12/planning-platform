@@ -185,10 +185,11 @@ def _row_from_sidecar(f: dict) -> dict:
 def _row_from_comment(c: dict) -> dict:
     disc_key = c.get("discipline_key") or ""
     disc_label = _SIDECAR_DISC_HE.get(disc_key, disc_key)
+    # Addendum 8: city-arch merged into אדריכלות וחזיתות. Defensive remap
+    # for pre-migration snapshot files that still carry the old key.
     if disc_key == "city-arch":
-        section = "הערות אדריכלית העיר"
-    else:
-        section = "הערות מפגישות"
+        disc_label = "אדריכלות וחזיתות"
+    section = "הערות מפגישות"
     return {
         "is_new": True,
         "report_section": section,

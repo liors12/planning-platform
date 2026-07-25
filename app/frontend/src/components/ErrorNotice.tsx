@@ -42,8 +42,14 @@ export function ErrorNotice({ error, title, explanation, steps, compact }: Props
 /** Heuristic router: technical-looking errors (raw fetch/API strings) render
  * as the full ErrorNotice; already-friendly Hebrew validation messages keep
  * the plain inline error style. */
-export function MaybeApiError({ error, title }: { error: string; title?: string }) {
+export function MaybeApiError({ error, title, explanation }: {
+  error: string;
+  title?: string;
+  /** Friendly Hebrew cause (e.g. friendlyError(raw)) shown above the
+   * collapsible technical details when the error is technical. */
+  explanation?: string;
+}) {
   const technical = /HTTP \d|→|Error:|TypeError|fetch|\{"detail"/.test(error);
   if (!technical) return <div className="error">{error}</div>;
-  return <ErrorNotice error={error} title={title} compact />;
+  return <ErrorNotice error={error} title={title} explanation={explanation} compact />;
 }

@@ -74,6 +74,12 @@ export interface SubmissionOut {
   engine_run_available: boolean;
   /** Set when this submission is a revision of another (re-audit lineage). */
   source_submission_id: number | null;
+  /** True iff the plan PDF exists on disk (false for the seeded pilot). */
+  has_pdf: boolean;
+  /** When a report exists: its generation time + whether findings/comments/
+   * uploads changed since. Both null when no report was generated yet. */
+  report_generated_at: string | null;
+  report_changes_since: boolean | null;
   /** True iff the three-way comparison xlsx has been generated. */
   has_comparison_xlsx: boolean;
   comparison_fixed: number | null;
@@ -739,6 +745,28 @@ export async function extractReferentPdf(
       { method: "POST", body: form },
     ),
     `POST /submissions/${submissionId}/extract-referent-pdf`,
+  );
+}
+
+// ── Unified comments-document extraction (addendum 6) ───────────────────
+// One endpoint behind the single upload button: the server classifies the
+// document (referent sheet vs meeting summary) and extracts accordingly.
+export interface UnifiedExtractResult extends ReferentExtractResult {
+  doc_type: "referent" | "meeting" | null;
+}
+
+export async function extractCommentsPdf(
+  submissionId: number,
+  pdfFile: File,
+): Promise<UnifiedExtractResult> {
+  const form = new FormData();
+  form.append("pdf_file", pdfFile, pdfFile.name);
+  return jsonOrThrow<UnifiedExtractResult>(
+    await fetchOrThrow(
+      `${SIDECAR_BASE}/submissions/${submissionId}/extract-comments-pdf`,
+      { method: "POST", body: form },
+    ),
+    `POST /submissions/${submissionId}/extract-comments-pdf`,
   );
 }
 
