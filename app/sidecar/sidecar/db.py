@@ -77,12 +77,22 @@ def _connect(db_path: Path, key: str):
 def build_engine(db_path: Path, key: str) -> Engine:
     """Build a SQLAlchemy Engine bound to an encrypted SQLite at `db_path`."""
     db_path.parent.mkdir(parents=True, exist_ok=True)
+    from sqlalchemy.pool import QueuePool
     engine = create_engine(
         "sqlite://",
         creator=lambda: _connect(db_path, key),
         # We manage pragmas ourselves on each connection; turn off SQLAlchemy's
         # default opinionated isolation handling.
         connect_args={},
+        # The "sqlite://" URL looks in-memory to SQLAlchemy, which defaults
+        # to SingletonThreadPool - ONE shared connection. Combined with
+        # check_same_thread=False (the F-3 fix) that let uvicorn/queue
+        # threads share and close each other's connection ("Cannot operate
+        # on a closed database" storms on the stdlib-sqlite3 backend).
+        # A real pool gives every checkout its own connection.
+        poolclass=QueuePool,
+        pool_size=5,
+        max_overflow=10,
         future=True,
     )
     return engine
