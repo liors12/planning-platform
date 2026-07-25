@@ -951,6 +951,25 @@ export interface GuidelineOut {
   section_key: string | null;
   section_title: string | null;
   sort_order: number | null;
+  /** v0.2.0: canonical discipline key - the primary grouping. */
+  discipline_key: string | null;
+  /** null = the approved docx; otherwise the authority source. */
+  origin: string | null;
+}
+
+export async function createGuideline(body: {
+  discipline_key: string;
+  title: string;
+  body_text: string;
+}): Promise<GuidelineOut> {
+  return jsonOrThrow<GuidelineOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/guidelines`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    "POST /guidelines",
+  );
 }
 
 export interface GuidelineEditPayload {

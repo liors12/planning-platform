@@ -29,10 +29,6 @@
       "section_title": "חלק ז - רשימת בדיקה למינהלת (קבלת ההגשה)"
     },
     {
-      "section_key": "part_h",
-      "section_title": "חלק ח - נוהל החזרת הגשה לא שלמה"
-    },
-    {
       "section_key": "appendix_a",
       "section_title": "נספח א - תקנים והפניות"
     }
@@ -48,7 +44,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 1
+      "sort_order": 1,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -60,7 +57,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 2
+      "sort_order": 2,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -72,7 +70,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 3
+      "sort_order": 3,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -84,7 +83,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 4
+      "sort_order": 4,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -96,7 +96,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 5
+      "sort_order": 5,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -108,7 +109,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 6
+      "sort_order": 6,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -120,7 +122,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 7
+      "sort_order": 7,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_a",
@@ -132,7 +135,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 8
+      "sort_order": 8,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -144,7 +148,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 9
+      "sort_order": 9,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -156,7 +161,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 10
+      "sort_order": 10,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -168,7 +174,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 11
+      "sort_order": 11,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -180,7 +187,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 12
+      "sort_order": 12,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -192,7 +200,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 13
+      "sort_order": 13,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_a",
@@ -204,7 +213,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 14
+      "sort_order": 14,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -216,7 +226,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 15
+      "sort_order": 15,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_a",
@@ -228,7 +239,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 16
+      "sort_order": 16,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -240,7 +252,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 17
+      "sort_order": 17,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -252,7 +265,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 18
+      "sort_order": 18,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -264,7 +278,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 19
+      "sort_order": 19,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -276,7 +291,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 20
+      "sort_order": 20,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -288,7 +304,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 21
+      "sort_order": 21,
+      "discipline_key": "sec-3-3"
     },
     {
       "section_key": "part_a",
@@ -300,7 +317,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 22
+      "sort_order": 22,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -312,7 +330,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 23
+      "sort_order": 23,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -324,7 +343,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 24
+      "sort_order": 24,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -336,7 +356,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 25
+      "sort_order": 25,
+      "discipline_key": "sec-3-8"
     },
     {
       "section_key": "part_a",
@@ -348,7 +369,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 26
+      "sort_order": 26,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -360,7 +382,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 27
+      "sort_order": 27,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -372,7 +395,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 28
+      "sort_order": 28,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_a",
@@ -384,7 +408,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 29
+      "sort_order": 29,
+      "discipline_key": "sec-3-2"
     },
     {
       "section_key": "part_a",
@@ -396,7 +421,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 30
+      "sort_order": 30,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -408,7 +434,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 31
+      "sort_order": 31,
+      "discipline_key": "sec-3-8"
     },
     {
       "section_key": "part_a",
@@ -420,7 +447,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 32
+      "sort_order": 32,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_a",
@@ -432,7 +460,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 33
+      "sort_order": 33,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -444,7 +473,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 34
+      "sort_order": 34,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -456,7 +486,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 35
+      "sort_order": 35,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -468,7 +499,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 36
+      "sort_order": 36,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -480,7 +512,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 37
+      "sort_order": 37,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -492,7 +525,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 38
+      "sort_order": 38,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -504,7 +538,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 39
+      "sort_order": 39,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -516,7 +551,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 40
+      "sort_order": 40,
+      "discipline_key": "sec-3-2"
     },
     {
       "section_key": "part_b",
@@ -528,7 +564,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 41
+      "sort_order": 41,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_b",
@@ -540,7 +577,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 42
+      "sort_order": 42,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "part_b",
@@ -552,7 +590,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 43
+      "sort_order": 43,
+      "discipline_key": "public-buildings"
     },
     {
       "section_key": "part_b",
@@ -564,7 +603,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 44
+      "sort_order": 44,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "part_b",
@@ -576,7 +616,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 45
+      "sort_order": 45,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_b",
@@ -588,7 +629,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 46
+      "sort_order": 46,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -600,7 +642,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 47
+      "sort_order": 47,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -612,7 +655,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 48
+      "sort_order": 48,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_b",
@@ -624,7 +668,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 49
+      "sort_order": 49,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_b",
@@ -636,7 +681,8 @@
       "check_key": "path_main_min_m",
       "check_value": 3.0,
       "unit": "מ'",
-      "sort_order": 50
+      "sort_order": 50,
+      "discipline_key": "sec-3-2"
     },
     {
       "section_key": "part_b",
@@ -648,7 +694,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 51
+      "sort_order": 51,
+      "discipline_key": "sec-3-2"
     },
     {
       "section_key": "part_c",
@@ -660,7 +707,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 52
+      "sort_order": 52,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_c",
@@ -672,7 +720,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 53
+      "sort_order": 53,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_c",
@@ -684,7 +733,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 54
+      "sort_order": 54,
+      "discipline_key": "sec-3-3"
     },
     {
       "section_key": "part_c",
@@ -696,7 +746,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 55
+      "sort_order": 55,
+      "discipline_key": "sec-3-3"
     },
     {
       "section_key": "part_c",
@@ -708,7 +759,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 56
+      "sort_order": 56,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_c",
@@ -720,7 +772,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 57
+      "sort_order": 57,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_c",
@@ -732,7 +785,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 58
+      "sort_order": 58,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -744,7 +798,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 59
+      "sort_order": 59,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_c",
@@ -756,7 +811,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 60
+      "sort_order": 60,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_c",
@@ -768,7 +824,8 @@
       "check_key": "gas_tank_setback_min_m",
       "check_value": 2.0,
       "unit": "מ'",
-      "sort_order": 61
+      "sort_order": 61,
+      "discipline_key": "sec-3-2"
     },
     {
       "section_key": "part_c",
@@ -780,7 +837,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 62
+      "sort_order": 62,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_c",
@@ -792,7 +850,8 @@
       "check_key": "laundry_screen_width_m",
       "check_value": 1.8,
       "unit": "מ'",
-      "sort_order": 63
+      "sort_order": 63,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_c",
@@ -804,7 +863,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 64
+      "sort_order": 64,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_c",
@@ -816,7 +876,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 65
+      "sort_order": 65,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_c",
@@ -828,7 +889,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 66
+      "sort_order": 66,
+      "discipline_key": "sec-3-5"
     },
     {
       "section_key": "part_c",
@@ -840,7 +902,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 67
+      "sort_order": 67,
+      "discipline_key": "sec-3-5"
     },
     {
       "section_key": "part_c",
@@ -852,7 +915,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 68
+      "sort_order": 68,
+      "discipline_key": "sec-3-5"
     },
     {
       "section_key": "part_d",
@@ -864,7 +928,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 69
+      "sort_order": 69,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -876,7 +941,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 70
+      "sort_order": 70,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -888,7 +954,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 71
+      "sort_order": 71,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -900,7 +967,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 72
+      "sort_order": 72,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -912,7 +980,8 @@
       "check_key": "glass_railing_min_height_cm",
       "check_value": 105.0,
       "unit": "ס\"מ",
-      "sort_order": 73
+      "sort_order": 73,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -924,7 +993,8 @@
       "check_key": "laundry_screen_height_m",
       "check_value": 1.5,
       "unit": "מ'",
-      "sort_order": 74
+      "sort_order": 74,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -936,7 +1006,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 75
+      "sort_order": 75,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -948,7 +1019,8 @@
       "check_key": "glazing_reflectivity_max_pct",
       "check_value": 70.0,
       "unit": "%",
-      "sort_order": 76
+      "sort_order": 76,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -960,7 +1032,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 77
+      "sort_order": 77,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -972,7 +1045,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 78
+      "sort_order": 78,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -984,7 +1058,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 79
+      "sort_order": 79,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -996,7 +1071,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 80
+      "sort_order": 80,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -1008,7 +1084,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 81
+      "sort_order": 81,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_d",
@@ -1020,7 +1097,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 82
+      "sort_order": 82,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_e",
@@ -1032,7 +1110,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 83
+      "sort_order": 83,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_e",
@@ -1044,7 +1123,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 84
+      "sort_order": 84,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_e",
@@ -1056,7 +1136,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 85
+      "sort_order": 85,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_e",
@@ -1068,7 +1149,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 86
+      "sort_order": 86,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_e",
@@ -1080,7 +1162,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 87
+      "sort_order": 87,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_e",
@@ -1092,7 +1175,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 88
+      "sort_order": 88,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "part_e",
@@ -1104,7 +1188,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 89
+      "sort_order": 89,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "part_e",
@@ -1116,7 +1201,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 90
+      "sort_order": 90,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_e",
@@ -1128,7 +1214,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 91
+      "sort_order": 91,
+      "discipline_key": "sec-3-8"
     },
     {
       "section_key": "part_e",
@@ -1140,7 +1227,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 92
+      "sort_order": 92,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1152,7 +1240,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 93
+      "sort_order": 93,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1164,7 +1253,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 94
+      "sort_order": 94,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1176,7 +1266,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 95
+      "sort_order": 95,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1188,7 +1279,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 96
+      "sort_order": 96,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1200,7 +1292,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 97
+      "sort_order": 97,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1212,7 +1305,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 98
+      "sort_order": 98,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1224,7 +1318,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 99
+      "sort_order": 99,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1236,7 +1331,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 100
+      "sort_order": 100,
+      "discipline_key": "sec-3-3"
     },
     {
       "section_key": "part_f",
@@ -1248,7 +1344,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 101
+      "sort_order": 101,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "part_f",
@@ -1260,7 +1357,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 102
+      "sort_order": 102,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_f",
@@ -1272,7 +1370,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 103
+      "sort_order": 103,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1284,7 +1383,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 104
+      "sort_order": 104,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1296,7 +1396,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 105
+      "sort_order": 105,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1308,7 +1409,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 106
+      "sort_order": 106,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_g",
@@ -1320,7 +1422,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 107
+      "sort_order": 107,
+      "discipline_key": "sec-3-2"
     },
     {
       "section_key": "part_g",
@@ -1332,7 +1435,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 108
+      "sort_order": 108,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1344,7 +1448,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 109
+      "sort_order": 109,
+      "discipline_key": "sec-3-8"
     },
     {
       "section_key": "part_g",
@@ -1356,7 +1461,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 110
+      "sort_order": 110,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1368,7 +1474,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 111
+      "sort_order": 111,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1380,7 +1487,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 112
+      "sort_order": 112,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1392,7 +1500,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 113
+      "sort_order": 113,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1404,7 +1513,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 114
+      "sort_order": 114,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1416,7 +1526,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 115
+      "sort_order": 115,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1428,7 +1539,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 116
+      "sort_order": 116,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1440,7 +1552,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 117
+      "sort_order": 117,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1452,7 +1565,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 118
+      "sort_order": 118,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1464,7 +1578,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 119
+      "sort_order": 119,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1476,7 +1591,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 120
+      "sort_order": 120,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1488,7 +1604,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 121
+      "sort_order": 121,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1500,7 +1617,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 122
+      "sort_order": 122,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1512,7 +1630,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 123
+      "sort_order": 123,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_g",
@@ -1524,7 +1643,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 124
+      "sort_order": 124,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1536,7 +1656,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 125
+      "sort_order": 125,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_g",
@@ -1548,7 +1669,8 @@
       "check_key": "path_secondary_min_m",
       "check_value": 2.5,
       "unit": "מ'",
-      "sort_order": 126
+      "sort_order": 126,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1560,7 +1682,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 127
+      "sort_order": 127,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_g",
@@ -1572,7 +1695,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 128
+      "sort_order": 128,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1584,7 +1708,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 129
+      "sort_order": 129,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1596,7 +1721,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 130
+      "sort_order": 130,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "part_g",
@@ -1608,7 +1734,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 131
+      "sort_order": 131,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1620,7 +1747,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 132
+      "sort_order": 132,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1632,7 +1760,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 133
+      "sort_order": 133,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1644,7 +1773,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 134
+      "sort_order": 134,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1656,7 +1786,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 135
+      "sort_order": 135,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_g",
@@ -1668,7 +1799,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 136
+      "sort_order": 136,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_g",
@@ -1680,7 +1812,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 137
+      "sort_order": 137,
+      "discipline_key": "sec-3-7"
     },
     {
       "section_key": "part_g",
@@ -1692,79 +1825,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 138
-    },
-    {
-      "section_key": "part_h",
-      "section_title": "חלק ח - נוהל החזרת הגשה לא שלמה",
-      "subsection": "",
-      "title": "מהנדס/ת המינהלת תחזיר את ההגשה לאדריכל תוך 7 ימי עבודה ממועד",
-      "body_text": "מהנדס/ת המינהלת תחזיר את ההגשה לאדריכל תוך 7 ימי עבודה ממועד הקבלה.",
-      "guideline_type": "manual",
-      "check_key": null,
-      "check_value": null,
-      "unit": null,
-      "sort_order": 139
-    },
-    {
-      "section_key": "part_h",
-      "section_title": "חלק ח - נוהל החזרת הגשה לא שלמה",
-      "subsection": "",
-      "title": "ההחזרה תכלול מכתב מנומק המפרט אילו פריטים חסרים",
-      "body_text": "ההחזרה תכלול מכתב מנומק המפרט אילו פריטים חסרים, בהפניה לסעיפי מסמך זה.",
-      "guideline_type": "manual",
-      "check_key": null,
-      "check_value": null,
-      "unit": null,
-      "sort_order": 140
-    },
-    {
-      "section_key": "part_h",
-      "section_title": "חלק ח - נוהל החזרת הגשה לא שלמה",
-      "subsection": "",
-      "title": "מד הזמן לבדיקה",
-      "body_text": "מד הזמן לבדיקה (תוך 60 ימי עבודה) לא יתחיל לרוץ עד שההגשה תהיה שלמה.",
-      "guideline_type": "manual",
-      "check_key": null,
-      "check_value": null,
-      "unit": null,
-      "sort_order": 141
-    },
-    {
-      "section_key": "part_h",
-      "section_title": "חלק ח - נוהל החזרת הגשה לא שלמה",
-      "subsection": "",
-      "title": "הערעור יוגש בכתב למהנדס המינהלת.",
-      "body_text": "הערעור יוגש בכתב למהנדס המינהלת.",
-      "guideline_type": "manual",
-      "check_key": null,
-      "check_value": null,
-      "unit": null,
-      "sort_order": 142
-    },
-    {
-      "section_key": "part_h",
-      "section_title": "חלק ח - נוהל החזרת הגשה לא שלמה",
-      "subsection": "",
-      "title": "מהנדס המינהלת + אדריכלית העיר ישקלו את הערעור בתוך 14 יום.",
-      "body_text": "מהנדס המינהלת + אדריכלית העיר ישקלו את הערעור בתוך 14 יום.",
-      "guideline_type": "manual",
-      "check_key": null,
-      "check_value": null,
-      "unit": null,
-      "sort_order": 143
-    },
-    {
-      "section_key": "part_h",
-      "section_title": "חלק ח - נוהל החזרת הגשה לא שלמה",
-      "subsection": "",
-      "title": "אם הערעור מתקבל - תוקנו ההגשה לפי החלטה זו.",
-      "body_text": "אם הערעור מתקבל - תוקנו ההגשה לפי החלטה זו.",
-      "guideline_type": "manual",
-      "check_key": null,
-      "check_value": null,
-      "unit": null,
-      "sort_order": 144
+      "sort_order": 138,
+      "discipline_key": "roads-dev"
     },
     {
       "section_key": "appendix_a",
@@ -1776,7 +1838,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 145
+      "sort_order": 139,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "appendix_a",
@@ -1788,7 +1851,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 146
+      "sort_order": 140,
+      "discipline_key": "general"
     },
     {
       "section_key": "appendix_a",
@@ -1800,7 +1864,8 @@
       "check_key": null,
       "check_value": null,
       "unit": null,
-      "sort_order": 147
+      "sort_order": 141,
+      "discipline_key": "general"
     },
     {
       "section_key": "part_c",
@@ -1813,7 +1878,8 @@
       "check_value": null,
       "unit": null,
       "origin": "מינהלת",
-      "sort_order": 148
+      "sort_order": 142,
+      "discipline_key": "sec-3-5"
     },
     {
       "section_key": "part_c",
@@ -1826,7 +1892,8 @@
       "check_value": null,
       "unit": null,
       "origin": "מינהלת",
-      "sort_order": 149
+      "sort_order": 143,
+      "discipline_key": "sec-3-5"
     },
     {
       "section_key": "part_b",
@@ -1839,7 +1906,8 @@
       "check_value": null,
       "unit": null,
       "origin": "מינהלת",
-      "sort_order": 150
+      "sort_order": 144,
+      "discipline_key": "roads-dev"
     },
     {
       "section_key": "part_c",
@@ -1852,7 +1920,8 @@
       "check_value": null,
       "unit": null,
       "origin": "מינהלת",
-      "sort_order": 151
+      "sort_order": 145,
+      "discipline_key": "roads-dev"
     },
     {
       "section_key": "part_c",
@@ -1865,7 +1934,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 152
+      "sort_order": 146,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1878,7 +1948,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 153
+      "sort_order": 147,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1891,7 +1962,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 154
+      "sort_order": 148,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1904,7 +1976,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 155
+      "sort_order": 149,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1917,7 +1990,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 156
+      "sort_order": 150,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1930,7 +2004,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 157
+      "sort_order": 151,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1943,7 +2018,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 158
+      "sort_order": 152,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1956,7 +2032,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 159
+      "sort_order": 153,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1969,7 +2046,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 160
+      "sort_order": 154,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1982,7 +2060,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 161
+      "sort_order": 155,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -1995,7 +2074,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 162
+      "sort_order": 156,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_c",
@@ -2008,7 +2088,8 @@
       "check_value": null,
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
-      "sort_order": 163
+      "sort_order": 157,
+      "discipline_key": "sec-3-1"
     },
     {
       "section_key": "part_b",
@@ -2021,7 +2102,8 @@
       "check_value": null,
       "unit": null,
       "origin": "מינהלת",
-      "sort_order": 164
+      "sort_order": 158,
+      "discipline_key": "sec-3-4"
     },
     {
       "section_key": "part_b",
@@ -2034,7 +2116,8 @@
       "check_value": null,
       "unit": null,
       "origin": "מינהלת",
-      "sort_order": 165
+      "sort_order": 159,
+      "discipline_key": "public-buildings"
     },
     {
       "section_key": "part_b",
@@ -2047,7 +2130,8 @@
       "check_value": null,
       "unit": null,
       "origin": "מינהלת",
-      "sort_order": 166
+      "sort_order": 160,
+      "discipline_key": "public-buildings"
     }
   ]
 }

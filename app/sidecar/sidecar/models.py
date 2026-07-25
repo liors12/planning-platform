@@ -576,6 +576,15 @@ class Guideline(Base):
     # Document-structure fields (full-seed): the guidelines screen mirrors the
     # approved municipal document - its own parts, in its own order.
     section_key: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    # v0.2.0: canonical discipline (compliance_engine/disciplines.py key) -
+    # the PRIMARY grouping of the guidelines screen and the attachment
+    # check-mapping selector. Nullable for pre-migration rows; the startup
+    # backfill fills it.
+    discipline_key: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    # Where the guideline came from: None = the approved docx; "מינהלת" /
+    # "הנחיות יועץ התברואה העירוני" = authority additions (incl. rows Ellen
+    # creates in the UI, which get "מינהלת").
+    origin: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     section_title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     sort_order: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
@@ -583,6 +592,8 @@ class Guideline(Base):
         return {
             "id": self.id,
             "discipline": self.discipline,
+            "discipline_key": self.discipline_key,
+            "origin": self.origin,
             "section_key": self.section_key,
             "section_title": self.section_title,
             "sort_order": self.sort_order,

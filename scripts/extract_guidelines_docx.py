@@ -61,7 +61,60 @@ SKIP_PREFIXES = [
     ("מסמך זה אושר על ידי", "signature block"),
     ("הסעיפים הבאים חולצו", "appendix-B preamble (internal legal-review notes)"),
 ]
-SKIP_SECTIONS = {"appendix_b": "נספח ב is internal legal-review commentary (notes-to-reconsider), not architect-facing requirements"}
+SKIP_SECTIONS = {
+    "appendix_b": "נספח ב is internal legal-review commentary (notes-to-reconsider), not architect-facing requirements",
+    # v0.2.0 Phase 1b: חלק ח (נוהל החזרת הגשה לא שלמה) removed from the
+    # seeded set - process text, not architect-facing plan requirements.
+    # Existing installs deactivate these rows via the db.py migration.
+    "part_h": "חלק ח removed in v0.2.0 - return-procedure process text, not plan requirements",
+}
+
+# ── v0.2.0 Phase 1a: discipline classification ────────────────────────
+# Every guideline gets a canonical discipline_key (compliance_engine/
+# disciplines.py). Keyword rules run first (order matters - first match
+# wins); anything unmatched falls back to its section default; sections
+# without a thematic home default to "general".
+DISCIPLINE_KEYWORD_RULES: list[tuple[str, str]] = [
+    # שפ"ע - waste
+    ("אשפה|אצירה|מיחזור|דחסן|תברואה|פינוי פסולת|שוט", "sec-3-1"),
+    # גנים ונוף
+    ("גנים|נוף|עצים|צמחי|גינון|נטיע", "sec-3-2"),
+    # ניקוז וחלחול
+    ("ניקוז|חלחול|נגר|השהיה|שיפוע", "sec-3-5"),
+    # פיתוח וכבישים - paths, ramps, gas tank (per the learned mapping)
+    ("שביל|כביש|רמפה|צובר|מדרכ", "roads-dev"),
+    # תנועה - parking & traffic
+    ("חני|תנועה|מאזן החניה|רכב", "sec-3-4"),
+    # תשתיות
+    ("תשתיות|חשמל|תאורה|ביוב|מים |קווי ", "sec-3-3"),
+    # מבני ציבור
+    ("מבני ציבור|מבנה ציבור|גן ילדים|מעון|כיתות|חצר הגן", "public-buildings"),
+    # אדריכלות וחזיתות - facades, railings, glazing, materials, roofs
+    ("חזית|מעקה|זיגוג|מסתור|מרפסת|גג|חומרי|צבע|חיפוי|פרגול|סוכך|מזג|חלון", "sec-3-7"),
+    # הנחיות סביבתיות
+    ("סביבת|אקוסט|קרינה|הצלל|רוח ", "sec-3-8"),
+    # שירותים לדיירים
+    ("דיירים|לובי|מחסנ|אופניים|עגלות", "sec-3-9"),
+]
+
+SECTION_DEFAULT_DISCIPLINE: dict[str, str] = {
+    "part_a": "general",       # file-format requirements
+    "part_b": "general",       # booklet structure
+    "part_c": "general",       # per-plot content (keyword rules catch most)
+    "part_d": "sec-3-7",       # facades & sections marking
+    "part_e": "general",       # quantitative tables
+    "part_f": "general",       # tb"a conformance
+    "part_g": "general",       # checklist (keyword rules catch most)
+    "appendix_a": "general",   # standards & references
+}
+
+
+def classify_discipline(title: str, body: str, section_key: str) -> str:
+    hay = f"{title} {body}"
+    for pattern, key in DISCIPLINE_KEYWORD_RULES:
+        if re.search(pattern, hay):
+            return key
+    return SECTION_DEFAULT_DISCIPLINE.get(section_key, "general")
 
 DASHES = {"—": "-", "–": "-"}
 
@@ -111,6 +164,7 @@ def main() -> None:
             "guideline_type": "manual",
             "check_key": None, "check_value": None, "unit": None,
             "sort_order": sort_order,
+            "discipline_key": classify_discipline(norm(title), norm(body), cur_key),
         })
 
     for child in d.element.body.iterchildren():
@@ -300,6 +354,11 @@ def main() -> None:
     for extra in authority_rows:
         sort_order += 1
         extra["sort_order"] = sort_order
+        # Authority rows imply their discipline via the same keyword rules
+        # (verified: all classify unambiguously).
+        extra.setdefault("discipline_key",
+                         classify_discipline(extra["title"], extra["body_text"],
+                                             extra["section_key"]))
         rows.append(extra)
 
     # Attach the 7 check_keys.
@@ -328,6 +387,20 @@ def main() -> None:
     print(f"\nSKIPPED ({len(skipped)}):")
     for text, reason in skipped:
         print(f"  - [{reason}] {text}")
+
+    # v0.2.0: discipline classification table + ambiguous (fallback) list.
+    from collections import Counter
+    disc_counts = Counter(r["discipline_key"] for r in rows)
+    print("\nDISCIPLINES:")
+    for k, n in disc_counts.most_common():
+        print(f"  {k:18s} {n:3d}")
+    ambiguous = [r for r in rows
+                 if r["discipline_key"] == "general"
+                 and not any(re.search(p, r["title"] + " " + r["body_text"])
+                             for p, _ in DISCIPLINE_KEYWORD_RULES)]
+    print(f"\nAMBIGUOUS→general ({len(ambiguous)}):")
+    for r in ambiguous[:200]:
+        print(f"  - [{r['section_key']}] {r['title'][:60]}")
 
 
 if __name__ == "__main__":

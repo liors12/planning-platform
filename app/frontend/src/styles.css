@@ -2123,3 +2123,34 @@ details.guidelines-group > summary::-webkit-details-marker { margin-inline-start
   font-weight: 600;
   font-size: 13.5px;
 }
+
+/* ── v0.2.0: discipline-first guidelines ─────────────────────────────── */
+.guidelines-disc-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0;
+  background: var(--bg);
+  border-block-end: 1px solid var(--rule);
+  margin-block-end: 10px;
+}
+.disc-nav-chip {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--green-line);
+  background: var(--green-soft);
+  color: var(--green);
+  cursor: pointer;
+}
+.disc-nav-chip:hover { background: var(--green); color: #fff; }
+.disc-nav-count { font-weight: 700; }
+.guidelines-group-count { font-size: 12.5px; font-weight: 400; }
+.guidelines-group-add { margin-inline-start: 10px; }
+.guideline-source-section { font-size: 11.5px; margin: 2px 0 0; }
+.badge-origin { background: #fff4e0; color: #8a5b00; }
