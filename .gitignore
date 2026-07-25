@@ -155,3 +155,7 @@ tests/ui-dev/.qa-ui-data/
 tests/ui-dev/node_modules/
 tests/ui-dev/test-results/
 tests/ui-dev/playwright-report/
+
+# ── SQLite sidecar files (B-8: never commit WAL/SHM journals) ─────────
+*.db-wal
+*.db-shm

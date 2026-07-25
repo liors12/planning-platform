@@ -48,7 +48,15 @@ def _connect(db_path: Path, key: str):
     With sqlcipher3: applies PRAGMA key + cipher_compatibility first.
     With stdlib sqlite3 (Windows fallback): skips encryption pragmas.
     """
-    conn = _sqlite_backend.connect(str(db_path), isolation_level=None)
+    # check_same_thread=False (F-3): SQLAlchemy's pool hands each connection
+    # to one thread at a time, but POOL TEARDOWN may close it from a
+    # different thread (uvicorn/queue-worker thread pools) - sqlcipher3's
+    # same-thread guard turned every such close into a noisy
+    # ProgrammingError in the logs during engine runs. Cross-thread CLOSE of
+    # an idle connection is safe; concurrent USE is still prevented by the
+    # pool's checkout discipline.
+    conn = _sqlite_backend.connect(str(db_path), isolation_level=None,
+                                   check_same_thread=False)
     cur = conn.cursor()
     if _BACKEND_NAME == "sqlcipher3":
         # Key must be the very first statement on a fresh connection.

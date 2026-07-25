@@ -27,7 +27,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 from compliance_engine.content_compliance_checker import (  # noqa: E402
     run_content_compliance,
     VERDICT_PASS, VERDICT_FAIL, VERDICT_FAIL_BORDERLINE, VERDICT_REQUIRES_REVIEW,
-    VERDICT_UNEVALUABLE, VERDICT_NOT_APPLICABLE,
+    VERDICT_UNEVALUABLE, VERDICT_NOT_APPLICABLE, VERDICT_NOT_SUBMITTED,
 )
 from compliance_engine.submission_data_extractor import (  # noqa: E402
     ExtractedSubmissionData, PlanWideData, TAShetachData, extract,
@@ -144,10 +144,13 @@ def test_unit_count_fail_over(split_schema, content_rules):
 
 
 def test_unit_count_missing_data(split_schema, content_rules):
+    # B-7 expectation update: the engine deliberately reclassified
+    # missing-data outcomes as not_submitted (the M7-era "נדרשת השלמה"
+    # policy) - honest "not in this submission", never a fabricated verdict.
     ex = _extracted(plot_A={}, plot_B={"unit_count": 30})
     r = _by_code_and_parcel(run_content_compliance(ex, split_schema, content_rules), "CONTENT_UNIT_COUNT", "plot_A")
-    assert r["verdict"] == VERDICT_UNEVALUABLE
-    assert r["failure_mode"] == "MISSING_DATA"
+    assert r["verdict"] == VERDICT_NOT_SUBMITTED
+    assert r["failure_mode"] == "DOCUMENT_NOT_PROVIDED"
 
 
 def test_area_main_borderline(split_schema, content_rules):
@@ -183,10 +186,15 @@ def test_setbacks_always_requires_review(split_schema, content_rules):
 
 
 def test_parking_deferred_when_status_is_deferred(split_schema, content_rules):
+    # B-7 expectation update: the parking checker was deliberately rewritten
+    # (M6 transparency pass) - with data present it computes the ratio against
+    # the national-standard baseline and passes WITH a transparent note that
+    # spells out the standard, instead of punting to requires_review.
     ex = _extracted(plot_A={"parking_private": 100, "unit_count": 50})
     r = _by_code_and_parcel(run_content_compliance(ex, split_schema, content_rules), "CONTENT_PARKING_RATIO", "plot_A")
-    assert r["verdict"] == VERDICT_REQUIRES_REVIEW
-    assert "תקנון" in r["notes_he"]
+    assert r["verdict"] == VERDICT_PASS
+    assert "תקן חניה לאומי" in r["notes_he"]
+    assert r["evidence"]["actual_ratio"] == 2.0
 
 
 def test_split_mode_only_rules_run(split_schema, content_rules):
@@ -320,12 +328,16 @@ def test_manual_override_changes_verdict(small_pdf, tmp_path, content_rules):
 
 
 def test_no_api_key_yields_unevaluable_for_missing_fields(split_schema, content_rules):
-    """Without extracted values, all data-dependent rules are unevaluable."""
+    """Without extracted values, no rule may fabricate a pass/fail verdict.
+
+    B-7 expectation update: not_submitted joined the honest no-data verdicts
+    (the engine's M7-era reclassification) - the invariant under test is
+    unchanged: with zero extracted data there is never a pass or a fail."""
     ex = _extracted()  # everything null
     results = run_content_compliance(ex, split_schema, content_rules)
-    # CONTENT_SETBACKS is requires_review, CONTENT_PARKING_RATIO is requires_review
-    # All other rules should be unevaluable, not_applicable, or similar — none "fail"
+    honest = (VERDICT_UNEVALUABLE, VERDICT_REQUIRES_REVIEW,
+              VERDICT_NOT_APPLICABLE, VERDICT_NOT_SUBMITTED)
     for r in results:
-        assert r["verdict"] in (VERDICT_UNEVALUABLE, VERDICT_REQUIRES_REVIEW, VERDICT_NOT_APPLICABLE), (
+        assert r["verdict"] in honest, (
             f"{r['rule_code']}/{r.get('ta_shetach_id')} returned {r['verdict']} with no extracted data"
         )
