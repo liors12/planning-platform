@@ -46,6 +46,8 @@ class GuidelineOut(BaseModel):
     section_key: Optional[str] = None
     section_title: Optional[str] = None
     sort_order: Optional[int] = None
+    discipline_key: Optional[str] = None
+    origin: Optional[str] = None
 
 
 class GuidelineEditIn(BaseModel):
@@ -53,6 +55,25 @@ class GuidelineEditIn(BaseModel):
     body_text: Optional[str] = None
     check_value: Optional[float] = None
     edited_by: str = "user"
+
+
+class GuidelineCreateIn(BaseModel):
+    """v0.2.0 1f: Ellen-created guideline. Manual only - checkable wiring
+    stays a dev task, so no check fields are exposed."""
+    discipline_key: str
+    title: str
+    body_text: str
+
+
+import re as _re
+
+_HEBREW_RE = _re.compile(r"[א-ת]")
+
+
+def _normalize_dashes(s: str) -> str:
+    """Server-side em/en-dash normalization so pasted text can't break the
+    style gate (Ellen's approved style uses plain hyphens)."""
+    return s.replace("—", "-").replace("–", "-")
 
 
 # ── DB helpers (reused by queue_worker for audit-time reads) ─────────────────
@@ -94,6 +115,46 @@ def make_router(engine: Engine) -> APIRouter:
             headers={"Content-Disposition": 'attachment; filename="guidelines.pdf"'},
         )
 
+    # ── POST /guidelines — Ellen-created guideline (v0.2.0 1f) ───────────────
+    @router.post("", response_model=GuidelineOut, status_code=201)
+    def create_guideline(body: GuidelineCreateIn):
+        from .disciplines import DISCIPLINES
+        disc = next((d for d in DISCIPLINES if d["key"] == body.discipline_key), None)
+        if disc is None:
+            raise HTTPException(status_code=422, detail="יש לבחור תחום מהרשימה")
+        title = _normalize_dashes(body.title.strip())
+        text_body = _normalize_dashes(body.body_text.strip())
+        if len(_HEBREW_RE.findall(title)) < 4:
+            raise HTTPException(status_code=422,
+                                detail="הכותרת חייבת להכיל לפחות 4 אותיות בעברית")
+        if len(text_body) < 10:
+            raise HTTPException(status_code=422,
+                                detail="נוסח ההנחיה חייב להכיל לפחות 10 תווים")
+        with _session() as sess:
+            # Append at the end of the global order - grouping is by
+            # discipline, so within its discipline card it lands last.
+            from sqlalchemy import func as _f
+            max_sort = sess.query(_f.max(Guideline.sort_order)).scalar() or 0
+            row = Guideline(
+                discipline=disc["label"],
+                title=title,
+                body_text=text_body,
+                guideline_type="manual",
+                version=1,
+                is_active=1,
+                edited_by="user",
+                edited_at=datetime.now(timezone.utc),
+                section_key=None,
+                section_title=None,
+                sort_order=max_sort + 1,
+                discipline_key=body.discipline_key,
+                origin="מינהלת",
+            )
+            sess.add(row)
+            sess.commit()
+            sess.refresh(row)
+            return GuidelineOut(**row.to_dict())
+
     # ── POST /guidelines/{gid}/edit — insert version+1, flip is_active ────────
     @router.post("/{gid}/edit", response_model=GuidelineOut, status_code=201)
     def edit_guideline(gid: int, body: GuidelineEditIn):
@@ -119,6 +180,8 @@ def make_router(engine: Engine) -> APIRouter:
                 section_key=old.section_key,
                 section_title=old.section_title,
                 sort_order=old.sort_order,
+                discipline_key=old.discipline_key,
+                origin=old.origin,
             )
             old.is_active = 0
             sess.add(new_row)
@@ -231,10 +294,16 @@ def _build_guidelines_html(rows: list[dict]) -> str:
         f"<p class='meta'>הופק: {now_str}</p>",
     ]
 
-    by_discipline: dict[str, list[dict]] = {}
+    # v0.2.0 1d: PRIMARY grouping = canonical discipline, in canonical
+    # order. Rows with no discipline_key (pre-migration edge) fold into
+    # "כללי".
+    from .disciplines import DISCIPLINES as _DISC
+    _label = {d["key"]: d["label"] for d in _DISC}
+    by_discipline: dict[str, list[dict]] = {d["label"]: [] for d in _DISC}
     for r in rows:
-        group = r.get("section_title") or r["discipline"]
+        group = _label.get(r.get("discipline_key") or "", "כללי")
         by_discipline.setdefault(group, []).append(r)
+    by_discipline = {k: v for k, v in by_discipline.items() if v}
 
     header = (
         "<thead><tr>"

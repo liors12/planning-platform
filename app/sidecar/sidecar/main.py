@@ -711,6 +711,10 @@ app.include_router(make_layer_mappings_router(lambda: ENGINE, cfg=CFG))
 # Guidelines editor — editable thresholds with versioning + PDF export.
 app.include_router(make_guidelines_router(ENGINE))
 
+# v0.2.0: attachments (נספחי תוכנית עיצוב) + mapped reviews.
+from .attachments import make_router as make_attachments_router  # noqa: E402
+app.include_router(make_attachments_router(CFG, ENGINE))
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # uvicorn entry point — used by Tauri to spawn the sidecar

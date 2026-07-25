@@ -951,6 +951,117 @@ export interface GuidelineOut {
   section_key: string | null;
   section_title: string | null;
   sort_order: number | null;
+  /** v0.2.0: canonical discipline key - the primary grouping. */
+  discipline_key: string | null;
+  /** null = the approved docx; otherwise the authority source. */
+  origin: string | null;
+}
+
+// ── v0.2.0: attachments (נספחי תוכנית עיצוב) ─────────────────────────────
+export interface PlanAttachmentOut {
+  id: number;
+  project_id: number;
+  discipline_key: string;
+  version_string: string;
+  file_path: string;
+  status: "prepared" | "sent" | "response_received" | "closed";
+  source_attachment_id: number | null;
+  has_review: boolean;
+  uploaded_at: string | null;
+}
+
+export interface AttachmentReview {
+  attachment_id: number;
+  discipline_key: string;
+  reviewed_at: string;
+  checks: Array<{
+    rule_code: string;
+    rule_name_he: string;
+    verdict: string;
+    notes_he: string;
+    guideline_id?: number;
+    guideline_version?: number;
+  }>;
+}
+
+export async function listProjectAttachments(projectId: number): Promise<PlanAttachmentOut[]> {
+  return jsonOrThrow<PlanAttachmentOut[]>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/attachments`),
+    `GET /projects/${projectId}/attachments`,
+  );
+}
+
+export async function uploadPlanAttachment(
+  projectId: number, disciplineKey: string, version: string, file: File,
+): Promise<PlanAttachmentOut> {
+  const form = new FormData();
+  form.append("discipline_key", disciplineKey);
+  form.append("version_string", version);
+  form.append("file", file, file.name);
+  return jsonOrThrow<PlanAttachmentOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/attachments`,
+      { method: "POST", body: form }),
+    `POST /projects/${projectId}/attachments`,
+  );
+}
+
+export async function runAttachmentReview(attId: number): Promise<AttachmentReview> {
+  return jsonOrThrow<AttachmentReview>(
+    await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/run-review`, { method: "POST" }),
+    `POST /attachments/${attId}/run-review`,
+  );
+}
+
+export async function getAttachmentReview(attId: number): Promise<AttachmentReview> {
+  return jsonOrThrow<AttachmentReview>(
+    await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/review`),
+    `GET /attachments/${attId}/review`,
+  );
+}
+
+export async function uploadPlanAttachmentRevision(
+  attId: number, version: string, file: File,
+): Promise<PlanAttachmentOut> {
+  const form = new FormData();
+  form.append("version_string", version);
+  form.append("file", file, file.name);
+  return jsonOrThrow<PlanAttachmentOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/revision`,
+      { method: "POST", body: form }),
+    `POST /attachments/${attId}/revision`,
+  );
+}
+
+export async function setAttachmentStatus(
+  attId: number, status: PlanAttachmentOut["status"],
+): Promise<PlanAttachmentOut> {
+  return jsonOrThrow<PlanAttachmentOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/status`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    }),
+    `POST /attachments/${attId}/status`,
+  );
+}
+
+export function attachmentReportUrl(attId: number): string {
+  return `${SIDECAR_BASE}/attachments/${attId}/report-pdf`;
+}
+
+export async function createGuideline(body: {
+  discipline_key: string;
+  title: string;
+  body_text: string;
+}): Promise<GuidelineOut> {
+  return jsonOrThrow<GuidelineOut>(
+    await fetchOrThrow(`${SIDECAR_BASE}/guidelines`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    }),
+    "POST /guidelines",
+  );
 }
 
 export interface GuidelineEditPayload {

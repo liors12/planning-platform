@@ -164,6 +164,17 @@ def initialize(engine: Engine) -> dict:
     # fresh installs; for existing DBs create_all is idempotent via IF NOT EXISTS).
     # No ALTER TABLE needed: create_all only creates missing tables.
 
+    # v0.2.0 migration - comments can link to an attachment.
+    with engine.begin() as conn:
+        dc = conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='discipline_comments'"
+        )).fetchone()
+        if dc:
+            dc_cols = {c[1] for c in conn.execute(text("PRAGMA table_info(discipline_comments)")).fetchall()}
+            if "attachment_id" not in dc_cols:
+                conn.execute(text("ALTER TABLE discipline_comments ADD COLUMN attachment_id INTEGER"))
+                log.info("migration: added attachment_id to discipline_comments")
+
     # Addendum-8 migration - merge the legacy "הערות אדריכלית העיר"
     # discipline into "אדריכלות וחזיתות" (same discipline in Ellen's
     # practice). Idempotent: after the first pass no rows carry a legacy
@@ -191,7 +202,9 @@ def initialize(engine: Engine) -> dict:
         if g_exists:
             g_cols = {c[1] for c in conn.execute(text("PRAGMA table_info(guidelines)")).fetchall()}
             for col, decl in (("section_key", "TEXT"), ("section_title", "TEXT"),
-                              ("sort_order", "INTEGER")):
+                              ("sort_order", "INTEGER"),
+                              ("discipline_key", "TEXT"),   # v0.2.0
+                              ("origin", "TEXT")):          # v0.2.0 (מינהלת additions)
                 if col not in g_cols:
                     conn.execute(text(f"ALTER TABLE guidelines ADD COLUMN {col} {decl}"))
                     log.info("migration: added %s to guidelines", col)
@@ -331,6 +344,9 @@ def seed_guidelines(engine: Engine) -> None:
                 g.section_key = row["section_key"]
                 g.section_title = row["section_title"]
                 g.sort_order = row["sort_order"]
+                g.discipline_key = row.get("discipline_key")
+                if g.origin is None:
+                    g.origin = row.get("origin")
                 if g.version == 1 and (g.edited_by or "seed") == "seed":
                     g.title = row["title"]
                     g.body_text = row["body_text"]
@@ -355,6 +371,8 @@ def seed_guidelines(engine: Engine) -> None:
                 section_key=row["section_key"],
                 section_title=row["section_title"],
                 sort_order=row["sort_order"],
+                discipline_key=row.get("discipline_key"),
+                origin=row.get("origin"),
             ))
             inserted += 1
 
@@ -364,7 +382,26 @@ def seed_guidelines(engine: Engine) -> None:
                 g.is_active = 0
                 superseded += 1
 
+        # v0.2.0 backfills on existing installs:
+        # 1. חלק ח removed - deactivate its rows (never delete; user edits
+        #    stay in history).
+        # 2. discipline_key: match placed rows to the seed by
+        #    (section_key, sort_order); anything still NULL → general.
+        part_h_removed = 0
+        by_place = {(r["section_key"], r["sort_order"]): r for r in doc_rows}
+        backfilled = 0
+        for g in existing:
+            if g.is_active and g.section_key == "part_h":
+                g.is_active = 0
+                part_h_removed += 1
+                continue
+            if g.is_active and g.discipline_key is None:
+                src = by_place.get((g.section_key, g.sort_order))
+                g.discipline_key = (src or {}).get("discipline_key") or "general"
+                backfilled += 1
+
         sess.commit()
-        if inserted or adopted or superseded:
-            log.info("guidelines seed: %d inserted, %d adopted, %d superseded",
-                     inserted, adopted, superseded)
+        if inserted or adopted or superseded or part_h_removed or backfilled:
+            log.info("guidelines seed: %d inserted, %d adopted, %d superseded, "
+                     "%d part_h deactivated, %d discipline backfilled",
+                     inserted, adopted, superseded, part_h_removed, backfilled)

@@ -1,21 +1,30 @@
 import { useEffect, useState } from "react";
 import {
+  createGuideline,
   editGuideline,
   guidelineHistory,
   guidelinesPdfUrl,
+  listDisciplines,
   listGuidelines,
+  type DisciplineDef,
   type GuidelineOut,
 } from "../api";
 import { MaybeApiError } from "../components/ErrorNotice";
 
 // Global guidelines editor - city-wide submission rules (NOT project-keyed).
-// Editing creates version+1; history stays queryable.
+// v0.2.0: PRIMARY grouping by canonical discipline (sticky nav + one
+// collapsible card per discipline); the source document section is shown
+// as muted metadata on each row. Editing creates version+1; Ellen can add
+// new guidelines (origin מינהלת) per discipline.
 
 export function Guidelines() {
   const [rows, setRows] = useState<GuidelineOut[] | null>(null);
+  const [disciplines, setDisciplines] = useState<DisciplineDef[]>([]);
   const [err, setErr] = useState<string | null>(null);
   const [editing, setEditing] = useState<GuidelineOut | null>(null);
   const [historyFor, setHistoryFor] = useState<GuidelineOut | null>(null);
+  const [addingFor, setAddingFor] = useState<string | "">("__closed__");
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
   function refresh() {
     listGuidelines()
@@ -23,16 +32,25 @@ export function Guidelines() {
       .catch((e) => setErr(String(e)));
   }
 
-  useEffect(() => { refresh(); }, []);
+  useEffect(() => {
+    refresh();
+    listDisciplines().then((d) => setDisciplines(d.disciplines)).catch(() => {});
+  }, []);
 
-  // Group by DOCUMENT SECTION in document order (rows arrive sorted by
-  // sort_order from the API); fall back to discipline for unplaced rows.
-  const bySection = new Map<string, GuidelineOut[]>();
+  // Group by canonical discipline, in canonical order; rows without a
+  // discipline fold into כללי.
+  const byDiscipline = new Map<string, GuidelineOut[]>();
+  for (const d of disciplines) byDiscipline.set(d.key, []);
   for (const g of rows ?? []) {
-    const group = g.section_title ?? g.discipline;
-    const list = bySection.get(group) ?? [];
-    list.push(g);
-    bySection.set(group, list);
+    const key = g.discipline_key && byDiscipline.has(g.discipline_key)
+      ? g.discipline_key : "general";
+    if (!byDiscipline.has(key)) byDiscipline.set(key, []);
+    byDiscipline.get(key)!.push(g);
+  }
+
+  function scrollToDiscipline(key: string) {
+    setExpanded((e) => ({ ...e, [key]: true }));
+    document.getElementById(`disc-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -61,46 +79,95 @@ export function Guidelines() {
         <p className="muted">אין הנחיות מוגדרות עדיין.</p>
       )}
 
-      {[...bySection.entries()].map(([sectionTitle, items]) => (
-        <details key={sectionTitle} className="card guidelines-group" open>
-          <summary className="card-title guidelines-section-summary">{sectionTitle}</summary>
-          <ul className="guidelines-list" data-testid={`guidelines-group-${sectionTitle}`}>
-            {items.map((g) => (
-              <li key={g.id} className="guideline-row" data-testid={`guideline-row-${g.id}`}
-                  data-check-key={g.check_key ?? undefined}>
-                <div className="guideline-main">
-                  <div className="guideline-title-line">
-                    <b>{g.title}</b>
-                    <span className={`badge ${g.guideline_type === "checkable" ? "badge-auto" : "badge-manual"}`}>
-                      {g.guideline_type === "checkable" ? "נבדקת אוטומטית" : "ידנית"}
-                    </span>
-                    <span className="muted guideline-version">גרסה {g.version}</span>
-                  </div>
-                  {g.guideline_type === "checkable" && g.check_value !== null && (
-                    <div className="guideline-value" data-testid={`guideline-value-${g.id}`}>
-                      ערך נדרש: <b>{g.check_value}</b> {g.unit ?? ""}
-                    </div>
-                  )}
-                  {g.body_text && <p className="muted guideline-body">{g.body_text}</p>}
-                </div>
-                <div className="guideline-actions">
-                  <button type="button" className="ghost-btn"
-                          data-testid={`guideline-edit-${g.id}`}
-                          onClick={() => setEditing(g)}>
-                    עריכה
-                  </button>
-                  <button type="button" className="ghost-btn"
-                          data-testid={`guideline-history-${g.id}`}
-                          onClick={() => setHistoryFor(g)}>
-                    היסטוריה
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </details>
-      ))}
+      {/* Sticky discipline nav - one chip per discipline with its count. */}
+      {rows && rows.length > 0 && (
+        <nav className="guidelines-disc-nav" data-testid="guidelines-disc-nav">
+          {disciplines.map((d) => {
+            const n = byDiscipline.get(d.key)?.length ?? 0;
+            if (n === 0) return null;
+            return (
+              <button key={d.key} type="button" className="disc-nav-chip"
+                      data-testid={`disc-nav-${d.key}`}
+                      onClick={() => scrollToDiscipline(d.key)}>
+                {d.label} <span className="disc-nav-count">{n}</span>
+              </button>
+            );
+          })}
+          <button type="button" className="ghost-btn small"
+                  data-testid="add-guideline-global"
+                  onClick={() => setAddingFor("")}>
+            + הוסיפי הנחיה
+          </button>
+        </nav>
+      )}
 
+      {disciplines.map((d) => {
+        const items = byDiscipline.get(d.key) ?? [];
+        if (items.length === 0) return null;
+        const isOpen = expanded[d.key] !== false;
+        return (
+          <details key={d.key} id={`disc-${d.key}`} className="card guidelines-group"
+                   open={isOpen}
+                   onToggle={(e) => setExpanded((x) => ({ ...x, [d.key]: (e.target as HTMLDetailsElement).open }))}>
+            <summary className="card-title guidelines-section-summary">
+              {d.label}
+              <span className="muted guidelines-group-count"> · {items.length} הנחיות</span>
+              <button type="button" className="ghost-btn small guidelines-group-add"
+                      data-testid={`add-guideline-${d.key}`}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setAddingFor(d.key); }}>
+                + הוסיפי הנחיה
+              </button>
+            </summary>
+            <ul className="guidelines-list" data-testid={`guidelines-group-${d.key}`}>
+              {items.map((g) => (
+                <li key={g.id} className="guideline-row" data-testid={`guideline-row-${g.id}`}
+                    data-check-key={g.check_key ?? undefined}>
+                  <div className="guideline-main">
+                    <div className="guideline-title-line">
+                      <b>{g.title}</b>
+                      <span className={`badge ${g.guideline_type === "checkable" ? "badge-auto" : "badge-manual"}`}>
+                        {g.guideline_type === "checkable" ? "נבדקת אוטומטית" : "ידנית"}
+                      </span>
+                      <span className="muted guideline-version">גרסה {g.version}</span>
+                      {g.origin && <span className="badge badge-origin">{g.origin}</span>}
+                    </div>
+                    {g.guideline_type === "checkable" && g.check_value !== null && (
+                      <div className="guideline-value" data-testid={`guideline-value-${g.id}`}>
+                        ערך נדרש: <b>{g.check_value}</b> {g.unit ?? ""}
+                      </div>
+                    )}
+                    {g.body_text && <p className="muted guideline-body">{g.body_text}</p>}
+                    {g.section_title && (
+                      <p className="muted guideline-source-section">מקור: {g.section_title}</p>
+                    )}
+                  </div>
+                  <div className="guideline-actions">
+                    <button type="button" className="ghost-btn"
+                            data-testid={`guideline-edit-${g.id}`}
+                            onClick={() => setEditing(g)}>
+                      עריכה
+                    </button>
+                    <button type="button" className="ghost-btn"
+                            data-testid={`guideline-history-${g.id}`}
+                            onClick={() => setHistoryFor(g)}>
+                      היסטוריה
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </details>
+        );
+      })}
+
+      {addingFor !== "__closed__" && (
+        <AddDialog
+          disciplines={disciplines}
+          initialKey={addingFor}
+          onClose={() => setAddingFor("__closed__")}
+          onSaved={() => { setAddingFor("__closed__"); refresh(); }}
+        />
+      )}
       {editing && (
         <EditDialog
           guideline={editing}
@@ -112,6 +179,83 @@ export function Guidelines() {
         <HistoryDialog guideline={historyFor} onClose={() => setHistoryFor(null)} />
       )}
     </article>
+  );
+}
+
+function AddDialog({
+  disciplines, initialKey, onClose, onSaved,
+}: {
+  disciplines: DisciplineDef[];
+  initialKey: string;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [disc, setDisc] = useState(initialKey);
+  const [title, setTitle] = useState("");
+  const [bodyText, setBodyText] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const hebrewCount = (title.match(/[א-ת]/g) ?? []).length;
+  const valid = disc !== "" && hebrewCount >= 4 && bodyText.trim().length >= 10;
+
+  async function onSave() {
+    if (!valid || saving) return;
+    setSaving(true);
+    setErr(null);
+    try {
+      await createGuideline({ discipline_key: disc, title: title.trim(), body_text: bodyText.trim() });
+      onSaved();
+    } catch (e) {
+      setErr(String(e));
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-box" onClick={(e) => e.stopPropagation()}>
+        <h2 className="card-title">הוספת הנחיה</h2>
+        <p className="muted">הנחיה חדשה מטעם המינהלת. נשמרת כגרסה 1 וניתנת לעריכה ככל הנחיה.</p>
+        <label className="form-label">
+          <span>תחום</span>
+          <select value={disc} onChange={(e) => setDisc(e.target.value)}
+                  data-testid="add-guideline-discipline">
+            <option value="">בחרי תחום ▾</option>
+            {disciplines.map((d) => (
+              <option key={d.key} value={d.key}>{d.label}</option>
+            ))}
+          </select>
+        </label>
+        <label className="form-label">
+          <span>כותרת</span>
+          <input value={title} onChange={(e) => setTitle(e.target.value)}
+                 data-testid="add-guideline-title" />
+          {title.length > 0 && hebrewCount < 4 && (
+            <span className="small-error">הכותרת חייבת להכיל לפחות 4 אותיות בעברית</span>
+          )}
+        </label>
+        <label className="form-label">
+          <span>נוסח ההנחיה</span>
+          <textarea rows={4} value={bodyText}
+                    onChange={(e) => setBodyText(e.target.value)}
+                    data-testid="add-guideline-body" />
+          {bodyText.length > 0 && bodyText.trim().length < 10 && (
+            <span className="small-error">נוסח ההנחיה חייב להכיל לפחות 10 תווים</span>
+          )}
+        </label>
+        {err && <MaybeApiError error={err} title="לא ניתן לשמור את ההנחיה" />}
+        <div className="modal-actions">
+          <button type="button" className="primary-btn" disabled={!valid || saving}
+                  onClick={onSave} data-testid="add-guideline-save">
+            {saving ? "שומרת..." : "שמירה"}
+          </button>
+          <button type="button" className="ghost-btn" onClick={onClose}>
+            ביטול
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 

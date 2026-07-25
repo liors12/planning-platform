@@ -2123,3 +2123,88 @@ details.guidelines-group > summary::-webkit-details-marker { margin-inline-start
   font-weight: 600;
   font-size: 13.5px;
 }
+
+/* ── v0.2.0: discipline-first guidelines ─────────────────────────────── */
+.guidelines-disc-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 0;
+  background: var(--bg);
+  border-block-end: 1px solid var(--rule);
+  margin-block-end: 10px;
+}
+.disc-nav-chip {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--green-line);
+  background: var(--green-soft);
+  color: var(--green);
+  cursor: pointer;
+}
+.disc-nav-chip:hover { background: var(--green); color: #fff; }
+.disc-nav-count { font-weight: 700; }
+.guidelines-group-count { font-size: 12.5px; font-weight: 400; }
+.guidelines-group-add { margin-inline-start: 10px; }
+.guideline-source-section { font-size: 11.5px; margin: 2px 0 0; }
+.badge-origin { background: #fff4e0; color: #8a5b00; }
+
+/* ── v0.2.0: attachments tab ─────────────────────────────────────────── */
+.attachments-tab-root { display: flex; flex-direction: column; gap: 12px; }
+.attachment-upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+.attachment-upload-grid select,
+.attachment-upload-grid input {
+  font-family: inherit;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+.attachment-card { display: flex; flex-direction: column; gap: 10px; }
+.attachment-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.attachment-status-stepper { display: flex; gap: 4px; margin-inline-start: auto; flex-wrap: wrap; }
+.status-step {
+  font-family: inherit;
+  font-size: 11.5px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--rule);
+  background: var(--card-bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+.status-step.current {
+  background: var(--green);
+  border-color: var(--green-dark);
+  color: #fff;
+  font-weight: 600;
+}
+.attachment-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.attachment-revision-label { cursor: pointer; }
+.attachment-review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  overflow: hidden;
+}

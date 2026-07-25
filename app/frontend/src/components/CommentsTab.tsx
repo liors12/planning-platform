@@ -18,6 +18,7 @@ import {
   extractCommentsPdf,
   listComments,
   listDisciplines,
+  listProjectAttachments,
   openOutput,
   patchComment,
   pollJobUntilDone,
@@ -25,6 +26,7 @@ import {
   revealOutput,
   type CommentOut,
   type DisciplineDef,
+  type PlanAttachmentOut,
   type ProjectOut,
   type ReferentExtractRow,
   type SubmissionOut,
@@ -517,6 +519,7 @@ function CommentsTabReady({ project, submission }: { project: ProjectOut; submis
           disciplines={disciplines}
           statuses={statuses}
           submissionId={submission.id}
+          projectId={project.id}
           loading={comments === null}
           onChanged={async (newId) => {
             await refreshComments();
@@ -646,6 +649,7 @@ function CommentListPanel({
   disciplines,
   statuses,
   submissionId,
+  projectId,
   loading,
   onChanged,
 }: {
@@ -653,6 +657,7 @@ function CommentListPanel({
   disciplines: DisciplineDef[];
   statuses: string[];
   submissionId: number;
+  projectId?: number;
   loading: boolean;
   onChanged: (newId?: string) => Promise<void> | void;
 }) {
@@ -686,6 +691,7 @@ function CommentListPanel({
         disciplines={disciplines}
         statuses={statuses}
         submissionId={submissionId}
+        projectId={projectId}
         onCreated={onChanged}
       />
     </div>
@@ -861,11 +867,13 @@ function AddCommentForm({
   disciplines,
   statuses,
   submissionId,
+  projectId,
   onCreated,
 }: {
   disciplines: DisciplineDef[];
   statuses: string[];
   submissionId: number;
+  projectId?: number;
   onCreated: (newId?: string) => Promise<void> | void;
 }) {
   const [discipline, setDiscipline] = useState("");
@@ -874,6 +882,14 @@ function AddCommentForm({
   const [action, setAction] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  // v0.2.0: optional attachment linkage (attachments are project-level).
+  const [attachments, setAttachments] = useState<PlanAttachmentOut[]>([]);
+  const [attachmentId, setAttachmentId] = useState("");
+  useEffect(() => {
+    if (projectId) {
+      listProjectAttachments(projectId).then(setAttachments).catch(() => {});
+    }
+  }, [projectId]);
 
   const ready = Boolean(
     discipline && status && topic.trim().length > 0 && action.trim().length > 0,
@@ -890,8 +906,10 @@ function AddCommentForm({
         status,
         topic_he: topic.trim(),
         action_he: action.trim(),
+        ...(attachmentId ? { attachment_id: Number(attachmentId) } : {}),
       });
       // Reset form
+      setAttachmentId("");
       setDiscipline("");
       setStatus("");
       setTopic("");
@@ -946,6 +964,17 @@ function AddCommentForm({
           placeholder="פעולה נדרשת"
           rows={3}
         />
+        {attachments.length > 0 && (
+          <select value={attachmentId}
+                  onChange={(e) => setAttachmentId(e.target.value)}
+                  aria-label="שייכי לנספח"
+                  data-testid="comment-attachment-link">
+            <option value="">שייכי לנספח (אופציונלי) ▾</option>
+            {attachments.map((a) => (
+              <option key={a.id} value={a.id}>נספח #{a.id} · {a.version_string}</option>
+            ))}
+          </select>
+        )}
       </div>
       {err && <MaybeApiError error={err} />}
       <div className="add-comment-actions">
