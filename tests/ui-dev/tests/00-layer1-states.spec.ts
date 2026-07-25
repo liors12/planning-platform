@@ -79,6 +79,19 @@ test("run-engine affordance: disabled without schema data", async ({ page, reque
   await expect(page.getByTestId("run-engine-v1.0")).toBeDisabled();
 });
 
+test("re-run without a stored PDF: Hebrew explanation, not the generic failure", async ({ page }) => {
+  // The seeded pilot has findings but ships no source PDF - clicking
+  // "הפעילי שוב את התוכנה" must explain that honestly (the addendum bug:
+  // it surfaced as the unrelated generic 'אירעה תקלה ביצירת הדוח').
+  await page.goto("/");
+  await page.getByTestId("home-project-link-407-1048248").click();
+  await page.getByTestId("tab-submissions").click();
+  await page.getByTestId("run-engine-v24.3").click();
+  await expect(page.getByText(/קובץ התכנית של גרסה זו אינו שמור/).first()).toBeVisible();
+  const body = await page.locator("body").innerText();
+  expect(body).not.toContain("אירעה תקלה ביצירת הדוח");
+});
+
 test("comparison affordance: disabled when no revised version exists", async ({ page }) => {
   // The seeded pilot has audit results but is not a revision of anything -
   // the comparison button must be visible-but-disabled with the hint.

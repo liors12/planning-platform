@@ -262,6 +262,24 @@ function FindingsTabContent({
   // Side-by-side: findings on visual RIGHT (start, ~55%), tasrit on the LEFT
   // (end, ~45%). Splitter position persisted per-project to localStorage.
   const pdfUrl = sub ? `${SIDECAR_BASE}/submissions/${sub.id}/pdf` : null;
+  // Phase A3: when the plan PDF isn't on disk (the seeded pilot ships
+  // without its 100MB source), skip the split view entirely - a slim
+  // explanatory bar + the findings list at full width.
+  const pdfAvailable = sub?.has_pdf !== false;
+  if (sub && !pdfAvailable) {
+    return (
+      <div className="findings-tab-root">
+        <p className="muted findings-meta">
+          מציג ממצאים עבור גרסה <span dir="ltr">{sub.version_string}</span> של תכנית העיצוב.
+        </p>
+        <div className="pdf-unavailable-bar" data-testid="pdf-unavailable-bar">
+          קובץ התכנית של הגשת הדוגמה אינו כלול בתוכנה. בהגשות חדשות שיועלו
+          למערכת - התכנית תוצג כאן. ההערות והפקת הדו"ח פועלות כרגיל.
+        </div>
+        <FindingsView findings={findings} projectId={project.id} pdfAvailable={false} />
+      </div>
+    );
+  }
   return (
     <div className="findings-tab-root">
       {sub && (

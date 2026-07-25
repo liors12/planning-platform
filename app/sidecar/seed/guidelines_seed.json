@@ -1801,6 +1801,58 @@
       "check_value": null,
       "unit": null,
       "sort_order": 147
+    },
+    {
+      "section_key": "part_c",
+      "section_title": "חלק ג - דרישות תוכן מפורטות לכל תא שטח",
+      "subsection": "",
+      "title": "פתרון חלחול מלא בתחום המגרש",
+      "body_text": "יוצג פתרון חלחול/השהיה לניהול 100% מנגר הגשם בתחום המגרש. אמצעי החלחול וההשהיה יסומנו בתכנית הפיתוח כולל נפחים.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 148
+    },
+    {
+      "section_key": "part_c",
+      "section_title": "חלק ג - דרישות תוכן מפורטות לכל תא שטח",
+      "subsection": "",
+      "title": "חיבור מערך הניקוז לתשתית העירונית",
+      "body_text": "יוצג חיבור מתוכנן של מערך הניקוז אל התשתית העירונית, כולל נקודות התחברות במקרא.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 149
+    },
+    {
+      "section_key": "part_b",
+      "section_title": "חלק ב - מבנה החוברת הראשית",
+      "subsection": "",
+      "title": "סימון רוחבי שבילים בתכנית",
+      "body_text": "רוחב כל שביל להולכי רגל יסומן במפורש בתכנית הפיתוח במטרים, לצד השביל, באופן המאפשר בדיקה מול הרוחב המזערי הנדרש.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 150
+    },
+    {
+      "section_key": "part_c",
+      "section_title": "חלק ג - דרישות תוכן מפורטות לכל תא שטח",
+      "subsection": "",
+      "title": "סימון מרחק צובר הגז מהמבנים",
+      "body_text": "מרחק הצובר מכל מבנה סמוך יסומן במפורש בתכנית במטרים, באופן המאפשר בדיקה מול המרחק המזערי הנדרש.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 151
     }
   ]
 }

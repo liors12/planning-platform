@@ -72,7 +72,8 @@ export function PdfViewer({ fileUrl, target, onLoad }: Props) {
 
   const onDocumentLoadError = useCallback((_err: Error) => {
     setLoadError(
-      "התכנית אינה זמינה לתצוגה - ההערות והפקת הדו״ח פועלות כרגיל."
+      "קובץ התכנית של הגשת הדוגמה אינו כלול בתוכנה. בהגשות חדשות שיועלו " +
+      "למערכת - התכנית תוצג כאן. ההערות והפקת הדו״ח פועלות כרגיל."
     );
   }, []);
 

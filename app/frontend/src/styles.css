@@ -707,12 +707,19 @@ code, .path {
   flex-direction: column;
   gap: 6px;
   block-size: 100%;
+  /* The LIST scrolls; sections keep natural height (see below). */
+  overflow-y: auto;
 }
 .findings-section {
   background: #fff;
   border: 1px solid var(--rule);
   border-radius: 6px;
   overflow: hidden;
+  /* Round-2 addendum: as flex children the sections were COMPRESSED to fit
+   * the pane (default flex-shrink), and overflow:hidden then cut rows and
+   * discipline chips mid-pixel at the card edge. Sections must never
+   * shrink - the list scrolls instead. */
+  flex-shrink: 0;
 }
 .findings-section-header {
   display: flex;
@@ -726,13 +733,90 @@ code, .path {
   flex-wrap: wrap;
 }
 .findings-section-header:hover { background: #ebf3ed; }
-.section-chevron {
-  font-size: 18px;
-  color: var(--green);
-  font-weight: 700;
-  width: 16px;
-  text-align: center;
+
+/* ── Phase A: summary bar, filter bar, search, full-width mode ──────── */
+.findings-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  flex-shrink: 0;
 }
+.findings-summary-counts { font-size: 14px; }
+.findings-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.filter-pill {
+  font-family: inherit;
+  font-size: 12.5px;
+  padding: 4px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--rule);
+  background: var(--card-bg);
+  color: var(--muted);
+  cursor: pointer;
+}
+.filter-pill:hover { border-color: var(--green); color: var(--green); }
+.filter-pill.pressed {
+  background: var(--green);
+  border-color: var(--green-dark);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+.ghost-btn.pressed {
+  background: var(--green-soft);
+  border-color: var(--green);
+  color: var(--green);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.findings-search {
+  flex: 1 1 160px;
+  min-inline-size: 140px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 5px 10px;
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+}
+.findings-all-clear {
+  padding: 14px;
+  background: var(--green-soft);
+  border: 1px solid var(--green-line);
+  border-radius: 6px;
+  color: var(--green);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.pdf-unavailable-bar {
+  padding: 10px 14px;
+  background: var(--amber-bg);
+  border: 1px solid #e8d9a0;
+  border-radius: 6px;
+  font-size: 13.5px;
+  margin-block-end: 8px;
+  flex-shrink: 0;
+}
+.page-pill-static { cursor: default; }
+.page-pill-static:hover { background: #fff; color: var(--green); }
+.report-freshness {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+  margin-block-start: 4px;
+}
+.report-stale-hint { color: var(--green); font-weight: 700; }
+.report-scope-hint { font-size: 12.5px; }
 .findings-section-title {
   font-size: 14.5px;
   color: var(--green);
@@ -1416,6 +1500,9 @@ code, .path {
   gap: 10px;
   border: 1px solid #d6cdf0;
   background: #faf7ff;
+  /* Addendum 7: the flex column must never compress the form - that cut
+   * the "+ הוסיפי הערה" button at the card's bottom edge. */
+  flex-shrink: 0;
 }
 .add-comment-title {
   margin: 0;
@@ -1425,7 +1512,10 @@ code, .path {
 }
 .add-comment-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Addendum 7: stack to one column when the pane is narrow (same
+   * responsive treatment as the submissions upload form) - two rigid 1fr
+   * tracks let wide selects overflow past the card edge in the split. */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 8px;
 }
 .add-comment-grid select,
@@ -1436,6 +1526,11 @@ code, .path {
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  /* Selects refuse to shrink below their content width by default -
+   * that was the horizontal clipping. */
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 .add-comment-grid input,
 .add-comment-grid textarea { grid-column: 1 / -1; }
@@ -2016,3 +2111,15 @@ code, .path {
 .layer-mapping-scan-hint { font-size: 12px; }
 .guidelines-section-summary { cursor: pointer; list-style-position: inside; }
 details.guidelines-group > summary::-webkit-details-marker { margin-inline-start: 4px; }
+
+/* Addendum 6 - classification summary above the extraction preview */
+.classification-summary {
+  margin: 0;
+  padding: 8px 12px;
+  background: var(--green-soft);
+  border: 1px solid var(--green-line);
+  border-radius: 6px;
+  color: var(--green);
+  font-weight: 600;
+  font-size: 13.5px;
+}

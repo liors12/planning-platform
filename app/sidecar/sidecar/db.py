@@ -154,6 +154,25 @@ def initialize(engine: Engine) -> dict:
     # fresh installs; for existing DBs create_all is idempotent via IF NOT EXISTS).
     # No ALTER TABLE needed: create_all only creates missing tables.
 
+    # Addendum-8 migration - merge the legacy "הערות אדריכלית העיר"
+    # discipline into "אדריכלות וחזיתות" (same discipline in Ellen's
+    # practice). Idempotent: after the first pass no rows carry a legacy
+    # key. Alias map lives with the canonical list.
+    from .disciplines import LEGACY_DISCIPLINE_ALIASES
+    with engine.begin() as conn:
+        dc_exists = conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='discipline_comments'"
+        )).fetchone()
+        if dc_exists:
+            for old_key, new_key in LEGACY_DISCIPLINE_ALIASES.items():
+                res = conn.execute(text(
+                    "UPDATE discipline_comments SET discipline_key = :new "
+                    "WHERE discipline_key = :old"
+                ), {"new": new_key, "old": old_key})
+                if res.rowcount:
+                    log.info("migration: remapped %d discipline_comments rows %s -> %s",
+                             res.rowcount, old_key, new_key)
+
     # Full-seed migration - document-structure columns on guidelines.
     with engine.begin() as conn:
         g_exists = conn.execute(text(

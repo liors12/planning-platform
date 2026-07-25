@@ -26,14 +26,16 @@ log = logging.getLogger(__name__)
 from fastapi import APIRouter, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.responses import Response, StreamingResponse
 from pydantic import BaseModel
+from sqlalchemy import func
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from .config import Config
 from .engine_bridge import has_schema
-from .models import (ArchitectResponse, EmailCorrection, EmailCorrectionRow,
-                     Project, ResponseRow, Submission, SubmissionAttachment)
+from .models import (ArchitectResponse, DisciplineComment, EmailCorrection,
+                     EmailCorrectionRow, Project, ResponseRow, Submission,
+                     SubmissionAttachment)
 from .queue_worker import EngineQueue
 from .storage import StorageError, sanitize_upload_filename, submission_dir
 
@@ -105,6 +107,15 @@ class SubmissionOut(BaseModel):
     # but pydantic ignores undeclared kwargs, so the frontend saw `undefined`
     # and the "no revision to compare" affordance never engaged.
     source_submission_id: int | None = None
+    # True iff the plan PDF actually exists on disk. False for the seeded
+    # pilot (its 100MB source is not bundled) - the findings tab collapses
+    # the viewer pane and renders the list full width.
+    has_pdf: bool = True
+    # Report freshness (round-2 addendum 5): when a report PDF exists,
+    # its generation time + whether inputs (findings, comments, upload)
+    # changed since. Both None when no report was generated yet.
+    report_generated_at: str | None = None
+    report_changes_since: bool | None = None
     # True iff audit_results.m4.sanitized.json (or .m4.json fallback)
     # exists on disk under cfg.data_dir/audit_outputs/<tava>/v<ver>/.
     # Frontend uses this to show "הפיקי דו״ח" / "הפיקי אקסל" - independent
@@ -212,12 +223,39 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                 _cmp_total = _s.get("total_fixable")
             except Exception:
                 pass
+        # Report freshness (addendum 5): compare the report file's mtime
+        # against the newest input - findings, comments, or the upload
+        # itself. All timestamps compared as naive UTC (DB defaults are
+        # utcnow; file mtimes converted with utcfromtimestamp).
+        _rp = _report_pdf_path(cfg, tava, sub.version_string)
+        _rep_at: str | None = None
+        _rep_stale: bool | None = None
+        if _rp.exists():
+            _gen = datetime.utcfromtimestamp(_rp.stat().st_mtime)
+            _rep_at = _gen.isoformat()
+            _inputs: list[datetime] = []
+            if sub.uploaded_at:
+                _inputs.append(sub.uploaded_at)
+            if sub.findings_json_path and Path(sub.findings_json_path).exists():
+                _inputs.append(datetime.utcfromtimestamp(Path(sub.findings_json_path).stat().st_mtime))
+            _osess = Session.object_session(sub)
+            if _osess is not None:
+                _last_comment = (_osess.query(func.max(DisciplineComment.created_at))
+                                 .filter(DisciplineComment.submission_id == sub.id)
+                                 .scalar())
+                if _last_comment:
+                    _inputs.append(_last_comment)
+            _rep_stale = any(t > _gen for t in _inputs)
+
         return SubmissionOut(
             **sub.to_dict(),
+            report_generated_at=_rep_at,
+            report_changes_since=_rep_stale,
             has_audit_results=_audit_results_path(cfg, tava, sub.version_string) is not None,
             has_report_pdf=_report_pdf_path(cfg, tava, sub.version_string).exists(),
             has_report_xlsx=_report_xlsx_path(cfg, tava, sub.version_string).exists(),
             has_architect_response=has_arch_response,
+            has_pdf=Path(sub.pdf_path).exists(),
             engine_run_available=True,
             has_comparison_xlsx=_comparison_xlsx_path(cfg, tava, sub.version_string).exists(),
             comparison_fixed=_cmp_fixed,
@@ -844,9 +882,19 @@ def make_routers(get_engine, cfg: Config, queue: EngineQueue):
                     "engine cannot run. Phase 3 will add a schema-upload UI.",
                 )
             if not Path(sub.pdf_path).exists():
+                # The seeded pilot ships WITHOUT its source PDF (too large to
+                # bundle), so post-F-1 its findings exist while the plan file
+                # doesn't - clicking "הפעילי שוב את התוכנה" landed here with a
+                # raw English detail that surfaced as a generic failure.
+                # User-facing Hebrew in the detail; the technical path goes to
+                # the log.
+                log.warning("run-engine refused: submission %s PDF missing at %s",
+                            submission_id, sub.pdf_path)
                 raise HTTPException(
                     409,
-                    f"submission {submission_id} PDF missing from disk at {sub.pdf_path}",
+                    "קובץ התכנית של גרסה זו אינו שמור במערכת, ולכן לא ניתן "
+                    "להריץ עליה את הבדיקה שוב. הממצאים הקיימים נשארים זמינים; "
+                    "כדי להריץ בדיקה חדשה, העלי גרסה מתוקנת עם קובץ ה-PDF.",
                 )
             if sub.pdf_hash:
                 duplicate = (

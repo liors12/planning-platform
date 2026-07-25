@@ -150,6 +150,74 @@ def main() -> None:
                 item, requirement = cells[0], " / ".join(x for x in cells[1:] if x)
                 add_row(item, f"{item}: {requirement}" if requirement else item, table_item=True)
 
+    # Authority additions (addendum 10) - guidelines added by the מינהלת
+    # AFTER the approved document, not extracted from the docx. They join
+    # the drainage items' section (part_c) at the section's visual end:
+    # the UI/PDF group rows by section_title, so a sort_order past the
+    # document total keeps them last within their group without renumbering
+    # the document rows (renumbering would break the (section, sort_order)
+    # placement dedup on existing installs).
+    authority_rows = [
+        {
+            "section_key": "part_c",
+            "section_title": next(s["section_title"] for s in sections
+                                  if s["section_key"] == "part_c"),
+            "subsection": "",
+            "title": "פתרון חלחול מלא בתחום המגרש",
+            "body_text": ("יוצג פתרון חלחול/השהיה לניהול 100% מנגר הגשם בתחום "
+                          "המגרש. אמצעי החלחול וההשהיה יסומנו בתכנית הפיתוח "
+                          "כולל נפחים."),
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        },
+        {
+            "section_key": "part_c",
+            "section_title": next(s["section_title"] for s in sections
+                                  if s["section_key"] == "part_c"),
+            "subsection": "",
+            "title": "חיבור מערך הניקוז לתשתית העירונית",
+            "body_text": ("יוצג חיבור מתוכנן של מערך הניקוז אל התשתית "
+                          "העירונית, כולל נקודות התחברות במקרא."),
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        },
+        # Addendum 12: marking requirements that make the numeric checks
+        # verifiable on the plan. part_b hosts the path-width guidelines
+        # (the שצ"פ row carrying path_main_min_m); part_c hosts צובר גז.
+        {
+            "section_key": "part_b",
+            "section_title": next(s["section_title"] for s in sections
+                                  if s["section_key"] == "part_b"),
+            "subsection": "",
+            "title": "סימון רוחבי שבילים בתכנית",
+            "body_text": ("רוחב כל שביל להולכי רגל יסומן במפורש בתכנית "
+                          "הפיתוח במטרים, לצד השביל, באופן המאפשר בדיקה מול "
+                          "הרוחב המזערי הנדרש."),
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        },
+        {
+            "section_key": "part_c",
+            "section_title": next(s["section_title"] for s in sections
+                                  if s["section_key"] == "part_c"),
+            "subsection": "",
+            "title": "סימון מרחק צובר הגז מהמבנים",
+            "body_text": ("מרחק הצובר מכל מבנה סמוך יסומן במפורש בתכנית "
+                          "במטרים, באופן המאפשר בדיקה מול המרחק המזערי "
+                          "הנדרש."),
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        },
+    ]
+    for extra in authority_rows:
+        sort_order += 1
+        extra["sort_order"] = sort_order
+        rows.append(extra)
+
     # Attach the 7 check_keys.
     attached = set()
     for sec, needle, key, value, unit in CHECK_MAP:
