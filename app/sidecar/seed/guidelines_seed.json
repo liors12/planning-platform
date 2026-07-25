@@ -2009,6 +2009,45 @@
       "unit": null,
       "origin": "הנחיות יועץ התברואה העירוני",
       "sort_order": 163
+    },
+    {
+      "section_key": "part_b",
+      "section_title": "חלק ב - מבנה החוברת הראשית",
+      "subsection": "",
+      "title": "חניות אורחים - תוספת מינהלת",
+      "body_text": "בנוסף לתקן החניה למגורים, תידרש תוספת של 30% חניות אורחים מתוך תקן החניות למגורים. חניות האורחים יסומנו בתכנית ובמאזן החניה בנפרד.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 164
+    },
+    {
+      "section_key": "part_b",
+      "section_title": "חלק ב - מבנה החוברת הראשית",
+      "subsection": "",
+      "title": "שטח חצר מזערי לגן ילדים",
+      "body_text": "חצר הגן תהיה בשטח של 200 מ\"ר לפחות לכל גן. שטח החצר יסומן בתכנית במ\"ר.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 165
+    },
+    {
+      "section_key": "part_b",
+      "section_title": "חלק ב - מבנה החוברת הראשית",
+      "subsection": "",
+      "title": "סימון שטחים ומספר כיתות במבני ציבור",
+      "body_text": "בתכניות מבני ציבור יסומנו שטחי כל החללים הציבוריים במ\"ר, כולל יחידת המידה, וכן מספר הכיתות וחלוקתן.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 166
     }
   ]
 }

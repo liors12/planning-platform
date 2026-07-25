@@ -267,6 +267,36 @@ def main() -> None:
             "origin": _waste_origin,
         })
 
+    # Addenda 14-15: guest parking + public-buildings additions (מינהלת).
+    # part_b hosts the traffic/parking rows and the מעונות item. The
+    # numeric values (30% guest parking, 200 sqm gan yard) are future
+    # check_key candidates (guest_parking_pct, gan_yard_min_sqm) - not
+    # wired now.
+    _pb_title = next(s["section_title"] for s in sections
+                     if s["section_key"] == "part_b")
+    for t, b in [
+        ("חניות אורחים - תוספת מינהלת",
+         "בנוסף לתקן החניה למגורים, תידרש תוספת של 30% חניות אורחים מתוך "
+         "תקן החניות למגורים. חניות האורחים יסומנו בתכנית ובמאזן החניה "
+         "בנפרד."),
+        ("שטח חצר מזערי לגן ילדים",
+         'חצר הגן תהיה בשטח של 200 מ"ר לפחות לכל גן. שטח החצר יסומן '
+         'בתכנית במ"ר.'),
+        ("סימון שטחים ומספר כיתות במבני ציבור",
+         'בתכניות מבני ציבור יסומנו שטחי כל החללים הציבוריים במ"ר, כולל '
+         "יחידת המידה, וכן מספר הכיתות וחלוקתן."),
+    ]:
+        authority_rows.append({
+            "section_key": "part_b",
+            "section_title": _pb_title,
+            "subsection": "",
+            "title": t,
+            "body_text": b,
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        })
+
     for extra in authority_rows:
         sort_order += 1
         extra["sort_order"] = sort_order
