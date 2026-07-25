@@ -45,12 +45,14 @@ test("attachments: mapped-only review - traffic checks in, gan-yard out", async 
   await expect(review).toContainText("פורמט קובץ");
 });
 
-test("attachments: revision auto-runs the review", async ({ page }) => {
-  // The DB persists across specs in one invocation - count relatively,
-  // anchoring BEFORE the upload so the freshly-uploaded card is awaited too.
+test("attachments: revision auto-runs the review", async ({ page, request }) => {
+  // The DB persists across specs in one invocation - count relatively.
+  // The baseline comes from the API (the DOM count races the initial fetch).
   await openAttachments(page);
   const cards = page.locator('[data-testid^="attachment-card-"]');
-  const before = await cards.count();
+  const before =
+    (await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json()).length;
+  await expect(cards).toHaveCount(before);
   await uploadTraffic(page);
   await expect(cards).toHaveCount(before + 1);
   await cards.first().locator('[data-testid^="attachment-revision-"]').setInputFiles({
