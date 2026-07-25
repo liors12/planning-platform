@@ -213,6 +213,90 @@ def main() -> None:
             "origin": "מינהלת",
         },
     ]
+
+    # Addendum 13: municipal waste-consultant guidelines (source letter:
+    # יועץ התברואה מטעם העירייה, סיסטמה הנדסת הסביבה, 13/7/26). Placed in
+    # part_c next to the existing waste-room requirements (חדרי דחסניות).
+    # Numeric thresholds here are candidates for future check_key wiring
+    # once the engine can read room dimensions from תוכנית כתמים - NOT
+    # wired now.
+    _waste_origin = "הנחיות יועץ התברואה העירוני"
+    _pc_title = next(s["section_title"] for s in sections
+                     if s["section_key"] == "part_c")
+    for t, b in [
+        ("חדרי אצירה ומיחזור מבניים במקום מרכזי מיחזור",
+         "בוטל השימוש במרכזי מיחזור שכונתיים/מתחמיים. יש לתכנן חדרי "
+         "אצירה/מיחזור מבניים בתוך המבנים."),
+        ("תוכנית כתמים - תוכן נדרש",
+         "תוכנית הכתמים תציג את החדרים לסוגיהם כולל מידותיהם המדויקות, "
+         "איפיון דלתות החדרים, ומיקום השוטים - ברמה מבנית, עם צביעת "
+         "החדרים."),
+        ("תיאום הנדסי לשלב ההיתר",
+         "בשלב הבקשות להיתרי בנייה יידרש תיאום הנדסי נוסף והגשת תשריטים "
+         "הנדסיים מפורטים כולל חתכים של חדרי האצירה והשוטים (במגדלים)."),
+        ("חדר אצירה מרכזי במגדל - רוחב מזערי",
+         "רוחב החדר 5.0 מ' נטו לפחות. המידות יוצגו ויצוינו בתוכנית."),
+        ("חדר אצירה מרכזי במגדל - אורך מזערי",
+         "אורך החדר 8.0 מ' נטו לפחות."),
+        ("חדר אצירה מרכזי במגדל - גובה מזערי",
+         "יצוין גובה מזערי של 5.0 מ'. הגובה הסופי מותנה בזווית השוט."),
+        ("חדר אצירה מרכזי במגדל - דלתות",
+         "יצוינו דלתות החדר: דלת חזיתית ודלת שירות צידית."),
+        ("חדר אצירה מרכזי במגדל - דחסן ושוט",
+         "יצוין (במלל) דחסן נתיק בנפח 14 קוב. יוצג אזור ירידת השוט עד "
+         "חיבורו לדחסן, כולל המידה האופקית במטר רץ."),
+        ("חדר מיחזור במגדל - מכלים ומידות",
+         "בכל חדר יוצבו 5 מכלי 1100 ליטר כתומים, 2 מכלי 1100 ליטר כחולים "
+         "ועגלת רשת. מידות החדר: רוחב 4.0 מ', אורך 6.0 מ'."),
+        ("חדר מיחזור במגדל - דלת",
+         "בחזית החדר תוצג דלת דו-כנפית ברוחב 1.6 מ'."),
+        ("חדר אשפה במבנה נמוך - מידות",
+         "מידות החדר יוצגו בתוכנית: רוחב 4.0 מ', אורך 9.0 מ', גובה 2.7 מ' "
+         "לפחות."),
+        ("חדר אשפה במבנה נמוך - דלת",
+         "במרכז מידת הרוחב תותקן ותוצג דלת דו-כנפית ברוחב 1.6 מ'."),
+    ]:
+        authority_rows.append({
+            "section_key": "part_c",
+            "section_title": _pc_title,
+            "subsection": "",
+            "title": t,
+            "body_text": b,
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": _waste_origin,
+        })
+
+    # Addenda 14-15: guest parking + public-buildings additions (מינהלת).
+    # part_b hosts the traffic/parking rows and the מעונות item. The
+    # numeric values (30% guest parking, 200 sqm gan yard) are future
+    # check_key candidates (guest_parking_pct, gan_yard_min_sqm) - not
+    # wired now.
+    _pb_title = next(s["section_title"] for s in sections
+                     if s["section_key"] == "part_b")
+    for t, b in [
+        ("חניות אורחים - תוספת מינהלת",
+         "בנוסף לתקן החניה למגורים, תידרש תוספת של 30% חניות אורחים מתוך "
+         "תקן החניות למגורים. חניות האורחים יסומנו בתכנית ובמאזן החניה "
+         "בנפרד."),
+        ("שטח חצר מזערי לגן ילדים",
+         'חצר הגן תהיה בשטח של 200 מ"ר לפחות לכל גן. שטח החצר יסומן '
+         'בתכנית במ"ר.'),
+        ("סימון שטחים ומספר כיתות במבני ציבור",
+         'בתכניות מבני ציבור יסומנו שטחי כל החללים הציבוריים במ"ר, כולל '
+         "יחידת המידה, וכן מספר הכיתות וחלוקתן."),
+    ]:
+        authority_rows.append({
+            "section_key": "part_b",
+            "section_title": _pb_title,
+            "subsection": "",
+            "title": t,
+            "body_text": b,
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        })
+
     for extra in authority_rows:
         sort_order += 1
         extra["sort_order"] = sort_order
