@@ -35,3 +35,14 @@ def test_merged_discipline_present_once():
     labels = [d["label"] for d in DISCIPLINES]
     assert labels.count("אדריכלות וחזיתות") == 1
     assert len(labels) == len(set(labels)), "duplicate discipline labels"
+
+
+def test_roads_dev_discipline_adjacent_to_traffic():
+    # Addendum 11: "פיתוח וכבישים" (key roads-dev) exists, with the FINAL
+    # corrected name (not the earlier "כבישים וגאומטריה" wording), placed
+    # right after תנועה.
+    labels = [d["label"] for d in DISCIPLINES]
+    assert "פיתוח וכבישים" in labels
+    assert "כבישים וגאומטריה" not in labels
+    assert labels.index("פיתוח וכבישים") == labels.index("תנועה") + 1
+    assert "roads-dev" in DISCIPLINE_KEYS

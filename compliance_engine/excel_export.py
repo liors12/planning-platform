@@ -60,6 +60,7 @@ _SIDECAR_DISC_HE: dict[str, str] = {
     "sec-3-2":          "גנים ונוף",
     "sec-3-3":          "תשתיות",
     "sec-3-4":          DISCIPLINE_NAME_HE["fire"],
+    "roads-dev":        "פיתוח וכבישים",
     "sec-3-5":          "ניקוז וחלחול",
     "sec-3-6":          DISCIPLINE_NAME_HE["roofs"],
     "sec-3-7":          DISCIPLINE_NAME_HE["arch"],

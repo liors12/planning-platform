@@ -20,6 +20,10 @@ CANONICAL_DISCIPLINES: list[dict] = [
     {"key": "sec-3-2",          "label": "גנים ונוף"},
     {"key": "sec-3-3",          "label": "תשתיות"},
     {"key": "sec-3-4",          "label": "תנועה"},
+    # Addendum 11: authority-added discipline, positioned adjacent to
+    # תנועה. No §3 anchor in the engine PDF (like public-buildings /
+    # general) - comments under it surface via the Excel + platform views.
+    {"key": "roads-dev",        "label": "פיתוח וכבישים"},
     {"key": "sec-3-5",          "label": "ניקוז וחלחול"},
     {"key": "sec-3-7",          "label": "אדריכלות וחזיתות"},
     {"key": "sec-3-8",          "label": "הנחיות סביבתיות"},

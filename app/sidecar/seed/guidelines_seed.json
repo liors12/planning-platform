@@ -1801,6 +1801,32 @@
       "check_value": null,
       "unit": null,
       "sort_order": 147
+    },
+    {
+      "section_key": "part_c",
+      "section_title": "חלק ג - דרישות תוכן מפורטות לכל תא שטח",
+      "subsection": "",
+      "title": "פתרון חלחול מלא בתחום המגרש",
+      "body_text": "יוצג פתרון חלחול/השהיה לניהול 100% מנגר הגשם בתחום המגרש. אמצעי החלחול וההשהיה יסומנו בתכנית הפיתוח כולל נפחים.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 148
+    },
+    {
+      "section_key": "part_c",
+      "section_title": "חלק ג - דרישות תוכן מפורטות לכל תא שטח",
+      "subsection": "",
+      "title": "חיבור מערך הניקוז לתשתית העירונית",
+      "body_text": "יוצג חיבור מתוכנן של מערך הניקוז אל התשתית העירונית, כולל נקודות התחברות במקרא.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 149
     }
   ]
 }
