@@ -1500,6 +1500,9 @@ code, .path {
   gap: 10px;
   border: 1px solid #d6cdf0;
   background: #faf7ff;
+  /* Addendum 7: the flex column must never compress the form - that cut
+   * the "+ הוסיפי הערה" button at the card's bottom edge. */
+  flex-shrink: 0;
 }
 .add-comment-title {
   margin: 0;
@@ -1509,7 +1512,10 @@ code, .path {
 }
 .add-comment-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* Addendum 7: stack to one column when the pane is narrow (same
+   * responsive treatment as the submissions upload form) - two rigid 1fr
+   * tracks let wide selects overflow past the card edge in the split. */
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 8px;
 }
 .add-comment-grid select,
@@ -1520,6 +1526,11 @@ code, .path {
   padding: 6px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
+  /* Selects refuse to shrink below their content width by default -
+   * that was the horizontal clipping. */
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 .add-comment-grid input,
 .add-comment-grid textarea { grid-column: 1 / -1; }

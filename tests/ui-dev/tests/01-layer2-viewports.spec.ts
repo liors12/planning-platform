@@ -42,6 +42,27 @@ for (const vp of VIEWPORTS) {
     await page.getByTestId("tab-findings").click();
     await assertLayoutIntegrity(page, "findings");
 
+    // Addendum 7: the add-comment form used to clip its selects past the
+    // card edge and cut the submit button - the generic clipped-button +
+    // overflow assertions now cover the comments tab too, plus an explicit
+    // check that the form controls stay inside the card.
+    await page.getByTestId("tab-comments").click();
+    await assertLayoutIntegrity(page, "comments");
+    const formClip = await page.evaluate(() => {
+      const form = document.querySelector(".add-comment-form");
+      if (!form) return ["form not rendered"];
+      const f = form.getBoundingClientRect();
+      const out: string[] = [];
+      form.querySelectorAll("select, input, textarea, button").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        if (r.left < f.left - 0.5 || r.right > f.right + 0.5 || r.bottom > f.bottom + 0.5) {
+          out.push(el.tagName + ":" + ((el as HTMLElement).innerText || (el as HTMLInputElement).placeholder || "").slice(0, 20));
+        }
+      });
+      return out;
+    });
+    expect(formClip, `comments form clipped controls: ${formClip.join(" | ")}`).toHaveLength(0);
+
     await page.getByTestId("tab-cad_layers").click();
     await assertLayoutIntegrity(page, "cad");
 

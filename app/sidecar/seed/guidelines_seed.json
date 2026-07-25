@@ -1827,6 +1827,32 @@
       "unit": null,
       "origin": "מינהלת",
       "sort_order": 149
+    },
+    {
+      "section_key": "part_b",
+      "section_title": "חלק ב - מבנה החוברת הראשית",
+      "subsection": "",
+      "title": "סימון רוחבי שבילים בתכנית",
+      "body_text": "רוחב כל שביל להולכי רגל יסומן במפורש בתכנית הפיתוח במטרים, לצד השביל, באופן המאפשר בדיקה מול הרוחב המזערי הנדרש.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 150
+    },
+    {
+      "section_key": "part_c",
+      "section_title": "חלק ג - דרישות תוכן מפורטות לכל תא שטח",
+      "subsection": "",
+      "title": "סימון מרחק צובר הגז מהמבנים",
+      "body_text": "מרחק הצובר מכל מבנה סמוך יסומן במפורש בתכנית במטרים, באופן המאפשר בדיקה מול המרחק המזערי הנדרש.",
+      "guideline_type": "manual",
+      "check_key": null,
+      "check_value": null,
+      "unit": null,
+      "origin": "מינהלת",
+      "sort_order": 151
     }
   ]
 }

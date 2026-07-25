@@ -183,6 +183,35 @@ def main() -> None:
             "check_key": None, "check_value": None, "unit": None,
             "origin": "מינהלת",
         },
+        # Addendum 12: marking requirements that make the numeric checks
+        # verifiable on the plan. part_b hosts the path-width guidelines
+        # (the שצ"פ row carrying path_main_min_m); part_c hosts צובר גז.
+        {
+            "section_key": "part_b",
+            "section_title": next(s["section_title"] for s in sections
+                                  if s["section_key"] == "part_b"),
+            "subsection": "",
+            "title": "סימון רוחבי שבילים בתכנית",
+            "body_text": ("רוחב כל שביל להולכי רגל יסומן במפורש בתכנית "
+                          "הפיתוח במטרים, לצד השביל, באופן המאפשר בדיקה מול "
+                          "הרוחב המזערי הנדרש."),
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        },
+        {
+            "section_key": "part_c",
+            "section_title": next(s["section_title"] for s in sections
+                                  if s["section_key"] == "part_c"),
+            "subsection": "",
+            "title": "סימון מרחק צובר הגז מהמבנים",
+            "body_text": ("מרחק הצובר מכל מבנה סמוך יסומן במפורש בתכנית "
+                          "במטרים, באופן המאפשר בדיקה מול המרחק המזערי "
+                          "הנדרש."),
+            "guideline_type": "manual",
+            "check_key": None, "check_value": None, "unit": None,
+            "origin": "מינהלת",
+        },
     ]
     for extra in authority_rows:
         sort_order += 1
