@@ -223,6 +223,21 @@ window resize sanity, uninstall-data-survival.
 
 ### Backlog (from prior FLAG/AMBIGUOUS items)
 
+**Cleanup sweep (chore/backlog-cleanup, 2026-07-24):** B-7 (test
+expectations updated to the deliberate not_submitted/parking-transparency
+behavior), B-8 (WAL/SHM untracked + global ignore), B-9 (frozen
+SEED_FROZEN_AT timestamp on seed-discovered submissions - dates in UI are
+now deterministic), B-10 (nsis dir cleaned pre-build + upload glob scoped
+to APP_VERSION + release-cleanup filter generalized past v0.1.0), B-4/F-2
+(render PDF output untracked; audit_outputs/*/ ignore now actually keeps
+git status clean - note the dev render still READS inputs from the repo
+root, the F-4 coupling, unchanged), B-5/F-3 (check_same_thread=False on
+the sqlite connect - pool teardown may close idle connections cross-thread,
+which is safe; the noisy ProgrammingError is gone at the source).
+Still open by nature: B-1 (needs a manual Windows click), B-2 (needs real
+architect-response data), B-3 (product decision), B-6 (external WebView2
+fix).
+
 - B-1 (AMBIGUOUS, UI audit 2026-07-22): "צפי בתכנון זמין ↗" mavat link relies
   on the Tauri opener capability - verify one manual click on Windows.
 - B-2 (AMBIGUOUS, UI audit 2026-07-22): comparison badge "X/Y תוקנו" not yet

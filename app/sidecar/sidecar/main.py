@@ -25,6 +25,7 @@ import shutil
 import sys
 import time
 from contextlib import asynccontextmanager
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -109,6 +110,12 @@ def _seed_data_dir(cfg: Config) -> dict:
         copied += 1
     return {"seed_dir": str(seed_dir), "copied": copied,
             "skipped_existing": skipped}
+
+
+# B-9: timestamp stamped on rows the seed discovery inserts. A constant (not
+# now()) so screenshots and fresh installs are deterministic; the date is the
+# pilot submission's real-world hand-off date.
+SEED_FROZEN_AT = datetime(2026, 7, 1, 12, 0, 0)
 
 
 def _stage_seed_findings(cfg: Config, tava: str, version_string: str) -> str | None:
@@ -338,6 +345,11 @@ def _discover_submissions(cfg: Config, engine: Engine) -> dict:
                     pdf_path=str(pdf_path),
                     findings_json_path=_stage_seed_findings(
                         cfg, tava, version_string),
+                    # B-9: frozen timestamp for seed-discovered rows so the
+                    # dates shown in the UI (home "עודכן", submission cards)
+                    # are stable across fresh installs and test runs. Real
+                    # uploads through the API keep their true now().
+                    uploaded_at=SEED_FROZEN_AT,
                 ))
                 inserted += 1
         if inserted or healed:
