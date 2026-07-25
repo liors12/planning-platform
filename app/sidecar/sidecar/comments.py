@@ -35,6 +35,8 @@ class CommentIn(BaseModel):
     status: str = Field(..., description="One of STATUSES (Hebrew)")
     topic_he: str = Field(..., min_length=1, max_length=TOPIC_MAX_LEN)
     action_he: str = Field(..., min_length=1)
+    # v0.2.0: optional link to the attachment the comment refers to.
+    attachment_id: Optional[int] = None
 
 
 class CommentPatch(BaseModel):
@@ -48,6 +50,7 @@ class CommentOut(BaseModel):
     id: str
     submission_id: int
     discipline_key: str
+    attachment_id: Optional[int] = None
     status: str
     topic_he: str
     action_he: str
@@ -138,6 +141,7 @@ def make_routers(engine: Engine, queue: EngineQueue, cfg) -> tuple[APIRouter, AP
                 id=str(uuid.uuid4()),
                 submission_id=submission_id,
                 discipline_key=body.discipline_key,
+                attachment_id=body.attachment_id,
                 status=body.status,
                 topic_he=body.topic_he,
                 action_he=body.action_he,

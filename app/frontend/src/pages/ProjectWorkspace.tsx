@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { archiveProject, getProject, getFindings, listSubmissions, type ProjectOut, type SubmissionOut } from "../api";
+import { AttachmentsTab } from "../components/AttachmentsTab";
 import { CommentsTab } from "../components/CommentsTab";
 import { ErrorNotice } from "../components/ErrorNotice";
 import { DebugOverlay } from "../components/DebugOverlay";
@@ -21,17 +22,18 @@ interface Props {
 // Removed tabs: "guidelines" (now the GLOBAL top-level #/guidelines screen),
 // and the "history" / "final" placeholders - stubs confused non-technical
 // users; the report itself is produced from הגשות → "הפיקי דו״ח".
-type TabKey = "overview" | "submissions" | "findings" | "comments" | "cad_layers";
+type TabKey = "overview" | "submissions" | "attachments" | "findings" | "comments" | "cad_layers";
 
 const TAB_LABELS: Record<TabKey, string> = {
   overview: "סקירה",
   submissions: "הגשות",
+  attachments: "נספחי תוכנית עיצוב",
   findings: "ממצאים",
   comments: "הערות רפרנטים",
   cad_layers: "שכבות CAD",
 };
 
-const TAB_ORDER: TabKey[] = ["overview", "submissions", "findings", "comments", "cad_layers"];
+const TAB_ORDER: TabKey[] = ["overview", "submissions", "attachments", "findings", "comments", "cad_layers"];
 
 export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Props) {
   const [project, setProject] = useState<ProjectOut | null>(null);
@@ -143,6 +145,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
             onSubmissionsChanged={() => { refresh(); onProjectChanged(); }}
           />
         )}
+        {tab === "attachments" && <AttachmentsTab project={project} />}
         {tab === "findings" && (
           <FindingsTabContent
             project={project}

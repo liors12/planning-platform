@@ -519,6 +519,8 @@ class DisciplineComment(Base):
         ForeignKey("submissions.id", ondelete="CASCADE"), nullable=False, index=True,
     )
     discipline_key: Mapped[str] = mapped_column(String(32), nullable=False)
+    # v0.2.0: optional link to the attachment this comment refers to.
+    attachment_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
     topic_he: Mapped[str] = mapped_column(String(255), nullable=False)
     action_he: Mapped[str] = mapped_column(Text, nullable=False)
@@ -540,6 +542,7 @@ class DisciplineComment(Base):
             "id": self.id,
             "submission_id": self.submission_id,
             "discipline_key": self.discipline_key,
+            "attachment_id": self.attachment_id,
             "status": self.status,
             "topic_he": self.topic_he,
             "action_he": self.action_he,
@@ -607,6 +610,44 @@ class Guideline(Base):
             "is_active": bool(self.is_active),
             "edited_by": self.edited_by,
             "edited_at": self.edited_at.isoformat() if self.edited_at else None,
+        }
+
+
+class Attachment(Base):
+    """v0.2.0: תכנית-עיצוב attachment (נספח) - mirrors Submission's shape.
+
+    discipline_key IS the attachment type (canonical disciplines list);
+    status flow: prepared → sent → response_received → closed. A revision
+    points at its source via source_attachment_id.
+    """
+    __tablename__ = "attachments"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    project_id: Mapped[int] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, index=True,
+    )
+    discipline_key: Mapped[str] = mapped_column(String(32), nullable=False)
+    version_string: Mapped[str] = mapped_column(String(32), nullable=False)
+    file_path: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(32), nullable=False,
+                                        default="prepared", server_default="prepared")
+    source_attachment_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    review_json_path: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    uploaded_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.datetime("now"), nullable=False,
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id": self.id,
+            "project_id": self.project_id,
+            "discipline_key": self.discipline_key,
+            "version_string": self.version_string,
+            "file_path": self.file_path,
+            "status": self.status,
+            "source_attachment_id": self.source_attachment_id,
+            "has_review": self.review_json_path is not None,
+            "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
         }
 
 

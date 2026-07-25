@@ -1,0 +1,74 @@
+{
+  "_comment": "v0.2.0 attachment check mapping. Default for every type: run the guidelines tagged with ITS discipline_key. extra_guideline_disciplines pulls in additional disciplines' guidelines (cross-links); extra_checks are named review items with a Hebrew instruction, optionally citing (cross_cite) another discipline in the finding text. Editable data - the review runner reads this file from the data dir.",
+  "types": {
+    "sec-3-5": {
+      "extra_checks": [
+        {"id": "slope-min-crossdoc", "title_he": "שיפועי ניקוז מזעריים",
+         "instruction_he": "יש לוודא שיפועי ניקוז מזעריים גם כאשר השיפועים מסומנים בגיליונות הפיתוח - הבדיקה חוצת-מסמכים.",
+         "cross_cite": "roads-dev"}
+      ]
+    },
+    "roads-dev": {
+      "extra_guideline_check_keys": ["path_main_min_m", "path_secondary_min_m", "gas_tank_setback_min_m"],
+      "extra_checks": [
+        {"id": "path-width-labels", "title_he": "סימון רוחבי שבילים",
+         "instruction_he": "רוחב כל שביל יסומן במטרים לצד השביל, לבדיקה מול הרוחב המזערי (3 מ' ראשי / 2.5 מ' משני)."},
+        {"id": "ramp-designation", "title_he": "ייעוד רמפות בשיפוע 8% ומעלה",
+         "instruction_he": "כל שיפוע של 8% ומעלה יסווג במפורש: רמפת רכב או רמפה נגישה."},
+        {"id": "accessibility-continuity", "title_he": "רציפות נגישות לכניסות",
+         "instruction_he": "יש להציג רצף נגיש מהרחוב ועד כל כניסת מבנה."},
+        {"id": "slope-min-note", "title_he": "שיפועי ניקוז מזעריים",
+         "instruction_he": "בדיקת שיפועי המינימום נעשית גם על גיליונות הפיתוח.",
+         "cross_cite": "sec-3-5"}
+      ]
+    },
+    "sec-3-4": {
+      "extra_checks": [
+        {"id": "parking-balance-complete", "title_he": "שלמות מאזן החניה",
+         "instruction_he": "מאזן החניה יציג את כל תאי השטח; אין תא חסר."},
+        {"id": "parking-arithmetic", "title_he": "בדיקת חשבון מאזן החניה",
+         "instruction_he": "סכימת החניות פר תא שטח תושווה לסך-הכל המוצהר."},
+        {"id": "parking-ratio-residential", "title_he": "יחס חניה למגורים 1.3:1 לפחות",
+         "instruction_he": "יחס החניות למגורים לא יפחת מ-1.3 לכל יחידת דיור."},
+        {"id": "guest-parking-30", "title_he": "חניות אורחים 30%",
+         "instruction_he": "תוספת חניות האורחים תיבדק מול הנחיית המינהלת (30% מתקן המגורים), בסימון נפרד במאזן."},
+        {"id": "parking-columns", "title_he": "עמודות נגישות ואופניים",
+         "instruction_he": "מאזן החניה יכלול עמודות לחניות נגישות ולחניות אופניים."},
+        {"id": "ramp-clearance", "title_he": "גבהים חופשיים ברמפות",
+         "instruction_he": "יסומנו הגבהים החופשיים ברמפות ובכניסות החניון."},
+        {"id": "waste-truck-maneuver", "title_he": "תמרון רכב פינוי אשפה",
+         "instruction_he": "יוצג תרשים תמרון לרכב הפינוי; הבדיקה מוצלבת עם דרישות שפ\"ע.",
+         "cross_cite": "sec-3-1"},
+        {"id": "sheet-version-consistency", "title_he": "עקביות גרסאות בין גיליונות",
+         "instruction_he": "מספרי הגרסה על כל גיליונות התנועה יהיו אחידים."}
+      ]
+    },
+    "public-buildings": {
+      "extra_checks": [
+        {"id": "separate-entrances", "title_he": "כניסות נפרדות",
+         "instruction_he": "למבני הציבור יוצגו כניסות נפרדות מהשימושים האחרים."},
+        {"id": "protected-space", "title_he": "מרחב מוגן",
+         "instruction_he": "יסומן מרחב מוגן בכל מבנה ציבור."},
+        {"id": "gan-yard-200", "title_he": "חצר גן 200 מ\"ר לפחות",
+         "instruction_he": "שטח חצר הגן יסומן ויעמוד ב-200 מ\"ר לפחות לכל גן."},
+        {"id": "areas-units-classes", "title_he": "שטחים, יחידות מידה ומספר כיתות",
+         "instruction_he": "כל החללים הציבוריים יסומנו במ\"ר כולל יחידת מידה, בצירוף מספר הכיתות וחלוקתן."},
+        {"id": "alt-coverage-note", "title_he": "הערת כיסוי חלופי",
+         "instruction_he": "אם דרישה מכוסה במסמך אחר - תצוין הפניה מפורשת."}
+      ]
+    },
+    "sec-3-1": {
+      "extra_checks": [
+        {"id": "maneuver-crosscheck", "title_he": "תרשימי תמרון",
+         "instruction_he": "תרשימי התמרון של רכב הפינוי מוצלבים עם נספח התנועה.",
+         "cross_cite": "sec-3-4"}
+      ]
+    },
+    "sec-3-2": {"extra_checks": []},
+    "sec-3-3": {"extra_checks": []},
+    "sec-3-7": {"extra_checks": []},
+    "sec-3-8": {"extra_checks": []},
+    "sec-3-9": {"extra_checks": []},
+    "general": {"extra_checks": []}
+  }
+}

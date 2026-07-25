@@ -164,6 +164,17 @@ def initialize(engine: Engine) -> dict:
     # fresh installs; for existing DBs create_all is idempotent via IF NOT EXISTS).
     # No ALTER TABLE needed: create_all only creates missing tables.
 
+    # v0.2.0 migration - comments can link to an attachment.
+    with engine.begin() as conn:
+        dc = conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='discipline_comments'"
+        )).fetchone()
+        if dc:
+            dc_cols = {c[1] for c in conn.execute(text("PRAGMA table_info(discipline_comments)")).fetchall()}
+            if "attachment_id" not in dc_cols:
+                conn.execute(text("ALTER TABLE discipline_comments ADD COLUMN attachment_id INTEGER"))
+                log.info("migration: added attachment_id to discipline_comments")
+
     # Addendum-8 migration - merge the legacy "הערות אדריכלית העיר"
     # discipline into "אדריכלות וחזיתות" (same discipline in Ellen's
     # practice). Idempotent: after the first pass no rows carry a legacy
