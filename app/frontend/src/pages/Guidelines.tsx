@@ -96,7 +96,10 @@ export function Guidelines() {
             <span className={`badge ${g.guideline_type === "checkable" ? "badge-auto" : "badge-manual"}`}>
               {g.guideline_type === "checkable" ? "נבדקת אוטומטית" : "ידנית"}
             </span>
-            <span className="muted guideline-version">גרסה {g.version}</span>
+            <span className="muted guideline-version"
+                  title="מספר הגרסה עולה בכל עריכה; ההיסטוריה נשמרת">
+              גרסה {g.version}
+            </span>
             {g.origin && <span className="badge badge-origin">{g.origin}</span>}
           </div>
           {g.guideline_type === "checkable" && g.check_value !== null && (
@@ -138,6 +141,10 @@ export function Guidelines() {
           <p className="muted">
             הנחיות ההגשה החלות על כל תכניות העיצוב בעיר. עריכת ערך יוצרת גרסה
             חדשה - הבדיקה האוטומטית הבאה תשתמש בערך המעודכן.
+          </p>
+          <p className="muted guidelines-version-legend">
+            לצד כל הנחיה מופיע מספר הגרסה שלה. המספר עולה בכל עריכה, וההיסטוריה
+            המלאה נשמרת וזמינה בכפתור היסטוריה.
           </p>
         </div>
         <button

@@ -56,10 +56,6 @@ test("guidelines v0.2.0: add-guideline flow (מינהלת origin)", async ({ pag
   await expect(group.getByText("מינהלת").first()).toBeVisible();
 });
 
-// v0.2.1: assert the OPEN-ENDPOINT is called, not Playwright's download
-// event. Chromium happily downloads; the packaged WebView2 shell does not,
-// so a download-event assertion passes while the real app is broken. That
-// exact false-green shipped the dead "הורדת PDF" button in v0.1.0-v0.2.0.
 test("guidelines v0.2.1: כללי splits into source-section sub-groups", async ({ page, request }) => {
   await page.goto("/#/guidelines");
   const general = page.getByTestId("guidelines-group-general");
@@ -81,6 +77,10 @@ test("guidelines v0.2.1: כללי splits into source-section sub-groups", async 
   }
 });
 
+// v0.2.1: assert the OPEN-ENDPOINT is called, not Playwright's download
+// event. Chromium happily downloads; the packaged WebView2 shell does not,
+// so a download-event assertion passes while the real app is broken. That
+// exact false-green shipped the dead "הורדת PDF" button in v0.1.0-v0.2.0.
 test("guidelines: PDF button calls the sidecar open-endpoint", async ({ page, request }) => {
   await page.goto("/#/guidelines");
   const btn = page.getByTestId("guidelines-pdf-download");
@@ -103,4 +103,19 @@ test("guidelines: PDF button calls the sidecar open-endpoint", async ({ page, re
   const buf = await pdf.body();
   expect(buf.subarray(0, 4).toString("ascii")).toBe("%PDF");
   expect(buf.length).toBeGreaterThan(1000);
+});
+
+test("guidelines v0.2.1: every row shows a version chip + legend", async ({ page }) => {
+  await page.goto("/#/guidelines");
+  await expect(page.getByTestId("guidelines-disc-nav")).toBeVisible();
+  // The legend explains what the chip means - no bare number without context.
+  await expect(page.locator(".guidelines-version-legend")).toContainText("מספר הגרסה");
+
+  // EVERY rendered row carries a version chip. A row without one reads as a
+  // guideline with no provenance, which is what this gate prevents.
+  const rows = page.locator('[data-testid^="guideline-row-"]');
+  const rowCount = await rows.count();
+  expect(rowCount).toBeGreaterThan(50);
+  await expect(page.locator('[data-testid^="guideline-row-"] .guideline-version'))
+    .toHaveCount(rowCount);
 });

@@ -400,8 +400,24 @@ def seed_guidelines(engine: Engine) -> None:
                 g.discipline_key = (src or {}).get("discipline_key") or "general"
                 backfilled += 1
 
+        # v0.2.1 content-quality sweep on existing installs: adopt the
+        # rewritten bodies (duplicate-of-title, checklist stubs, leaked CAD
+        # identifiers) for rows Ellen has NEVER edited. version > 1 means she
+        # changed the text herself - her wording wins, always.
+        body_refreshed = 0
+        for g in existing:
+            if not g.is_active or g.version != 1:
+                continue
+            src = by_place.get((g.section_key, g.sort_order))
+            if src and (src.get("body_text") or "") != (g.body_text or ""):
+                g.body_text = src.get("body_text")
+                body_refreshed += 1
+
         sess.commit()
-        if inserted or adopted or superseded or part_h_removed or backfilled:
+        if (inserted or adopted or superseded or part_h_removed or backfilled
+                or body_refreshed):
             log.info("guidelines seed: %d inserted, %d adopted, %d superseded, "
-                     "%d part_h deactivated, %d discipline backfilled",
-                     inserted, adopted, superseded, part_h_removed, backfilled)
+                     "%d part_h deactivated, %d discipline backfilled, "
+                     "%d bodies refreshed",
+                     inserted, adopted, superseded, part_h_removed, backfilled,
+                     body_refreshed)
