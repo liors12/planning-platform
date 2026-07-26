@@ -56,15 +56,66 @@ test("guidelines v0.2.0: add-guideline flow (מינהלת origin)", async ({ pag
   await expect(group.getByText("מינהלת").first()).toBeVisible();
 });
 
-test("guidelines: export-pdf downloads a real PDF", async ({ page }) => {
+test("guidelines v0.2.1: כללי splits into source-section sub-groups", async ({ page, request }) => {
   await page.goto("/#/guidelines");
-  const downloadPromise = page.waitForEvent("download");
-  await page.getByTestId("guidelines-pdf-download").click();
-  const download = await downloadPromise;
-  const stream = await download.createReadStream();
-  const chunks: Buffer[] = [];
-  for await (const c of stream) chunks.push(c as Buffer);
-  const buf = Buffer.concat(chunks);
-  expect(buf.length).toBeGreaterThan(1000);
+  const general = page.getByTestId("guidelines-group-general");
+  const subGroups = general.locator('[data-testid^="guidelines-subgroup-"]');
+  await expect(subGroups.first()).toBeVisible();
+
+  // Counts on screen must match the API, per sub-group - not just in total.
+  const rows = await (await request.get("http://127.0.0.1:17321/guidelines")).json();
+  const expected = new Map<string, number>();
+  for (const g of rows.filter((r: { discipline_key: string }) => r.discipline_key === "general")) {
+    const key = (g.section_title || "").trim() || "הנחיות מינהלת";
+    expected.set(key, (expected.get(key) ?? 0) + 1);
+  }
+  expect(expected.size).toBeGreaterThan(1);
+  await expect(subGroups).toHaveCount(expected.size);
+  for (const [title, n] of expected) {
+    await expect(general.getByTestId(`guidelines-subgroup-${title}`))
+      .toContainText(`${n} הנחיות`);
+  }
+});
+
+// v0.2.1: assert the OPEN-ENDPOINT is called, not Playwright's download
+// event. Chromium happily downloads; the packaged WebView2 shell does not,
+// so a download-event assertion passes while the real app is broken. That
+// exact false-green shipped the dead "הורדת PDF" button in v0.1.0-v0.2.0.
+test("guidelines: PDF button calls the sidecar open-endpoint", async ({ page, request }) => {
+  await page.goto("/#/guidelines");
+  const btn = page.getByTestId("guidelines-pdf-download");
+  const callPromise = page.waitForRequest(
+    (r) => r.url().includes("/guidelines/open-pdf") && r.method() === "POST",
+  );
+  await btn.click();
+  const req = await callPromise;
+  const resp = await req.response();
+  expect(resp?.status()).toBe(204);
+
+  // The button tells the whole story: working, then opened. Ellen gets no
+  // browser download shelf here - the file is opened by the OS.
+  await expect(btn).toHaveAttribute("data-pdf-state", "opened");
+  await expect(btn).toContainText("הקובץ נפתח");
+
+  // ...and the endpoint it calls really does produce a PDF.
+  const pdf = await request.get("http://127.0.0.1:17321/guidelines/export-pdf");
+  expect(pdf.status()).toBe(200);
+  const buf = await pdf.body();
   expect(buf.subarray(0, 4).toString("ascii")).toBe("%PDF");
+  expect(buf.length).toBeGreaterThan(1000);
+});
+
+test("guidelines v0.2.1: every row shows a version chip + legend", async ({ page }) => {
+  await page.goto("/#/guidelines");
+  await expect(page.getByTestId("guidelines-disc-nav")).toBeVisible();
+  // The legend explains what the chip means - no bare number without context.
+  await expect(page.locator(".guidelines-version-legend")).toContainText("מספר הגרסה");
+
+  // EVERY rendered row carries a version chip. A row without one reads as a
+  // guideline with no provenance, which is what this gate prevents.
+  const rows = page.locator('[data-testid^="guideline-row-"]');
+  const rowCount = await rows.count();
+  expect(rowCount).toBeGreaterThan(50);
+  await expect(page.locator('[data-testid^="guideline-row-"] .guideline-version'))
+    .toHaveCount(rowCount);
 });

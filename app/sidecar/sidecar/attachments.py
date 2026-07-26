@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -130,7 +130,10 @@ def _finding(code: str, name_he: str, verdict: str, notes_he: str,
 
 def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     """Execute ONLY the mapped checks for this attachment's type."""
-    mapping = _load_mapping(cfg).get("types", {}).get(att.discipline_key, {})
+    full_mapping = _load_mapping(cfg)
+    mapping = full_mapping.get("types", {}).get(att.discipline_key, {})
+    subgroup_cfg = full_mapping.get("general_subgroups", {})
+    always_on = set(subgroup_cfg.get("always_on_attachments", []))
     checks: list[dict] = []
 
     with Session(engine) as sess:
@@ -144,8 +147,20 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     extra_keys = set(mapping.get("extra_guideline_check_keys", []))
     extras = [g for g in active
               if g.check_key in extra_keys and g.discipline_key != att.discipline_key]
+    # 3. v0.2.1: כללי sub-groups marked always_on_attachments (file formats)
+    # apply to every attachment type. The booklet-structure and checklist
+    # sub-groups are submission-only and deliberately never reach here.
+    general_always = [
+        g for g in active
+        if g.discipline_key == "general"
+        and (g.section_title or "").strip() in always_on
+    ]
 
-    for g in own + extras:
+    seen_ids = set()
+    for g in own + extras + general_always:
+        if g.id in seen_ids:
+            continue
+        seen_ids.add(g.id)
         gd = g.to_dict()
         cite = f'הנחיה: "{g.title}" (גרסה {g.version})'
         if g.guideline_type == "checkable" and g.check_value is not None:
@@ -291,8 +306,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             sess.refresh(att)
             return AttachmentOut(**att.to_dict())
 
-    @router.get("/attachments/{att_id}/report-pdf")
-    def report_pdf(att_id: int):
+    def _build_attachment_report_pdf(att_id: int) -> bytes:
         from .guidelines import _render_pdf
         with _session() as sess:
             att = sess.get(Attachment, att_id)
@@ -306,11 +320,27 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                 .where(DisciplineComment.attachment_id == att.id)
             ).scalars().all()
             html = _build_attachment_report_html(att, review, comments)
-        pdf = _render_pdf(html)
+        return _render_pdf(html)
+
+    @router.get("/attachments/{att_id}/report-pdf")
+    def report_pdf(att_id: int):
         import io
+        pdf = _build_attachment_report_pdf(att_id)
         return StreamingResponse(io.BytesIO(pdf), media_type="application/pdf",
                                  headers={"Content-Disposition":
                                           'attachment; filename="attachment_report.pdf"'})
+
+    # ── POST /attachments/{id}/open-report ───────────────────────────────────
+    # Same reason as guidelines/open-pdf: the packaged WebView2 shell blocks
+    # `<a download>`, so the sidecar writes the file and the OS opens it.
+    @router.post("/attachments/{att_id}/open-report", status_code=204)
+    def open_attachment_report(att_id: int):
+        from .os_open import exports_dir, open_in_default_app
+        pdf = _build_attachment_report_pdf(att_id)
+        path = exports_dir(cfg) / f"attachment_{att_id}_report.pdf"
+        path.write_bytes(pdf)
+        open_in_default_app(path)
+        return Response(status_code=204)
 
     return router
 

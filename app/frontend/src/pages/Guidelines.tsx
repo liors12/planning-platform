@@ -3,9 +3,9 @@ import {
   createGuideline,
   editGuideline,
   guidelineHistory,
-  guidelinesPdfUrl,
   listDisciplines,
   listGuidelines,
+  openGuidelinesPdf,
   type DisciplineDef,
   type GuidelineOut,
 } from "../api";
@@ -25,6 +25,25 @@ export function Guidelines() {
   const [historyFor, setHistoryFor] = useState<GuidelineOut | null>(null);
   const [addingFor, setAddingFor] = useState<string | "">("__closed__");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  // The PDF is generated then opened by the OS, which takes a beat and gives
+  // no browser-level feedback of its own - so the button carries the whole
+  // story: working, opened, or failed. Never silent.
+  const [pdfState, setPdfState] = useState<"idle" | "working" | "opened">("idle");
+  const [pdfErr, setPdfErr] = useState<string | null>(null);
+
+  async function onOpenPdf() {
+    if (pdfState === "working") return;
+    setPdfState("working");
+    setPdfErr(null);
+    try {
+      await openGuidelinesPdf();
+      setPdfState("opened");
+      window.setTimeout(() => setPdfState("idle"), 4000);
+    } catch (e) {
+      setPdfErr(String(e));
+      setPdfState("idle");
+    }
+  }
 
   function refresh() {
     listGuidelines()
@@ -48,6 +67,67 @@ export function Guidelines() {
     byDiscipline.get(key)!.push(g);
   }
 
+  // v0.2.1: inside כללי only, split by the SOURCE DOCUMENT SECTION we kept
+  // as metadata in Phase 1. Order follows first appearance (seed sort_order),
+  // so the sub-groups read in document order. Authority-added rows carry no
+  // source section and collect under "הנחיות מינהלת".
+  const AUTHORITY_SUBGROUP = "הנחיות מינהלת";
+  function subGroupsOf(items: GuidelineOut[]) {
+    const groups = new Map<string, GuidelineOut[]>();
+    for (const g of items) {
+      const key = g.section_title?.trim() || AUTHORITY_SUBGROUP;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(g);
+    }
+    // The authority bucket always sorts last, however early a row appeared.
+    return [...groups.entries()].sort(
+      (a, b) =>
+        Number(a[0] === AUTHORITY_SUBGROUP) - Number(b[0] === AUTHORITY_SUBGROUP),
+    );
+  }
+
+  function renderRow(g: GuidelineOut) {
+    return (
+      <li key={g.id} className="guideline-row" data-testid={`guideline-row-${g.id}`}
+          data-check-key={g.check_key ?? undefined}>
+        <div className="guideline-main">
+          <div className="guideline-title-line">
+            <b>{g.title}</b>
+            <span className={`badge ${g.guideline_type === "checkable" ? "badge-auto" : "badge-manual"}`}>
+              {g.guideline_type === "checkable" ? "נבדקת אוטומטית" : "ידנית"}
+            </span>
+            <span className="muted guideline-version"
+                  title="מספר הגרסה עולה בכל עריכה; ההיסטוריה נשמרת">
+              גרסה {g.version}
+            </span>
+            {g.origin && <span className="badge badge-origin">{g.origin}</span>}
+          </div>
+          {g.guideline_type === "checkable" && g.check_value !== null && (
+            <div className="guideline-value" data-testid={`guideline-value-${g.id}`}>
+              ערך נדרש: <b>{g.check_value}</b> {g.unit ?? ""}
+            </div>
+          )}
+          {g.body_text && <p className="muted guideline-body">{g.body_text}</p>}
+          {g.section_title && (
+            <p className="muted guideline-source-section">מקור: {g.section_title}</p>
+          )}
+        </div>
+        <div className="guideline-actions">
+          <button type="button" className="ghost-btn"
+                  data-testid={`guideline-edit-${g.id}`}
+                  onClick={() => setEditing(g)}>
+            עריכה
+          </button>
+          <button type="button" className="ghost-btn"
+                  data-testid={`guideline-history-${g.id}`}
+                  onClick={() => setHistoryFor(g)}>
+            היסטוריה
+          </button>
+        </div>
+      </li>
+    );
+  }
+
   function scrollToDiscipline(key: string) {
     setExpanded((e) => ({ ...e, [key]: true }));
     document.getElementById(`disc-${key}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -62,17 +142,26 @@ export function Guidelines() {
             הנחיות ההגשה החלות על כל תכניות העיצוב בעיר. עריכת ערך יוצרת גרסה
             חדשה - הבדיקה האוטומטית הבאה תשתמש בערך המעודכן.
           </p>
+          <p className="muted guidelines-version-legend">
+            לצד כל הנחיה מופיע מספר הגרסה שלה. המספר עולה בכל עריכה, וההיסטוריה
+            המלאה נשמרת וזמינה בכפתור היסטוריה.
+          </p>
         </div>
-        <a
+        <button
+          type="button"
           className="primary-btn"
-          href={guidelinesPdfUrl()}
-          download="guidelines.pdf"
+          onClick={onOpenPdf}
+          disabled={pdfState === "working"}
+          data-pdf-state={pdfState}
           data-testid="guidelines-pdf-download"
         >
-          הורדת PDF
-        </a>
+          {pdfState === "working" && "מכינה את הקובץ..."}
+          {pdfState === "opened" && "הקובץ נפתח"}
+          {pdfState === "idle" && "הורדת PDF"}
+        </button>
       </header>
 
+      {pdfErr && <MaybeApiError error={pdfErr} title="לא ניתן להפיק את הקובץ" />}
       {err && <MaybeApiError error={err} title="לא ניתן לטעון את ההנחיות" />}
       {!rows && !err && <p className="muted">טוענת...</p>}
       {rows && rows.length === 0 && (
@@ -118,44 +207,32 @@ export function Guidelines() {
                 + הוסיפי הנחיה
               </button>
             </summary>
-            <ul className="guidelines-list" data-testid={`guidelines-group-${d.key}`}>
-              {items.map((g) => (
-                <li key={g.id} className="guideline-row" data-testid={`guideline-row-${g.id}`}
-                    data-check-key={g.check_key ?? undefined}>
-                  <div className="guideline-main">
-                    <div className="guideline-title-line">
-                      <b>{g.title}</b>
-                      <span className={`badge ${g.guideline_type === "checkable" ? "badge-auto" : "badge-manual"}`}>
-                        {g.guideline_type === "checkable" ? "נבדקת אוטומטית" : "ידנית"}
+            {d.key === "general" ? (
+              // כללי carries the whole submission rulebook (formats, booklet
+              // structure, checklist), so a flat list of 81 rows is unusable.
+              // Split it by source section; every other discipline is small
+              // enough to stay flat.
+              <div data-testid={`guidelines-group-${d.key}`}>
+                {subGroupsOf(items).map(([title, subItems]) => (
+                  <details key={title} className="guidelines-subgroup" open
+                           data-testid={`guidelines-subgroup-${title}`}>
+                    <summary className="guidelines-subgroup-summary">
+                      {title}
+                      <span className="muted guidelines-group-count">
+                        {" "}· {subItems.length} הנחיות
                       </span>
-                      <span className="muted guideline-version">גרסה {g.version}</span>
-                      {g.origin && <span className="badge badge-origin">{g.origin}</span>}
-                    </div>
-                    {g.guideline_type === "checkable" && g.check_value !== null && (
-                      <div className="guideline-value" data-testid={`guideline-value-${g.id}`}>
-                        ערך נדרש: <b>{g.check_value}</b> {g.unit ?? ""}
-                      </div>
-                    )}
-                    {g.body_text && <p className="muted guideline-body">{g.body_text}</p>}
-                    {g.section_title && (
-                      <p className="muted guideline-source-section">מקור: {g.section_title}</p>
-                    )}
-                  </div>
-                  <div className="guideline-actions">
-                    <button type="button" className="ghost-btn"
-                            data-testid={`guideline-edit-${g.id}`}
-                            onClick={() => setEditing(g)}>
-                      עריכה
-                    </button>
-                    <button type="button" className="ghost-btn"
-                            data-testid={`guideline-history-${g.id}`}
-                            onClick={() => setHistoryFor(g)}>
-                      היסטוריה
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                    </summary>
+                    <ul className="guidelines-list">
+                      {subItems.map(renderRow)}
+                    </ul>
+                  </details>
+                ))}
+              </div>
+            ) : (
+              <ul className="guidelines-list" data-testid={`guidelines-group-${d.key}`}>
+                {items.map(renderRow)}
+              </ul>
+            )}
           </details>
         );
       })}
@@ -164,6 +241,9 @@ export function Guidelines() {
         <AddDialog
           disciplines={disciplines}
           initialKey={addingFor}
+          subCategories={subGroupsOf(byDiscipline.get("general") ?? [])
+            .map(([t]) => t)
+            .filter((t) => t !== AUTHORITY_SUBGROUP)}
           onClose={() => setAddingFor("__closed__")}
           onSaved={() => { setAddingFor("__closed__"); refresh(); }}
         />
@@ -183,28 +263,41 @@ export function Guidelines() {
 }
 
 function AddDialog({
-  disciplines, initialKey, onClose, onSaved,
+  disciplines, initialKey, subCategories, onClose, onSaved,
 }: {
   disciplines: DisciplineDef[];
   initialKey: string;
+  subCategories: string[];
   onClose: () => void;
   onSaved: () => void;
 }) {
   const [disc, setDisc] = useState(initialKey);
   const [title, setTitle] = useState("");
   const [bodyText, setBodyText] = useState("");
+  const [subCat, setSubCat] = useState("");
+  const [subCatFree, setSubCatFree] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const hebrewCount = (title.match(/[א-ת]/g) ?? []).length;
   const valid = disc !== "" && hebrewCount >= 4 && bodyText.trim().length >= 10;
 
+  // Sub-category is offered for כללי only - the other disciplines are small
+  // enough to stay flat, so an extra field there would be noise.
+  const showSubCat = disc === "general";
+  const effectiveSubCat = subCat === "__free__" ? subCatFree.trim() : subCat;
+
   async function onSave() {
     if (!valid || saving) return;
     setSaving(true);
     setErr(null);
     try {
-      await createGuideline({ discipline_key: disc, title: title.trim(), body_text: bodyText.trim() });
+      await createGuideline({
+        discipline_key: disc,
+        title: title.trim(),
+        body_text: bodyText.trim(),
+        ...(showSubCat && effectiveSubCat ? { section_title: effectiveSubCat } : {}),
+      });
       onSaved();
     } catch (e) {
       setErr(String(e));
@@ -227,6 +320,24 @@ function AddDialog({
             ))}
           </select>
         </label>
+        {showSubCat && (
+          <label className="form-label">
+            <span>תת-קטגוריה (לא חובה)</span>
+            <select value={subCat} onChange={(e) => setSubCat(e.target.value)}
+                    data-testid="add-guideline-subcategory">
+              <option value="">ללא תת-קטגוריה</option>
+              {subCategories.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+              <option value="__free__">תת-קטגוריה חדשה...</option>
+            </select>
+            {subCat === "__free__" && (
+              <input value={subCatFree} onChange={(e) => setSubCatFree(e.target.value)}
+                     placeholder="שם תת-הקטגוריה"
+                     data-testid="add-guideline-subcategory-new" />
+            )}
+          </label>
+        )}
         <label className="form-label">
           <span>כותרת</span>
           <input value={title} onChange={(e) => setTitle(e.target.value)}

@@ -137,6 +137,111 @@ def short_title(text: str, max_len: int = 60) -> str:
     return (first[:max_len]).strip() or t[:max_len]
 
 
+# ── v0.2.1 content-quality sweep ─────────────────────────────────────────────
+# The approved docx is a checklist written for a human reader, so many rows
+# arrive with the body repeating the title verbatim, checklist glyphs, or CAD
+# layer identifiers. Ellen reads these as guidance, so each row must say what
+# is actually required. Rewrites live here, keyed by title, so re-extracting
+# from the docx reproduces them.
+
+# 1. Rows whose body merely repeats the title. Each gets an action sentence
+# saying what the submission must DO; a few carry nothing beyond the title
+# and get an empty body (the UI then shows the title alone).
+DUPLICATE_BODY_REWRITES: dict[str, str] = {
+    "הקבצים הבאים יצורפו להגשה. ללא קבצי CAD ההגשה לא תתקבל.":
+        "יש לצרף את כל קבצי ה-CAD המפורטים להלן. הגשה ללא קבצי CAD לא תתקבל.",
+    "גודל קובץ. כל קובץ DWG/DXF מקסימום 200 MB.":
+        "יש לוודא שכל קובץ DWG או DXF אינו עולה על 200 MB. קובץ גדול יותר יפוצל או יידחס לפני ההגשה.",
+    "גבול תא השטח מסומן בקו כחול מקווקו, מקושר במפורש לתב”ע":
+        "יש לסמן את גבול תא השטח בקו כחול מקווקו, ולציין במפורש את ההפניה לתב”ע שממנה נגזר הגבול.",
+    "מרחקים בין בניינים באותו תא שטח מסומנים במספרים בקנ”מ":
+        "יש לסמן במספרים את המרחק בין כל שני בניינים באותו תא שטח, בקנה המידה של התכנית.",
+    "חיפוי לפי נספח חומריות - ללא חיפוי אבן טבעית או דמוית-אבן":
+        "יש לציין את חומרי החיפוי בהתאם לנספח החומריות. חיפוי באבן טבעית או דמוית-אבן אינו מאושר.",
+    "פתחים אנכיים רצפה-תקרה (לא חלונות רוחביים)":
+        "יש לתכנן את הפתחים כפתחים אנכיים מרצפה עד תקרה. חלונות רוחביים אינם מאושרים.",
+    "מרפסות משולבות בחזית עם מעקים בנויים בחומר תואם":
+        "יש לשלב את המרפסות בחזית הבניין, עם מעקים בנויים מחומר התואם את חומרי החזית.",
+    "מסתורי כביסה - מידות וחומר מסומנים":
+        "יש לסמן בתכנית את מידות מסתורי הכביסה ואת החומר שממנו ייבנו.",
+    "ציון מסגרות חלון, סוג זיגוג, רפלקטיביות זיגוג מקסימלית 70%":
+        "יש לציין את סוג מסגרות החלון ואת סוג הזיגוג. רפלקטיביות הזיגוג לא תעלה על 70%.",
+    "סימון פאנלים סולאריים בפריסה מותאמת":
+        "יש לסמן את הפאנלים הסולאריים בתכנית הגג, בפריסה המותאמת לצורת הגג ולמערכות שעליו.",
+    "סימון דודי שמש (לא בחזית, רק בגג)":
+        "יש לסמן את מיקום דודי השמש. הדודים ימוקמו על הגג בלבד ולא על חזית הבניין.",
+    "סימון מתקני מיזוג מסיביים (מקוררי מים, צ’ילרים)":
+        "יש לסמן בתכנית את מיקומם של מתקני המיזוג המסיביים, ובכללם מקוררי מים וצ’ילרים.",
+    "מעקה גג + סף קצה":
+        "יש לסמן בתכנית הגג את מעקה הגג ואת סף הקצה.",
+    "אנטנות תקשורת - אם קיימות":
+        "אם מתוכננות אנטנות תקשורת, יש לסמן את מיקומן בתכנית הגג.",
+    "ולא טבלה מצרפת לפי בנדים של חדרים בלבד.":
+        "יש להציג את הנתונים פר-יחידת דיור. טבלה מצרפת לפי בנדים של חדרים בלבד אינה מספקת.",
+    "ניתוח הצללה על שכנים - אסור הצללה משמעותית בתאריך 21.12":
+        "יש להגיש ניתוח הצללה על המגרשים השכנים. לא תאושר הצללה משמעותית בתאריך 21.12.",
+}
+
+# 2. חלק ז is the intake checklist: every body was a "☐ item" glyph line.
+# Rewritten to state what the booklet must contain and what gets checked.
+CHECKLIST_TEMPLATE = ("החוברת תכלול {item}. "
+                      "בקבלת ההגשה נבדק שהפריט קיים ותואם לנדרש.")
+
+# 3. Internal CAD layer identifiers that leaked into user-facing text.
+TECH_ID_REPLACEMENTS: dict[str, str] = {
+    "0_OPEN_SPACE": "שכבת המרחבים הפתוחים",
+    "SETBACK_0": "שכבת קווי הבניין",
+}
+
+_CHECKBOX = "☐"
+
+
+def apply_content_fixes(rows: list[dict]) -> None:
+    """Rewrite bodies that repeat the title, expand חלק ז checklist stubs,
+    and strip internal identifiers. Mutates rows in place; prints a
+    before/after report for review."""
+    dup_fixed, stub_fixed, tech_fixed = [], [], []
+
+    for r in rows:
+        title = r["title"]
+        body = r.get("body_text") or ""
+
+        # 1. body repeats the title
+        if title in DUPLICATE_BODY_REWRITES and norm(body) == norm(title):
+            r["body_text"] = DUPLICATE_BODY_REWRITES[title]
+            dup_fixed.append((title, body, r["body_text"]))
+            body = r["body_text"]
+
+        # 2. חלק ז checklist stubs
+        if r["section_key"] == "part_g" and body.lstrip().startswith(_CHECKBOX):
+            item = body.lstrip()[len(_CHECKBOX):].strip().rstrip(".")
+            r["body_text"] = CHECKLIST_TEMPLATE.format(item=item)
+            stub_fixed.append((title, body, r["body_text"]))
+            body = r["body_text"]
+
+        # 3. internal identifiers in either field
+        for field in ("title", "body_text"):
+            val = r.get(field) or ""
+            new = val
+            for tok, human in TECH_ID_REPLACEMENTS.items():
+                new = new.replace(tok, human)
+            # Any remaining CAPS_UNDERSCORE token is an unmapped leak - the
+            # Layer-0 gate will fail on it rather than let it reach Ellen.
+            if new != val:
+                r[field] = new
+                tech_fixed.append((title, field, val, new))
+
+    print(f"\nCONTENT SWEEP: {len(dup_fixed)} duplicate bodies rewritten, "
+          f"{len(stub_fixed)} checklist stubs expanded, "
+          f"{len(tech_fixed)} technical identifiers replaced")
+    for t, before, after in dup_fixed:
+        print(f"  [dup] {t}\n        before: {before}\n        after:  {after}")
+    for t, before, after in stub_fixed:
+        print(f"  [stub] {t}\n        before: {before}\n        after:  {after}")
+    for t, field, before, after in tech_fixed:
+        print(f"  [tech] {t} ({field})\n        before: {before}\n        after:  {after}")
+
+
 def main() -> None:
     d = docx.Document(DOC)
     sections: list[dict] = []
@@ -374,6 +479,13 @@ def main() -> None:
     if missing:
         print(f"FATAL: check_keys not matched to any row: {missing}", file=sys.stderr)
         sys.exit(1)
+
+    # v0.2.1 content-quality sweep. Applied HERE (not by hand on the JSON) so
+    # a re-extraction from the approved docx keeps the improvements. It runs
+    # AFTER check_key attachment on purpose: CHECK_MAP needles match the raw
+    # docx wording (including the "☐" checklist glyphs) that the sweep
+    # rewrites, so sweeping first silently breaks the numeric checks.
+    apply_content_fixes(rows)
 
     OUT.write_text(json.dumps({"sections": sections, "guidelines": rows},
                               ensure_ascii=False, indent=2), encoding="utf-8")

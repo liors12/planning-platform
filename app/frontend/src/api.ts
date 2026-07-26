@@ -1049,10 +1049,23 @@ export function attachmentReportUrl(attId: number): string {
   return `${SIDECAR_BASE}/attachments/${attId}/report-pdf`;
 }
 
+/** Render the attachment response report and open it in the OS default app.
+ * Never use `<a download>` for this: the packaged WebView2 shell blocks
+ * those navigations silently. */
+export async function openAttachmentReport(attId: number): Promise<void> {
+  await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/open-report`, {
+    method: "POST",
+  });
+}
+
 export async function createGuideline(body: {
   discipline_key: string;
   title: string;
   body_text: string;
+  /** v0.2.1: optional sub-category inside כללי. Reuses section_title, the
+   * same field the seed's source sections populate, so UI-added rows group
+   * alongside them with no extra schema. */
+  section_title?: string;
 }): Promise<GuidelineOut> {
   return jsonOrThrow<GuidelineOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/guidelines`, {
@@ -1101,4 +1114,11 @@ export async function guidelineHistory(gid: number): Promise<GuidelineOut[]> {
 
 export function guidelinesPdfUrl(): string {
   return `${SIDECAR_BASE}/guidelines/export-pdf`;
+}
+
+/** Render the guidelines book and open it in the OS default app. Never use
+ * `<a download>` for this: the packaged WebView2 shell blocks those
+ * navigations silently. */
+export async function openGuidelinesPdf(): Promise<void> {
+  await fetchOrThrow(`${SIDECAR_BASE}/guidelines/open-pdf`, { method: "POST" });
 }

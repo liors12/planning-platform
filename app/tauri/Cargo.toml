@@ -1,6 +1,6 @@
 [package]
 name = "planning-platform"
-version = "0.2.0"
+version = "0.2.1"
 description = "Municipal Compliance Platform for Ness Ziona"
 authors = ["Lior Levin"]
 edition = "2021"
