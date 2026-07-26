@@ -13,9 +13,12 @@ import { MaybeApiError } from "../components/ErrorNotice";
 
 // Global guidelines editor - city-wide submission rules (NOT project-keyed).
 // v0.2.0: PRIMARY grouping by canonical discipline (sticky nav + one
-// collapsible card per discipline); the source document section is shown
-// as muted metadata on each row. Editing creates version+1; Ellen can add
+// collapsible card per discipline). Editing creates version+1; Ellen can add
 // new guidelines (origin מינהלת) per discipline.
+// v0.2.2: rows show title, version and body only. The source section drives
+// the כללי sub-group headers but is no longer printed per row, and the
+// auto/manual chip is gone - that distinction belongs in findings output,
+// not in the rulebook.
 
 export function Guidelines() {
   const [rows, setRows] = useState<GuidelineOut[] | null>(null);
@@ -93,9 +96,6 @@ export function Guidelines() {
         <div className="guideline-main">
           <div className="guideline-title-line">
             <b>{g.title}</b>
-            <span className={`badge ${g.guideline_type === "checkable" ? "badge-auto" : "badge-manual"}`}>
-              {g.guideline_type === "checkable" ? "נבדקת אוטומטית" : "ידנית"}
-            </span>
             <span className="muted guideline-version"
                   title="מספר הגרסה עולה בכל עריכה; ההיסטוריה נשמרת">
               גרסה {g.version}
@@ -108,20 +108,24 @@ export function Guidelines() {
             </div>
           )}
           {g.body_text && <p className="muted guideline-body">{g.body_text}</p>}
-          {g.section_title && (
-            <p className="muted guideline-source-section">מקור: {g.section_title}</p>
-          )}
         </div>
         <div className="guideline-actions">
-          <button type="button" className="ghost-btn"
+          <button type="button" className="primary-btn"
                   data-testid={`guideline-edit-${g.id}`}
                   onClick={() => setEditing(g)}>
             עריכה
           </button>
-          <button type="button" className="ghost-btn"
+          <button type="button" className="icon-btn"
+                  aria-label="היסטוריית גרסאות"
+                  title="היסטוריית גרסאות"
                   data-testid={`guideline-history-${g.id}`}
                   onClick={() => setHistoryFor(g)}>
-            היסטוריה
+            {/* clock face - version history */}
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"
+                 fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7v5l3 2" strokeLinecap="round" />
+            </svg>
           </button>
         </div>
       </li>
