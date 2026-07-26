@@ -33,9 +33,12 @@ const VERDICT_HE: Record<string, string> = {
   pass: "תקין",
   fail: "נדרש תיקון",
   requires_review: "נדרשת בדיקה",
+  manual_review: "נדרשת בדיקה ידנית",
+  not_submitted: "לא הוגש",
 };
 const VERDICT_CLASS: Record<string, string> = {
   pass: "v-ok", fail: "v-fail", requires_review: "v-review",
+  manual_review: "v-review", not_submitted: "v-fail",
 };
 
 export function AttachmentsTab({ project }: { project: ProjectOut }) {

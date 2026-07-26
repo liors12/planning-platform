@@ -508,6 +508,82 @@ CHECKLIST_TITLE_FIXES: dict[str, str] = {
     "ניתוח שמש (21.12, 9": "ניתוח שמש",
 }
 
+# ── v0.2.2 status semantics: what CAN the engine say about each row? ─────────
+# Findings used to come back "נדרשת בדיקה" for everything, conflating "the
+# item is missing from the submission" with "I cannot judge this myself".
+# Ellen saw all-yellow and got no signal. Each row now declares its mode:
+#
+#   auto_detect   - the item leaves a detectable trace (a drawing label, a
+#                   titled sheet, a file property).
+#   manual        - professional judgment or coordination with city staff.
+#                   No amount of parsing decides it.
+#   needs_context - the engine can see the item but cannot judge it (a value
+#                   that must be compared against the תב"ע, a lead-in row
+#                   describing the structure of what follows).
+#
+# HOW THE MODE IS DERIVED - and the rule that governs this file:
+# the mode comes ONLY from structural facts about the row (its section, its
+# position, whether it carries a check_key). It must NEVER be derived from
+# the Hebrew wording of the title or body. The first cut of this classifier
+# read the prose, and the חלק ו tb"a rows silently became "manual" because a
+# readability rewrite phrased them "ייבדק מול" - meaning an editor changing
+# a guideline's wording would change how every future submission is judged
+# against it. tests/test_check_mode_structural.py pins this: reword a row
+# arbitrarily and the category must not move.
+
+# Per-section default. A section is a coherent kind of requirement, so the
+# section is the primary structural signal.
+SECTION_DEFAULT_MODE: dict[str, str] = {
+    "part_a": "auto_detect",     # file format + CAD file properties
+    "part_b": "auto_detect",     # booklet structure - titled sheets
+    "part_c": "auto_detect",     # per-plot markings - drawing labels
+    "part_d": "auto_detect",     # facade/roof markings
+    "part_e": "auto_detect",     # required tables - titled artefacts
+    "part_f": "needs_context",   # tb"a parameters: numeric comparisons the
+                                 # engine cannot perform (Q1)
+    "part_g": "auto_detect",     # intake checklist - presence of each item
+    "appendix_a": "manual",      # standards + reference lists + contacts
+}
+
+# Rows whose mode differs from their section default. Keyed by
+# (section_key, sort_order) - a STRUCTURAL identity that is stable under
+# rewording, and the same placement key the seed adoption logic already uses.
+# The trailing comment names the row for humans; it is documentation only and
+# is never read by the code.
+CHECK_MODE_OVERRIDES: dict[tuple[str, int], str] = {
+    # Coordination with city staff - decided by people, not by parsing.
+    ("part_c", 148): "manual",        # תיאום הנדסי לשלב ההיתר
+    ("part_d", 69): "manual",         # תיאום חומרי גמר וחיפוי
+    ("part_d", 70): "manual",         # חיפוי לפי נספח חומריות
+    # Lead-in rows: they describe the STRUCTURE of the rows that follow, so
+    # there is no single marker to look for.
+    ("part_b", 39): "needs_context",  # מבנה העמודים לכל תא שטח
+    ("part_c", 52): "needs_context",  # סימונים וכיתובים נדרשים בתכנית
+    ("part_e", 83): "needs_context",  # פירוט הטבלה לכל יחידת דיור
+    # Explanatory / conditional rows.
+    ("part_e", 86): "manual",         # מטרת טבלת התמהיל
+    ("part_b", 46): "manual",         # תאי שטח זהים
+}
+
+
+def classify_check_mode(row: dict) -> str:
+    """Declare what the engine can say about this row.
+
+    STRUCTURAL ONLY. Reads section_key, sort_order and check_key; never the
+    title or body text. See the module note above and
+    tests/test_check_mode_structural.py.
+    """
+    key = (row["section_key"], row.get("sort_order"))
+    if key in CHECK_MODE_OVERRIDES:
+        return CHECK_MODE_OVERRIDES[key]
+    # A numeric threshold means the item is both findable and measurable.
+    # The runtime still degrades to needs_context when it finds the item but
+    # cannot measure a value (see run_attachment_review).
+    if row.get("check_key"):
+        return "auto_detect"
+    return SECTION_DEFAULT_MODE.get(row["section_key"], "needs_context")
+
+
 _CHECKBOX = "☐"
 
 
@@ -838,6 +914,28 @@ def main() -> None:
     # docx wording (including the "☐" checklist glyphs) that the sweep
     # rewrites, so sweeping first silently breaks the numeric checks.
     apply_content_fixes(rows)
+
+    # v0.2.2: declare each row's check mode AFTER the readability pass, so
+    # classification reads the final wording Ellen sees.
+    import collections as _c
+    mode_counts: _c.Counter = _c.Counter()
+    for r in rows:
+        r["check_mode"] = classify_check_mode(r)
+        mode_counts[r["check_mode"]] += 1
+    # Overrides are keyed structurally, so the orphan check must be too: an
+    # override pointing at a (section, sort_order) that no longer exists means
+    # the docx moved and the row silently reverted to its section default.
+    orphan_modes = sorted(
+        set(CHECK_MODE_OVERRIDES)
+        - {(r["section_key"], r.get("sort_order")) for r in rows})
+    if orphan_modes:
+        print(f"FATAL: check-mode overrides matched no row: {orphan_modes}",
+              file=sys.stderr)
+        sys.exit(1)
+    print("\nCHECK MODES: " + ", ".join(
+        f"{k}={v}" for k, v in sorted(mode_counts.items())))
+    for r in rows:
+        print(f"  [{r['check_mode']:<13}] {r['section_key']:<10} {r['title']}")
 
     OUT.write_text(json.dumps({"sections": sections, "guidelines": rows},
                               ensure_ascii=False, indent=2), encoding="utf-8")

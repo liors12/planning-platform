@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -92,11 +93,11 @@ def _file_quality_checks(file_path: Path) -> list[dict]:
             import fitz  # noqa: PLC0415
             doc = fitz.open(file_path)
             pages = doc.page_count
-            text_len = sum(len(p.get_text()) for p in doc)
+            page_lens = [len(p.get_text().strip()) for p in doc]
             doc.close()
             out.append(_finding("FILE_PAGES", "מספר עמודים", "pass",
                                 f"הקובץ מכיל {pages} עמודים."))
-            if text_len < 50:
+            if not _has_usable_text(page_lens):
                 out.append(_finding("FILE_TEXT_LAYER", "שכבת טקסט", "requires_review",
                                     "לא אותרה שכבת טקסט קריאה - ייתכן שהקובץ סרוק. "
                                     "מומלץ להגיש PDF טקסטואלי."))
@@ -128,6 +129,222 @@ def _finding(code: str, name_he: str, verdict: str, notes_he: str,
     return f
 
 
+# ── v0.2.2 status semantics ──────────────────────────────────────────────────
+# "נדרשת בדיקה" used to be the answer to every unmet guideline, which told
+# Ellen nothing: a missing sheet and an un-judgeable design decision looked
+# identical. Each guideline now declares a check_mode (see
+# scripts/extract_guidelines_docx.py) and the verdict follows from it:
+#
+#   manual        → "נדרשת בדיקה ידנית"  (manual_review) - always
+#   needs_context → "נדרשת בדיקה"        (requires_review) - always
+#   auto_detect   → depends on what we find in the attachment:
+#       no marker evidence at all       → "לא הוגש"       (not_submitted)
+#       marker found, value under bar   → "נדרש תיקון"    (fail)
+#       marker found, nothing measurable→ "נדרשת בדיקה"   (requires_review)
+#
+# That last line is the case-1 fall-through: an auto-detectable item that IS
+# present but carries no measurable value degrades to needs_context behaviour
+# rather than inventing a pass or a failure. "לא הוגש" is reserved for ZERO
+# evidence; "נדרש תיקון" is reserved for a MEASURED value below threshold.
+
+# ── When presence detection is NOT allowed to run ────────────────────────────
+# Ellen routinely receives DWFX and CAD-exported PDFs whose annotations are
+# vector graphics, not text. Those files extract to little or no text, so
+# "I could not find this item" means "I cannot read this file", not "the
+# architect omitted it". Reporting "לא הוגש" there would accuse an architect
+# of omitting everything he actually submitted - the common case, not an edge
+# case. So: no usable text layer → presence detection does not run at all,
+# and every finding that would have been "לא הוגש" becomes "נדרשת בדיקה".
+#
+# THE RULE IS PER PAGE, NOT PER DOCUMENT.
+# A document-wide threshold is defeated by the exact file it exists to catch:
+# a real submission is ~60 CAD sheets, each carrying a title block (project,
+# tava, date, scale, sheet number) and nothing else as text. That is ~34
+# characters per page but ~2,000 document-wide, which clears any sane
+# per-document threshold and re-enables presence detection on a file whose
+# every annotation is vector. Measured on the 60-sheet fixture: 2,031 chars
+# total, 34 per page.
+#
+# MIN_TEXT_CHARS_PER_PAGE = 250. A title block, even a verbose one carrying
+# project name, address, tava number, date, scale, sheet number and a
+# drawn-by/checked-by pair, lands around 100-150 characters. A sheet with
+# genuine annotation - room labels, dimension strings, general notes -
+# reaches several hundred (the annotated fixture measures 635). 250 sits in
+# the gap, above any plausible title block and well below real annotation.
+#
+# READABLE_PAGE_RATIO = 0.5: the document counts as readable only when at
+# least half its pages clear the per-page bar - i.e. the MEDIAN page carries
+# real text. Presence detection searches the whole document, so if most pages
+# are unreadable then a missing marker says nothing about the submission.
+#
+# Both constants err deliberately toward suppression. Raising them suppresses
+# more, which costs a "נדרשת בדיקה" that a human resolves; lowering them
+# risks telling an architect he omitted work he submitted. The asymmetry is
+# not close, so when in doubt we suppress.
+MIN_TEXT_CHARS_PER_PAGE = 250
+READABLE_PAGE_RATIO = 0.5
+
+PARTIAL_TEXT_NOTICE_HE = (
+    "בחלק מעמודי הקובץ ({unreadable} מתוך {total}) לא אותר טקסט קריא, ולכן "
+    "בדיקת הימצאות הפריטים אינה מכסה אותם. סעיפים שלא אותרו מסומנים כטעונים "
+    "בדיקה ולא כחסרים, מכיוון שייתכן שהם מופיעים באותם עמודים."
+)
+
+NO_TEXT_NOTICE_HE = (
+    "לא ניתן היה לקרוא טקסט מהקובץ, ולכן בדיקת הימצאות הפריטים לא בוצעה. "
+    "הסעיפים מסומנים כטעונים בדיקה, ואין לראות בהם קביעה שפריט חסר. "
+    "ייתכן שהקובץ יוצא מתוכנת שרטוט ללא שכבת טקסט - מומלץ להגיש PDF טקסטואלי."
+)
+
+
+def _page_text_lengths(file_path: Path) -> list[int]:
+    """Extractable characters per page. Empty list when the file is not a
+    readable PDF at all."""
+    if file_path.suffix.lower() != ".pdf":
+        return []
+    try:
+        import fitz  # noqa: PLC0415
+        doc = fitz.open(file_path)
+        lengths = [len(p.get_text().strip()) for p in doc]
+        doc.close()
+        return lengths
+    except Exception:
+        return []
+
+
+def _page_census(page_lengths: list[int]) -> tuple[int, int]:
+    """(readable pages, unreadable pages) by the per-page bar."""
+    readable = sum(1 for n in page_lengths if n >= MIN_TEXT_CHARS_PER_PAGE)
+    return readable, len(page_lengths) - readable
+
+
+def _has_usable_text(page_lengths: list[int]) -> bool:
+    """Is the document readable ENOUGH to be worth scanning at all? Used for
+    the file-quality warning and to choose which notice to show. Detection
+    permission is a stricter test - see _detection_allowed."""
+    if not page_lengths:
+        return False
+    readable, _ = _page_census(page_lengths)
+    return readable / len(page_lengths) >= READABLE_PAGE_RATIO
+
+
+def _detection_allowed(page_lengths: list[int]) -> bool:
+    """"לא הוגש" requires that we could read EVERY page.
+
+    The ratio rule alone leaves a silent hole: a submission half-exported with
+    a text layer and half vector-only passes at 50%, suppression switches off,
+    and any item living only on the unreadable half is reported "לא הוגש" -
+    with nothing on screen to warn anyone. That is worse than the fully-vector
+    file, which at least announces itself with a notice.
+
+    The same reasoning that justifies suppression justifies this: if we cannot
+    read a page, a missing marker says nothing about what is drawn on it. We
+    genuinely do not know which items live on the unreadable sheets, so we
+    cannot claim absence for ANY of them.
+
+    The cost of this choice is that one unreadable sheet in a 60-sheet
+    submission downgrades every "לא הוגש" to "נדרשת בדיקה" - detection becomes
+    all-or-nothing. We accept that: the downgrade costs a check a human
+    resolves, while the alternative tells an architect he omitted work he
+    submitted, in a form that looks entirely credible. Only the second kind of
+    error damages trust in the tool.
+    """
+    if not page_lengths:
+        return False
+    _, unreadable = _page_census(page_lengths)
+    return unreadable == 0
+
+
+# Hebrew stopwords - too common to be evidence that an item is present.
+_STOPWORDS = {
+    "יש", "לא", "של", "על", "את", "כל", "או", "עם", "לפי", "בכל", "אל",
+    "מן", "אם", "גם", "רק", "בין", "תוך", "יהיה", "תהיה", "יוגש", "תוגש",
+    "יסומן", "יסומנו", "תסומן", "יצורף", "יוצג", "יוצגו", "נדרש", "נדרשת",
+    "החוברת", "התכנית", "בתכנית", "הקובץ", "לכל", "לפחות", "מ", "ב", "ה",
+}
+
+
+def _content_words(title: str) -> list[str]:
+    """Words from the title that could plausibly appear as a label in the
+    submission. Short words and stopwords carry no evidential weight."""
+    words = re.findall(r"[א-ת]{3,}", title)
+    return [w for w in words if w not in _STOPWORDS]
+
+
+def _extract_text(file_path: Path) -> str:
+    """All text in the attachment, lowercased-equivalent for Hebrew (no case).
+    Empty string when the file has no text layer - which is exactly the
+    blank-PDF case that must yield "לא הוגש", not "נדרשת בדיקה"."""
+    if file_path.suffix.lower() != ".pdf":
+        return ""
+    try:
+        import fitz  # noqa: PLC0415
+        doc = fitz.open(file_path)
+        text = " ".join(p.get_text() for p in doc)
+        doc.close()
+        return text
+    except Exception:
+        return ""
+
+
+def _marker_found(title: str, doc_text: str) -> bool:
+    """Is there ANY evidence this item appears in the submission? Deliberately
+    generous: one content word from the title is enough. A false "present"
+    downgrades to "נדרשת בדיקה" (honest), whereas a false "absent" would
+    accuse the architect of omitting something they submitted."""
+    if not doc_text:
+        return False
+    return any(w in doc_text for w in _content_words(title))
+
+
+def _guideline_finding(g, doc_text: str, text_ok: bool) -> dict:
+    """Verdict for one guideline against one attachment, per its check_mode.
+
+    text_ok=False means the file has no usable text layer, so presence
+    detection did not run and NO finding may claim "לא הוגש"."""
+    gd = g.to_dict()
+    cite = f'הנחיה: "{g.title}" (גרסה {g.version})'
+    mode = getattr(g, "check_mode", None) or "needs_context"
+    code = f"GUIDE_{g.id}"
+
+    if mode == "manual":
+        return _finding(code, g.title, "manual_review",
+                        f"סעיף זה נבדק בבדיקה ידנית של המינהלת. {cite}",
+                        guideline=gd)
+
+    if mode == "auto_detect":
+        if not text_ok:
+            # Suppressed: we cannot read the file, so absence proves nothing.
+            return _finding(
+                code, g.title, "requires_review",
+                f"לא בוצעה בדיקת הימצאות אוטומטית - לא נקרא טקסט מהקובץ. {cite}",
+                guideline=gd)
+        if not _marker_found(g.title, doc_text):
+            return _finding(code, g.title, "not_submitted",
+                            f"לא נמצא סימון או אזכור של הפריט בנספח. {cite}",
+                            guideline=gd)
+        # Present. Measurable?
+        if g.guideline_type == "checkable" and g.check_value is not None:
+            thr = f"{g.check_value:g} {g.unit or ''}".strip()
+            return _finding(
+                code, g.title, "requires_review",
+                f"הפריט נמצא בנספח, אך לא אותר ערך מדיד להשוואה. "
+                f"הסף הנדרש הוא {thr}. {cite}",
+                guideline=gd)
+        return _finding(code, g.title, "requires_review",
+                        f"הפריט נמצא בנספח ונדרשת בדיקה של התאמתו לנדרש. {cite}",
+                        guideline=gd)
+
+    # needs_context
+    if g.guideline_type == "checkable" and g.check_value is not None:
+        thr = f"{g.check_value:g} {g.unit or ''}".strip()
+        return _finding(code, g.title, "requires_review",
+                        f"נדרשת בדיקה מול הנספח. הסף הנדרש הוא {thr}. {cite}",
+                        guideline=gd)
+    return _finding(code, g.title, "requires_review",
+                    f"נדרשת בדיקה מול הנספח. {cite}", guideline=gd)
+
+
 def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     """Execute ONLY the mapped checks for this attachment's type."""
     full_mapping = _load_mapping(cfg)
@@ -156,20 +373,35 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
         and (g.section_title or "").strip() in always_on
     ]
 
+    # v0.2.2 status semantics: read the attachment ONCE, then let each
+    # guideline's declared check_mode decide what we are allowed to say.
+    doc_text = _extract_text(Path(att.file_path))
+    page_lengths = _page_text_lengths(Path(att.file_path))
+    readable_pages, unreadable_pages = _page_census(page_lengths)
+    text_ok = _detection_allowed(page_lengths)
+    mostly_readable = _has_usable_text(page_lengths)
+
+    # The notice leads the list so it is the first thing Ellen reads, on the
+    # screen and at the top of the דו"ח התייחסות.
+    notice_he = None
+    if not text_ok:
+        if mostly_readable and readable_pages:
+            # Mixed document: readable overall, but some sheets are vector.
+            notice_he = PARTIAL_TEXT_NOTICE_HE.format(
+                unreadable=unreadable_pages, total=len(page_lengths))
+            notice_title = "בדיקת הימצאות חלקית"
+        else:
+            notice_he = NO_TEXT_NOTICE_HE
+            notice_title = "בדיקת הימצאות לא בוצעה"
+        checks.append(_finding("NO_TEXT_LAYER_NOTICE", notice_title,
+                               "requires_review", notice_he))
+
     seen_ids = set()
     for g in own + extras + general_always:
         if g.id in seen_ids:
             continue
         seen_ids.add(g.id)
-        gd = g.to_dict()
-        cite = f'הנחיה: "{g.title}" (גרסה {g.version})'
-        if g.guideline_type == "checkable" and g.check_value is not None:
-            thr = f"{g.check_value:g}"
-            notes = (f'נדרשת בדיקה מול הנספח: הסף הנדרש הוא {thr} {g.unit or ""}. {cite}')
-        else:
-            notes = f'נדרשת בדיקה מול הנספח. {cite}'
-        checks.append(_finding(f"GUIDE_{g.id}", g.title, "requires_review", notes,
-                               guideline=gd))
+        checks.append(_guideline_finding(g, doc_text, text_ok))
 
     # 3. The type's named extra checks (learned cross-links).
     for c in mapping.get("extra_checks", []):
@@ -183,6 +415,10 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     return {
         "attachment_id": att.id,
         "discipline_key": att.discipline_key,
+        "text_layer_ok": text_ok,
+        "readable_pages": readable_pages,
+        "unreadable_pages": unreadable_pages,
+        "notice_he": notice_he,
         "reviewed_at": datetime.now(timezone.utc).isoformat(),
         "checks": checks,
     }
@@ -349,6 +585,8 @@ _VERDICT_HE = {
     "pass": "תקין",
     "fail": "נדרש תיקון",
     "requires_review": "נדרשת בדיקה",
+    "manual_review": "נדרשת בדיקה ידנית",
+    "not_submitted": "לא הוגש",
 }
 
 
@@ -363,6 +601,11 @@ def _build_attachment_report_html(att: Attachment, review: dict,
         f"גרסה {escape(att.version_string)} · {now_str}</div>",
         f"<h1>דו\"ח התייחסות לנספח {escape(label)} - גרסה {escape(att.version_string)}</h1>",
         f"<p class='meta'>הופק: {now_str}</p>",
+    ]
+    if review.get("notice_he"):
+        parts.append(
+            f"<p class='meta'><b>שימו לב:</b> {escape(review['notice_he'])}</p>")
+    parts += [
         "<h2>ממצאי הבדיקה</h2>",
         "<table><thead><tr><th>סעיף</th><th>מצב</th><th>פירוט</th></tr></thead><tbody>",
     ]

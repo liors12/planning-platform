@@ -30,7 +30,8 @@ jobs:
         run: |
           pip install --quiet pytest
           python -m pytest tests/test_no_emdash.py tests/test_jargon_lexicon.py \
-                           tests/test_no_download_anchor.py -q
+                           tests/test_no_download_anchor.py \
+                           tests/test_check_key_attachment.py -q
 
   ui-suite:
     runs-on: ubuntu-latest

@@ -1,5 +1,5 @@
 import { test, expect } from "./fixtures";
-import { MIN_PDF } from "./helpers";
+import { MIN_PDF, TITLE_BLOCK_ONLY_PDF, ANNOTATED_PDF, MIXED_PDF } from "./helpers";
 
 // v0.2.0 Phase 2f - attachments tab specs. All against the seeded pilot.
 
@@ -171,4 +171,125 @@ test("attachments: comment linkage + דוח התייחסות", async ({ page, re
   const buf = await rep.body();
   expect(buf.subarray(0, 4).toString("ascii")).toBe("%PDF");
   expect(buf.length).toBeGreaterThan(1000);
+});
+
+test("v0.2.2: no text layer SUPPRESSES לא הוגש entirely", async ({ page, request }) => {
+  // Ellen's common case: a DWFX or CAD-exported PDF whose annotations are
+  // vector graphics. We cannot read it, so "not found" would mean "I cannot
+  // read this file" - never "the architect omitted it". ZERO findings may
+  // say לא הוגש, and a notice must say why detection did not run.
+  await openAttachments(page);
+  await page.getByTestId("attachment-type").selectOption("sec-3-4");
+  await page.getByTestId("attachment-version").fill("v-notext");
+  await page.getByTestId("attachment-file").setInputFiles({
+    name: "vector-only.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
+  });
+  await page.getByTestId("attachment-upload-submit").click();
+
+  const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
+  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-notext").pop();
+  const card = page.getByTestId(`attachment-card-${att.id}`);
+  await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-run-review-${att.id}`).click();
+  await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
+
+  const review = await (await request.get(
+    `http://127.0.0.1:17321/attachments/${att.id}/review`)).json();
+  const notSubmitted = review.checks.filter(
+    (c: { verdict: string }) => c.verdict === "not_submitted");
+  expect(notSubmitted).toHaveLength(0);
+  expect(review.text_layer_ok).toBe(false);
+  expect(review.notice_he).toContain("לא בוצעה");
+  // The notice leads the findings list.
+  expect(review.checks[0].rule_code).toBe("ATTACH_NO_TEXT_LAYER_NOTICE");
+});
+
+test("v0.2.2: 60 sheets of title blocks only - ZERO לא הוגש", async ({ page, request }) => {
+  // The case that broke the first threshold. A real submission is ~60 CAD
+  // sheets; each carries a title block and nothing else as text. Document-wide
+  // that is ~2000 characters, which passes ANY per-document threshold and
+  // re-enables presence detection on a file we cannot read. Per page it is
+  // ~34 characters. Readability must be judged PER PAGE.
+  await openAttachments(page);
+  await page.getByTestId("attachment-type").selectOption("sec-3-4");
+  await page.getByTestId("attachment-version").fill("v-titleblocks");
+  await page.getByTestId("attachment-file").setInputFiles({
+    name: "sheets.pdf", mimeType: "application/pdf", buffer: TITLE_BLOCK_ONLY_PDF,
+  });
+  await page.getByTestId("attachment-upload-submit").click();
+
+  const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
+  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-titleblocks").pop();
+  const card = page.getByTestId(`attachment-card-${att.id}`);
+  await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-run-review-${att.id}`).click();
+  await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
+
+  const review = await (await request.get(
+    `http://127.0.0.1:17321/attachments/${att.id}/review`)).json();
+  const notSubmitted = review.checks.filter(
+    (c: { verdict: string }) => c.verdict === "not_submitted");
+  expect(notSubmitted).toHaveLength(0);
+  expect(review.text_layer_ok).toBe(false);
+});
+
+test("v0.2.2: densely annotated PDF with no matching markers yields לא הוגש", async ({ page, request }) => {
+  // The other half: when pages carry real annotation text (~635 chars each),
+  // the document IS readable and absence of every marker is real evidence.
+  // Without this the suppression could be satisfied by never emitting לא הוגש.
+  await openAttachments(page);
+  await page.getByTestId("attachment-type").selectOption("sec-3-4");
+  await page.getByTestId("attachment-version").fill("v-annotated");
+  await page.getByTestId("attachment-file").setInputFiles({
+    name: "annotated.pdf", mimeType: "application/pdf", buffer: ANNOTATED_PDF,
+  });
+  await page.getByTestId("attachment-upload-submit").click();
+
+  const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
+  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-annotated").pop();
+  const card = page.getByTestId(`attachment-card-${att.id}`);
+  await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-run-review-${att.id}`).click();
+  await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
+
+  const review = await (await request.get(
+    `http://127.0.0.1:17321/attachments/${att.id}/review`)).json();
+  expect(review.text_layer_ok).toBe(true);
+  const guideline = review.checks.filter(
+    (c: { guideline_id?: number }) => c.guideline_id !== undefined);
+  const notSubmitted = guideline.filter(
+    (c: { verdict: string }) => c.verdict === "not_submitted").length;
+  expect(guideline.length).toBeGreaterThan(3);
+  expect(notSubmitted).toBeGreaterThan(guideline.length / 2);
+});
+
+test("v0.2.2: MIXED document - readable overall, some vector sheets", async ({ page, request }) => {
+  // The silent case. 4 annotated sheets + 4 title-block sheets clears the 0.5
+  // ratio, so the ratio rule alone would switch suppression off and report
+  // לא הוגש for anything living on the vector half - with nothing on screen
+  // to warn Ellen. ZERO לא הוגש, and a notice naming the page count.
+  await openAttachments(page);
+  await page.getByTestId("attachment-type").selectOption("sec-3-4");
+  await page.getByTestId("attachment-version").fill("v-mixed");
+  await page.getByTestId("attachment-file").setInputFiles({
+    name: "mixed.pdf", mimeType: "application/pdf", buffer: MIXED_PDF,
+  });
+  await page.getByTestId("attachment-upload-submit").click();
+
+  const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
+  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-mixed").pop();
+  const card = page.getByTestId(`attachment-card-${att.id}`);
+  await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-run-review-${att.id}`).click();
+  await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
+
+  const review = await (await request.get(
+    `http://127.0.0.1:17321/attachments/${att.id}/review`)).json();
+  expect(review.checks.filter((c: { verdict: string }) => c.verdict === "not_submitted"))
+    .toHaveLength(0);
+  // The census is reported, and the notice says how many sheets were skipped.
+  expect(review.readable_pages).toBe(4);
+  expect(review.unreadable_pages).toBe(4);
+  expect(review.notice_he).toContain("4 מתוך 8");
+  expect(review.checks[0].rule_code).toBe("ATTACH_NO_TEXT_LAYER_NOTICE");
 });

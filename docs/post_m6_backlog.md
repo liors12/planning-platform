@@ -289,3 +289,205 @@ During Phase 7.1 implementation, the following data quality issues were found in
 - **Plot 10 AREA ATTRIB = 1512.50** but polygon area = 1655.01 (consistent with takanon schema). Likely pre-revision stale attribute.
 
 These do not affect the audit pipeline (we use polygon-derived geometry as authoritative). They are worth flagging to the planning authority's CAD team for source data correction in their next tashrit revision cycle. See `data/projects/407-1048248/cad_attribute_discrepancies.json` for the full structured log.
+
+---
+
+## v0.2.2 deferred items
+
+### B-11: calibrate the attachment presence-detection match threshold
+
+`_marker_found` in `app/sidecar/sidecar/attachments.py` currently declares an
+item "present" if ANY single content word from the guideline title appears in
+the attachment's text. On a text-bearing PDF that is too loose: a submission
+mentioning "תכנית" anywhere satisfies every guideline whose title starts with
+"תכנית", so real omissions get downgraded from "לא הוגש" to "נדרשת בדיקה".
+
+Deliberately NOT tuned in v0.2.2 - the architecture (structural check_mode +
+no-text-layer suppression) is settled, and the match rule is calibration on
+top of it. Tuning it well needs a corpus of real submissions, ideally with
+Ellen labelling a sample of items as present/absent so precision and recall
+can be measured rather than guessed.
+
+Direction when picked up: require a proportion of the title's content words
+rather than one, weight rarer words higher, and consider matching against
+drawing-label text specifically rather than the whole page text. Note that
+loosening errs toward "נדרשת בדיקה" (safe) and tightening errs toward
+"לא הוגש" (accusatory), so calibration should be biased toward the former.
+
+### B-12: image-coverage page classification for attachment presence detection
+
+DEFERRED from v0.2.2, not rejected. v0.2.2 ships the all-or-nothing rule:
+if ANY page falls below MIN_TEXT_CHARS_PER_PAGE (250), presence detection is
+suppressed and no finding may say "לא הוגש". That is never wrong - it costs
+manual checks and nothing else - but on a booklet-shaped attachment it makes
+"לא הוגש" unreachable.
+
+Measured on the real 63-page תכנית עיצוב (24.3): 40 readable pages, 23 below
+the bar, ratio 63%. Detection suppressed. Notably NO page has zero text - the
+23 sub-threshold pages carry 33-217 chars each, i.e. renderings with a caption
+or title block. A "zero text" rule would catch none of them.
+
+Proposed direction: classify sub-threshold pages by raster coverage, excluding
+legitimately image-only pages from the denominator, so a rendering does not
+count as an unreadable sheet. THE PROPOSAL AS DRAFTED DOES NOT WORK - measured
+below.
+
+Full per-page data for the 23 sub-threshold pages (page, chars, raster
+coverage as a fraction of page area, embedded image count), with the
+classification a 0.35 coverage bar would give:
+
+    page  chars  img_cover  imgs   class(>=0.35)
+       1     56      0.803     7   IMAGE-ONLY
+       3     77      0.525     7   IMAGE-ONLY
+       4     56      0.686     7   IMAGE-ONLY
+       5     56      0.649     7   IMAGE-ONLY
+       9    182      0.367     7   IMAGE-ONLY
+      10     62      0.336     8   UNREADABLE   <-- misses by 0.014
+      11     44      0.462     8   IMAGE-ONLY
+      16     53      0.488     9   IMAGE-ONLY
+      17     53      0.488     9   IMAGE-ONLY
+      18     44      0.489     9   IMAGE-ONLY
+      19     53      0.489     9   IMAGE-ONLY
+      20     86      0.588    11   IMAGE-ONLY
+      21     98      0.604    13   IMAGE-ONLY
+      22    149      0.557    12   IMAGE-ONLY
+      23     93      0.420    11   IMAGE-ONLY
+      24    175      0.413     9   IMAGE-ONLY
+      31     91      0.491     9   IMAGE-ONLY
+      32    101      0.491     9   IMAGE-ONLY
+      33    139      0.492     9   IMAGE-ONLY
+      34    159      0.368     9   IMAGE-ONLY
+      39    217      0.542     9   IMAGE-ONLY
+      46    197      0.092     8   UNREADABLE   <-- genuinely low coverage
+      63     33      0.756     7   IMAGE-ONLY
+
+UNREADABLE under the proposed rule: 2 (pages 10 and 46). Detection would
+STILL be suppressed on the real booklet, so the proposal does not solve the
+problem it was designed for.
+
+Open questions to settle before implementing:
+
+  1. Page 10 fails at 0.336 against a 0.35 bar - a 1.4% margin deciding
+     whether an entire document gets detection. Not a rule; a coin toss.
+  2. Page 46 (197 chars, 0.092 coverage, 8 images) does not fit either
+     category: too much text for a rendering, too little raster for a photo
+     page, too little text to read. Suspected THIRD page class - possibly a
+     diagram/vector figure with a caption. The two-way image-vs-vector split
+     may not describe the real page population at all. Characterise the
+     classes from real files before choosing any threshold.
+  3. Every constant in this area so far (200 doc-wide, then 250/page + 0.5
+     ratio, then 0.35 coverage) was calibrated on self-authored fixtures or a
+     single file and broke on first contact with real data. Do not pick the
+     next number from one file either.
+
+Also recorded: an earlier report of this analysis claimed the 23 pages were
+"all >= 0.37x coverage -> 0 unreadable" while simultaneously quoting page 46
+at 0.09x. That was a sampling error (13 of 23 pages measured, conclusion
+generalised from the sample). The table above is the complete measurement and
+supersedes it.
+
+Needed to proceed: the פיתוח וכבישים and מבני ציבור attachments, plus any
+further real נספחים, to characterise page classes across more than one file.
+
+### B-13: check_key needles and thresholds are bound by Hebrew prose, not structure
+
+PRIORITY: LOWERED (was near-term). B-13 hardens the BINDING side of a mechanism
+whose INPUT side is empty - see B-14: no measure_key is populated for any of the
+7 keys, so every numeric check returns "נדרשת בדיקה" regardless of how robustly
+the key is bound. Fixing the binding changes nothing Ellen sees until measured
+values exist. Still correct and still worth doing; no longer urgent.
+
+Two coupled defects, same root cause as the v0.2.2 classifier bug: machine
+behaviour derived from editable Hebrew text instead of structural identity.
+
+(a) CHECK_MAP NEEDLES ARE LITERAL STRINGS.
+scripts/extract_guidelines_docx.py attaches the 7 engine check_keys by
+searching each row's raw text for a hard-coded Hebrew substring. Audited
+against the CURRENT (post-v0.2.2-readability) row text, 3 of 7 needles no
+longer appear anywhere in their row:
+
+    check_key                      needle                        matches now?
+    glass_railing_min_height_cm    "גובה מעקה 105"                NO  (dead)
+    laundry_screen_width_m         "מידות 1.8×1.5"                NO  (dead)
+    path_main_min_m                "שביל הולכי רגל 3 מ"           NO  (dead)
+    glazing_reflectivity_max_pct   "רפלקטיביות זיגוג מקסימלית 70%" yes
+    laundry_screen_height_m        "מסתורי כביסה - מידות וחומר"    yes
+    gas_tank_setback_min_m         "צובר גז"                      yes
+    path_secondary_min_m           "☐ שצ”פ"                       NO - absent from
+                                     BOTH pre- and post-v0.2.2 text; the v0.2.1
+                                     checklist sweep already stripped the ☐ glyph
+
+Bindings survive today ONLY because attachment runs before the content
+sweeps in main(). Reverse those steps and 3-4 keys vanish silently - no
+error, no failing test, just guidelines that stop being checkable. An
+ordering comment is the only thing protecting this.
+
+PROPOSED (not implemented): key needles structurally, as
+(section_key, sort_order), exactly like CHECK_MODE_OVERRIDES. sort_order is
+derived from docx document order, is stable under any rewording, and is
+already the placement key used by the seed adoption logic. The Hebrew
+substring would drop to a human-readable comment. Editing a guideline's
+wording could then never break its numeric check. Requires a re-extraction
+to confirm the (section, sort_order) pairs, and a gate asserting all 7 keys
+attach.
+
+(b) THRESHOLDS ARE DUPLICATED IN PROSE.
+5 of the 7 checkable rows state the threshold in BOTH check_value and the
+body text:
+
+    part_b/50   path_main_min_m               3.0    "3 מ' לשביל הולכי רגל"
+    part_c/61   gas_tank_setback_min_m        2.0    "2 מ' לפחות"
+    part_c/63   laundry_screen_width_m        1.8    "1.8 על 1.5 מ'"
+    part_d/73   glass_railing_min_height_cm   105.0  "105 ס\"מ"
+    part_d/76   glazing_reflectivity_max_pct  70.0   "70%"
+
+The other 2 (part_d/74 laundry height, part_g/126 path secondary) carry the
+value only in check_value - they are "partner" keys riding on a row whose
+prose names a different number, which is its own inconsistency.
+
+When Ellen edits a threshold in the guidelines screen, check_value changes
+and the prose does not. The row then displays one number and enforces
+another, with nothing flagging the divergence. Needs either a render-time
+substitution (body text references the field rather than repeating it) or a
+gate that fails when check_value and the number in prose disagree.
+
+
+### B-14: the 7 numeric guideline checks have no input (product finding)
+
+NOT A CODE DEFECT. The checks are bound, they execute, and they read the
+threshold live from the guideline row so Ellen's edits take effect. What is
+missing is the measured value to compare against.
+
+Every numeric check reads extracts["plan_wide"][measure_key]. In the pilot's
+audit_outputs/407-1048248/v24.3/extracts.json, NONE of the 7 measure_keys is
+present:
+
+    check_key                        measure_key                  present?
+    gas_tank_setback_min_m           gas_tank_setback_m           NO
+    glass_railing_min_height_cm      glass_railing_height_cm      NO
+    glazing_reflectivity_max_pct     glazing_reflectivity_pct     NO
+    laundry_screen_height_m          laundry_screen_height_m      NO
+    laundry_screen_width_m           laundry_screen_width_m       NO
+    path_main_min_m                  path_main_width_m            NO
+    path_secondary_min_m             path_secondary_width_m       NO
+
+    PRESENT: 0 of 7
+
+plan_wide currently holds a disjoint set serving other checks:
+infiltration_area_percent, infiltration_area_total_sqm, small_apartments_count,
+small_apartments_percent_calculated, stormwater_retention_cubic_m,
+total_units_proposed.
+
+CONSEQUENCE IN THE SHIPPED BUILD: all 7 numeric guideline checks return
+"נדרשת בדיקה" with the threshold cited. Verified by direct invocation of
+run_guideline_checks - with a measured value supplied the check correctly
+returns fail (2.0 < 2.5) or pass (3.0 >= 2.5); with none it returns
+requires_review citing "הסף הנדרש הוא 2.5 מ' לפחות".
+
+The behaviour is HONEST and the citation is useful to Ellen - it tells her the
+current threshold and that she must verify it herself. The gap is that nothing
+feeds it, so these are guided manual checks, not automated verdicts. Worth
+knowing when weighing further investment in the binding machinery (B-13).
+
+extracts.json is hand-maintained today. No extraction pipeline is proposed here
+- this entry records the finding only.

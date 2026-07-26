@@ -204,7 +204,8 @@ def initialize(engine: Engine) -> dict:
             for col, decl in (("section_key", "TEXT"), ("section_title", "TEXT"),
                               ("sort_order", "INTEGER"),
                               ("discipline_key", "TEXT"),   # v0.2.0
-                              ("origin", "TEXT")):          # v0.2.0 (מינהלת additions)
+                              ("origin", "TEXT"),          # v0.2.0 (מינהלת additions)
+                              ("check_mode", "TEXT")):     # v0.2.2 status semantics
                 if col not in g_cols:
                     conn.execute(text(f"ALTER TABLE guidelines ADD COLUMN {col} {decl}"))
                     log.info("migration: added %s to guidelines", col)
@@ -345,6 +346,7 @@ def seed_guidelines(engine: Engine) -> None:
                 g.section_title = row["section_title"]
                 g.sort_order = row["sort_order"]
                 g.discipline_key = row.get("discipline_key")
+                g.check_mode = row.get("check_mode")
                 if g.origin is None:
                     g.origin = row.get("origin")
                 if g.version == 1 and (g.edited_by or "seed") == "seed":
@@ -373,6 +375,7 @@ def seed_guidelines(engine: Engine) -> None:
                 sort_order=row["sort_order"],
                 discipline_key=row.get("discipline_key"),
                 origin=row.get("origin"),
+                check_mode=row.get("check_mode"),
             ))
             inserted += 1
 
@@ -413,11 +416,25 @@ def seed_guidelines(engine: Engine) -> None:
                 g.body_text = src.get("body_text")
                 body_refreshed += 1
 
+        # v0.2.2: backfill check_mode on existing installs. Unlike the body
+        # refresh this applies to EVERY active row regardless of version -
+        # check_mode is not user-authored content, it is a machine-derived
+        # capability declaration, so Ellen's edits are not at stake.
+        mode_backfilled = 0
+        for g in existing:
+            if not g.is_active:
+                continue
+            src = by_place.get((g.section_key, g.sort_order))
+            want = (src or {}).get("check_mode")
+            if want and g.check_mode != want:
+                g.check_mode = want
+                mode_backfilled += 1
+
         sess.commit()
         if (inserted or adopted or superseded or part_h_removed or backfilled
-                or body_refreshed):
+                or body_refreshed or mode_backfilled):
             log.info("guidelines seed: %d inserted, %d adopted, %d superseded, "
                      "%d part_h deactivated, %d discipline backfilled, "
-                     "%d bodies refreshed",
+                     "%d bodies refreshed, %d check_mode backfilled",
                      inserted, adopted, superseded, part_h_removed, backfilled,
-                     body_refreshed)
+                     body_refreshed, mode_backfilled)
