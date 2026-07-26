@@ -1,5 +1,13 @@
 {
   "_comment": "v0.2.0 attachment check mapping. Default for every type: run the guidelines tagged with ITS discipline_key. extra_guideline_disciplines pulls in additional disciplines' guidelines (cross-links); extra_checks are named review items with a Hebrew instruction, optionally citing (cross_cite) another discipline in the finding text. Editable data - the review runner reads this file from the data dir.",
+  "_comment_general_subgroups": "v0.2.1. The כללי discipline is split into sub-groups by source document section. always_on_attachments sub-groups run on EVERY attachment type (a file-format rule applies to any sheet you hand in), merged with the built-in file-quality checks without duplicates. submission_only sub-groups describe the full submission booklet and must NEVER run on a single attachment.",
+  "general_subgroups": {
+    "always_on_attachments": ["חלק א - פורמט קבצים"],
+    "submission_only": [
+      "חלק ב - מבנה החוברת הראשית",
+      "חלק ז - רשימת בדיקה למינהלת (קבלת ההגשה)"
+    ]
+  },
   "types": {
     "sec-3-5": {
       "extra_checks": [

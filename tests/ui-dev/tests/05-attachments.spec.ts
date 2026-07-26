@@ -45,6 +45,41 @@ test("attachments: mapped-only review - traffic checks in, gan-yard out", async 
   await expect(review).toContainText("פורמט קובץ");
 });
 
+test("attachments v0.2.1: כללי format sub-group runs, booklet sub-group does not",
+  async ({ page, request }) => {
+  await openAttachments(page);
+  await uploadTraffic(page);
+  const card = page.locator('[data-testid^="attachment-card-"]').first();
+  await card.locator('[data-testid^="attachment-run-review-"]').click();
+  await expect(card.locator('[data-testid^="attachment-review-"]')).toBeVisible();
+
+  const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
+  const review = await (await request.get(
+    `http://127.0.0.1:17321/attachments/${atts[0].id}/review`)).json();
+  // Match on rule_code (GUIDE_<id>), NOT on title: titles legitimately repeat
+  // across sub-groups (e.g. "חתכים" is both a required CAD file in חלק א and
+  // a booklet section in חלק ב), so a title comparison reports false leaks.
+  const codes: string[] = review.checks.map((c: { rule_code: string }) => c.rule_code);
+
+  // Pull the real sub-group membership from the API so the spec cannot drift
+  // from the seed.
+  const rows = await (await request.get("http://127.0.0.1:17321/guidelines")).json();
+  const idsInSub = (section: string) => rows
+    .filter((g: { discipline_key: string; section_title: string | null }) =>
+      g.discipline_key === "general" && (g.section_title || "").startsWith(section))
+    .map((g: { id: number }) => `ATTACH_GUIDE_${g.id}`);
+
+  const formatCodes = idsInSub("חלק א");
+  const bookletCodes = idsInSub("חלק ב");
+  expect(formatCodes.length).toBeGreaterThan(0);
+  expect(bookletCodes.length).toBeGreaterThan(0);
+
+  // Format rules apply to any sheet you hand in - all of them.
+  expect(codes).toEqual(expect.arrayContaining(formatCodes));
+  // ...booklet-structure rules describe the whole submission and must not.
+  for (const c of bookletCodes) expect(codes).not.toContain(c);
+});
+
 test("attachments: revision auto-runs the review", async ({ page, request }) => {
   // The DB persists across specs in one invocation - count relatively.
   // The baseline comes from the API (the DOM count races the initial fetch).
@@ -123,8 +158,11 @@ test("attachments: comment linkage + דוח התייחסות", async ({ page, re
     (r) => /\/attachments\/\d+\/open-report$/.test(r.url()) && r.method() === "POST",
   );
   await page.getByTestId("tab-attachments").click();
-  await card.locator('[data-testid^="attachment-report-"]').click();
+  const reportBtn = card.locator('[data-testid^="attachment-report-"]');
+  await reportBtn.click();
   expect((await (await reportCall).response())?.status()).toBe(204);
+  await expect(reportBtn).toHaveAttribute("data-pdf-state", "opened");
+  await expect(reportBtn).toContainText("הקובץ נפתח");
 
   // ...and that report really is a PDF including the linked comment.
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();

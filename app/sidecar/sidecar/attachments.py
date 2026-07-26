@@ -130,7 +130,10 @@ def _finding(code: str, name_he: str, verdict: str, notes_he: str,
 
 def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     """Execute ONLY the mapped checks for this attachment's type."""
-    mapping = _load_mapping(cfg).get("types", {}).get(att.discipline_key, {})
+    full_mapping = _load_mapping(cfg)
+    mapping = full_mapping.get("types", {}).get(att.discipline_key, {})
+    subgroup_cfg = full_mapping.get("general_subgroups", {})
+    always_on = set(subgroup_cfg.get("always_on_attachments", []))
     checks: list[dict] = []
 
     with Session(engine) as sess:
@@ -144,8 +147,20 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     extra_keys = set(mapping.get("extra_guideline_check_keys", []))
     extras = [g for g in active
               if g.check_key in extra_keys and g.discipline_key != att.discipline_key]
+    # 3. v0.2.1: כללי sub-groups marked always_on_attachments (file formats)
+    # apply to every attachment type. The booklet-structure and checklist
+    # sub-groups are submission-only and deliberately never reach here.
+    general_always = [
+        g for g in active
+        if g.discipline_key == "general"
+        and (g.section_title or "").strip() in always_on
+    ]
 
-    for g in own + extras:
+    seen_ids = set()
+    for g in own + extras + general_always:
+        if g.id in seen_ids:
+            continue
+        seen_ids.add(g.id)
         gd = g.to_dict()
         cite = f'הנחיה: "{g.title}" (גרסה {g.version})'
         if g.guideline_type == "checkable" and g.check_value is not None:

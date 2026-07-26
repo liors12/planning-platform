@@ -63,6 +63,10 @@ class GuidelineCreateIn(BaseModel):
     discipline_key: str
     title: str
     body_text: str
+    # v0.2.1: optional sub-category inside כללי. Stored in section_title -
+    # the same field the seed's source sections use - so UI-added rows group
+    # alongside them in both the screen and the PDF with no schema change.
+    section_title: Optional[str] = None
 
 
 import re as _re
@@ -144,6 +148,11 @@ def make_router(engine: Engine, cfg) -> APIRouter:
         if len(text_body) < 10:
             raise HTTPException(status_code=422,
                                 detail="נוסח ההנחיה חייב להכיל לפחות 10 תווים")
+        # Sub-categories are a כללי-only affordance; ignore the field
+        # elsewhere rather than 422, so the UI can send it unconditionally.
+        sub_category = None
+        if body.discipline_key == "general" and body.section_title:
+            sub_category = _normalize_dashes(body.section_title.strip()) or None
         with _session() as sess:
             # Append at the end of the global order - grouping is by
             # discipline, so within its discipline card it lands last.
@@ -159,7 +168,7 @@ def make_router(engine: Engine, cfg) -> APIRouter:
                 edited_by="user",
                 edited_at=datetime.now(timezone.utc),
                 section_key=None,
-                section_title=None,
+                section_title=sub_category,
                 sort_order=max_sort + 1,
                 discipline_key=body.discipline_key,
                 origin="מינהלת",
@@ -296,6 +305,24 @@ def _dash(s: str) -> str:
     return s.replace("—", "-").replace("–", "-")
 
 
+AUTHORITY_SUBGROUP = "הנחיות מינהלת"
+
+
+def _sub_groups(items: list[dict]) -> list[tuple[str, list[dict]]]:
+    """Split כללי by source document section, in first-appearance order
+    (which is seed sort_order, i.e. document order). Rows with no source
+    section - authority additions - collect last under הנחיות מינהלת.
+
+    Shared shape with the screen (Guidelines.tsx subGroupsOf); the two must
+    agree or the PDF stops matching what Ellen just read.
+    """
+    groups: dict[str, list[dict]] = {}
+    for g in items:
+        key = (g.get("section_title") or "").strip() or AUTHORITY_SUBGROUP
+        groups.setdefault(key, []).append(g)
+    return sorted(groups.items(), key=lambda kv: kv[0] == AUTHORITY_SUBGROUP)
+
+
 def _build_guidelines_html(rows: list[dict]) -> str:
     from html import escape
 
@@ -324,8 +351,7 @@ def _build_guidelines_html(rows: list[dict]) -> str:
         "<th>הנחיה</th><th>תיאור</th><th>סוג בדיקה</th><th>ערך נדרש</th><th>גרסה</th>"
         "</tr></thead>"
     )
-    for disc, items in by_discipline.items():
-        parts.append(f"<h2>{escape(disc)}</h2>")
+    def _emit_table(items: list[dict]) -> None:
         parts.append(f"<table>{header}<tbody>")
         for g in items:
             checkable = g["guideline_type"] == "checkable"
@@ -345,6 +371,21 @@ def _build_guidelines_html(rows: list[dict]) -> str:
                 "</tr>"
             )
         parts.append("</tbody></table>")
+
+    for disc, items in by_discipline.items():
+        parts.append(f"<h2>{escape(disc)}</h2>")
+        if disc == "כללי":
+            # v0.2.1: כללי carries the whole rulebook, so it gets one
+            # sub-heading per source section (mirrors the screen). Authority
+            # rows have no source section and land in "הנחיות מינהלת" last.
+            for sub_title, sub_items in _sub_groups(items):
+                parts.append(
+                    f"<h3>{escape(sub_title)} "
+                    f"<span class='meta'>({len(sub_items)} הנחיות)</span></h3>"
+                )
+                _emit_table(sub_items)
+        else:
+            _emit_table(items)
 
     parts.append("</body></html>")
     return "\n".join(parts)

@@ -127,6 +127,10 @@ function AttachmentCard({
 }: { att: PlanAttachmentOut; typeLabel: string; onChanged: () => void }) {
   const [review, setReview] = useState<AttachmentReview | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reportState, setReportState] =
+    useState<"idle" | "working" | "opened">("idle");
+  // The card has one error slot; the title tells Ellen which action failed.
+  const [errTitle, setErrTitle] = useState("לא ניתן להשלים את הפעולה");
   const [err, setErr] = useState<string | null>(null);
   const revisionRef = useRef<HTMLInputElement>(null);
 
@@ -160,11 +164,21 @@ function AttachmentCard({
     setBusy(false);
   }
 
+  // Same three-state story as the guidelines PDF button: the file is
+  // generated then opened by the OS, so the button must say so.
   async function onReport() {
-    setBusy(true);
-    try { await openAttachmentReport(att.id); setErr(null); }
-    catch (e) { setErr(String(e)); }
-    setBusy(false);
+    if (reportState === "working") return;
+    setReportState("working");
+    setErr(null);
+    try {
+      await openAttachmentReport(att.id);
+      setReportState("opened");
+      window.setTimeout(() => setReportState("idle"), 4000);
+    } catch (e) {
+      setErrTitle("לא ניתן להפיק את הקובץ");
+      setErr(String(e));
+      setReportState("idle");
+    }
   }
 
   async function onStatus(s: PlanAttachmentOut["status"]) {
@@ -209,15 +223,19 @@ function AttachmentCard({
                  data-testid={`attachment-revision-${att.id}`} />
         </label>
         {att.has_review && (
-          <button type="button" className="ghost-btn" disabled={busy}
+          <button type="button" className="ghost-btn"
+                  disabled={busy || reportState === "working"}
+                  data-pdf-state={reportState}
                   data-testid={`attachment-report-${att.id}`}
                   onClick={onReport}>
-            הפיקי דו"ח התייחסות
+            {reportState === "working" && "מכינה את הקובץ..."}
+            {reportState === "opened" && "הקובץ נפתח"}
+            {reportState === "idle" && 'הפיקי דו"ח התייחסות'}
           </button>
         )}
       </div>
 
-      {err && <MaybeApiError error={err} title="לא ניתן להשלים את הפעולה" />}
+      {err && <MaybeApiError error={err} title={errTitle} />}
 
       {review && (
         <ul className="attachment-review-list"
