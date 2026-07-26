@@ -20,7 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Response, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -291,8 +291,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             sess.refresh(att)
             return AttachmentOut(**att.to_dict())
 
-    @router.get("/attachments/{att_id}/report-pdf")
-    def report_pdf(att_id: int):
+    def _build_attachment_report_pdf(att_id: int) -> bytes:
         from .guidelines import _render_pdf
         with _session() as sess:
             att = sess.get(Attachment, att_id)
@@ -306,11 +305,27 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                 .where(DisciplineComment.attachment_id == att.id)
             ).scalars().all()
             html = _build_attachment_report_html(att, review, comments)
-        pdf = _render_pdf(html)
+        return _render_pdf(html)
+
+    @router.get("/attachments/{att_id}/report-pdf")
+    def report_pdf(att_id: int):
         import io
+        pdf = _build_attachment_report_pdf(att_id)
         return StreamingResponse(io.BytesIO(pdf), media_type="application/pdf",
                                  headers={"Content-Disposition":
                                           'attachment; filename="attachment_report.pdf"'})
+
+    # ── POST /attachments/{id}/open-report ───────────────────────────────────
+    # Same reason as guidelines/open-pdf: the packaged WebView2 shell blocks
+    # `<a download>`, so the sidecar writes the file and the OS opens it.
+    @router.post("/attachments/{att_id}/open-report", status_code=204)
+    def open_attachment_report(att_id: int):
+        from .os_open import exports_dir, open_in_default_app
+        pdf = _build_attachment_report_pdf(att_id)
+        path = exports_dir(cfg) / f"attachment_{att_id}_report.pdf"
+        path.write_bytes(pdf)
+        open_in_default_app(path)
+        return Response(status_code=204)
 
     return router
 

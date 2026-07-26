@@ -17,7 +17,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
@@ -91,7 +91,7 @@ def load_active_guidelines(engine: Engine) -> list[dict]:
 
 # ── Router factory ────────────────────────────────────────────────────────────
 
-def make_router(engine: Engine) -> APIRouter:
+def make_router(engine: Engine, cfg) -> APIRouter:
     router = APIRouter(prefix="/guidelines", tags=["guidelines"])
 
     def _session() -> Session:
@@ -114,6 +114,20 @@ def make_router(engine: Engine) -> APIRouter:
             media_type="application/pdf",
             headers={"Content-Disposition": 'attachment; filename="guidelines.pdf"'},
         )
+
+    # ── POST /guidelines/open-pdf ────────────────────────────────────────────
+    # The packaged WebView2 shell blocks `<a download>` silently, so the UI
+    # cannot save the streamed PDF itself. Write it server-side and let the
+    # OS open it, exactly like submissions' open-output.
+    @router.post("/open-pdf", status_code=204)
+    def open_guidelines_pdf():
+        from .os_open import exports_dir, open_in_default_app
+        rows = load_active_guidelines(engine)
+        pdf_bytes = _render_pdf(_build_guidelines_html(rows))
+        path = exports_dir(cfg) / "guidelines.pdf"
+        path.write_bytes(pdf_bytes)
+        open_in_default_app(path)
+        return Response(status_code=204)
 
     # ── POST /guidelines — Ellen-created guideline (v0.2.0 1f) ───────────────
     @router.post("", response_model=GuidelineOut, status_code=201)

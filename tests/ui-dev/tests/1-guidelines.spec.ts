@@ -56,15 +56,24 @@ test("guidelines v0.2.0: add-guideline flow (מינהלת origin)", async ({ pag
   await expect(group.getByText("מינהלת").first()).toBeVisible();
 });
 
-test("guidelines: export-pdf downloads a real PDF", async ({ page }) => {
+// v0.2.1: assert the OPEN-ENDPOINT is called, not Playwright's download
+// event. Chromium happily downloads; the packaged WebView2 shell does not,
+// so a download-event assertion passes while the real app is broken. That
+// exact false-green shipped the dead "הורדת PDF" button in v0.1.0-v0.2.0.
+test("guidelines: PDF button calls the sidecar open-endpoint", async ({ page, request }) => {
   await page.goto("/#/guidelines");
-  const downloadPromise = page.waitForEvent("download");
+  const callPromise = page.waitForRequest(
+    (r) => r.url().includes("/guidelines/open-pdf") && r.method() === "POST",
+  );
   await page.getByTestId("guidelines-pdf-download").click();
-  const download = await downloadPromise;
-  const stream = await download.createReadStream();
-  const chunks: Buffer[] = [];
-  for await (const c of stream) chunks.push(c as Buffer);
-  const buf = Buffer.concat(chunks);
-  expect(buf.length).toBeGreaterThan(1000);
+  const req = await callPromise;
+  const resp = await req.response();
+  expect(resp?.status()).toBe(204);
+
+  // ...and the endpoint it calls really does produce a PDF.
+  const pdf = await request.get("http://127.0.0.1:17321/guidelines/export-pdf");
+  expect(pdf.status()).toBe(200);
+  const buf = await pdf.body();
   expect(buf.subarray(0, 4).toString("ascii")).toBe("%PDF");
+  expect(buf.length).toBeGreaterThan(1000);
 });

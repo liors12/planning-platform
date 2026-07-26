@@ -3,9 +3,9 @@ import {
   createGuideline,
   editGuideline,
   guidelineHistory,
-  guidelinesPdfUrl,
   listDisciplines,
   listGuidelines,
+  openGuidelinesPdf,
   type DisciplineDef,
   type GuidelineOut,
 } from "../api";
@@ -25,6 +25,19 @@ export function Guidelines() {
   const [historyFor, setHistoryFor] = useState<GuidelineOut | null>(null);
   const [addingFor, setAddingFor] = useState<string | "">("__closed__");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [opening, setOpening] = useState(false);
+
+  async function onOpenPdf() {
+    setOpening(true);
+    try {
+      await openGuidelinesPdf();
+      setErr(null);
+    } catch (e) {
+      setErr(String(e));
+    } finally {
+      setOpening(false);
+    }
+  }
 
   function refresh() {
     listGuidelines()
@@ -63,14 +76,15 @@ export function Guidelines() {
             חדשה - הבדיקה האוטומטית הבאה תשתמש בערך המעודכן.
           </p>
         </div>
-        <a
+        <button
+          type="button"
           className="primary-btn"
-          href={guidelinesPdfUrl()}
-          download="guidelines.pdf"
+          onClick={onOpenPdf}
+          disabled={opening}
           data-testid="guidelines-pdf-download"
         >
-          הורדת PDF
-        </a>
+          {opening ? "מפיקה..." : "פתיחת PDF"}
+        </button>
       </header>
 
       {err && <MaybeApiError error={err} title="לא ניתן לטעון את ההנחיות" />}

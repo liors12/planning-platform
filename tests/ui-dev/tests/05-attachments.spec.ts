@@ -117,7 +117,16 @@ test("attachments: comment linkage + דוח התייחסות", async ({ page, re
   const linked = comments.find((c: { topic_he: string }) => c.topic_he === "הערה מקושרת לנספח");
   expect(linked?.attachment_id).not.toBeNull();
 
-  // דוח התייחסות downloads a real PDF including the linked comment.
+  // The report button calls the sidecar open-endpoint (NOT an <a download>,
+  // which the packaged WebView2 shell blocks silently).
+  const reportCall = page.waitForRequest(
+    (r) => /\/attachments\/\d+\/open-report$/.test(r.url()) && r.method() === "POST",
+  );
+  await page.getByTestId("tab-attachments").click();
+  await card.locator('[data-testid^="attachment-report-"]').click();
+  expect((await (await reportCall).response())?.status()).toBe(204);
+
+  // ...and that report really is a PDF including the linked comment.
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const rep = await request.get(`http://127.0.0.1:17321/attachments/${atts[0].id}/report-pdf`);
   expect(rep.status()).toBe(200);

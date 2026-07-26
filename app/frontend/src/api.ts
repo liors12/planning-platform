@@ -1049,6 +1049,15 @@ export function attachmentReportUrl(attId: number): string {
   return `${SIDECAR_BASE}/attachments/${attId}/report-pdf`;
 }
 
+/** Render the attachment response report and open it in the OS default app.
+ * Never use `<a download>` for this: the packaged WebView2 shell blocks
+ * those navigations silently. */
+export async function openAttachmentReport(attId: number): Promise<void> {
+  await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/open-report`, {
+    method: "POST",
+  });
+}
+
 export async function createGuideline(body: {
   discipline_key: string;
   title: string;
@@ -1101,4 +1110,11 @@ export async function guidelineHistory(gid: number): Promise<GuidelineOut[]> {
 
 export function guidelinesPdfUrl(): string {
   return `${SIDECAR_BASE}/guidelines/export-pdf`;
+}
+
+/** Render the guidelines book and open it in the OS default app. Never use
+ * `<a download>` for this: the packaged WebView2 shell blocks those
+ * navigations silently. */
+export async function openGuidelinesPdf(): Promise<void> {
+  await fetchOrThrow(`${SIDECAR_BASE}/guidelines/open-pdf`, { method: "POST" });
 }

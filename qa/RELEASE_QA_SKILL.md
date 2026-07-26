@@ -20,6 +20,7 @@ dev-only backlog item) AND the manual VM checklist passed.
 |---|---|---|
 | 0a | Em/en-dash gate (Ellen's style: plain hyphens only) | `python3.13 -m pytest tests/test_no_emdash.py -q` |
 | 0b | Jargon lexicon gate (no technical Hebrew/English leaks) | `python3.13 -m pytest tests/test_jargon_lexicon.py -q`; lexicon `qa/jargon-lexicon.txt`, whitelist `qa/jargon-whitelist.txt` |
+| 0c | Download-anchor gate (no `<a download>`; WebView2 blocks them silently) | `python3.13 -m pytest tests/test_no_download_anchor.py -q` |
 | 1 | Per-screen states + affordances + DOM-leakage afterEach | `cd tests/ui-dev && npx playwright test 00-layer1` (leak markers live in `tests/fixtures.ts`) |
 | 2 | Viewport matrix 1024x700 + 1280x800 (no overflow, no clipped labels) | `npx playwright test 01-layer2` |
 | 3 | Screenshots + codified judgment (LOOK at them; committed under `tests/ui-dev/screenshots/`) | `npx playwright test 02-layer3`, then open the PNGs |
@@ -57,7 +58,7 @@ a fresh-install simulation. Never point it at real data.
   a bug (ErrorNotice's פרטים טכניים collapsible is the ONLY sanctioned
   place for raw error text).
 
-## 3. Regression checklist — the 9 bug families from the first hands-on session
+## 3. Regression checklist - the 10 bug families
 
 Every one of these was a REAL finding on the packaged app (round 1,
 2026-07-22). They are automated now, but re-check them consciously whenever
@@ -74,6 +75,20 @@ touching adjacent code:
 8. Raw API/fetch error strings rendered directly (must route through
    ErrorNotice / MaybeApiError).
 9. Sidebar footer pushed off-screen at 1024x700 (must stay pinned).
+10. **WebView2 swallows downloads** (v0.2.1, shipped broken in v0.1.0-v0.2.0).
+    `<a href=... download>` works in `npm run dev` and in Playwright's
+    Chromium, and does NOTHING in the packaged Tauri/WebView2 shell: no
+    error, no file, no clue. Same family as the older `target="_blank"`
+    finding. **Rule: every file the user "gets" must go through a sidecar
+    open-endpoint** that writes the file server-side and calls
+    `os_open.open_in_default_app` (see `/guidelines/open-pdf`,
+    `/attachments/{id}/open-report`, `/submissions/{id}/open-output`).
+    Enforced statically by gate 0c (`tests/test_no_download_anchor.py`).
+    **Spec rule:** assert the open-endpoint was CALLED (`waitForRequest` +
+    204), never `page.waitForEvent("download")` - a download-event
+    assertion is green in Chromium while the real app is dead. This is the
+    fake-spec lesson in its most expensive form: the dead "הורדת PDF"
+    button survived three tagged releases behind a passing test.
 
 ## 4. Layer 4 — the 10-minute manual VM checklist
 
@@ -88,10 +103,11 @@ maximize first.
 | 2 | Default window size sanity | Sidebar footer (הנחיות/הגדרות) visible without resizing; no horizontal scrollbar |
 | 3 | Dashboard | Pilot project card shows; pipeline pills correct (nonzero emphasized) |
 | 4 | Findings tab on the pilot | Findings render immediately (three sections, Hebrew); NO raw English/HTTP text anywhere |
-| 5 | Guidelines | Sections collapsible in document order; edit a checkable value → גרסה +1; היסטוריה shows both; הורדת PDF downloads a styled PDF |
+| 5 | Guidelines | Grouped by discipline with the sticky nav chips; edit a checkable value → גרסה +1; היסטוריה shows both; פתיחת PDF OPENS a styled PDF in the OS viewer |
 | 6 | Upload + engine | New version upload works; הפעילי את התוכנה enabled only with schema data; run reaches מנתחת then הושלם |
 | 7 | Report + Excel | הפיקי דו"ח produces the banner and a PDF that opens; Excel export opens in Excel |
 | 8 | Hebrew-only sweep | Click through Settings, CAD tab, comments; feminine imperatives everywhere; פרטים טכניים is the only place raw text may hide |
+| 9 | **Every export button opens a real file** | Click EVERY PDF/export/report button in the app - guidelines PDF, submission report, Excel, attachment דו"ח התייחסות - and confirm a file actually OPENS on screen each time. A button that appears to do nothing is the WebView2 download failure (family 10); no automated layer can catch it, because dev-mode and Chromium both succeed where the packaged shell fails |
 
 Findings from this checklist follow rule "FLAG → backlog": blocks-Ellen →
 stop the release, fix, rebuild, redo the checklist; cosmetic → B-n entry and

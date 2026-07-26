@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  attachmentReportUrl,
   getAttachmentReview,
   listDisciplines,
   listProjectAttachments,
+  openAttachmentReport,
   runAttachmentReview,
   setAttachmentStatus,
   uploadPlanAttachment,
@@ -160,6 +160,13 @@ function AttachmentCard({
     setBusy(false);
   }
 
+  async function onReport() {
+    setBusy(true);
+    try { await openAttachmentReport(att.id); setErr(null); }
+    catch (e) { setErr(String(e)); }
+    setBusy(false);
+  }
+
   async function onStatus(s: PlanAttachmentOut["status"]) {
     setBusy(true);
     try { await setAttachmentStatus(att.id, s); onChanged(); }
@@ -202,10 +209,11 @@ function AttachmentCard({
                  data-testid={`attachment-revision-${att.id}`} />
         </label>
         {att.has_review && (
-          <a className="ghost-btn" href={attachmentReportUrl(att.id)}
-             download data-testid={`attachment-report-${att.id}`}>
+          <button type="button" className="ghost-btn" disabled={busy}
+                  data-testid={`attachment-report-${att.id}`}
+                  onClick={onReport}>
             הפיקי דו"ח התייחסות
-          </a>
+          </button>
         )}
       </div>
 

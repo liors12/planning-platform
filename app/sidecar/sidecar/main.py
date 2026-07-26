@@ -709,7 +709,7 @@ app.include_router(make_settings_router(lambda: ENGINE))
 app.include_router(make_layer_mappings_router(lambda: ENGINE, cfg=CFG))
 
 # Guidelines editor — editable thresholds with versioning + PDF export.
-app.include_router(make_guidelines_router(ENGINE))
+app.include_router(make_guidelines_router(ENGINE, CFG))
 
 # v0.2.0: attachments (נספחי תוכנית עיצוב) + mapped reviews.
 from .attachments import make_router as make_attachments_router  # noqa: E402
