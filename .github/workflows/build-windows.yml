@@ -455,6 +455,96 @@ jobs:
             Remove-Item $sentinelPath   -Force -ErrorAction SilentlyContinue
             Remove-Item $fakePlatformDb -Force -ErrorAction SilentlyContinue
 
+            # ── 1c. UNINSTALL DATA-SURVIVAL PROBE (information only) ─────
+            # Question this answers: if we ever enable auto-uninstall before
+            # install, does the uninstaller take Ellen's platform.db with it?
+            # The install dir IS the data dir (%LOCALAPPDATA%\Planning
+            # Platform\), so an uninstaller that does RMDir /r on $INSTDIR
+            # would delete her entire database and every project folder.
+            #
+            # We could not answer this by reading the NSIS script: the
+            # uninstall section comes from Tauri's bundled template (not in
+            # this repo) and the shipped installer's header is LZMA-compressed,
+            # so the instructions are not greppable. This probe settles it
+            # empirically.
+            #
+            # DELIBERATELY NOT A GATE. It records a verdict; it must not fail
+            # the build while auto-uninstall is still off. Re-installs happen
+            # in later steps, so removing the app here is safe.
+            $probeDb   = Join-Path $installDir "platform.db"
+            $probeKeep = Join-Path $installDir "projects\407-probe\note.txt"
+            New-Item -ItemType Directory -Force -Path (Split-Path $probeKeep) | Out-Null
+            Set-Content -Path $probeDb   -Value "uninstall-probe-database-content" -Encoding utf8
+            Set-Content -Path $probeKeep -Value "uninstall-probe-project-file" -Encoding utf8
+            $probeHashBefore = (Get-FileHash -Algorithm SHA256 -Path $probeDb).Hash
+            $filesBefore = (Get-ChildItem -Recurse -File $installDir -ErrorAction SilentlyContinue).Count
+            Write-Host "Probe: planted platform.db (sha256=$probeHashBefore) + a project file; $filesBefore files in install dir"
+
+            $probeUninstaller = Join-Path $installDir "uninstall.exe"
+            $verdict = "UNKNOWN"
+            $probeSummary = ""
+            if (Test-Path $probeUninstaller) {
+              & taskkill /f /im sidecar.exe 2>$null; $true
+              & taskkill /f /im "Planning Platform.exe" 2>$null; $true
+              Start-Process -FilePath $probeUninstaller -ArgumentList "/S" -Wait
+              # NSIS spawns an async cleanup process; give it time to finish.
+              Start-Sleep -Seconds 10
+
+              $dbStillThere = Test-Path $probeDb
+              $keepStillThere = Test-Path $probeKeep
+              $dbHashAfter = if ($dbStillThere) {
+                               (Get-FileHash -Algorithm SHA256 -Path $probeDb).Hash
+                             } else { "(deleted)" }
+              $filesAfter = (Get-ChildItem -Recurse -File $installDir -ErrorAction SilentlyContinue).Count
+              $hashSame = ($dbStillThere -and $dbHashAfter -eq $probeHashBefore)
+
+              if (-not $dbStillThere) {
+                $verdict = "DESTROYS-DATA"
+              } elseif ($hashSame) {
+                $verdict = "SAFE"
+              } else {
+                $verdict = "DESTROYS-DATA"   # present but modified is still loss
+              }
+
+              $probeSummary = @"
+          ### Uninstall data-survival probe: $verdict
+
+          | Question | Answer |
+          |---|---|
+          | platform.db still exists after uninstall? | $(if ($dbStillThere) { 'YES' } else { 'NO' }) |
+          | platform.db hash unchanged? | $(if ($hashSame) { 'YES' } else { 'NO' }) |
+          | project file still exists? | $(if ($keepStillThere) { 'YES' } else { 'NO' }) |
+          | files in install dir before → after | $filesBefore → $filesAfter |
+          | install dir itself removed? | $(if (Test-Path $installDir) { 'NO' } else { 'YES' }) |
+
+          sha256 before: ``$probeHashBefore``
+          sha256 after:  ``$dbHashAfter``
+
+          Information only - this step does not gate the build. Auto-uninstall
+          stays OFF until the data dir is separated from the install dir.
+          "@
+              Write-Host "════ UNINSTALL PROBE VERDICT: $verdict ════"
+              Write-Host "  platform.db exists after uninstall : $dbStillThere"
+              Write-Host "  platform.db hash unchanged         : $hashSame"
+              Write-Host "  project file exists after uninstall: $keepStillThere"
+              Write-Host "  files before/after                 : $filesBefore / $filesAfter"
+            } else {
+              $probeSummary = "### Uninstall data-survival probe: UNKNOWN`n`nuninstall.exe not found at $probeUninstaller."
+              Write-Host "Probe: uninstall.exe not found - cannot answer"
+            }
+            $probeSummary | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Append -Encoding utf8
+
+            # Leave no probe residue, then reinstall so the steps below (which
+            # expect a working install) proceed normally.
+            Remove-Item $probeDb   -Force -ErrorAction SilentlyContinue
+            Remove-Item (Split-Path $probeKeep) -Recurse -Force -ErrorAction SilentlyContinue
+            Write-Host "Probe: reinstalling for the remaining smoke steps"
+            Start-Process -FilePath $installer.FullName -ArgumentList "/S" -Wait
+            $sidecarExe = Get-ChildItem -Recurse -File -Path $installDir -Filter "sidecar.exe" `
+                          | Select-Object -First 1
+            if (-not $sidecarExe) { Fail "sidecar.exe missing after probe reinstall" }
+            Record "probe: reinstall after uninstall probe" $true "verdict=$verdict"
+
             # ── 2. BOOT ───────────────────────────────────────────────
             # Isolate to a tempdir so cleanup is local; avoids polluting
             # whatever the installer wrote to %LOCALAPPDATA%.
