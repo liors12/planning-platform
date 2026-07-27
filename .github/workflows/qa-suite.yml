@@ -28,7 +28,10 @@ jobs:
         with: { python-version: '3.12' }
       - name: Run convention gates (em-dash + jargon + anchors + check keys + report chrome)
         run: |
-          pip install --quiet pytest
+          # python-docx: test_check_mode_structural imports the extraction
+          # script, which parses the source docx. Without it the gate errors
+          # on import and reports a failure that is not a convention breach.
+          pip install --quiet pytest python-docx
           python -m pytest tests/test_no_emdash.py tests/test_jargon_lexicon.py \
                            tests/test_no_download_anchor.py \
                            tests/test_check_key_attachment.py \
