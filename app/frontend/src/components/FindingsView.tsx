@@ -22,16 +22,18 @@ type Verdict =
   | "pass" | "pass_with_note"
   | "fail" | "fail_borderline"
   | "not_submitted" | "requires_review"
-  | "unevaluable" | "not_applicable";
+  | "unevaluable" | "not_applicable" | "manual_review";
 
 // Statuses that need Ellen's attention - the default view.
-const ACTIONABLE: Verdict[] = ["fail", "fail_borderline", "requires_review", "not_submitted"];
+const ACTIONABLE: Verdict[] = ["fail", "fail_borderline", "requires_review",
+  "manual_review", "not_submitted"];
 
 // Filter-bar pills: one per user-facing status label (fail and
 // fail_borderline share the "נדרש תיקון" label, so one pill drives both).
 const FILTER_PILLS: Array<{ label: string; verdicts: Verdict[] }> = [
   { label: "נדרש תיקון", verdicts: ["fail", "fail_borderline"] },
   { label: "נדרשת השלמה", verdicts: ["requires_review"] },
+  { label: "נדרשת בדיקה ידנית", verdicts: ["manual_review"] },
   { label: "לא הוגש", verdicts: ["not_submitted"] },
   { label: "תקין", verdicts: ["pass"] },
   { label: "תקין בהערה", verdicts: ["pass_with_note"] },
@@ -53,6 +55,7 @@ const VERDICT_LABEL_HE: Record<string, string> = {
   fail_borderline: "נדרש תיקון",
   not_submitted: "לא הוגש",
   requires_review: "נדרשת השלמה",
+  manual_review: "נדרשת בדיקה ידנית",
   unevaluable: "לא ניתן לבדיקה",
   not_applicable: "לא רלוונטי",
 };

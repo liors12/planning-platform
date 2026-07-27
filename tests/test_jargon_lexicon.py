@@ -60,8 +60,26 @@ def test_no_jargon_in_hebrew_strings():
 # v0.2.1: internal identifiers (CAD layer names, rule codes) are jargon that
 # no lexicon can enumerate - they are invented ad hoc. Match the SHAPE
 # instead. Seeded guideline text is what Ellen reads as municipal guidance,
-# so a leaked "0_OPEN_SPACE" or "SETBACK_0" there is a content bug.
-TECH_ID = re.compile(r"[A-Z]{2,}_[A-Z0-9_]+")
+# so a leaked "SETBACK_0" there is a content bug.
+#
+# v0.2.2: the original pattern required two capitals BEFORE the underscore,
+# so the docx's own layer names - 0_LOTS, 0_OPEN_SPACE - never matched it.
+# The gate was blind to the exact shape the guidelines use. Widened to catch
+# the leading-digit form too. Five of those names are approved content (the
+# architect must know which layer to name in the CAD file), so they are
+# whitelisted BY NAME - not by loosening the pattern back.
+TECH_ID = re.compile(r"(?<![A-Za-z0-9_])(?:[A-Z]{2,}|\d+)_[A-Z0-9_]+")
+
+# Approved CAD layer names, quoted verbatim from the docx (חלק א, 2.א קבצי CAD).
+# Ellen's architects submit files whose layers must carry these exact strings,
+# so the identifier IS the guidance. Anything not on this list is still a leak.
+ALLOWED_TECH_IDS = {
+    "0_LOTS",
+    "0_SETBACK",
+    "0_BOUNDARY",
+    "0_BLDG",
+    "0_OPEN_SPACE",
+}
 
 
 def test_no_technical_identifiers_in_guideline_text():
@@ -73,6 +91,8 @@ def test_no_technical_identifiers_in_guideline_text():
         for field in ("title", "body_text"):
             value = row.get(field) or ""
             for hit in TECH_ID.findall(value):
+                if hit in ALLOWED_TECH_IDS:
+                    continue
                 offenders.append(f"{row['title']!r} ({field}): {hit}")
     assert not offenders, (
         "internal identifiers found in guideline text Ellen reads. Map them to "

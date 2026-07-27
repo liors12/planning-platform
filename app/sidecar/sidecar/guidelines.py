@@ -238,64 +238,18 @@ def make_router(engine: Engine, cfg) -> APIRouter:
 # ── PDF helpers ───────────────────────────────────────────────────────────────
 
 def _resolve_font_dir() -> Path:
-    if getattr(sys, "frozen", False):
-        meipass = getattr(sys, "_MEIPASS", None)
-        if meipass:
-            return Path(meipass) / "assets" / "fonts"
-    return Path(__file__).resolve().parent.parent.parent.parent / "assets" / "fonts"
+    from compliance_engine.report_chrome import resolve_font_dir
+    return resolve_font_dir()
 
 
-# Style spec: Ellen's approved municipal look — black-on-white only. Black bold
-# headings (16/14/12pt), full 0.5pt black table grid, bold white header row, no
-# shading/banding, no colored accents, hyphens (never em-dash) in template text.
-_PDF_CSS = """
-@font-face {
-    font-family: "Heebo";
-    src: url("Heebo-Regular.ttf");
-    font-weight: normal;
-}
-@font-face {
-    font-family: "Heebo";
-    src: url("Heebo-Bold.ttf");
-    font-weight: bold;
-}
-@page {
-    size: A4;
-    margin: 2cm 2cm 2.5cm 2cm;
-    @bottom-right { content: element(pdf-footer); }
-}
-html { direction: rtl; }
-body {
-    font-family: "Heebo", "Arial Hebrew", sans-serif;
-    direction: rtl;
-    text-align: right;
-    font-size: 11pt;
-    color: #000000;
-}
-h1 { font-size: 16pt; font-weight: bold; color: #000000; margin-bottom: 4pt; }
-h2 { font-size: 14pt; font-weight: bold; color: #000000;
-     margin-top: 16pt; margin-bottom: 6pt; }
-.meta { color: #000000; font-size: 9pt; margin-bottom: 14pt; }
-.pdf-footer { position: running(pdf-footer); font-size: 8pt; color: #000000;
-              direction: rtl; }
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 12pt;
-}
-th, td {
-    border: 0.5pt solid #000000;
-    padding: 4pt 6pt;
-    text-align: right;
-    vertical-align: top;
-    font-size: 10pt;
-    color: #000000;
-    background: #ffffff;
-}
-th { font-weight: bold; }
-td { font-weight: normal; }
-.body-text { white-space: pre-wrap; }
-"""
+# v0.2.2: this file used to carry its own black-on-white stylesheet. An
+# architect receiving the guidelines export and the main סקירת תוכנית עיצוב got
+# two documents that did not look related. Both now render from the single
+# shared chrome in compliance_engine/templates/report_chrome.css.
+from compliance_engine.report_chrome import chrome_css as _chrome_css
+from compliance_engine.report_chrome import isolate_ltr as _iso
+
+_PDF_CSS = _chrome_css()
 
 
 def _dash(s: str) -> str:
@@ -328,12 +282,15 @@ def _build_guidelines_html(rows: list[dict]) -> str:
 
     now_str = datetime.now().strftime("%d/%m/%Y")
     max_version = max((g["version"] for g in rows), default=1)
-    parts = [
-        "<html><head><meta charset='utf-8'></head><body>",
-        f"<div class='pdf-footer'>הנחיות עירוניות לתוכנית העיצוב · גרסה {max_version} · {now_str}</div>",
-        "<h1>הנחיות עירוניות לתוכנית העיצוב</h1>",
-        f"<p class='meta'>הופק: {now_str}</p>",
-    ]
+    from compliance_engine.report_chrome import cover_html
+
+    parts = [cover_html(
+        title="הנחיות עירוניות לתוכנית העיצוב",
+        subtitles=["מסמך ההנחיות המלא, לפי תחום"],
+        pill="הנחיות עירוניות",
+        meta_rows=[("גרסת ההנחיות:", str(max_version)),
+                   ("תאריך הפקה:", now_str)],
+    )]
 
     # v0.2.0 1d: PRIMARY grouping = canonical discipline, in canonical
     # order. Rows with no discipline_key (pre-migration edge) fold into
@@ -360,10 +317,12 @@ def _build_guidelines_html(rows: list[dict]) -> str:
                 value_cell = f"{g['check_value']:g} {escape(g['unit'] or '')}"
             else:
                 value_cell = "-"
-            body = escape(_dash(g["body_text"] or "-"))
+            # LTR technical tokens reverse inside RTL text; isolate_ltr
+            # escapes AND wraps them (see report_chrome).
+            body = _iso(_dash(g["body_text"] or "-"))
             parts.append(
                 "<tr>"
-                f"<td>{escape(_dash(g['title']))}</td>"
+                f"<td>{_iso(_dash(g['title']))}</td>"
                 f"<td class='body-text'>{body}</td>"
                 f"<td>{type_label}</td>"
                 f"<td>{value_cell}</td>"
@@ -387,8 +346,8 @@ def _build_guidelines_html(rows: list[dict]) -> str:
         else:
             _emit_table(items)
 
-    parts.append("</body></html>")
-    return "\n".join(parts)
+    from compliance_engine.report_chrome import document_html
+    return document_html(cover=parts[0], content="\n".join(parts[1:]))
 
 
 def _render_pdf(html: str) -> bytes:

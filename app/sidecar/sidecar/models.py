@@ -588,6 +588,10 @@ class Guideline(Base):
     # "הנחיות יועץ התברואה העירוני" = authority additions (incl. rows Ellen
     # creates in the UI, which get "מינהלת").
     origin: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # v0.2.2: what the engine is allowed to SAY about this row -
+    # auto_detect | manual | needs_context. Derived structurally at seed
+    # time (scripts/extract_guidelines_docx.py); never from the Hebrew text.
+    check_mode: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     section_title: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     sort_order: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
@@ -597,6 +601,7 @@ class Guideline(Base):
             "discipline": self.discipline,
             "discipline_key": self.discipline_key,
             "origin": self.origin,
+            "check_mode": self.check_mode,
             "section_key": self.section_key,
             "section_title": self.section_title,
             "sort_order": self.sort_order,

@@ -149,17 +149,17 @@ def short_title(text: str, max_len: int = 60) -> str:
 # and get an empty body (the UI then shows the title alone).
 DUPLICATE_BODY_REWRITES: dict[str, str] = {
     "הקבצים הבאים יצורפו להגשה. ללא קבצי CAD ההגשה לא תתקבל.":
-        "יש לצרף את כל קבצי ה-CAD המפורטים להלן. הגשה ללא קבצי CAD לא תתקבל.",
+        "יש לצרף את כל קבצי ה-CAD הנדרשים. הגשה ללא קבצי CAD לא תתקבל.",
     "גודל קובץ. כל קובץ DWG/DXF מקסימום 200 MB.":
-        "יש לוודא שכל קובץ DWG או DXF אינו עולה על 200 MB. קובץ גדול יותר יפוצל או יידחס לפני ההגשה.",
+        "יש לוודא שכל קובץ DWG או DXF אינו עולה על 200 MB.",
     "גבול תא השטח מסומן בקו כחול מקווקו, מקושר במפורש לתב”ע":
-        "יש לסמן את גבול תא השטח בקו כחול מקווקו, ולציין במפורש את ההפניה לתב”ע שממנה נגזר הגבול.",
+        "יש לסמן את גבול תא השטח בקו כחול מקווקו, ולציין במפורש את ההפניה לתב”ע.",
     "מרחקים בין בניינים באותו תא שטח מסומנים במספרים בקנ”מ":
         "יש לסמן במספרים את המרחק בין כל שני בניינים באותו תא שטח, בקנה המידה של התכנית.",
     "חיפוי לפי נספח חומריות - ללא חיפוי אבן טבעית או דמוית-אבן":
-        "יש לציין את חומרי החיפוי בהתאם לנספח החומריות. חיפוי באבן טבעית או דמוית-אבן אינו מאושר.",
+        "יש לציין את חומרי החיפוי בהתאם לנספח החומריות. אסור חיפוי באבן טבעית או דמוית-אבן.",
     "פתחים אנכיים רצפה-תקרה (לא חלונות רוחביים)":
-        "יש לתכנן את הפתחים כפתחים אנכיים מרצפה עד תקרה. חלונות רוחביים אינם מאושרים.",
+        "יש לתכנן את הפתחים כפתחים אנכיים מרצפה עד תקרה, ולא כחלונות רוחביים.",
     "מרפסות משולבות בחזית עם מעקים בנויים בחומר תואם":
         "יש לשלב את המרפסות בחזית הבניין, עם מעקים בנויים מחומר התואם את חומרי החזית.",
     "מסתורי כביסה - מידות וחומר מסומנים":
@@ -167,7 +167,7 @@ DUPLICATE_BODY_REWRITES: dict[str, str] = {
     "ציון מסגרות חלון, סוג זיגוג, רפלקטיביות זיגוג מקסימלית 70%":
         "יש לציין את סוג מסגרות החלון ואת סוג הזיגוג. רפלקטיביות הזיגוג לא תעלה על 70%.",
     "סימון פאנלים סולאריים בפריסה מותאמת":
-        "יש לסמן את הפאנלים הסולאריים בתכנית הגג, בפריסה המותאמת לצורת הגג ולמערכות שעליו.",
+        "יש לסמן את הפאנלים הסולאריים בתכנית הגג, בפריסה מותאמת.",
     "סימון דודי שמש (לא בחזית, רק בגג)":
         "יש לסמן את מיקום דודי השמש. הדודים ימוקמו על הגג בלבד ולא על חזית הבניין.",
     "סימון מתקני מיזוג מסיביים (מקוררי מים, צ’ילרים)":
@@ -175,23 +175,500 @@ DUPLICATE_BODY_REWRITES: dict[str, str] = {
     "מעקה גג + סף קצה":
         "יש לסמן בתכנית הגג את מעקה הגג ואת סף הקצה.",
     "אנטנות תקשורת - אם קיימות":
-        "אם מתוכננות אנטנות תקשורת, יש לסמן את מיקומן בתכנית הגג.",
+        "אם קיימות אנטנות תקשורת, יש לסמן את מיקומן בתכנית הגג.",
     "ולא טבלה מצרפת לפי בנדים של חדרים בלבד.":
-        "יש להציג את הנתונים פר-יחידת דיור. טבלה מצרפת לפי בנדים של חדרים בלבד אינה מספקת.",
+        "לא תוגש טבלה מצרפת לפי בנדים של חדרים בלבד.",
     "ניתוח הצללה על שכנים - אסור הצללה משמעותית בתאריך 21.12":
-        "יש להגיש ניתוח הצללה על המגרשים השכנים. לא תאושר הצללה משמעותית בתאריך 21.12.",
+        "יש להגיש ניתוח הצללה על המגרשים השכנים. אסורה הצללה משמעותית בתאריך 21.12.",
 }
 
 # 2. חלק ז is the intake checklist: every body was a "☐ item" glyph line.
 # Rewritten to state what the booklet must contain and what gets checked.
-CHECKLIST_TEMPLATE = ("החוברת תכלול {item}. "
-                      "בקבלת ההגשה נבדק שהפריט קיים ותואם לנדרש.")
+# v0.2.2: the trailing "בקבלת ההגשה נבדק שהפריט קיים ותואם לנדרש" was cut.
+# It was a claim about OUR software published as municipal guidance, and it was
+# false as written - nothing performs a conformance check at intake.
+CHECKLIST_TEMPLATE = "החוברת תכלול {item}."
+
+# The default frame assumes every checklist item is a component CONTAINED in
+# the booklet. Many are not: seven are separate PDFs the docx explicitly says
+# are NOT embedded ("לא יוטמעו בתוך החוברת הראשית"), and eight are physical
+# or plan elements the booklet SHOWS rather than contains. Forcing the formula
+# produced "החוברת תכלול חוברת תכנית עיצוב" and "החוברת תכלול שצ”פ".
+# Keyed by the docx item text (the ☐ line minus glyph and trailing period).
+CHECKLIST_FRAMES: dict[str, str] = {
+    # the booklet itself - it cannot contain itself
+    "חוברת תכנית עיצוב - קובץ PDF, פחות מ-100 MB, RTL, גופנים מוטמעים":
+        "תוגש {item}.",
+    # separate files, submitted alongside the booklet
+    "קבצי CAD - DXF או DWG (AC1018+), XREFs מאוחדים, פוליגונים סגורים, ITM":
+        "יצורפו {item}.",
+    "נספח חומריות - PDF נפרד": "יצורף {item}.",
+    "רשימת צמחייה - PDF נפרד מאדריכל נוף": "תצורף {item}.",
+    "נספח הידרולוגי - PDF נפרד מהידרולוג מוסמך": "יצורף {item}.",
+    "נספח אקוסטי - PDF נפרד מיועץ אקוסטיקה": "יצורף {item}.",
+    "נספח בנייה ירוקה ת”י 5281 - PDF נפרד": "יצורף {item}.",
+    "נספח איכות סביבה - PDF נפרד": "יצורף {item}.",
+    # things the booklet DEPICTS - a booklet does not contain a gas tank
+    "שצ”פ": "החוברת תציג {item}.",
+    "עמידה בת”י 5281": "החוברת תציג {item}.",
+    "רחבת גזם ייעודית בכל תא שטח (נפרדת מרחבת כיבוי)": "החוברת תציג {item}.",
+    "חדרי פסולת קומתיים מסומנים בנפרד מדירות 2 חד’": "החוברת תציג {item}.",
+    "רחבת כיבוי - כיתוב סוג ריצוף + הערה על שילוט": "החוברת תציג {item}.",
+    "פתחי ממ”ד - סימון לחזית פונה": "החוברת תציג {item}.",
+    "מסתורי כביסה - מידות + חומר": "החוברת תציג {item}.",
+    "צובר גז - מיקום תת-קרקעי": "החוברת תציג {item}.",
+}
+
+# The six per-plot rows carry TWO facts (which plot, and the six pages) that no
+# single frame carries grammatically. Written out rather than forced.
+CHECKLIST_EXCEPTIONS: dict[str, str] = {
+    "תא שטח 1: 6 העמודים הנדרשים":
+        "החוברת תכלול עבור תא שטח 1 את ששת העמודים הנדרשים.",
+    "תא שטח 2: 6 העמודים הנדרשים":
+        "החוברת תכלול עבור תא שטח 2 את ששת העמודים הנדרשים.",
+    "תא שטח 3: 6 העמודים הנדרשים":
+        "החוברת תכלול עבור תא שטח 3 את ששת העמודים הנדרשים.",
+    "תא שטח 4: 6 העמודים הנדרשים":
+        "החוברת תכלול עבור תא שטח 4 את ששת העמודים הנדרשים.",
+    "תא שטח 5: 6 העמודים הנדרשים":
+        "החוברת תכלול עבור תא שטח 5 את ששת העמודים הנדרשים.",
+    "תא שטח 9 (אם רלוונטי): 6 העמודים הנדרשים":
+        "החוברת תכלול עבור תא שטח 9, אם רלוונטי, את ששת העמודים הנדרשים.",
+}
 
 # 3. Internal CAD layer identifiers that leaked into user-facing text.
+#
+# v0.2.2: 0_OPEN_SPACE was REMOVED from this map. It is not a leak - it is the
+# layer name the architect must actually use, quoted from the docx, and its
+# four siblings (0_LOTS / 0_SETBACK / 0_BOUNDARY / 0_BLDG) are stated in חלק א.
+# Mapping it to Hebrew left one of five layer rows without the name to type.
 TECH_ID_REPLACEMENTS: dict[str, str] = {
-    "0_OPEN_SPACE": "שכבת המרחבים הפתוחים",
     "SETBACK_0": "שכבת קווי הבניין",
 }
+
+# CAD layer names that are approved CONTENT, not leaks. Mirrors
+# ALLOWED_TECH_IDS in tests/test_jargon_lexicon.py. This stage runs after the
+# readability rewrites, so without the guard below a name restored upstream is
+# silently substituted away again and the seed quietly loses it.
+APPROVED_LAYER_IDS = ("0_LOTS", "0_SETBACK", "0_BOUNDARY", "0_BLDG",
+                      "0_OPEN_SPACE")
+_clash = [k for k in TECH_ID_REPLACEMENTS if k in APPROVED_LAYER_IDS]
+if _clash:
+    raise SystemExit(
+        "FATAL: TECH_ID_REPLACEMENTS would strip approved layer name(s): "
+        + ", ".join(_clash) + ". These are content the architect must read."
+    )
+
+# 4. v0.2.2 FULL READABILITY PASS. The docx is a set of tables, so most rows
+# arrived as "key: value" fragments, bare numbers, or titles truncated at the
+# first colon. The test each row must pass: reading TITLE + BODY alone, is it
+# clear (a) what is required and (b) what gets checked?
+# Keyed by (section_key, original_title). "t" overrides the title, "b" the body.
+READABILITY_REWRITES: dict[tuple[str, str], dict[str, str]] = {
+    # ── חלק א: file format ──────────────────────────────────────────────
+    # v0.2.2 addendum: six rows whose body opened by repeating the title
+    # verbatim. Reordered so the requirement leads; every fact retained.
+    ("part_a", "DXF מועדף על DWG"): {
+        "b": "הפורמט DXF מועדף על DWG, והוא נתון לפענוח אוטומטי בידי מערכת "
+             "הבדיקה של המינהלת. ניתן לייצא DXF מ-AutoCAD דרך "
+             "File → Save As → AutoCAD R2013 DXF."},
+    ("part_a", "אסור על קישורי XREF External References"): {
+        "b": "קובץ DWG חייב להיות מאוחד (flattened) באמצעות פקודת etransmit "
+             "ב-AutoCAD לפני ההגשה. כל הגיאומטריה החיונית חייבת להיות מובנית "
+             "בתוך הקובץ עצמו, ולא מקושרת לקובץ חיצוני."},
+    ("part_a", "פוליגונים סגורים"): {
+        "b": "גבולות תאי שטח ומבנים יוגשו כפוליגונים סגורים "
+             "(LWPOLYLINE / POLYLINE עם closed=true), ולא כקווים פתוחים "
+             "או הצללות (hatches)."},
+    ("part_a", "קואורדינטות במערכת ישראל החדשה"): {
+        "b": "כל הגיאומטריה תיוצג ביחידות מטרים, במערכת הקואורדינטות של "
+             "ישראל החדשה (ITM), EPSG:2039."},
+    ("part_a", "פורמט"): {
+        "t": "פורמט קובץ החוברת",
+        "b": "חוברת תכנית העיצוב תוגש כקובץ PDF אחד מרובה עמודים."},
+    ("part_a", "גודל עמוד"): {
+        "b": "עמודי החוברת יוגשו בגודל A3 אופקי או A1 אופקי."},
+    ("part_a", "גודל קובץ מירבי"): {
+        "b": "קובץ החוברת לא יעלה על 100 MB."},
+    ("part_a", "כותרת קובץ"): {
+        "t": "שם הקובץ",
+        "b": "שם הקובץ יורכב ממספר התכנית, שם המתחם ומספר הגרסה, "
+             "בתבנית {מספר_תכנית}_{מתחם}_{גרסה}.pdf. "
+             "לדוגמה: 407-1048248_הטייסים_24.3.pdf"},
+    ("part_a", "יישור עברי"): {
+        "t": "כיוון הטקסט",
+        "b": "הטקסט בחוברת יוצג בכיוון עברי RTL, מימין לשמאל."},
+    ("part_a", "גופנים"): {
+        "b": "הגופנים יוטמעו בתוך קובץ ה-PDF."},
+    ("part_a", "הדפסה"): {
+        "b": "החוברת תהיה ניתנת להדפסה בשחור-לבן ובצבע, ללא איבוד מידע מהותי."},
+    ("part_a", "נגישות"): {
+        "t": "טקסט מוכל בקובץ",
+        "b": "הטקסט בחוברת יהיה טקסט אמיתי הניתן לחיפוש, ולא תמונה סרוקה."},
+    # CAD files
+    ("part_a", "תכנית פיתוח לכל תא שטח"): {
+        "b": "יצורף קובץ CAD בפורמט DXF או DWG בגרסה AC1018 ומעלה: "
+             "קובץ נפרד לכל תא שטח, או קובץ מאוחד שבו תאי השטח מסומנים "
+             "בשכבות."},
+    ("part_a", "תכנית קומה טיפוסית"): {
+        "b": "יצורף קובץ CAD בפורמט DXF או DWG של הקומה הטיפוסית, "
+             "קובץ נפרד לכל טיפולוגיית בניין."},
+    ("part_a", "תכנית מרתף"): {
+        "b": "יצורף קובץ CAD בפורמט DXF או DWG של תכנית המרתף, "
+             "קובץ נפרד לכל תא שטח."},
+    ("part_a", "חזיתות"): {
+        "b": "יצורף קובץ CAD בפורמט DXF או DWG ובו חזיתות בארבעה כיוונים "
+             "לכל בניין."},
+    ("part_a", "חתכים"): {
+        "b": "יצורף קובץ CAD בפורמט DXF או DWG ובו לפחות שני חתכים: "
+             "אורכי ורוחבי."},
+    ("part_a", "גג / חזית חמישית"): {
+        "b": "יצורף קובץ CAD בפורמט DXF או DWG של תכנית הגג, עם סימון "
+             "פאנלים סולאריים, דודים ומתקנים."},
+    ("part_a", "גרסת DWG"): {
+        "b": "קבצי DWG יישמרו בגרסה AC1018 AutoCAD 2004 ומעלה. "
+             "קבצים בגרסה ישנה יותר לא יתקבלו."},
+    ("part_a", "שכבות לפי סטנדרט מבא”ת"): {
+        "b": "שמות השכבות יכולים להיות בעברית או באנגלית, רצוי "
+             "בפורמט מבא”ת."},
+    # CAD layer names - the identifiers themselves must not reach Ellen.
+    ("part_a", "תאי שטח"): {
+        "t": "שכבת תאי שטח",
+        "b": "גבולות תאי השטח יוגשו בשכבה ייעודית: 0_LOTS או "
+             "תא_שטח_X, כאשר X הוא מספר תא השטח."},
+    ("part_a", "קווי בניין"): {
+        "t": "שכבת קווי בניין",
+        "b": "קווי הבניין יוגשו בשכבה ייעודית: 0_SETBACK או קו_בניין."},
+    ("part_a", "גבולות מגרש"): {
+        "t": "שכבת גבולות מגרש",
+        "b": "גבולות המגרש יוגשו בשכבה ייעודית: 0_BOUNDARY או קו_מגרש."},
+    ("part_a", "מבני המגורים"): {
+        "t": "שכבת מבני המגורים",
+        "b": "מבני המגורים יוגשו בשכבה ייעודית: 0_BLDG או בניין_X."},
+    ("part_a", "מרחבים פתוחים"): {
+        "t": "שכבת מרחבים פתוחים",
+        "b": "המרחבים הפתוחים יוגשו בשכבה ייעודית: 0_OPEN_SPACE או שצ”פ."},
+    # Separate appendices
+    ("part_a", "נספח חומריות"): {
+        "b": "יצורף נספח חומריות כקובץ PDF נפרד בגודל A3, בהיקף של 5 עד 15 "
+             "עמודים, בחתימת אדריכל הפרויקט."},
+    ("part_a", "רשימת צמחייה (נספח גינון)"): {
+        "b": "תצורף רשימת צמחייה כקובץ PDF נפרד בגודל A4, בהיקף של 3 עד 10 "
+             "עמודים, בחתימת אדריכל נוף מוסמך."},
+    ("part_a", "נספח הידרולוגי"): {
+        "b": "יצורף נספח הידרולוגי כקובץ PDF נפרד בגודל A4, בהיקף של 10 עד 30 "
+             "עמודים, בחתימת הידרולוג מוסמך."},
+    ("part_a", "נספח אקוסטי"): {
+        "b": "יצורף נספח אקוסטי כקובץ PDF נפרד בגודל A4, בהיקף של 5 עד 20 "
+             "עמודים, בחתימת יועץ אקוסטיקה מוסמך."},
+    ("part_a", "ת”י 5281 - בנייה ירוקה"): {
+        "b": "יצורף נספח בנייה ירוקה לפי ת”י 5281 כקובץ PDF נפרד בגודל A4, "
+             "בהיקף משתנה, בחתימת יועץ בנייה ירוקה, בצירוף מבדק חיצוני."},
+    ("part_a", "נספח איכות סביבה וקיימות"): {
+        "b": "יצורף נספח איכות סביבה וקיימות כקובץ PDF נפרד בגודל A4, בהיקף "
+             "של 10 עד 30 עמודים, בחתימת יועץ סביבה מוסמך."},
+
+    # ── חלק ב: booklet structure (bare numeric titles) ──────────────────
+    ("part_b", "1"): {
+        "t": "שער החוברת",
+        "b": "החוברת תיפתח בשער ובו שם הפרויקט, מספר התב”ע, מספר הגרסה והתאריך."},
+    ("part_b", "2"): {
+        "t": "תוכן עניינים",
+        "b": "החוברת תכלול תוכן עניינים מפורט."},
+    ("part_b", "3"): {
+        "t": "צוות הפרויקט",
+        "b": "יוצג צוות הפרויקט: שמות בעלי המקצוע, מספרי הרישוי ופרטי הקשר."},
+    ("part_b", "4"): {
+        "t": "הקדמה",
+        "b": "תוצג הקדמה ובה חזון התכנית ועקרונותיה."},
+    ("part_b", "5"): {
+        "t": "נתונים כלליים",
+        "b": "יוצגו נתוני התכנית: שטח התכנית בדונם, סך יחידות הדיור, סך השטח "
+             "העסקי, מספר הבניינים ומספר הקומות המרבי."},
+    ("part_b", "לכל תא שטח בתב”ע, יוגשו לפחות 6 העמודים הבאים, בסדר הזה"): {
+        "t": "מבנה העמודים לכל תא שטח",
+        "b": "לכל תא שטח בתב”ע יוגשו לפחות ששת העמודים הנדרשים, "
+             "בסדר הקבוע."},
+    ("part_b", "תכנית פיתוח (קנ”מ 1"): {
+        "t": "תכנית פיתוח לתא שטח (קנ”מ 1:500)",
+        "b": "תוגש תכנית פיתוח בקנה מידה 1:500: מבט-על על תא השטח ובו עצים, "
+             "ריצוף, רחבות, חניות ודרכי גישה."},
+    ("part_b", "דיאגרמת אשפה"): {
+        "b": "תוצג דיאגרמת אשפה ובה חדרי האשפה, חדרי הדחסניות, רחבת הגזם "
+             "ורחבת הכיבוי, חצי תנועה של רכבי האשפה, וסימון גישה תפעולית "
+             "נפרדת לשצ”פ הנבדלת מתנועת רכבי האשפה."},
+    ("part_b", "דיאגרמת פונקציות"): {
+        "b": "תוצג דיאגרמת פונקציות ובה השימוש של כל חלל בקומת הקרקע: מסחר, "
+             "מבני ציבור, לובי וחניון תת-קרקעי."},
+    ("part_b", "מעונות יום (אם רלוונטי)"): {
+        "b": "אם רלוונטי, תוגש תכנית מפורטת של מעון יום או גן ילדים "
+             "בתא השטח."},
+    ("part_b", "תכנית מרתף"): {
+        "b": "תוגש תכנית מרתף ובה החניון התת-קרקעי, חדרי המערכות והמחסנים, "
+             "בצירוף טבלת חניות הכוללת מקומות חניה פרטיים, אופנועים, חניות "
+             "נגישות וחניות אופניים."},
+    ("part_b", "תכנית קומה טיפוסית"): {
+        "b": "תוגש תכנית קומה טיפוסית ובה שטחי הדירות, שטחי השירות, הממ”דים "
+             "ומסתורי הכביסה, בצירוף טבלת תמהיל יחידות הדיור."},
+    ("part_b", "אם תאי שטח שונים זהים לחלוטין"): {
+        "t": "תאי שטח זהים",
+        "b": "אם תאי שטח שונים זהים לחלוטין, ניתן להגיש תכנית אחת ולציין בה "
+             "במפורש על אילו תאי שטח היא חלה."},
+    ("part_b", "זיתות"): {   # docx truncation lost the leading letter
+        "t": "חזיתות",
+        "b": "יוגשו חזיתות בארבעה כיוונים - צפון, דרום, מזרח ומערב - לכל "
+             "טיפולוגיית בניין, בקנה מידה 1:500 ובקנה מידה מפורט 1:50."},
+    ("part_b", "חתכים"): {
+        "b": "יוגשו לפחות שני חתכים, אורכי ורוחבי, החוצים את כל אזור הפרויקט."},
+    ("part_b", "תכנית גג / חזית חמישית"): {
+        "b": "תוגש תכנית גג של כל הבניינים, עם סימון פאנלים סולאריים, דודי "
+             "שמש, יחידות מיזוג, אנטנות ומעקה גג."},
+    ("part_b", "שצ”פ - שטח ציבורי פתוח"): {
+        "b": "תוגש תכנית מפורטת של כל השטחים הציבוריים הפתוחים. שלד השצ”פ "
+             "יכלול הפרדה בין שביל הולכי הרגל לשביל האופניים, ברצועת הפרדה "
+             "הכוללת גינון, תאורה, ספסלים ואשפתונים. רוחב מנחה: 3 מ’ לשביל "
+             "הולכי רגל ו-2.5 מ’ לשביל אופניים."},
+    ("part_b", "הדמיות (רנדרים)"): {
+        "t": "הדמיות",
+        "b": "יוגשו לפחות שלוש הדמיות צבעוניות פוטוריאליסטיות. לפחות אחת מהן "
+             "תציג את הפרויקט בהקשר עירוני, מרחוב ראשי, ובה מכוניות, הולכי "
+             "רגל ועצים."},
+
+    # ── חלק ג: per-plot content ─────────────────────────────────────────
+    ("part_c", "לכל תא שטח, התכנית תכלול את הסימונים והכיתובים הבאים"): {
+        "t": "סימונים וכיתובים נדרשים בתכנית",
+        "b": "לכל תא שטח תכלול התכנית את הסימונים והכיתובים הנדרשים."},
+    ("part_c", "קווי בניין מותרים מסומנים כקווים מקווקווים נפרדים"): {
+        "t": "קווי בניין מותרים",
+        "b": "קווי הבניין המותרים יסומנו כקווים מקווקווים נפרדים: קו בניין "
+             "קדמי, קו בניין אחורי וקו בניין צדדי."},
+    ("part_c", "קווי בניין נדרשים"): {
+        "b": "אם קיימת דרישה לקרבה לחזית הרחוב, קווי הבניין הנדרשים יסומנו "
+             "בכיתוב מפורש."},
+    ("part_c", "חדרי פסולת קומתיים"): {
+        "b": "חדרי הפסולת הקומתיים יסומנו במפורש בכל קומה טיפוסית, בנפרד "
+             "מסימון הדירות בנות 2 חדרים."},
+    ("part_c", "חדרי דחסניות (מערכת פניאומטית)"): {
+        "b": "חדרי הדחסניות של המערכת הפניאומטית יסומנו בצבע ייעודי, בנפרד "
+             "מחדרי אצירת האשפה."},
+    ("part_c", "רחבת גזם ייעודית"): {
+        "b": "רחבת הגזם תסומן בקנה מידה 1:500, באבן משתלבת, ברצועה הצמודה "
+             "לרחוב, ובסימון נפרד מרחבת כיבוי האש."},
+    ("part_c", "רחבת כיבוי אש"): {
+        "b": "רחבת כיבוי האש תסומן בתכנית, בצירוף כיתוב של סוג הריצוף - אבן "
+             "משתלבת, גוטה גרדן או ריצוף מחלחל - והערה כי הסימון בשטח ייעשה "
+             "בשילוט בלבד, ללא צביעה על הקרקע."},
+    ("part_c", "צובר גז"): {
+        "b": "מיקום צובר הגז יסומן בתת-הקרקע, במרחק של 2 מ’ לפחות מקו המגרש, "
+             "ברצועת גינון."},
+    ("part_c", "פתחי ממ”ד"): {
+        "b": "פתחי הממ”ד יסומנו במפורש בכל קומה טיפוסית, בצירוף כיתוב של "
+             "החזית שאליה הם פונים. הפתחים חייבים לפנות לחזית משנית, "
+             "לא לרחוב הראשי."},
+    ("part_c", "מסתורי כביסה"): {
+        "b": "מסתורי הכביסה יסומנו בחזיתות, במידות 1.8 על 1.5 מ’ בכיתוב. "
+             "החומר שממנו ייבנו, שאינו PVC, יצוין בנספח החומריות."},
+    ("part_c", "יחידות מיזוג"): {
+        "b": "אם מוצגות יחידות מיזוג בחזית, הן יוסתרו בשבכות אדריכליות "
+             "ולא ייחשפו לרחוב הראשי."},
+    ("part_c", "צנרת חזיתית"): {
+        "b": "בחזיתות תותר צנרת גשם בלבד, והיא תסומן בתכנית. כל צנרת אחרת "
+             "תתוכנן בתוך המבנה."},
+    ("part_c", "שיפועי ניקוז קרקע מסומנים על תכניות הפיתוח באחוזים"): {
+        "t": "סימון שיפועי ניקוז",
+        "b": "שיפועי ניקוז הקרקע יסומנו על תכניות הפיתוח באחוזים, לדוגמה "
+             "2.5%, בצירוף חצים המסמנים את כיווני הזרימה."},
+    ("part_c", "שיפוע מינימלי"): {
+        "t": "שיפוע ניקוז מזערי",
+        "b": "השיפוע המזערי בכל אזורי הפיתוח יהיה 1%."},
+    ("part_c", "כל הניקוז יזרום פנימה אל מערך השהיה/חלחול בתא השטח"): {
+        "t": "כיוון זרימת הניקוז",
+        "b": "כל הניקוז יזרום פנימה אל מערך ההשהיה והחלחול שבתא השטח, "
+             "ולא לעבר המגרשים השכנים."},
+
+    # ── חלק ד: facades ──────────────────────────────────────────────────
+    ("part_d", "חומרי הגמר והחיפוי בחזיתות יתואמו מול מהנדס/ת העיר ואדריכלית"): {
+        "t": "תיאום חומרי גמר וחיפוי",
+        "b": "חומרי הגמר והחיפוי בחזיתות יתואמו מול מהנדס/ת העיר ואדריכלית "
+             "העיר טרם האישור הסופי."},
+    ("part_d", "מרפסת זיזית עם מעקה זכוכית"): {
+        "b": "במרפסת זיזית עם מעקה זכוכית יהיה גובה המעקה 105 ס”מ. במרפסת "
+             "ובמרצפה זיזית יידרש סינור או עיבוי לפי פרט קונסטרוקטיבי."},
+    ("part_d", "ללא יחידות מיזוג"): {
+        "b": "לא יותקנו בחזית יחידות מיזוג, צנרת חיצונית, ארובות חימום "
+             "או דודים גלויים."},
+    ("part_d", "תכנית גג בקנ”מ 1"): {
+        "t": "קנה מידה לתכנית הגג",
+        "b": "תכנית הגג תוגש בקנה מידה 1:500 לפחות."},
+
+    # ── חלק ה: tables ───────────────────────────────────────────────────
+    ("part_e", "הטבלה תכלול לכל יחידת דיור (לא ברמת קטגוריה)"): {
+        "t": "פירוט הטבלה לכל יחידת דיור",
+        "b": "הטבלה תפרט את הנתונים לכל יחידת דיור בנפרד, ולא ברמת קטגוריה."},
+    ("part_e", "ה.1. טבלת תמהיל יחידות דיור (חובה - לכל תא שטח)"): {
+        "t": "טבלת תמהיל יחידות דיור (חובה - לכל תא שטח)",
+        "b": "טבלת תמהיל יחידות הדיור תוגש לכל תא שטח ותכלול את העמודות: "
+             "מספר יחידה, תכנון לפי מספר חדרים, שטח עיקרי במ”ר, שטח שירות "
+             "במ”ר, שטח כולל במ”ר, קומה, חזית עיקרית והערות."},
+    ("part_e", "הסיבה"): {
+        "t": "מטרת טבלת התמהיל",
+        "b": "בלי טבלת התמהיל לא ניתן לאמת חישובים כגון אחוז הדירות הקטנות, "
+             "המוגדרות כדירות בשטח של עד 75 מ”ר."},
+    ("part_e", "ה.2. טבלת שטחים לכל תא שטח (חובה)"): {
+        "t": "טבלת שטחים לכל תא שטח (חובה)",
+        "b": "טבלת השטחים תוגש לכל תא שטח ותכלול את העמודות: תא שטח, שטח "
+             "עיקרי במ”ר, שטח שירות מעל הקרקע במ”ר, שטח שירות מתחת לקרקע "
+             "במ”ר, השטח העיקרי המרבי לפי התב”ע, והסטייה ממנו."},
+    ("part_e", "ה.3. טבלת חניה לכל תא שטח (חובה)"): {
+        "t": "טבלת חניה לכל תא שטח (חובה)",
+        "b": "טבלת החניה תוגש לכל תא שטח ותכלול את העמודות: תא שטח, חניות "
+             "פרטיות, חניות אופנועים, חניות נגישות, חניות אופניים, מספר "
+             "יחידות הדיור, היחס הנדרש לפי תקן 3.1 הלאומי, וחישוב ההתאמה."},
+    ("part_e", "תקן חניה לאומי 3.1 (ינואר 2023)"): {
+        "b": "תקן החניה הלאומי 3.1 מינואר 2023 קובע: לדירה בשטח של עד 120 "
+             "מ”ר נדרשות 1.0 עד 1.3 חניות; לדירה בשטח 120 עד 200 מ”ר נדרשות "
+             "1.5 חניות; ובתוספת 20% חניות אורחים."},
+    ("part_e", "אחוז קרינה ישירה לכל חזית עיקרית"): {
+        "t": "אחוז קרינה ישירה בחזיתות",
+        "b": "יוצג אחוז הקרינה הישירה לכל חזית עיקרית, לפי תאריך 21.12 "
+             "בין השעות 9:00 ל-15:00."},
+    ("part_e", "עמידה בת”י 5281"): {
+        "b": "התכנית תעמוד בת”י 5281 בדירוג המזערי שנקבע בחוברת ההנחיות, "
+             "בדרך כלל מצוין או לפחות טוב מאוד, בצירוף מסמכי הוכחה."},
+
+    ("part_f", "כל פרמטר חייב לעמוד בתב”ע התקפה"): {
+        "b": "אסור לכלול בתכנית העיצוב פרמטרים החורגים מהתב”ע ללא הליך "
+             "תיקון מסודר. כל פרמטר חייב לעמוד בתב”ע התקפה."},
+    ("part_f", "חריגות יוצגו בנפרד"): {
+        "b": "אם יש דרישה לחרוג מפרמטר תב”עי, יש להציג זאת בנספח נפרד "
+             "“חריגות מהתב”ע” עם נימוקים מקצועיים, ולא להטמיע בגוף התכנית "
+             "כאילו זה תקין."},
+    # ── חלק ו: TABA compliance ──────────────────────────────────────────
+    ("part_f", "תכנית העיצוב כפופה לתב”ע, לא להפך. במקרה של סתירה"): {
+        "t": "יחס בין תכנית העיצוב לתב”ע",
+        "b": "תכנית העיצוב כפופה לתב”ע ולא להפך. במקרה של סתירה בין השתיים, "
+             "קובעת התב”ע."},
+    ("part_f", "מספר יחידות דיור מקסימלי לכל תא שטח"): {
+        "t": "מספר יחידות דיור מרבי",
+        "b": "מספר יחידות הדיור המרבי לכל תא שטח ייבדק מול הקבוע "
+             "בתקנון התב”ע."},
+    ("part_f", "גובה בניין מקסימלי (מ’ + קומות)"): {
+        "t": "גובה בניין מרבי",
+        "b": "גובה הבניין המרבי, במטרים ובמספר קומות, ייבדק מול תקנון התב”ע "
+             "ומול התשריט."},
+    ("part_f", "שטח עיקרי מקסימלי"): {
+        "t": "שטח עיקרי מרבי",
+        "b": "השטח העיקרי המרבי ייבדק מול הקבוע בתקנון התב”ע."},
+    ("part_f", "שטח שירות מקסימלי"): {
+        "t": "שטח שירות מרבי",
+        "b": "שטח השירות המרבי ייבדק מול הקבוע בתקנון התב”ע."},
+    ("part_f", "קווי בניין"): {
+        "b": "קווי הבניין ייבדקו מול תשריט התב”ע (DWG)."},
+    ("part_f", "יחס חניה"): {
+        "b": "יחס החניה ייבדק מול תקנון התב”ע ומול תקן החניה הלאומי."},
+    ("part_f", "אחוז דירות קטנות (≤75 מ”ר)"): {
+        "b": "אחוז הדירות הקטנות, ששטחן עד 75 מ”ר, ייבדק מול תקנון התב”ע. "
+             "בדרך כלל נדרש 20% לפחות."},
+    ("part_f", "ייעודי קרקע"): {
+        "b": "ייעודי הקרקע ייבדקו מול תשריט התב”ע."},
+
+    # ── נספח א: references ──────────────────────────────────────────────
+    ("appendix_a", "תקנים לאומיים מחייבים"): {
+        "b": "התכנית תעמוד בתקנים הלאומיים המחייבים: תקנון תכנון ובנייה "
+             "(תיקון 23) וחוק התכנון והבנייה; ת”י 5281 לבנייה ירוקה; תקן "
+             "החניה הלאומי 3.1 מינואר 2023; תקני כיבוי אש ת”י 1220 על "
+             "שלוחותיו; ותקני הנגישות ת”י 1918."},
+    ("appendix_a", "מסמכי תכנון תקפים בנס-ציונה"): {
+        "b": "המסמכים התקפים בנס-ציונה הם: חוברת הנחיות בינוי ופיתוח לשכונת "
+             "צפון מזרח (תכנית 407-0730606, פברואר 2026); ההנחיות המרחביות "
+             "של עיריית נס-ציונה (תכנית 130/3/א); ותכניות התב”ע המאושרות "
+             "לכל מתחם בנפרד."},
+    ("appendix_a", "אנשי קשר במינהלת"): {
+        "b": "אנשי הקשר במינהלת: מהנדס/ת המינהלת [שם + טלפון + אימייל]; "
+             "מזכירות המינהלת [שם + טלפון + אימייל]."},
+}
+
+# חלק ז titles that the docx truncated at the first colon.
+CHECKLIST_TITLE_FIXES: dict[str, str] = {
+    "חזיתות 4 כיוונים בקנ”מ 1": "חזיתות בארבעה כיוונים",
+    "ניתוח שמש (21.12, 9": "ניתוח שמש",
+}
+
+# ── v0.2.2 status semantics: what CAN the engine say about each row? ─────────
+# Findings used to come back "נדרשת בדיקה" for everything, conflating "the
+# item is missing from the submission" with "I cannot judge this myself".
+# Ellen saw all-yellow and got no signal. Each row now declares its mode:
+#
+#   auto_detect   - the item leaves a detectable trace (a drawing label, a
+#                   titled sheet, a file property).
+#   manual        - professional judgment or coordination with city staff.
+#                   No amount of parsing decides it.
+#   needs_context - the engine can see the item but cannot judge it (a value
+#                   that must be compared against the תב"ע, a lead-in row
+#                   describing the structure of what follows).
+#
+# HOW THE MODE IS DERIVED - and the rule that governs this file:
+# the mode comes ONLY from structural facts about the row (its section, its
+# position, whether it carries a check_key). It must NEVER be derived from
+# the Hebrew wording of the title or body. The first cut of this classifier
+# read the prose, and the חלק ו tb"a rows silently became "manual" because a
+# readability rewrite phrased them "ייבדק מול" - meaning an editor changing
+# a guideline's wording would change how every future submission is judged
+# against it. tests/test_check_mode_structural.py pins this: reword a row
+# arbitrarily and the category must not move.
+
+# Per-section default. A section is a coherent kind of requirement, so the
+# section is the primary structural signal.
+SECTION_DEFAULT_MODE: dict[str, str] = {
+    "part_a": "auto_detect",     # file format + CAD file properties
+    "part_b": "auto_detect",     # booklet structure - titled sheets
+    "part_c": "auto_detect",     # per-plot markings - drawing labels
+    "part_d": "auto_detect",     # facade/roof markings
+    "part_e": "auto_detect",     # required tables - titled artefacts
+    "part_f": "needs_context",   # tb"a parameters: numeric comparisons the
+                                 # engine cannot perform (Q1)
+    "part_g": "auto_detect",     # intake checklist - presence of each item
+    "appendix_a": "manual",      # standards + reference lists + contacts
+}
+
+# Rows whose mode differs from their section default. Keyed by
+# (section_key, sort_order) - a STRUCTURAL identity that is stable under
+# rewording, and the same placement key the seed adoption logic already uses.
+# The trailing comment names the row for humans; it is documentation only and
+# is never read by the code.
+CHECK_MODE_OVERRIDES: dict[tuple[str, int], str] = {
+    # Coordination with city staff - decided by people, not by parsing.
+    ("part_c", 148): "manual",        # תיאום הנדסי לשלב ההיתר
+    ("part_d", 69): "manual",         # תיאום חומרי גמר וחיפוי
+    ("part_d", 70): "manual",         # חיפוי לפי נספח חומריות
+    # Lead-in rows: they describe the STRUCTURE of the rows that follow, so
+    # there is no single marker to look for.
+    ("part_b", 39): "needs_context",  # מבנה העמודים לכל תא שטח
+    ("part_c", 52): "needs_context",  # סימונים וכיתובים נדרשים בתכנית
+    ("part_e", 83): "needs_context",  # פירוט הטבלה לכל יחידת דיור
+    # Explanatory / conditional rows.
+    ("part_e", 86): "manual",         # מטרת טבלת התמהיל
+    ("part_b", 46): "manual",         # תאי שטח זהים
+}
+
+
+def classify_check_mode(row: dict) -> str:
+    """Declare what the engine can say about this row.
+
+    STRUCTURAL ONLY. Reads section_key, sort_order and check_key; never the
+    title or body text. See the module note above and
+    tests/test_check_mode_structural.py.
+    """
+    key = (row["section_key"], row.get("sort_order"))
+    if key in CHECK_MODE_OVERRIDES:
+        return CHECK_MODE_OVERRIDES[key]
+    # A numeric threshold means the item is both findable and measurable.
+    # The runtime still degrades to needs_context when it finds the item but
+    # cannot measure a value (see run_attachment_review).
+    if row.get("check_key"):
+        return "auto_detect"
+    return SECTION_DEFAULT_MODE.get(row["section_key"], "needs_context")
+
 
 _CHECKBOX = "☐"
 
@@ -201,10 +678,24 @@ def apply_content_fixes(rows: list[dict]) -> None:
     and strip internal identifiers. Mutates rows in place; prints a
     before/after report for review."""
     dup_fixed, stub_fixed, tech_fixed = [], [], []
+    used_checklist_keys: set[str] = set()
+    readability_fixed: list[tuple[str, str, str, str, str]] = []
 
     for r in rows:
         title = r["title"]
         body = r.get("body_text") or ""
+
+        # 0. v0.2.2 readability pass runs FIRST: it replaces whole rows, so
+        # the later passes see (and leave alone) the finished text.
+        rw = READABILITY_REWRITES.get((r["section_key"], title))
+        if rw:
+            new_title = rw.get("t", title)
+            new_body = rw.get("b", body)
+            readability_fixed.append(
+                (r["section_key"], title, new_title, body, new_body))
+            r["title"] = new_title
+            r["body_text"] = new_body
+            title, body = new_title, new_body
 
         # 1. body repeats the title
         if title in DUPLICATE_BODY_REWRITES and norm(body) == norm(title):
@@ -215,9 +706,26 @@ def apply_content_fixes(rows: list[dict]) -> None:
         # 2. חלק ז checklist stubs
         if r["section_key"] == "part_g" and body.lstrip().startswith(_CHECKBOX):
             item = body.lstrip()[len(_CHECKBOX):].strip().rstrip(".")
-            r["body_text"] = CHECKLIST_TEMPLATE.format(item=item)
+            if item in CHECKLIST_EXCEPTIONS:
+                r["body_text"] = CHECKLIST_EXCEPTIONS[item]
+                used_checklist_keys.add(item)
+            else:
+                # "תא שטח 1: 6 העמודים הנדרשים" reads as a fragment after the
+                # template; turn the colon into a phrase that survives it.
+                if ": " in item:
+                    head, tail = item.split(": ", 1)
+                    item = f"{head} - {tail}"
+                frame = CHECKLIST_FRAMES.get(item, CHECKLIST_TEMPLATE)
+                if item in CHECKLIST_FRAMES:
+                    used_checklist_keys.add(item)
+                r["body_text"] = frame.format(item=item)
             stub_fixed.append((title, body, r["body_text"]))
             body = r["body_text"]
+            if title in CHECKLIST_TITLE_FIXES:
+                new_title = CHECKLIST_TITLE_FIXES[title]
+                readability_fixed.append(
+                    (r["section_key"], title, new_title, body, body))
+                r["title"] = new_title
 
         # 3. internal identifiers in either field
         for field in ("title", "body_text"):
@@ -231,9 +739,30 @@ def apply_content_fixes(rows: list[dict]) -> None:
                 r[field] = new
                 tech_fixed.append((title, field, val, new))
 
-    print(f"\nCONTENT SWEEP: {len(dup_fixed)} duplicate bodies rewritten, "
+    # Every rewrite key must match a real row, or a docx edit has silently
+    # orphaned it and the row Ellen reads stays broken.
+    stray = sorted((set(CHECKLIST_FRAMES) | set(CHECKLIST_EXCEPTIONS))
+                   - used_checklist_keys)
+    if stray:
+        print(f"FATAL: {len(stray)} checklist frame/exception keys matched no "
+              f"row: {stray}", file=sys.stderr)
+        sys.exit(1)
+
+    matched = {(s, t) for s, t, _, _, _ in readability_fixed}
+    orphans = sorted(set(READABILITY_REWRITES) - matched)
+    if orphans:
+        print(f"FATAL: {len(orphans)} readability rewrites matched no row: "
+              f"{orphans}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"\nCONTENT SWEEP: {len(readability_fixed)} rows rewritten for "
+          f"readability, {len(dup_fixed)} duplicate bodies rewritten, "
           f"{len(stub_fixed)} checklist stubs expanded, "
           f"{len(tech_fixed)} technical identifiers replaced")
+    for sec, old_t, new_t, old_b, new_b in readability_fixed:
+        print(f"  [read/{sec}] {old_t}"
+              + (f"  →  {new_t}" if new_t != old_t else "")
+              + f"\n        before: {old_b}\n        after:  {new_b}")
     for t, before, after in dup_fixed:
         print(f"  [dup] {t}\n        before: {before}\n        after:  {after}")
     for t, before, after in stub_fixed:
@@ -486,6 +1015,41 @@ def main() -> None:
     # docx wording (including the "☐" checklist glyphs) that the sweep
     # rewrites, so sweeping first silently breaks the numeric checks.
     apply_content_fixes(rows)
+
+    # v0.2.2: declare each row's check mode AFTER the readability pass, so
+    # classification reads the final wording Ellen sees.
+    import collections as _c
+    mode_counts: _c.Counter = _c.Counter()
+    for r in rows:
+        r["check_mode"] = classify_check_mode(r)
+        mode_counts[r["check_mode"]] += 1
+    # Overrides are keyed structurally, so the orphan check must be too: an
+    # override pointing at a (section, sort_order) that no longer exists means
+    # the docx moved and the row silently reverted to its section default.
+    orphan_modes = sorted(
+        set(CHECK_MODE_OVERRIDES)
+        - {(r["section_key"], r.get("sort_order")) for r in rows})
+    if orphan_modes:
+        print(f"FATAL: check-mode overrides matched no row: {orphan_modes}",
+              file=sys.stderr)
+        sys.exit(1)
+    print("\nCHECK MODES: " + ", ".join(
+        f"{k}={v}" for k, v in sorted(mode_counts.items())))
+    for r in rows:
+        print(f"  [{r['check_mode']:<13}] {r['section_key']:<10} {r['title']}")
+
+    # The approved CAD layer names must SURVIVE the whole pipeline, not merely
+    # be present in READABILITY_REWRITES. A later stage (TECH_ID_REPLACEMENTS)
+    # once substituted 0_OPEN_SPACE away after the rewrite had restored it, and
+    # nothing noticed. Assert against the rows about to be written.
+    _out_text = " ".join((r.get("title") or "") + " " + (r.get("body_text") or "")
+                         for r in rows)
+    _lost = [lid for lid in APPROVED_LAYER_IDS if lid not in _out_text]
+    if _lost:
+        print("FATAL: approved CAD layer name(s) missing from the generated "
+              f"seed: {', '.join(_lost)}. A later pipeline stage stripped them "
+              "after the readability rewrites restored them.", file=sys.stderr)
+        sys.exit(1)
 
     OUT.write_text(json.dumps({"sections": sections, "guidelines": rows},
                               ensure_ascii=False, indent=2), encoding="utf-8")

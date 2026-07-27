@@ -26,11 +26,22 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - name: Run convention gates (em-dash + jargon lexicon + download anchors)
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm', cache-dependency-path: app/frontend/package-lock.json }
+      - name: Frontend deps (esbuild, for the bidi Python/TS parity gate)
+        run: npm --prefix app/frontend ci --no-audit --no-fund
+      - name: Run convention gates (em-dash + jargon + anchors + check keys + chrome + bidi)
         run: |
-          pip install --quiet pytest
+          # python-docx: test_check_mode_structural imports the extraction
+          # script, which parses the source docx. Without it the gate errors
+          # on import and reports a failure that is not a convention breach.
+          pip install --quiet pytest python-docx
           python -m pytest tests/test_no_emdash.py tests/test_jargon_lexicon.py \
-                           tests/test_no_download_anchor.py -q
+                           tests/test_no_download_anchor.py \
+                           tests/test_check_key_attachment.py \
+                           tests/test_check_mode_structural.py \
+                           tests/test_report_chrome_shared.py \
+                           tests/test_bidi_isolation.py -q
 
   ui-suite:
     runs-on: ubuntu-latest
