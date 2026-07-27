@@ -671,3 +671,33 @@ five names plus their Hebrew alternatives to a tier, normalise gershayim and
 underscore/spelling variants, map 0_SETBACK to a generic setback role rather
 than FRONT, and add a gate that reads the layer names OUT of the seeded
 guideline text so the two cannot diverge again.
+
+B-16 ADDENDUM (v0.2.2 ruling: stays deferred, do not fix in this release)
+
+FIRST PIECE WHEN B-16 IS WORKED: 0_SETBACK -> SETBACK_FRONT. A wrong
+LOW-confidence guess is worse than UNKNOWN, because Ellen may accept it unread;
+UNKNOWN forces her to choose. Fix that mapping before adding any names.
+
+THE PATTERN - THIS IS THE THIRD INSTANCE. Three separate subsystems key off
+Hebrew strings, and in none of them does anything tie the code's expected text
+to the guideline text Ellen actually publishes:
+
+  1. CHECK_MAP needles (scripts/extract_guidelines_docx.py) - each of the 7
+     engine check_keys binds to a row by grepping a hard-coded Hebrew
+     substring. A rewording erases the binding. Caught only after the fact, by
+     an extractor FATAL and later tests/test_check_key_attachment.py. See B-13.
+  2. The check_mode classifier - originally proposed to read Hebrew prose;
+     rebuilt in v0.2.2 to key on (section_key, sort_order) precisely because
+     prose is not a stable key. tests/test_check_mode_structural.py holds that.
+  3. The DXF layer classifier (this item) - Tier 4 matches Hebrew layer names
+     by regex, and no test references it at all.
+
+The sharpest illustration is the gershayim mismatch: the Tier-4 rule spells
+שצ"פ with a STRAIGHT quote, while the docx and the seed use שצ”פ. A layer named
+EXACTLY as the guideline prints it does not match. Same class as the one-yud
+קו_בנין vs the published קו_בניין.
+
+The general lesson, worth applying before adding a fourth: Hebrew-string keys
+between two artifacts need either a shared constant or a gate that reads the
+strings OUT of the published text. Everything else drifts silently, and the
+drift is invisible to fact-level sweeps because no fact was lost.
