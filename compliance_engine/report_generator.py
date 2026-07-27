@@ -130,6 +130,9 @@ CONTENT_ROW_ORDER = [
 # the sidecar's guidelines and attachment reports (see report_chrome.py).
 # Duplicating it was how the two report families drifted apart.
 from .report_chrome import chrome_css as _chrome_css
+# Guideline text reaches THIS report too (section: הנחיות), so the same
+# bidi isolation applies here as in the sidecar PDFs and the app screen.
+from .report_chrome import isolate_ltr as _iso
 
 _CSS = _chrome_css()
 
@@ -938,9 +941,9 @@ def _render_guidelines_section(guideline_results: dict) -> str:
         cls, label = verdict_map.get(c.get("verdict"), ("v-rev", "נדרשת השלמה"))
         check_rows.append(
             '<tr>'
-            f'<td><b>{_esc(c.get("rule_name_he", ""))}</b></td>'
+            f'<td><b>{_iso(c.get("rule_name_he", ""))}</b></td>'
             f'<td><span class="{cls}">{label}</span></td>'
-            f'<td>{_esc(c.get("notes_he", ""))}</td>'
+            f'<td>{_iso(c.get("notes_he", ""))}</td>'
             '</tr>'
         )
     checks_html = ""
@@ -954,7 +957,7 @@ def _render_guidelines_section(guideline_results: dict) -> str:
     manual_html = ""
     if manual:
         items = "".join(
-            f'<li>{_esc(m.get("title", ""))}'
+            f'<li>{_iso(m.get("title", ""))}'
             f' <span class="referent-tag">(גרסה {_esc(m.get("version", ""))})</span></li>'
             for m in manual
         )

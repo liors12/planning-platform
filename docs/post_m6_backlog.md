@@ -701,3 +701,50 @@ The general lesson, worth applying before adding a fourth: Hebrew-string keys
 between two artifacts need either a shared constant or a gate that reads the
 strings OUT of the published text. Everything else drifts silently, and the
 drift is invisible to fact-level sweeps because no fact was lost.
+
+--------------------------------------------------------------------------
+
+B-17: title and body carry the same content (guidelines screen)
+PRIORITY: MEDIUM. v0.2.3. A DISPLAY change, not a content change - see why below.
+
+Found by rendering the guidelines screen for the first time (v0.2.2 pre-merge
+visual check). Three symptoms, ONE root cause: a row whose body restates its
+title, which a BEFORE/AFTER table cannot show because the table never puts the
+two side by side under each other.
+
+  A. חלק ז - 25 consecutive rows where the body adds three words and nothing
+     else:
+        title  תוכן עניינים מפורט     body  החוברת תכלול תוכן עניינים מפורט.
+        title  הקדמה וחזון            body  החוברת תכלול הקדמה וחזון.
+        title  חתכים אורכי + רוחבי    body  החוברת תכלול חתכים אורכי + רוחבי.
+     The six per-plot rows are the exception - they add real information
+     ("...עבור תא שטח 1 את ששת העמודים הנדרשים").
+
+  B. The same requirement appears TWICE inside one discipline card: the
+     substantive row and its חלק ז checklist echo. In אדריכלות וחזיתות:
+     נספח חומריות, מסתורי כביסה, פתחי ממ"ד, חזיתות, תכנית גג. Not new in
+     v0.2.2 - checklist rows always folded into disciplines - but while they
+     were "☐" stubs they read as a different KIND of thing.
+
+  C. Two titles in חלק א are full sentences with trailing periods, where every
+     neighbour is a noun phrase, and their bodies restate them:
+        הקבצים הבאים יצורפו להגשה. ללא קבצי CAD ההגשה לא תתקבל.
+        גודל קובץ. כל קובץ DWG/DXF מקסימום 200 MB.
+
+WHY THE OBVIOUS FIX IS NOT AVAILABLE. C cannot be fixed by editing the titles:
+those ARE the docx titles. Authority text is not ours to rewrite - that is the
+line this whole release has been drawn against. The same applies to A: the
+checklist item text is the authority's.
+
+So the only remedy available for all three is DISPLAY-LEVEL: suppress or
+collapse a body that restates its title (exact match after normalisation, or
+title-is-a-prefix-of-body). That is a UI change in Guidelines.tsx and the PDF
+builders, not a seed change, and it needs a rule careful enough not to hide a
+body that adds a threshold or a condition.
+
+NOTE ON PROVENANCE: A was CREATED by a correct fix in v0.2.2. The checklist
+template's trailing sentence "בקבלת ההגשה נבדק שהפריט קיים ותואם לנדרש" was cut
+because it was a claim about this software published as municipal guidance, and
+false as written. Cutting it was right. The residue - a body that now adds
+nothing - is the cost of that cut, and it is cheaper than shipping a false
+claim. Do not "restore" the sentence to fix the echo.

@@ -601,7 +601,8 @@ def _build_attachment_report_html(att: Attachment, review: dict,
     differs.
     """
     from html import escape
-    from compliance_engine.report_chrome import cover_html, document_html
+    from compliance_engine.report_chrome import (cover_html, document_html,
+                                                 isolate_ltr as _iso)
 
     label = _DISC_LABEL.get(att.discipline_key, att.discipline_key)
     now_str = datetime.now().strftime("%d/%m/%Y")
@@ -626,9 +627,9 @@ def _build_attachment_report_html(att: Attachment, review: dict,
         v = c.get("verdict", "requires_review")
         counts[v] = counts.get(v, 0) + 1
         parts.append(
-            f"<tr><td>{escape(c.get('rule_name_he', ''))}</td>"
+            f"<tr><td>{_iso(c.get('rule_name_he', ''))}</td>"
             f"<td>{escape(_VERDICT_HE.get(v, v))}</td>"
-            f"<td>{escape(c.get('notes_he', ''))}</td></tr>"
+            f"<td>{_iso(c.get('notes_he', ''))}</td></tr>"
         )
     parts.append("</tbody></table>")
 
@@ -638,8 +639,8 @@ def _build_attachment_report_html(att: Attachment, review: dict,
                      "<th>פעולה נדרשת</th></tr></thead><tbody>")
         for cm in comments:
             parts.append(
-                f"<tr><td>{escape(cm.topic_he)}</td><td>{escape(cm.status)}</td>"
-                f"<td>{escape(cm.action_he)}</td></tr>"
+                f"<tr><td>{_iso(cm.topic_he)}</td><td>{escape(cm.status)}</td>"
+                f"<td>{_iso(cm.action_he)}</td></tr>"
             )
         parts.append("</tbody></table>")
 

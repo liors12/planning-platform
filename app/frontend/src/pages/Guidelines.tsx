@@ -10,6 +10,7 @@ import {
   type GuidelineOut,
 } from "../api";
 import { MaybeApiError } from "../components/ErrorNotice";
+import { IsolateLtr } from "../lib/bidi";
 
 // Global guidelines editor - city-wide submission rules (NOT project-keyed).
 // v0.2.0: PRIMARY grouping by canonical discipline (sticky nav + one
@@ -95,7 +96,7 @@ export function Guidelines() {
           data-check-key={g.check_key ?? undefined}>
         <div className="guideline-main">
           <div className="guideline-title-line">
-            <b>{g.title}</b>
+            <b><IsolateLtr text={g.title} /></b>
             <span className="muted guideline-version"
                   title="מספר הגרסה עולה בכל עריכה; ההיסטוריה נשמרת">
               גרסה {g.version}
@@ -107,7 +108,12 @@ export function Guidelines() {
               ערך נדרש: <b>{g.check_value}</b> {g.unit ?? ""}
             </div>
           )}
-          {g.body_text && <p className="muted guideline-body">{g.body_text}</p>}
+          {g.body_text && (
+            <p className="muted guideline-body">
+              {/* LTR tokens (0_LOTS, 100 MB) reverse inside RTL text - see lib/bidi */}
+              <IsolateLtr text={g.body_text} />
+            </p>
+          )}
         </div>
         <div className="guideline-actions">
           <button type="button" className="primary-btn"

@@ -247,6 +247,7 @@ def _resolve_font_dir() -> Path:
 # two documents that did not look related. Both now render from the single
 # shared chrome in compliance_engine/templates/report_chrome.css.
 from compliance_engine.report_chrome import chrome_css as _chrome_css
+from compliance_engine.report_chrome import isolate_ltr as _iso
 
 _PDF_CSS = _chrome_css()
 
@@ -316,10 +317,12 @@ def _build_guidelines_html(rows: list[dict]) -> str:
                 value_cell = f"{g['check_value']:g} {escape(g['unit'] or '')}"
             else:
                 value_cell = "-"
-            body = escape(_dash(g["body_text"] or "-"))
+            # LTR technical tokens reverse inside RTL text; isolate_ltr
+            # escapes AND wraps them (see report_chrome).
+            body = _iso(_dash(g["body_text"] or "-"))
             parts.append(
                 "<tr>"
-                f"<td>{escape(_dash(g['title']))}</td>"
+                f"<td>{_iso(_dash(g['title']))}</td>"
                 f"<td class='body-text'>{body}</td>"
                 f"<td>{type_label}</td>"
                 f"<td>{value_cell}</td>"
