@@ -748,3 +748,49 @@ because it was a claim about this software published as municipal guidance, and
 false as written. Cutting it was right. The residue - a body that now adds
 nothing - is the cost of that cut, and it is cheaper than shipping a false
 claim. Do not "restore" the sentence to fix the echo.
+
+--------------------------------------------------------------------------
+
+B-18: font staging in the packaged build is UNVERIFIED
+PRIORITY: MEDIUM. Not a known break - an untested link, which is the same shape
+as the WebView2 download bug and the report_chrome.css staging gap.
+
+All three PDFs embed Heebo from assets/fonts/, staged into the PyInstaller
+bundle by backend.spec (`("../../assets/fonts", "assets/fonts")`) and resolved
+via report_chrome.resolve_font_dir(). Nothing verifies the fonts actually land
+in the packaged artifact.
+
+WHY THE EXISTING PROBE CANNOT CATCH IT. build-windows.yml's report-chrome probe
+asserts (1) 200 + %PDF, (2) size > 50 KB, (3) the body contains "/Image".
+None of the three fires on missing fonts:
+
+  * the render still SUCCEEDS - WeasyPrint falls back to a system face rather
+    than raising, so 200 + %PDF still passes;
+  * the size assertion is backwards here. MEASURED: with assets/fonts absent
+    the PDF gets LARGER, not smaller - 193 KB against 179 KB with the fonts
+    present - because the fallback face subsets differently. A "> 50 KB" floor
+    can never catch it, and a ceiling would be worse;
+  * "/FontFile" and "Heebo" do NOT appear in the raw bytes in either case,
+    because font descriptors and embedded programs sit inside compressed
+    streams. Verified on both renders. So no cheap byte-level assertion in
+    PowerShell distinguishes them.
+
+CONSEQUENCE IF IT REGRESSES: every PDF the municipality sends out renders
+Hebrew in a fallback face - wrong typography, and on a Windows host without a
+good Hebrew font, potentially unreadable text or tofu. Dev mode would look
+perfect throughout, because it reads assets/fonts/ from the source tree.
+
+WHAT A REAL CHECK NEEDS - one of:
+  a. a PDF library in the CI job (pypdf / pikepdf) to decompress the font
+     descriptors and assert an embedded FontFile2 whose BaseFont name contains
+     "Heebo". This is the direct assertion and the one to prefer;
+  b. rasterise page 1 and compare against a committed reference image, which
+     also covers layout regressions but is brittle across renderer versions;
+  c. cheapest partial: assert the staged bundle CONTAINS
+     assets/fonts/Heebo-Regular.ttf before the smoke test runs. That proves
+     staging, not embedding - the same distinction as the CSS, where boot
+     proves resolution but not use.
+
+(c) is a one-line file-existence check and would have caught a dropped datas
+entry; (a) is what actually proves the glyphs in the shipped PDF come from
+Heebo. Prefer (a), fall back to (c).
