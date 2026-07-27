@@ -148,6 +148,11 @@ a = Analysis(
     datas=[
         ("../../assets/fonts", "assets/fonts"),
         ("../../assets/nessziona_logo.png", "assets"),
+        # v0.2.2: the ONE shared report stylesheet. report_chrome.chrome_css()
+        # resolves it under _MEIPASS/compliance_engine/templates/ - without this
+        # entry all three PDFs render unstyled in the packaged build only.
+        ("../../compliance_engine/templates/report_chrome.css",
+         "compliance_engine/templates"),
         ("../../submission_format_rules.json", "."),
         # Rules JSONs needed by the V0.2 in-process full-audit path:
         #   audit.py resolves content_rules.json via PROJECT_ROOT (= _MEIPASS in frozen)

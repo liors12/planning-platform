@@ -592,20 +592,32 @@ _VERDICT_HE = {
 
 def _build_attachment_report_html(att: Attachment, review: dict,
                                   comments: list) -> str:
+    """The דו"ח התייחסות, in the same chrome as the main סקירת תוכנית עיצוב.
+
+    v0.2.2: this report used to render in a bespoke black-on-white stylesheet
+    with a bare <h1>. Ellen sends it to the same architects who receive the
+    main report, so it now uses the shared cover, colours, fonts, section and
+    table styling from compliance_engine/report_chrome. Only the title line
+    differs.
+    """
     from html import escape
+    from compliance_engine.report_chrome import cover_html, document_html
+
     label = _DISC_LABEL.get(att.discipline_key, att.discipline_key)
     now_str = datetime.now().strftime("%d/%m/%Y")
-    parts = [
-        "<html><head><meta charset='utf-8'></head><body>",
-        f"<div class='pdf-footer'>דו\"ח התייחסות לנספח {escape(label)} · "
-        f"גרסה {escape(att.version_string)} · {now_str}</div>",
-        f"<h1>דו\"ח התייחסות לנספח {escape(label)} - גרסה {escape(att.version_string)}</h1>",
-        f"<p class='meta'>הופק: {now_str}</p>",
-    ]
-    if review.get("notice_he"):
-        parts.append(
-            f"<p class='meta'><b>שימו לב:</b> {escape(review['notice_he'])}</p>")
-    parts += [
+
+    cover = cover_html(
+        title="דו\"ח התייחסות לנספח",
+        subtitles=[label, f"גרסה {att.version_string}"],
+        pill="דו\"ח התייחסות",
+        meta_rows=[("תחום:", label),
+                   ("גרסת הנספח:", att.version_string),
+                   ("תאריך הפקה:", now_str)],
+        note=review.get("notice_he") or None,
+    )
+
+    parts: list[str] = [
+        '<div class="chapter">',
         "<h2>ממצאי הבדיקה</h2>",
         "<table><thead><tr><th>סעיף</th><th>מצב</th><th>פירוט</th></tr></thead><tbody>",
     ]
@@ -622,7 +634,8 @@ def _build_attachment_report_html(att: Attachment, review: dict,
 
     if comments:
         parts.append("<h2>הערות מקושרות</h2>")
-        parts.append("<table><thead><tr><th>נושא</th><th>סטטוס</th><th>פעולה נדרשת</th></tr></thead><tbody>")
+        parts.append("<table><thead><tr><th>נושא</th><th>סטטוס</th>"
+                     "<th>פעולה נדרשת</th></tr></thead><tbody>")
         for cm in comments:
             parts.append(
                 f"<tr><td>{escape(cm.topic_he)}</td><td>{escape(cm.status)}</td>"
@@ -631,7 +644,8 @@ def _build_attachment_report_html(att: Attachment, review: dict,
         parts.append("</tbody></table>")
 
     total = sum(counts.values())
-    summary = " · ".join(f"{_VERDICT_HE.get(k, k)}: {n}" for k, n in counts.items())
+    summary = " \u00b7 ".join(f"{_VERDICT_HE.get(k, k)}: {n}"
+                             for k, n in counts.items())
     parts.append(f"<h2>סיכום</h2><p>נבדקו {total} סעיפים. {summary}.</p>")
-    parts.append("</body></html>")
-    return "".join(parts)
+    parts.append("</div>")
+    return document_html(cover=cover, content="".join(parts))

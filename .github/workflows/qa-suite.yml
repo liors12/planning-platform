@@ -26,12 +26,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - name: Run convention gates (em-dash + jargon lexicon + download anchors)
+      - name: Run convention gates (em-dash + jargon + anchors + check keys + report chrome)
         run: |
           pip install --quiet pytest
           python -m pytest tests/test_no_emdash.py tests/test_jargon_lexicon.py \
                            tests/test_no_download_anchor.py \
-                           tests/test_check_key_attachment.py -q
+                           tests/test_check_key_attachment.py \
+                           tests/test_check_mode_structural.py \
+                           tests/test_report_chrome_shared.py -q
 
   ui-suite:
     runs-on: ubuntu-latest
