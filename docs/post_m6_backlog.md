@@ -491,3 +491,117 @@ knowing when weighing further investment in the binding machinery (B-13).
 
 extracts.json is hand-maintained today. No extraction pipeline is proposed here
 - this entry records the finding only.
+
+--------------------------------------------------------------------------
+
+B-15: guideline voice unification - the 43 templated rows
+PRIORITY: LOW. Do NOT re-open on style grounds alone; see the reasoning below.
+
+v0.2.2's readability pass rewrote 92 of the 160 seeded guideline rows into the
+authority's voice. The remaining 68 were initially described as "raw rows in a
+second voice". That framing was wrong; the real breakdown is:
+
+  27  untouched, חלק ז checklist-template voice
+  16  untouched, DUPLICATE_BODY_REWRITES (v0.2.1, per-row hand-written)
+  25  untouched, genuinely raw
+      of which  6  had the body-echoes-title defect  -> FIXED in v0.2.2
+               19  were already clean prose in the authority's own voice
+                   (the waste-room rows part_c/142-157, the מינהלת additions
+                    part_b/144 and 158-160). Nothing to unify.
+
+So the open item is 43 rows in a uniform machine voice - not 68 raw ones.
+
+WHY THIS IS DEFERRED, AND WHY IT IS NOT SIMPLY "STYLE DEBT":
+
+  * חלק ז IS A CHECKLIST. The authority wrote it as ☐ lines to be scanned, not
+    read. A terse uniform voice there is arguably CORRECT rather than a defect;
+    turning "☐ נספח אקוסטי" into flowing prose would plausibly make it worse to
+    use. Anyone re-opening this must argue that point first, not assume it.
+  * The 16 duplicate-body rewrites are 16 separate editorial judgements keyed by
+    title, not one template. Reviewing them is 16 readings, not one.
+  * NO TOOLING SAFETY NET. Both available sweeps CONFIRM lists but cannot
+    ORIGINATE them: the docx-vs-seed sweep compares FACTS (identifiers, numbers,
+    units, standards) and would stay at 0 through a rewrite that destroyed the
+    meaning of every row; the jargon/tech-ID gates match shapes. Any rewrite here
+    needs a full manual reading of each row against the docx.
+  * Cost is therefore roughly half a day of authoring plus a full review round at
+    the density of the 92-row pass - spent on rows that are currently readable
+    and factually intact (sweep: 0 facts lost).
+
+WHAT WAS DONE IN v0.2.2 INSTEAD (cheap, bounded, and correctness-driven):
+  * the 6 echo rows rewritten (part_a/17,18,25,26 and part_f/93,95);
+  * "המפורטים להלן" removed from the CAD duplicate-body rewrite, matching the
+    ruling already applied to part_a/19, part_b/39 and part_c/52;
+  * the checklist template's trailing sentence
+    "בקבלת ההגשה נבדק שהפריט קיים ותואם לנדרש" CUT - it was a claim about this
+    software published as municipal guidance, and false as written (nothing
+    performs a conformance check at intake; see the 0-of-7 measure_key entry
+    above);
+  * CHECKLIST_FRAMES + CHECKLIST_EXCEPTIONS added because the single formula
+    produced category errors on 22 of the 35 rows (see below).
+
+STILL OPEN FOR A RULING (raised, not decided): three classes flagged inside the
+16 duplicate-body rewrites - added clauses (#2, #3, #10, borderline #15),
+softened modality (#5, #6, #16, mild #14). These were authored in v0.2.1 and
+have never been reviewed row by row.
+
+--------------------------------------------------------------------------
+
+SHIPPED DEFECT CLASS: the checklist template asserted the opposite of חלק א
+SHIPPED IN: v0.2.1.  FIXED IN: v0.2.2.  Logged as a shipped defect, not as a
+v0.2.2 finding - Ellen read these rows in a released build.
+
+v0.2.1 expanded all 35 חלק ז checklist stubs with ONE formula:
+    "החוברת תכלול {item}. בקבלת ההגשה נבדק שהפריט קיים ותואם לנדרש."
+
+The formula assumed every checklist item is a component CONTAINED IN the
+booklet. Most are not, and 22 of the 35 read wrongly as a result:
+
+  7 rows CONTRADICTED חלק א. "החוברת תכלול נספח אקוסטי - PDF נפרד" told the
+    architect the annexes go inside the booklet. חלק א says the opposite, in
+    the authority's own words: "לא יוטמעו בתוך החוברת הראשית". Two sections of
+    the same document, shipped saying opposite things.
+  8 rows were category errors: "החוברת תכלול שצ”פ", "החוברת תכלול צובר גז".
+    A booklet does not contain a gas tank.
+  6 per-plot rows carried two facts in one slot and read as fragments.
+  1 row was self-referential: "החוברת תכלול חוברת תכנית עיצוב".
+
+Additionally, the trailing sentence "בקבלת ההגשה נבדק שהפריט קיים ותואם
+לנדרש" was a claim about THIS SOFTWARE published as municipal guidance, and
+false as written - nothing performs a conformance check at intake (see the
+0-of-7 measure_key entry). It appeared on all 35 rows.
+
+WHY NOTHING CAUGHT IT: every gate is a shape or fact check. The docx-vs-seed
+sweep compares FACTS and stayed at 0 throughout - no identifier, number, unit
+or standard was lost. The sentence was well-formed Hebrew containing every
+fact from the source line. Only reading it against חלק א catches it.
+
+LESSON: a template applied uniformly to authority content asserts a
+RELATIONSHIP the source may not state ("the booklet contains X"). Before
+templating N rows, check that the frame's implicit claim is true for all N -
+it was true for 13 of 35 here.
+
+FIX: CHECKLIST_FRAMES (three verb frames: תוגש / יצורף / החוברת תציג) plus
+CHECKLIST_EXCEPTIONS for the six per-plot rows, keyed by the docx item text,
+with a FATAL if any key stops matching a row.
+
+--------------------------------------------------------------------------
+
+OPEN QUESTIONS FOR ELLEN (guideline wording; do not resolve unilaterally)
+
+Q1  part_d/78 solar panels. The docx says only "בפריסה מותאמת" and never
+    says adapted to WHAT. v0.2.1 resolved it as "לצורת הגג ולמערכות שעליו";
+    that was an invention and has been reverted to the source's ambiguity.
+    Ellen should say what the layout must be adapted to.
+
+Q2  part_e/85 unit-mix table. The docx line is an orphan fragment - the row's
+    TITLE and BODY are both "ולא טבלה מצרפת לפי בנדים של חדרים בלבד." v0.2.1
+    added a positive requirement ("יש להציג את הנתונים פר-יחידת דיור") which
+    the row does not carry; it is supported by the subsection heading ה.1 and
+    by the חלק ז checklist row 128 ("פר-יחידה, לא לפי בנד"), but NOT by this
+    row. Reverted to the prohibition alone. Ellen should confirm whether the
+    positive requirement belongs in this row.
+
+Q3  appendix_a/139 statutory name. The docx says "תקנון תכנון ובנייה"; the
+    statutory instrument is "תקנות התכנון והבנייה". Kept as the source wrote
+    it. Ellen to confirm whether the source is simply wrong.
