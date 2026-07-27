@@ -605,3 +605,69 @@ Q2  part_e/85 unit-mix table. The docx line is an orphan fragment - the row's
 Q3  appendix_a/139 statutory name. The docx says "תקנון תכנון ובנייה"; the
     statutory instrument is "תקנות התכנון והבנייה". Kept as the source wrote
     it. Ellen to confirm whether the source is simply wrong.
+
+--------------------------------------------------------------------------
+
+B-16: the DXF layer classifier does not know the layer names we publish
+PRIORITY: HIGH for correctness of expectations; the feature still works,
+because Ellen confirms every mapping by hand. Investigated in v0.2.2, NOT fixed.
+
+חלק א rows 20-24 tell the architect, in the authority's own words, which layer
+names to use - and offer a Hebrew alternative for each:
+
+  א/20  0_LOTS        or  תא_שטח_X
+  א/21  0_SETBACK     or  קו_בניין
+  א/22  0_BOUNDARY    or  קו_מגרש
+  א/23  0_BLDG        or  בניין_X
+  א/24  0_OPEN_SPACE  or  שצ"פ
+
+MODULE AND LOGIC: app/sidecar/sidecar/layer_mappings.py, _classify_layer(name).
+Four tiers, first match wins:
+  Tier 1  _TIER1_RZ      exact, case-insensitive UPPER, plus an "RZ_" prefix
+                         fallback. National רישוי זמין names only. HIGH.
+  Tier 2  _TIER2_MUNI    exact, case-insensitive lower. Tel Aviv muni_* names.
+  Tier 3  _TIER3_EXACT   exact, case-insensitive lower. Firm-specific names.
+  Tier 4  _TIER4_PATTERNS  re.search, IGNORECASE, substring/keyword. LOW.
+
+NONE of the five published names appears anywhere in the classifier. Verified by
+running _classify_layer on all ten published forms:
+
+  0_LOTS         -> UNKNOWN                     תא_שטח_5  -> AREA_ZONES    LOW
+  0_SETBACK      -> SETBACK_FRONT  LOW          קו_בניין  -> UNKNOWN
+  0_BOUNDARY     -> UNKNOWN                     קו_מגרש   -> UNKNOWN
+  0_BLDG         -> UNKNOWN                     בניין_3   -> UNKNOWN
+  0_OPEN_SPACE   -> UNKNOWN                     שצ"פ      -> PUBLIC_SPACE  LOW
+  (contrast) RZ_BOUNDARY -> PLOT_BOUNDARY  HIGH
+
+7 of 10 are UNKNOWN. The 3 that hit are Tier-4 substring accidents at LOW
+confidence, and one of them is WRONG: 0_SETBACK matches the generic "setback"
+keyword whose rule maps to SETBACK_FRONT, so a generic building-line layer is
+classified as the FRONT setback specifically.
+
+Three sharp details behind the misses:
+  * SPELLING. The Tier-4 rule is "קו\\s*בנין" - בנין with one yud. The guideline
+    says קו_בניין with two. "קו בנין" matches; "קו_בניין" does not. The
+    underscore also defeats "\\s*", which matches whitespace, not underscores.
+  * QUOTE FORM. The Tier-4 rule is 'שצ"פ' with a STRAIGHT quote. The seed and
+    the docx use the gershayim שצ”פ. Verified: שצ"פ -> PUBLIC_SPACE,
+    שצ”פ -> UNKNOWN. A layer named exactly as the guideline prints it misses.
+  * CASE. Tier 1 upper-cases before matching, so case is not the issue for the
+    0_* names - they are simply absent from every tier.
+
+GATE: none. No test in tests/ references layer_mappings or _classify_layer.
+Nothing ties the classifier's expected names to the guideline text, so the two
+can drift apart silently - and already have: v0.2.2 restored 0_LOTS, 0_SETBACK,
+0_BOUNDARY, 0_BLDG and 0_OPEN_SPACE to the guidelines Ellen publishes without
+anything noticing the parser had never heard of them.
+
+WHY THIS IS NOT A LIVE BREAKAGE: layer mapping is confirm-by-hand. discover
+seeds rows with a guessed role and confidence, and Ellen PATCHes each one. An
+UNKNOWN guess costs her a manual selection; it does not produce a wrong verdict
+on its own. The exception is 0_SETBACK, which guesses SETBACK_FRONT at LOW
+confidence - a wrong guess is worse than UNKNOWN if it is accepted unread.
+
+NOT FIXED IN v0.2.2 - reported only, per instruction. A fix would be: add the
+five names plus their Hebrew alternatives to a tier, normalise gershayim and
+underscore/spelling variants, map 0_SETBACK to a generic setback role rather
+than FRONT, and add a gate that reads the layer names OUT of the seeded
+guideline text so the two cannot diverge again.

@@ -302,19 +302,36 @@ jobs:
             }
           }
 
-          # Report-chrome probe (v0.2.2) — the ONLY place the packaged render
-          # path is exercised. All three PDFs read their stylesheet from
-          # compliance_engine/templates/report_chrome.css, staged into _MEIPASS
-          # by backend.spec. Dev mode reads it from the source tree and always
-          # looks right, so a missing datas entry would ship unstyled PDFs while
-          # every local check stayed green — the WebView2 download-bug shape.
+          # Packaged render + cover-asset probe (v0.2.2).
           #
-          # Three assertions, in order of what they rule out:
-          #   1. HTTP 200 + %PDF magic  -> the render path ran end to end with
-          #      the bundled weasyprint.exe
-          #   2. size > 50 KB           -> real content, not an error page
-          #   3. contains "/Image"      -> the branded cover's logo XObject was
-          #      found and embedded; an unstyled document has no cover at all
+          # WHAT THIS DOES NOT COVER, stated first so the gate is not trusted
+          # for the wrong thing: it does NOT prove report_chrome.css was staged
+          # into _MEIPASS. guidelines.py calls chrome_css() at MODULE IMPORT, so
+          # a missing stylesheet raises before uvicorn binds - the sidecar never
+          # boots and the /health probe above already fails. A missing CSS
+          # cannot degrade to unstyled output, and no assertion here can fire
+          # for that reason.
+          #
+          # What each assertion DOES catch, all of them request-time and so
+          # invisible to /health:
+          #   1. HTTP 200 + %PDF magic
+          #        the packaged render path itself - bundled weasyprint.exe
+          #        missing or not invocable, subprocess failure, any exception
+          #        raised inside the render. /health never renders anything.
+          #   2. body contains "/Image"
+          #        the LOGO ASSET failing to stage (assets/nessziona_logo.png)
+          #        while the CSS resolves and the server starts normally.
+          #        Measured: with the logo absent the document still renders
+          #        fully styled, 6.5 KB, with no image object. This is asset
+          #        packaging, not styling.
+          #   3. size > 50 KB
+          #        a backstop, NOT independent coverage - it fires on the same
+          #        missing-logo case as #2 (6.5 KB vs 179 KB). It does not catch
+          #        missing FONTS: with assets/fonts absent WeasyPrint falls back
+          #        to a system face and the file gets LARGER (193 KB), and the
+          #        font markers are inside compressed streams, so no cheap
+          #        byte-level assertion distinguishes them. Font staging is
+          #        uncovered here; see backlog.
           $chromeOk = $false
           $chromeErr = ""
           if ($passed) {
@@ -328,11 +345,11 @@ jobs:
               if ($magic -ne "%PDF") {
                 $chromeErr = "guidelines/export-pdf did not return a PDF (magic=$magic)."
               } elseif ($bytes.Length -lt 50000) {
-                $chromeErr = "guidelines PDF is only $($bytes.Length) bytes - too small to carry the branded cover; report_chrome.css likely missing from the bundle."
+                $chromeErr = "guidelines PDF is only $($bytes.Length) bytes - almost certainly the missing-logo case (measured 6.5 KB); see assertion 2."
               } elseif ($raw -notmatch "/Image") {
-                $chromeErr = "guidelines PDF embeds no image - the branded cover logo did not render, so the shared chrome did not apply in the packaged build."
+                $chromeErr = "guidelines PDF embeds no image - assets/nessziona_logo.png did not stage into the bundle. The document is still styled; the cover has no logo."
               } else {
-                Write-Host "OK guidelines PDF is styled: cover image embedded"
+                Write-Host "OK packaged render path works and the cover logo is embedded"
                 $chromeOk = $true
               }
             } catch {
