@@ -302,6 +302,44 @@ jobs:
             }
           }
 
+          # Report-chrome probe (v0.2.2) — the ONLY place the packaged render
+          # path is exercised. All three PDFs read their stylesheet from
+          # compliance_engine/templates/report_chrome.css, staged into _MEIPASS
+          # by backend.spec. Dev mode reads it from the source tree and always
+          # looks right, so a missing datas entry would ship unstyled PDFs while
+          # every local check stayed green — the WebView2 download-bug shape.
+          #
+          # Three assertions, in order of what they rule out:
+          #   1. HTTP 200 + %PDF magic  -> the render path ran end to end with
+          #      the bundled weasyprint.exe
+          #   2. size > 50 KB           -> real content, not an error page
+          #   3. contains "/Image"      -> the branded cover's logo XObject was
+          #      found and embedded; an unstyled document has no cover at all
+          $chromeOk = $false
+          $chromeErr = ""
+          if ($passed) {
+            try {
+              $pdfResp = Invoke-WebRequest -UseBasicParsing `
+                -Uri http://127.0.0.1:17321/guidelines/export-pdf -TimeoutSec 120
+              $bytes = $pdfResp.Content
+              $magic = [System.Text.Encoding]::ASCII.GetString($bytes[0..3])
+              $raw = [System.Text.Encoding]::Latin1.GetString($bytes)
+              Write-Host "guidelines/export-pdf: $($bytes.Length) bytes, magic=$magic"
+              if ($magic -ne "%PDF") {
+                $chromeErr = "guidelines/export-pdf did not return a PDF (magic=$magic)."
+              } elseif ($bytes.Length -lt 50000) {
+                $chromeErr = "guidelines PDF is only $($bytes.Length) bytes - too small to carry the branded cover; report_chrome.css likely missing from the bundle."
+              } elseif ($raw -notmatch "/Image") {
+                $chromeErr = "guidelines PDF embeds no image - the branded cover logo did not render, so the shared chrome did not apply in the packaged build."
+              } else {
+                Write-Host "OK guidelines PDF is styled: cover image embedded"
+                $chromeOk = $true
+              }
+            } catch {
+              $chromeErr = "report-chrome probe FAILED: $($_.Exception.Message)"
+            }
+          }
+
           Write-Host "`n─── sidecar.exe stdout ───"
           if (Test-Path $log) { Get-Content $log } else { Write-Host "(no stdout captured)" }
           Write-Host "`n─── sidecar.exe stderr ───"
@@ -317,6 +355,10 @@ jobs:
           }
           if (-not $seeded) {
             Write-Error "Boot smoke-test FAILED — $seedErr"
+            exit 1
+          }
+          if (-not $chromeOk) {
+            Write-Error "Boot smoke-test FAILED — $chromeErr"
             exit 1
           }
           Write-Host "Boot smoke-test PASSED ✓"
