@@ -21,6 +21,27 @@ segment it identically. Change one without the other and this goes red.
 Rendered-order assertions (that the isolate actually fixes the display, in a
 browser and in a generated PDF) live in tests/ui-dev/tests/97-bidi.spec.ts,
 which needs Playwright and so cannot run here.
+
+TWO BIDI ENGINES, ONE VERDICT (measured in v0.2.2, worth not re-deriving):
+the token list was first swept with the BROWSER as the oracle, but three of the
+four render paths are WeasyPrint/Pango - a different implementation. Both were
+then run over all 84 distinct LTR runs in the 160-row corpus:
+
+    * WeasyPrint flagged exactly the same 9 token shapes as the browser
+    * every one of the 20 tokens deliberately left alone - AC1018, EPSG:2039,
+      A3, 1:500, 9:00-15:00, PDF, DXF, DWG, RTL, 5281 ... - was safe in BOTH
+    * zero disagreements
+
+Measuring WeasyPrint took two attempts and the first was wrong: TextBox.text
+holds a run's LOGICAL text, so walking the box tree reproduces logical order
+and reports everything as fine. The working method renders the token twice -
+inside a <span> and inside a <span> carrying unicode-bidi:isolate - and
+compares rasterised pixels. Identical pixels mean the plain render already ran
+left-to-right. Holding the markup constant matters: wrapping one side in <bdi>
+perturbs layout on its own and reports false breakage.
+
+CONSEQUENCE: one oracle is enough for this rule going forward. The browser is
+the cheaper one, so the sweep harness uses it.
 """
 from __future__ import annotations
 
