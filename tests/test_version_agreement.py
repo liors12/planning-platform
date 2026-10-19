@@ -7,10 +7,11 @@ these three are the version, and a drift between them ships a binary whose
 parts claim different versions. v0.2.2 shipped labelled "0.2.1" partly
 because nothing forced the bump.
 
-Not covered, deliberately: Cargo.lock and package-lock.json record the app's
-own version too, and both still say 0.1.0 - drifted since before 0.1.1.
-Builds do not run --locked, so it has never broken anything; see the release
-report before tightening this gate to include them.
+All SIX places that record the app's own version are covered. The three
+lock/derived ones drifted for four releases before this gate existed:
+Cargo.lock and package-lock.json still said 0.1.0, and so did the sidecar's
+config.VERSION - which /health reports, so the one field we could use to
+learn what Ellen runs was wrong.
 """
 from __future__ import annotations
 
@@ -26,16 +27,26 @@ SEMVER = re.compile(r"^\d+\.\d+\.\d+$")
 def _versions() -> dict[str, str]:
     tauri = json.loads((ROOT / "app/tauri/tauri.conf.json").read_text(encoding="utf-8"))
     pkg = json.loads((ROOT / "app/frontend/package.json").read_text(encoding="utf-8"))
+    lock = json.loads((ROOT / "app/frontend/package-lock.json").read_text(encoding="utf-8"))
     cargo = (ROOT / "app/tauri/Cargo.toml").read_text(encoding="utf-8")
     m = re.search(r'^\[package\][^\[]*?^version\s*=\s*"([^"]+)"', cargo, re.M | re.S)
+    name = re.search(r'^\[package\][^\[]*?^name\s*=\s*"([^"]+)"', cargo, re.M | re.S).group(1)
+    clock = (ROOT / "app/tauri/Cargo.lock").read_text(encoding="utf-8")
+    cl = re.search(r'\[\[package\]\]\nname = "%s"\nversion = "([^"]+)"' % re.escape(name), clock)
+    sidecar = (ROOT / "app/sidecar/sidecar/config.py").read_text(encoding="utf-8")
+    sv = re.search(r'^VERSION\s*=\s*"([^"]+)"', sidecar, re.M)
     return {
         "app/tauri/tauri.conf.json": tauri.get("version"),
         "app/frontend/package.json": pkg.get("version"),
         "app/tauri/Cargo.toml [package]": m.group(1) if m else None,
+        "app/tauri/Cargo.lock [planning-platform]": cl.group(1) if cl else None,
+        "app/frontend/package-lock.json (root)": lock.get("version"),
+        "app/frontend/package-lock.json packages[\"\"]": lock["packages"][""].get("version"),
+        "app/sidecar/sidecar/config.py VERSION (/health)": sv.group(1) if sv else None,
     }
 
 
-def test_the_three_version_files_agree():
+def test_every_version_place_agrees():
     v = _versions()
     assert len(set(v.values())) == 1, (
         "app version disagrees across files:\n  "
