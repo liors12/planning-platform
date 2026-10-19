@@ -41,7 +41,7 @@ SQLCIPHER_PREFIX=$(brew --prefix sqlcipher)
 LDFLAGS="-L${SQLCIPHER_PREFIX}/lib" \
   CPPFLAGS="-I${SQLCIPHER_PREFIX}/include/sqlcipher" \
   pip install --break-system-packages --no-binary :all: sqlcipher3
-pip install --break-system-packages -r app/sidecar/requirements.txt
+pip install --break-system-packages -r app/sidecar/requirements.in   # exact direct pins; CI uses the per-platform locks
 
 # Frontend deps
 (cd app/frontend && npm install)
