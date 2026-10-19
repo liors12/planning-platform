@@ -42,7 +42,8 @@ jobs:
                            tests/test_check_mode_structural.py \
                            tests/test_report_chrome_shared.py \
                            tests/test_bidi_isolation.py \
-                           tests/test_release_safety.py -q
+                           tests/test_release_safety.py \
+                           tests/test_version_agreement.py -q
 
   ui-suite:
     runs-on: ubuntu-latest
