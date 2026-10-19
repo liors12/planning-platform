@@ -1475,71 +1475,41 @@ jobs:
           if-no-files-found: error
 
       - name: Compute release tag + title
-        # Release steps are gated to main/tags: a branch dispatch (e.g. the
-        # QA campaign) must never delete/replace the released installer.
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
-        # Tag form: v<version>-<UTC-date>-<short-sha>, e.g.
-        # v0.1.0-20260612-4dee986. We pull <version> from tauri.conf.json so
-        # bumping the app version in one place flows through to the tag.
-        # Outputs go to $GITHUB_ENV so the next step can read them.
+        # RELEASE POLICY (fix/release-safety): a release is cut ONLY by pushing
+        # an explicit version tag, and only ever as a DRAFT a human publishes.
+        # A push to main builds and tests but must never publish, tag or delete
+        # anything - on 2026-07-27 a main push auto-published a release labelled
+        # 0.2.1 that contained 0.2.2 code and deleted the real 0.2.1 release.
+        # tests/test_release_safety.py enforces this on every workflow file.
+        if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
           set -euo pipefail
           version=$(grep -oE '"version": *"[^"]+"' app/tauri/tauri.conf.json \
                     | head -1 | sed -E 's/.*"version": *"([^"]+)".*/\1/')
-          short=$(git rev-parse --short HEAD)
-          date_utc=$(date -u +%Y%m%d)
-          date_display=$(date -u +%Y-%m-%d)
-          tag="v${version}-${date_utc}-${short}"
-          title="Planning Platform — Build ${date_display}"
+          tag="${GITHUB_REF_NAME}"
+          # The tag is the human's statement of what is being released. If it
+          # disagrees with the version baked into the binary, stop: that
+          # mismatch is exactly how 0.2.2 code shipped as "0.2.1".
+          case "$tag" in
+            "v${version}"|"v${version}-"*) ;;
+            *) echo "::error::tag ${tag} does not match app version ${version} (tauri.conf.json)"; exit 1 ;;
+          esac
+          title="Planning Platform ${version} - $(date -u +%Y-%m-%d)"
           echo "RELEASE_TAG=${tag}"     >> "$GITHUB_ENV"
           echo "RELEASE_TITLE=${title}" >> "$GITHUB_ENV"
-          # B-10: version also exported standalone - the upload glob is
-          # scoped to it so cached older installers can't attach.
+          # B-10: the upload glob is scoped to this version so a cached older
+          # installer can never ride along.
           echo "APP_VERSION=${version}" >> "$GITHUB_ENV"
           echo "Tag:   ${tag}"
           echo "Title: ${title}"
 
-      - name: Delete previous build releases
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
-        # Each successful build cuts a new prerelease tagged
-        # v0.1.0-<date>-<sha>. Without cleanup the releases page grows
-        # one entry per build — confusing for Ellen, who only ever wants
-        # the latest installer. Loop through every v0.1.0-* release and
-        # delete it (and its tag) BEFORE softprops creates the new one,
-        # so the page always shows exactly one prerelease at the top.
-        # `|| true` on each delete so a partially-cleaned-up release
-        # (e.g. tag exists but release doesn't) doesn't fail the job.
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        shell: bash
-        run: |
-          set -uo pipefail
-          # B-10 follow-through: the filter was hardcoded to v0.1.0-* and
-          # stopped cleaning anything after the version bump. Match every
-          # build tag (v<semver>-<date>-<sha>) except the one this run is
-          # about to create.
-          tags=$(gh release list --json tagName --jq '.[].tagName' \
-                 | grep -E "^v[0-9]+\.[0-9]+\.[0-9]+-" \
-                 | grep -vx "${RELEASE_TAG}" || true)
-          if [ -z "$tags" ]; then
-            echo "No prior build releases found; nothing to clean."
-            exit 0
-          fi
-          echo "Deleting prior prereleases:"
-          echo "$tags"
-          while IFS= read -r tag; do
-            [ -z "$tag" ] && continue
-            echo "  - $tag"
-            gh release delete "$tag" --yes --cleanup-tag || true
-          done <<< "$tags"
-
-      - name: Create GitHub Release (pre-release)
-        if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')
-        # Pre-release while we're still iterating on the pilot — the badge on
-        # the releases page reads "Pre-release" so Ellen knows this isn't a
-        # stamped 1.0. softprops/action-gh-release creates the git tag for
-        # us; needs `contents: write` on the job (set at workflow root).
+      - name: Create GitHub Release (draft)
+        if: startsWith(github.ref, 'refs/tags/v')
+        # DRAFT, always. Nothing reaches Ellen until a human opens the draft
+        # on GitHub, checks the asset, and presses Publish. The tag already
+        # exists (it is what triggered this run), so softprops attaches to it
+        # rather than creating one. Needs `contents: write` (workflow root).
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
@@ -1555,7 +1525,8 @@ jobs:
           # B-10: scoped to THIS build's version (from tauri.conf.json via
           # APP_VERSION) so a cached older installer can never ride along.
           files: app/tauri/target/release/bundle/nsis/*_${{ env.APP_VERSION }}_*-setup.exe
-          # Full release (not prerelease) so /releases/latest resolves to it -
-          # that's the stable link Ellen uses.
+          # Draft until a human publishes it. Once published (not a
+          # prerelease) /releases/latest resolves to it - the link Ellen uses.
+          draft: true
           prerelease: false
           fail_on_unmatched_files: true
