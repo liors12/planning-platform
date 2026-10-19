@@ -2,6 +2,11 @@ name: Build Windows Installer
 
 on:
   workflow_dispatch:           # manual trigger
+    inputs:
+      ui_smoke_block_cdp:
+        description: 'Red-green for the UI gate: force the WebView2 CDP attach to fail, so the gate must report NOT RUN (not a pass).'
+        required: false
+        default: 'false'
   push:
     tags:
       - 'v*'                   # version-tag releases
@@ -14,6 +19,7 @@ on:
 
 permissions:
   contents: write          # softprops/action-gh-release needs write to create tags + releases
+  checks: write            # UI smoke publishes its own check run: neutral when it could not run
 
 jobs:
   build-windows:
@@ -1217,6 +1223,11 @@ jobs:
 
       - name: UI smoke gate (real WebView2)
         id: ui_smoke
+        env:
+          QA_BLOCK_CDP: ${{ github.event.inputs.ui_smoke_block_cdp == 'true' && '1' || '' }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Hard gate for REAL UI failures. A run that never attached is
+        # reported NOT RUN (neutral), never as a pass - see the verdict below.
         # Promoted to hard gate after 12+ green runs across P1→P5 with
         # zero flakes. The single transient red was a real test-
         # scaffolding bug (flow 6 missing UI refetch), not a flake —
@@ -1260,30 +1271,13 @@ jobs:
           npx playwright test --reporter=list 2>&1 | Tee-Object -FilePath $uiLog
           $exit = $LASTEXITCODE
           Pop-Location
-          if ($exit -ne 0) {
-            # Known infrastructure issue: since ~July 2026 the WebView2
-            # runtime on windows-latest refuses to bind the CDP debug port
-            # (--remote-debugging-port via WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS),
-            # so Playwright can never attach. The packaged app itself is
-            # proven healthy by the 49 API-level probes in the e2e step
-            # (app launches, sidecar starts, zero stderr). Tracked as a
-            # follow-up (move harness to a supported attach path). Only
-            # THIS signature is non-fatal — any other UI failure still
-            # blocks the installer.
-            $uiOut = Get-Content -Raw $uiLog -ErrorAction SilentlyContinue
-            if ($uiOut -match "WebView2 CDP endpoint .* never responded") {
-              Write-Host "::warning::UI smoke gate failed with the KNOWN WebView2 CDP bind issue (infra, tracked separately) — treated as non-fatal. Full tally above."
-              Write-Host "UI smoke gate: KNOWN INFRA FAILURE (non-fatal)"
-              # Explicit exit 0: GitHub's pwsh wrapper otherwise appends
-              # `exit $LASTEXITCODE`, which re-propagates playwright's 1.
-              exit 0
-            } else {
-              Write-Host "::error::UI smoke gate FAILED — installer will not publish. See Playwright report artifact."
-              exit $exit
-            }
-          } else {
-            Write-Host "UI smoke gate PASSED ✓"
-          }
+          # Verdict: PASSED / NOT RUN / FAILED. Before this, a CDP attach
+          # failure (B-6, since ~July 2026) printed a warning and exited 0,
+          # so this step showed GREEN on every build while testing nothing.
+          # NOT RUN now publishes a NEUTRAL check run + summary banner and does
+          # not fail the build; a real UI failure still blocks it.
+          python .github\scripts\ui_smoke_verdict.py --exit-code $exit --log $uiLog
+          exit $LASTEXITCODE
 
       - name: Attempt D — tauri-driver WebDriver probe
         # QA campaign Attempt D: official Tauri v2 e2e path. Sidesteps CDP

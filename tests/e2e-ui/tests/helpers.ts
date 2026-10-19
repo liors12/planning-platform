@@ -492,6 +492,10 @@ export async function waitForSidecar(timeoutMs = 30_000): Promise<void> {
 // Even after sidecar boots, WebView2 takes another moment to expose its
 // /json/version endpoint. Same poll-with-deadline pattern.
 export async function waitForCdp(port: number, timeoutMs = 30_000): Promise<string> {
+  // Red-green hook for the CI UI gate: QA_BLOCK_CDP=1 probes a port nothing
+  // listens on, reproducing the B-6 attach failure on demand, so the gate's
+  // NOT RUN path stays provable after the real runner issue is fixed.
+  if (process.env.QA_BLOCK_CDP === "1") { port = port + 1; timeoutMs = Math.min(timeoutMs, 10_000); }
   const deadline = Date.now() + timeoutMs;
   let lastErr: unknown = null;
   while (Date.now() < deadline) {

@@ -43,7 +43,8 @@ jobs:
                            tests/test_report_chrome_shared.py \
                            tests/test_bidi_isolation.py \
                            tests/test_release_safety.py \
-                           tests/test_version_agreement.py -q
+                           tests/test_version_agreement.py \
+                           tests/test_ui_smoke_verdict.py -q
 
   ui-suite:
     runs-on: ubuntu-latest
