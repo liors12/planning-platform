@@ -215,8 +215,10 @@ jobs:
                        -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
           Write-Host "Sentinel created: id=$($created.id) tava=$($created.tava_number)"
 
-          $back = Invoke-RestMethod http://127.0.0.1:17321/projects |
-                  Where-Object { $_.tava_number -eq $env:SENTINEL_TAVA }
+          # @(...) first: Invoke-RestMethod emits a JSON array as ONE pipeline
+          # object, so filtering it directly matches the whole list.
+          $all = @(Invoke-RestMethod http://127.0.0.1:17321/projects)
+          $back = $all | Where-Object { $_.tava_number -eq $env:SENTINEL_TAVA }
           if (-not $back) { throw "sentinel not readable back from the OLD build - probe cannot start" }
 
           # The layout under test: platform.db must be INSIDE the install dir.
@@ -265,8 +267,9 @@ jobs:
             try { Invoke-RestMethod http://127.0.0.1:17321/health -TimeoutSec 2 | Out-Null; break }
             catch { Start-Sleep -Seconds 1 }
           }
-          $hit = Invoke-RestMethod http://127.0.0.1:17321/projects |
-                 Where-Object { $_.tava_number -eq $env:SENTINEL_TAVA }
+          $all = @(Invoke-RestMethod http://127.0.0.1:17321/projects)
+          $hit = $all | Where-Object { $_.tava_number -eq $env:SENTINEL_TAVA }
+          Write-Host "projects after upgrade: $($all.Count)  ($(($all | ForEach-Object { $_.tava_number }) -join ', '))"
           Stop-Process -Id $proc.Id -Force
           Start-Sleep -Seconds 3
           if (-not $hit) {
@@ -280,10 +283,20 @@ jobs:
         shell: pwsh
         run: |
           Push-Location tests\e2e-ui
-          npx playwright test tests/upgrade.spec.ts --reporter=list
+          $out = npx playwright test tests/upgrade.spec.ts --reporter=list 2>&1 | Tee-Object -Variable log
           $exit = $LASTEXITCODE
           Pop-Location
-          if ($exit -ne 0) { "UI_RESULT=NOT VISIBLE" | Out-File -Append $env:GITHUB_ENV; exit $exit }
+          if ($exit -ne 0) {
+            # The WebView2 CDP attach failure (B-6) also breaks the regular UI
+            # smoke on these runners. Name it: "not visible" would claim the
+            # app was inspected and the row missing, which is not what happened.
+            if (($log | Out-String) -match "WebView2 CDP endpoint .* never responded") {
+              "UI_RESULT=NOT RUN - WebView2 CDP attach failed (runner infra, B-6)" | Out-File -Append $env:GITHUB_ENV
+            } else {
+              "UI_RESULT=NOT VISIBLE" | Out-File -Append $env:GITHUB_ENV
+            }
+            exit $exit
+          }
           "UI_RESULT=visible" | Out-File -Append $env:GITHUB_ENV
 
       - name: Verdict
