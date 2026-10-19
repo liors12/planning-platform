@@ -1,27 +1,37 @@
-fastapi>=0.110
-uvicorn[standard]>=0.27
-sqlalchemy>=2.0
-pydantic>=2.6
-sqlcipher3>=0.5
-python-multipart
+# Direct runtime dependencies of the sidecar + compliance engine, EXACT pins.
+# Human-edited. The locks are generated from this file - never edit them by hand:
+#   requirements-windows.txt   the packaged build (Windows, Python 3.11)
+#   requirements-linux.txt     CI test suites (Linux, Python 3.12)
+# Regenerate after changing a pin: see the header of either lock.
+# Versions = what the last green Windows build installed (run 39300596200,
+# 2026-10-19). Bumps arrive monthly as a Dependabot PR; never auto-merged.
+# tests/test_dependency_lock.py fails on any unpinned line or an out-of-sync lock.
+
+fastapi==0.149.0
+uvicorn[standard]==0.54.0
+sqlalchemy==2.1.5
+pydantic==2.14.1
+# sqlcipher3 has no Windows wheels; Windows falls back to stdlib sqlite3.
+sqlcipher3==0.6.2 ; sys_platform != "win32"   # last version run locally with SQLCipher 4.12
+python-multipart==0.0.32
 # openpyxl is used by compliance_engine.excel_export for the
 # "הפיקי אקסל" workbook export. Lazy-imported (function-body), so
 # PyInstaller also needs collect_submodules("openpyxl") in backend.spec.
-openpyxl>=3.1
+openpyxl==3.1.5
 # PyMuPDF (import fitz) — PDF text extraction for referent-comments ingestion.
 # Already listed as a hidden import in backend.spec for PyInstaller.
-PyMuPDF>=1.24
+PyMuPDF==1.28.2   # capped below 2.0 in ad2b4cf: 2.0 breaks the packaged engine (B-21)
 # DXF geometry analysis (Phase 1 CAD checks).
 # collect_submodules/collect_data_files in backend.spec depend on these being
 # installed at PyInstaller analysis time — missing entries here cause CI to fail.
-ezdxf>=0.18
-shapely>=2.0
+ezdxf==1.4.5
+shapely==2.2.0
 # pdfplumber — top-level import in compliance_engine/format_rules_checker.py.
 # NOT being here means PyInstaller can't collect it → No module named 'pdfplumber'
 # in the frozen bundle. pdfminer.six is pulled in transitively by pdfplumber.
-pdfplumber>=0.10
+pdfplumber==0.11.10
 # google-generativeai — lazy-imported (try/except) in submission_data_extractor,
 # meeting_extract, email_extract, referent_extract, vision_verify. Not in CI before
 # this means collect_submodules("google.generativeai") in backend.spec was a no-op
 # and those paths fell back silently. Must be installed for PyInstaller to collect it.
-google-generativeai>=0.5
+google-generativeai==0.8.6

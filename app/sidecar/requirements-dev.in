@@ -1,0 +1,10 @@
+# CI test tools, EXACT pins (versions from the last green QA run, 2026-10-19).
+pytest==9.1.1
+python-docx==1.2.0
+pyyaml==6.0.3
+# weasyprint: CI renders PDFs in-process on Linux. The packaged Windows build
+# does NOT use this - it ships Kozea's weasyprint.exe (v68.1, pinned by URL).
+weasyprint==70.0
+pypdf==6.21.1
+# The lock gate re-runs the lock command to prove the locks are in sync.
+uv==0.12.23

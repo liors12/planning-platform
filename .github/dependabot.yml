@@ -1,0 +1,43 @@
+# B-21: every dependency is pinned exactly, so nothing moves on its own. This
+# is how the pins move ON PURPOSE: once a month, one grouped PR per ecosystem.
+# A PR runs the full CI like any other and is merged by a person, never
+# automatically - do not add an auto-merge workflow for these.
+#
+# pip: Dependabot bumps the exact pins in requirements*.in. The per-platform
+# locks (requirements-windows.txt / requirements-linux.txt) must then be
+# regenerated with the uv command in each lock's header; the lock gate
+# (tests/test_dependency_lock.py) fails the PR until they are.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /app/sidecar
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 5
+    groups:
+      python: { patterns: ["*"] }
+
+  - package-ecosystem: npm
+    directories:
+      - /app/frontend
+      - /tests/e2e
+      - /tests/e2e-ui
+      - /tests/ui-dev
+      - /tests/ui-fixes
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 5
+    groups:
+      npm: { patterns: ["*"] }
+
+  - package-ecosystem: cargo
+    directory: /app/tauri
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 5
+    groups:
+      cargo: { patterns: ["*"] }
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 5
+    groups:
+      actions: { patterns: ["*"] }

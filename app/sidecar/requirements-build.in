@@ -1,0 +1,4 @@
+# Build-only tools for the packaged Windows installer, EXACT pins.
+pyinstaller==6.22.3
+# pypdf: the e2e smoke's PDF health check (build-windows, ui-smoke).
+pypdf==6.21.1

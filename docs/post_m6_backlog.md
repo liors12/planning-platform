@@ -794,3 +794,143 @@ WHAT A REAL CHECK NEEDS - one of:
 (c) is a one-line file-existence check and would have caught a dropped datas
 entry; (a) is what actually proves the glyphs in the shipped PDF come from
 Heebo. Prefer (a), fall back to (c).
+
+--------------------------------------------------------------------------
+
+B-19: 4 of the 9 verdicts print in English  - SHIPPED DEFECT, HIGH
+SHIPPED IN: v0.2.0 (attachments) through v0.2.2. Not fixed.
+
+The engine can emit nine verdicts: pass, fail, pass_with_note, fail_borderline,
+not_submitted, requires_review, manual_review, unevaluable, not_applicable.
+Each surface maps them to Hebrew with a `.get(v, v)`-style fallback, so an
+unmapped verdict prints its raw English key to the reader. Found while
+rendering a real דו"ח התייחסות for the conference deck: "pass_with_note"
+appeared in the table Ellen sends to architects.
+
+Sweep of every verdict/status label map (2026-10-19):
+
+  surface                      file                                  covers  missing
+  דו"ח התייחסות PDF            app/sidecar/sidecar/attachments.py     5/9    pass_with_note, fail_borderline, unevaluable, not_applicable   LIVE
+  attachments review screen    app/frontend/.../AttachmentsTab.tsx    5/9    the same four                                              LIVE
+  main report + Excel export   compliance_engine/constants.py         8/9    manual_review                                              LATENT
+  findings screen              app/frontend/.../FindingsView.tsx      9/9    -
+
+LATENT means no current path emits that status into those outputs:
+manual_review appears in the engine only as a check TYPE, never as a finding
+STATUS. It becomes live the day it does.
+
+Fix needs: Hebrew labels for the four (wording for Lior's approval - the
+existing five set the register), and a gate that derives the verdict list
+from the engine and fails if any label map misses one. Same defect class as
+the CAPS_UNDERSCORE tech-ID leak, in a different surface.
+
+--------------------------------------------------------------------------
+
+B-20: a merge to main published a release nobody approved - SHIPPED PROCESS DEFECT
+2026-07-27. FIXED ON BRANCH fix/release-safety (548642e), not yet in main.
+
+Pushing the v0.2.2 merge to main ran build-windows.yml's release job, gated
+on `github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')`.
+It created tag v0.2.1-20260727-b744fd3, published it as Latest (not draft,
+not prerelease, although the step was named "pre-release") with
+Planning.Platform_0.2.1_x64-setup.exe - labelled 0.2.1 because the version was
+never bumped, containing 0.2.2 code - and its "Delete previous build
+releases" step deleted the real v0.2.1 release and, with --cleanup-tag, the
+tags of every earlier build. 0 downloads. The approval had said "no tag, no
+release, no installer"; the report back said none had been made, because
+nobody checked what a push to main triggers.
+
+State now: the release was converted to a DRAFT on 2026-10-19 (asset and tag
+kept). /releases/latest therefore returns 404 - the link Ellen uses is dead
+until a new release is published.
+
+Fix on the branch: releases only on a version tag, only as draft, tag must
+match tauri.conf.json, delete step removed; tests/test_release_safety.py
+gates every workflow file (red against the July workflows: 3 failures).
+
+--------------------------------------------------------------------------
+
+FACT (recorded 2026-10-19, not a backlog item): data dir == install dir
+
+On Windows the sidecar's data dir and the NSIS install dir are the SAME
+folder, %LOCALAPPDATA%\Planning Platform:
+  - data:    app/sidecar/sidecar/config.py, _default_data_dir()
+  - install: app/tauri/tauri.conf.json, nsis.installMode = "currentUser"
+platform.db therefore lives inside the directory the installer rewrites.
+No release separated them - not v0.2.2, not any other. No document in the
+repo claims otherwise; the claim existed only in a prompt. Over-installs have
+kept data so far only because the NSIS uninstaller removes just the files it
+installed - an implementation detail, not a guarantee. See the data-dir
+proposal (2026-10-19 report) before relying on auto-uninstall.
+
+--------------------------------------------------------------------------
+
+B-21: every Python dependency is floor-only; PyMuPDF 2.0 already broke the packaged engine
+FOUND 2026-10-19. PyMuPDF capped on branch fix/release-safety (ad2b4cf).
+CLOSED 2026-10-19 on fix/release-safety (fabb5fc): exact pins + per-platform
+uv locks, CI installs only from them, actions/Rust/tauri tools pinned, monthly
+Dependabot PRs merged by a person, gate tests/test_dependency_lock.py.
+
+app/sidecar/requirements.txt pins nothing: every entry is `>=X` or bare.
+On 2026-10-19 the runner resolved `PyMuPDF>=1.24` to PyMuPDF 2.0, whose
+`import fitz` activates a `pymupdf.layout` package that loads ONNX data
+files PyInstaller does not collect. In the packaged app the import raises:
+the end-to-end smoke test failed 3 of 43 checks, including "engine job
+completed (run_full_audit loaded in bundle)" - i.e. a build made from main
+today cannot run an audit. Dev mode and pytest are unaffected, so nothing
+local would have shown it.
+
+Still floor-only (same exposure): fastapi, uvicorn, sqlalchemy, pydantic,
+python-multipart, openpyxl, ezdxf, shapely, pdfplumber, google-generativeai,
+and `pip install pyinstaller` in build-windows.yml.
+
+Fix needs: a lock file (pip-compile) or upper caps, regenerated deliberately;
+and the build should install from it, so a release is reproducible. Until
+then any rebuild of an old commit is NOT the build that shipped.
+
+--------------------------------------------------------------------------
+
+DECISIONS (Lior, 2026-10-19) - recorded so they are not reopened
+
+D-1: Auto-uninstall before install - NOT NEEDED. CLOSED.
+Install-over is proven to keep the data: the 0.2.1 -> 0.2.2 upgrade probe
+(ui-smoke.yml, job upgrade-probe) kept the sentinel project in runs
+39303871011 and 39304639970, and its sabotage run 39303884369 went red.
+Auto-uninstall would run the OLD uninstaller over the folder that holds
+platform.db (data dir == install dir, see the FACT above) for no
+demonstrated benefit. Do not reopen without a failure install-over cannot fix,
+and never before the data dir has moved out (D-2).
+
+D-2: Move the data dir out of the install dir - BACKLOG, LOW.
+Proposal as reported 2026-10-19 (section 6), nothing built:
+  - new default data folder outside %LOCALAPPDATA%\Planning Platform
+  - migration on the new version's first launch: copy with SQLite's backup
+    API (never a file copy - it must capture the WAL), into a temp folder,
+    verify file counts + PRAGMA integrity_check, then rename into place;
+    leave the old folder untouched for a few versions
+  - absolute file paths stored in the database (each submission's PDF path)
+    must be rewritten - the riskiest part
+  - a CI test for the migration, built like the upgrade probe
+Failure modes as Ellen would see them:
+  copy interrupted            nothing, if it falls back to the old folder
+  paths not rewritten         projects listed, PDFs and reports missing
+  downgrade then upgrade      recent work "disappears" (two folders drift)
+  disk full (~100 MB/PDF)     an error at launch
+  app open during the copy    a db missing recent changes, or no start
+
+D-3: B-14 - NO BUILD. DEFERRED until Ellen approves draft 4.1.
+Draft "19.10.26 טיוטא#4.1" drops 6 of the 7 numeric thresholds (only
+"צובר גז" remains, without its 2 m), so building inputs for them now builds
+for rules that are about to disappear.
+STANDING REASON automatic extraction (option C) is rejected: on page 13 of
+the real submission (תכנית_עיצוב_הטייסים_24.3.pdf, sha 92205abf...) the image
+reads 3 m for the pedestrian path and 2.5 m for the bike path - a pass - and
+the TEXT LAYER SWAPS THEM. An extractor would have FAILED a compliant plan.
+That is the only real measurement available, and it inverts. Options A
+(Ellen enters the values) and B (architect data sheet) remain open for
+whatever thresholds 4.1 keeps.
+
+D-4: The draft release v0.2.1-20260727-b744fd3 STAYS DRAFT until the
+attachment-mapping fix (v0.2.3 section 1) ships. /releases/latest returns
+404 until then.
+
