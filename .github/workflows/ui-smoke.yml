@@ -15,6 +15,14 @@ on:
       run_id:
         description: 'build-windows run ID to download installer from (required for manual dispatch)'
         required: true
+      upgrade_from_run_id:
+        description: 'UPGRADE PROBE: build-windows run ID of the OLD installer. Set this to run the upgrade probe instead of the UI smoke; run_id is then the NEW installer.'
+        required: false
+        default: ''
+      upgrade_sabotage:
+        description: 'UPGRADE PROBE red half: delete platform.db between the two installs. The probe MUST fail.'
+        required: false
+        default: 'false'
   workflow_run:
     workflows: ["Build Windows Installer"]
     types: [completed]
@@ -28,7 +36,8 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 15
     # workflow_run: only proceed if the triggering build succeeded.
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    # Stands aside when dispatched as an upgrade probe (upgrade_from_run_id set).
+    if: ${{ (github.event_name == 'workflow_dispatch' && inputs.upgrade_from_run_id == '') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -116,6 +125,196 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ui-smoke-report
+          path: |
+            tests/e2e-ui/playwright-report/**
+            tests/e2e-ui/test-results/**
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # ── Upgrade probe ─────────────────────────────────────────────────────────
+  # Ellen's installed version is unknown, most likely 0.2.1. Before any build
+  # is released to her, prove that installing it OVER an older build keeps her
+  # data. On this app that is not a given: the data dir and the install dir are
+  # the same folder (%LOCALAPPDATA%\Planning Platform, config.py + NSIS
+  # currentUser), so platform.db sits inside the directory the installer
+  # rewrites.
+  #
+  # Nothing here sets PLATFORM_DATA_DIR. Every other CI step overrides it to a
+  # temp dir, which would make this test pass by testing a layout Ellen does
+  # not have.
+  upgrade-probe:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.upgrade_from_run_id != '' }}
+    env:
+      SENTINEL_NAME: "בדיקת שדרוג ${{ github.run_id }}"
+      SENTINEL_TAVA: "UPGRADE-PROBE-${{ github.run_id }}"
+      SABOTAGE: ${{ inputs.upgrade_sabotage }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download OLD installer
+        uses: actions/download-artifact@v4
+        with:
+          name: ness-ziona-installer-windows
+          run-id: ${{ inputs.upgrade_from_run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: old
+
+      - name: Download NEW installer
+        uses: actions/download-artifact@v4
+        with:
+          name: ness-ziona-installer-windows
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path: new
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright deps
+        shell: bash
+        run: |
+          cd tests/e2e-ui
+          npm ci --no-audit --no-fund
+
+      - name: Old build - install, write sentinel through its own API, stop
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Remove-Item Env:PLATFORM_DATA_DIR -ErrorAction SilentlyContinue
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          if (Test-Path $installDir) { throw "runner not clean: $installDir already exists" }
+
+          $old = Get-ChildItem old\*.exe | Select-Object -First 1
+          Write-Host "OLD installer: $($old.Name)"
+          Start-Process -FilePath $old.FullName -ArgumentList "/S" -Wait
+
+          $reg = Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall |
+                 Get-ItemProperty | Where-Object { $_.DisplayName -like "Planning Platform*" } |
+                 Select-Object -First 1
+          $oldVer = $reg.DisplayVersion
+          Write-Host "Installed (registry DisplayVersion): $oldVer"
+          "OLD_VERSION=$oldVer" | Out-File -Append $env:GITHUB_ENV
+
+          $sidecar = Get-ChildItem -Recurse -File $installDir -Filter sidecar.exe | Select-Object -First 1
+          $proc = Start-Process -FilePath $sidecar.FullName -PassThru -WindowStyle Hidden
+          $ok = $false
+          for ($i = 0; $i -lt 60; $i++) {
+            try { Invoke-RestMethod http://127.0.0.1:17321/health -TimeoutSec 2 | Out-Null; $ok = $true; break }
+            catch { Start-Sleep -Seconds 1 }
+          }
+          if (-not $ok) { throw "old sidecar never answered /health" }
+
+          $body = @{ name_he = $env:SENTINEL_NAME; tava_number = $env:SENTINEL_TAVA } | ConvertTo-Json
+          $created = Invoke-RestMethod -Method Post http://127.0.0.1:17321/projects `
+                       -ContentType "application/json; charset=utf-8" `
+                       -Body ([System.Text.Encoding]::UTF8.GetBytes($body))
+          Write-Host "Sentinel created: id=$($created.id) tava=$($created.tava_number)"
+
+          $back = Invoke-RestMethod http://127.0.0.1:17321/projects |
+                  Where-Object { $_.tava_number -eq $env:SENTINEL_TAVA }
+          if (-not $back) { throw "sentinel not readable back from the OLD build - probe cannot start" }
+
+          # The layout under test: platform.db must be INSIDE the install dir.
+          $db = Join-Path $installDir "platform.db"
+          if (-not (Test-Path $db)) { throw "platform.db not at $db - the default data dir is not where config.py says" }
+          Write-Host "platform.db: $db  ($((Get-Item $db).Length) bytes)  - inside the install dir"
+
+          Stop-Process -Id $proc.Id -Force
+          Start-Sleep -Seconds 3
+
+      - name: SABOTAGE - delete platform.db between installs (red half only)
+        if: ${{ env.SABOTAGE == 'true' }}
+        shell: pwsh
+        run: |
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          Get-ChildItem $installDir -Filter "platform.db*" | ForEach-Object {
+            Write-Host "SABOTAGE: removing $($_.FullName)"; Remove-Item $_.FullName -Force
+          }
+
+      - name: New build - install over the old one
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $new = Get-ChildItem new\*.exe | Select-Object -First 1
+          Write-Host "NEW installer: $($new.Name)"
+          Start-Process -FilePath $new.FullName -ArgumentList "/S" -Wait
+          $reg = Get-ChildItem HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall |
+                 Get-ItemProperty | Where-Object { $_.DisplayName -like "Planning Platform*" } |
+                 Select-Object -First 1
+          $newVer = $reg.DisplayVersion
+          Write-Host "Installed after upgrade (registry DisplayVersion): $newVer"
+          "NEW_VERSION=$newVer" | Out-File -Append $env:GITHUB_ENV
+          if ($newVer -eq $env:OLD_VERSION) {
+            throw "registry still reports $newVer - the upgrade did not replace the old build, so this run proves nothing"
+          }
+
+      - name: New build - sentinel via the new app's API
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Remove-Item Env:PLATFORM_DATA_DIR -ErrorAction SilentlyContinue
+          $installDir = Join-Path $env:LOCALAPPDATA "Planning Platform"
+          $sidecar = Get-ChildItem -Recurse -File $installDir -Filter sidecar.exe | Select-Object -First 1
+          $proc = Start-Process -FilePath $sidecar.FullName -PassThru -WindowStyle Hidden
+          for ($i = 0; $i -lt 60; $i++) {
+            try { Invoke-RestMethod http://127.0.0.1:17321/health -TimeoutSec 2 | Out-Null; break }
+            catch { Start-Sleep -Seconds 1 }
+          }
+          $hit = Invoke-RestMethod http://127.0.0.1:17321/projects |
+                 Where-Object { $_.tava_number -eq $env:SENTINEL_TAVA }
+          Stop-Process -Id $proc.Id -Force
+          Start-Sleep -Seconds 3
+          if (-not $hit) {
+            "API_RESULT=LOST" | Out-File -Append $env:GITHUB_ENV
+            throw "SENTINEL LOST: $env:OLD_VERSION -> $env:NEW_VERSION, the row written by the old build is gone"
+          }
+          "API_RESULT=present" | Out-File -Append $env:GITHUB_ENV
+          Write-Host "Sentinel present after upgrade: id=$($hit.id) name=$($hit.name_he)"
+
+      - name: New build - sentinel visible in the running app (real WebView2)
+        shell: pwsh
+        run: |
+          Push-Location tests\e2e-ui
+          npx playwright test tests/upgrade.spec.ts --reporter=list
+          $exit = $LASTEXITCODE
+          Pop-Location
+          if ($exit -ne 0) { "UI_RESULT=NOT VISIBLE" | Out-File -Append $env:GITHUB_ENV; exit $exit }
+          "UI_RESULT=visible" | Out-File -Append $env:GITHUB_ENV
+
+      - name: Verdict
+        if: always()
+        shell: pwsh
+        run: |
+          $lines = @(
+            "### Upgrade probe",
+            "",
+            "| | |", "|---|---|",
+            "| old build | $env:OLD_VERSION |",
+            "| new build | $env:NEW_VERSION |",
+            "| sabotage | $env:SABOTAGE |",
+            "| sentinel via API | $env:API_RESULT |",
+            "| sentinel in the app | $env:UI_RESULT |"
+          )
+          $lines | Out-File -Append $env:GITHUB_STEP_SUMMARY
+          $lines | Write-Host
+
+      - name: Uninstall
+        if: always()
+        shell: pwsh
+        run: |
+          $u = Join-Path (Join-Path $env:LOCALAPPDATA "Planning Platform") "uninstall.exe"
+          if (Test-Path $u) { Start-Process -FilePath $u -ArgumentList "/S" -Wait }
+
+      - name: Upload upgrade-probe artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upgrade-probe-report
           path: |
             tests/e2e-ui/playwright-report/**
             tests/e2e-ui/test-results/**
