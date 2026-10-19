@@ -867,6 +867,9 @@ proposal (2026-10-19 report) before relying on auto-uninstall.
 
 B-21: every Python dependency is floor-only; PyMuPDF 2.0 already broke the packaged engine
 FOUND 2026-10-19. PyMuPDF capped on branch fix/release-safety (ad2b4cf).
+CLOSED 2026-10-19 on fix/release-safety (fabb5fc): exact pins + per-platform
+uv locks, CI installs only from them, actions/Rust/tauri tools pinned, monthly
+Dependabot PRs merged by a person, gate tests/test_dependency_lock.py.
 
 app/sidecar/requirements.txt pins nothing: every entry is `>=X` or bare.
 On 2026-10-19 the runner resolved `PyMuPDF>=1.24` to PyMuPDF 2.0, whose
@@ -884,3 +887,50 @@ and `pip install pyinstaller` in build-windows.yml.
 Fix needs: a lock file (pip-compile) or upper caps, regenerated deliberately;
 and the build should install from it, so a release is reproducible. Until
 then any rebuild of an old commit is NOT the build that shipped.
+
+--------------------------------------------------------------------------
+
+DECISIONS (Lior, 2026-10-19) - recorded so they are not reopened
+
+D-1: Auto-uninstall before install - NOT NEEDED. CLOSED.
+Install-over is proven to keep the data: the 0.2.1 -> 0.2.2 upgrade probe
+(ui-smoke.yml, job upgrade-probe) kept the sentinel project in runs
+39303871011 and 39304639970, and its sabotage run 39303884369 went red.
+Auto-uninstall would run the OLD uninstaller over the folder that holds
+platform.db (data dir == install dir, see the FACT above) for no
+demonstrated benefit. Do not reopen without a failure install-over cannot fix,
+and never before the data dir has moved out (D-2).
+
+D-2: Move the data dir out of the install dir - BACKLOG, LOW.
+Proposal as reported 2026-10-19 (section 6), nothing built:
+  - new default data folder outside %LOCALAPPDATA%\Planning Platform
+  - migration on the new version's first launch: copy with SQLite's backup
+    API (never a file copy - it must capture the WAL), into a temp folder,
+    verify file counts + PRAGMA integrity_check, then rename into place;
+    leave the old folder untouched for a few versions
+  - absolute file paths stored in the database (each submission's PDF path)
+    must be rewritten - the riskiest part
+  - a CI test for the migration, built like the upgrade probe
+Failure modes as Ellen would see them:
+  copy interrupted            nothing, if it falls back to the old folder
+  paths not rewritten         projects listed, PDFs and reports missing
+  downgrade then upgrade      recent work "disappears" (two folders drift)
+  disk full (~100 MB/PDF)     an error at launch
+  app open during the copy    a db missing recent changes, or no start
+
+D-3: B-14 - NO BUILD. DEFERRED until Ellen approves draft 4.1.
+Draft "19.10.26 טיוטא#4.1" drops 6 of the 7 numeric thresholds (only
+"צובר גז" remains, without its 2 m), so building inputs for them now builds
+for rules that are about to disappear.
+STANDING REASON automatic extraction (option C) is rejected: on page 13 of
+the real submission (תכנית_עיצוב_הטייסים_24.3.pdf, sha 92205abf...) the image
+reads 3 m for the pedestrian path and 2.5 m for the bike path - a pass - and
+the TEXT LAYER SWAPS THEM. An extractor would have FAILED a compliant plan.
+That is the only real measurement available, and it inverts. Options A
+(Ellen enters the values) and B (architect data sheet) remain open for
+whatever thresholds 4.1 keeps.
+
+D-4: The draft release v0.2.1-20260727-b744fd3 STAYS DRAFT until the
+attachment-mapping fix (v0.2.3 section 1) ships. /releases/latest returns
+404 until then.
+
