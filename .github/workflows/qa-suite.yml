@@ -53,7 +53,8 @@ jobs:
                            tests/test_attachment_scope.py \
                            tests/test_attachment_readability.py \
                            tests/test_duration_he.py \
-                           tests/test_attachment_multifile.py -q
+                           tests/test_attachment_multifile.py \
+                           tests/test_golden_attachment_reports.py -q
 
   ui-suite:
     runs-on: ubuntu-latest

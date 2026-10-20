@@ -1,0 +1,107 @@
+{
+ "_status": "PROPOSED - awaiting Lior's approval; not a baseline until approved",
+ "file": "traffic-12753.1-1_ts-1-3-5.pdf",
+ "original_name": "אאורה מתחם הטייסים - נספח תנועה ראשוני תאי שטח 1,3,5.pdf",
+ "sheet": "12753.1/1",
+ "md5": "932f6c4fe6b7a65b9a0395b8a2e79432",
+ "attachment_type": "sec-3-4",
+ "text_layer_ok": false,
+ "checks": [
+  {
+   "rule_code": "ATTACH_NO_TEXT_LAYER_NOTICE",
+   "title": "לא ניתן לקרוא את הטקסט בקובץ",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_44",
+   "title": "תכנית מרתף",
+   "verdict": "requires_review",
+   "guideline": "part_b#44"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_88",
+   "title": "טבלת חניה לכל תא שטח (חובה)",
+   "verdict": "requires_review",
+   "guideline": "part_e#88"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_89",
+   "title": "תקן חניה לאומי 3.1 (ינואר 2023)",
+   "verdict": "requires_review",
+   "guideline": "part_e#89"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_101",
+   "title": "יחס חניה",
+   "verdict": "requires_review",
+   "guideline": "part_f#101"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_139",
+   "title": "תקנים לאומיים מחייבים",
+   "verdict": "manual_review",
+   "guideline": "appendix_a#139"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_158",
+   "title": "חניות אורחים - תוספת מינהלת",
+   "verdict": "requires_review",
+   "guideline": "part_b#158"
+  },
+  {
+   "rule_code": "ATTACH_PARKING_BALANCE_COMPLETE",
+   "title": "שלמות מאזן החניה",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_PARKING_ARITHMETIC",
+   "title": "בדיקת חשבון מאזן החניה",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_PARKING_RATIO_RESIDENTIAL",
+   "title": "יחס חניה למגורים 1.3:1 לפחות",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_GUEST_PARKING_30",
+   "title": "חניות אורחים 30%",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_PARKING_COLUMNS",
+   "title": "עמודות נגישות ואופניים",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_RAMP_CLEARANCE",
+   "title": "גבהים חופשיים ברמפות",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_WASTE_TRUCK_MANEUVER",
+   "title": "תמרון רכב פינוי אשפה",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_SHEET_VERSION_CONSISTENCY",
+   "title": "עקביות גרסאות בין גיליונות",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_FILE_FORMAT",
+   "title": "פורמט קובץ",
+   "verdict": "pass"
+  },
+  {
+   "rule_code": "ATTACH_FILE_PAGES",
+   "title": "מספר עמודים",
+   "verdict": "pass"
+  },
+  {
+   "rule_code": "ATTACH_FILE_TEXT_LAYER",
+   "title": "שכבת טקסט",
+   "verdict": "requires_review"
+  }
+ ]
+}
