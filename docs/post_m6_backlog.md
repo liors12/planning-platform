@@ -967,3 +967,56 @@ Why it matters: a test that fails without a code change is a test nobody
 will trust when it fails for real. Fix needs the cause first (the trace in
 the artifact has the network log), then a wait on the real condition - not
 a retry and not a sleep.
+
+--------------------------------------------------------------------------
+
+B-23: every attachment report ran 25 unrelated general checks, on every type - SHIPPED DEFECT, HIGH
+SHIPPED IN: v0.2.1 (2200184) through v0.2.2 (main 9975d2e). FIXED ON
+feat/v0.2.3 (ea33905 + the include follow-up), not yet in main.
+
+Since v0.2.1, attachment_check_mapping.json marked the whole כללי section
+'חלק א - פורמט קבצים' always-on for EVERY attachment type, matched by its
+Hebrew title. Its 25 rows are booklet rules (page size, fonts, file name),
+the booklet's required-files list (CAD, development plan, basement plan,
+sections), CAD-file rules (DWG/DXF/XREF/layers/coordinates) and other
+annexes (hydrology, green building, environment). None is a property of a
+single sheet.
+
+  v0.2.1  the rows answered "נדרשת בדיקה" - wrong scope, but silent.
+  v0.2.2  status semantics let a presence check say "לא הוגש"; the same rows
+          now told architects they had omitted work a traffic sheet never
+          contains. Found by Ellen on sheet 12753.1/3: 44 checks, 31 "לא הוגש".
+
+Measured on the real file through the API: v0.2.1 and main run the SAME 44
+checks in the same order; only the verdicts differ. No Hebrew key broke
+between the versions - the mapping was too wide from the day it shipped.
+
+Per type, checks before -> after the fix: traffic 44->17, waste 43->18,
+landscape 34->7, infrastructure 32->6, roads 38->11, drainage 34->9,
+architecture 60->26, environment 32->4, tenant services 28->3, public
+buildings 36->11, general 84->25.
+
+Fix: scope keyed on section_key/sort_order (structural), part_a and part_g
+never on an attachment, cross-discipline rows only by explicit mapping.
+Gate: tests/test_attachment_scope.py. Ellen approves the per-type lists:
+~/Downloads/מיפוי_בדיקות_לפי_נספח.xlsx (2026-10-20). Open decision for her:
+"שירותים לדיירים" has no guideline at all - delete the type or say what
+belongs to it.
+
+--------------------------------------------------------------------------
+
+B-24: discipline rows inside part_a run on no attachment - LOW
+DECIDED 2026-10-20 (Lior): part_a is booklet-only for every discipline.
+
+Consequence: the discipline-tagged rows of part_a - e.g. נספח אקוסטי
+(sec-3-8, part_a#31), שכבת קווי בניין (sec-3-3, part_a#21), נספח חומריות,
+רשימת צמחייה, פוליגונים סגורים - now run on no attachment. They still run
+in the main audit. Reopen when an attachment type exists that matches one
+(e.g. an acoustic annex, or a CAD file as an attachment): add the row to
+that type with include_guidelines, by (section_key, sort_order).
+
+Note, same family: "דיאגרמת פונקציות" (part_b#42) is still TAGGED תנועה in
+the guidelines database, which is where the main report files it. For
+attachments it is excluded from traffic and included in architecture
+(include_guidelines). Retagging the row itself changes the main report and
+is a guidelines-content decision, not done.
