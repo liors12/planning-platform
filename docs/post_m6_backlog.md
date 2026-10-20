@@ -934,3 +934,36 @@ D-4: The draft release v0.2.1-20260727-b744fd3 STAYS DRAFT until the
 attachment-mapping fix (v0.2.3 section 1) ships. /releases/latest returns
 404 until then.
 
+
+--------------------------------------------------------------------------
+
+B-22: flaky viewport test - the comments form is "not rendered" at 1024x700
+FOUND 2026-10-19 on main after the fix/release-safety merge. NOT FIXED.
+
+Test:   tests/ui-dev/tests/01-layer2-viewports.spec.ts:28
+        "layout 1024x700: home / overview / submissions / findings / cad /
+        guidelines / settings", assertion at line 64:
+        "comments form clipped controls: form not rendered"
+Runs:   QA Suite 39312456426 (main, 9975d2e) attempt 1 FAILED,
+        attempt 2 (rerun of the failed job, same commit) PASSED.
+        The identical tree passed on fix/release-safety in 39309715615.
+Evidence: docs/evidence/B-22-comments-1024x700-failed.jpeg - the last
+        screencast frame of the failed attempt (artifact qa-suite-traces
+        12216956740, expires with the run's retention).
+
+What the frame shows: the הערות רפרנטים tab rendered its "לא זמין" card
+(run the check before entering reviewer comments) instead of the form. So
+the form was legitimately absent at that instant - the assertion is not
+reading a clipped layout, it is reading a project with no completed check.
+
+Not the cause: parallel tests - playwright.config.ts has workers: 1.
+Two hypotheses, neither verified:
+  1. ordering/state - an earlier spec leaves project 1 without a completed
+     check when this one reaches the tab;
+  2. loading race - the tab shows "לא זמין" before its status request
+     returns, and page.evaluate runs right after click() with no wait.
+
+Why it matters: a test that fails without a code change is a test nobody
+will trust when it fails for real. Fix needs the cause first (the trace in
+the artifact has the network log), then a wait on the real condition - not
+a retry and not a sleep.
