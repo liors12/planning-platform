@@ -63,6 +63,12 @@ def test_ground_floor_function_diagram_is_not_a_traffic_check():
     assert ("part_b", 42) not in {(g.section_key, g.sort_order) for g in picked}
 
 
+def test_function_diagram_runs_on_architecture_instead():
+    """Taken out of traffic, it must land somewhere - not vanish."""
+    picked = select_guidelines(_mapping(), "sec-3-7", _guidelines())
+    assert ("part_b", 42) in {(g.section_key, g.sort_order) for g in picked}
+
+
 @pytest.mark.parametrize("dtype", _types())
 def test_no_general_row_rides_along_on_another_type(dtype):
     if dtype == "general":
@@ -92,7 +98,8 @@ def test_scope_is_keyed_structurally_not_by_hebrew_title():
     keys = list(m["attachment_scope"]["submission_only_sections"])
     for t in m["types"].values():
         keys += t.get("exclude_sections", [])
-        keys += [e["section_key"] for e in t.get("exclude_guidelines", [])]
+        keys += [e["section_key"] for e in t.get("exclude_guidelines", [])
+                 + t.get("include_guidelines", [])]
     hebrew = [k for k in keys if HEBREW.search(k)]
     assert not hebrew, f"scope keyed on Hebrew text: {hebrew}"
 
@@ -102,6 +109,9 @@ def test_every_exclusion_points_at_a_real_row_of_that_type():
     rows = {(g.section_key, g.sort_order): g for g in _guidelines()}
     stale = []
     for dtype, t in _mapping()["types"].items():
+        for e in t.get("include_guidelines", []):
+            if (e["section_key"], e["sort_order"]) not in rows:
+                stale.append(f"{dtype} include: {e['section_key']}#{e['sort_order']}")
         for e in t.get("exclude_guidelines", []):
             g = rows.get((e["section_key"], e["sort_order"]))
             if g is None or g.discipline_key != dtype:

@@ -370,8 +370,9 @@ def select_guidelines(full_mapping: dict, discipline_key: str, active) -> list:
     """The guideline rows a review of this attachment type runs, in order.
 
     1. guidelines tagged with THIS discipline;
-    2. mapped extra check_keys from other disciplines - the ONLY way a row
-       from another discipline (כללי included) reaches this type. Until
+    2. mapped extra check_keys and include_guidelines from other
+       disciplines - the ONLY ways a row from another discipline (כללי
+       included) reaches this type. Until
        v0.2.2 every כללי row of 'חלק א' rode along on every type: 25 rows a
        traffic sheet answered 'לא הוגש' to (B-23);
     3. minus anything attachment_scope() rules out.
@@ -382,6 +383,12 @@ def select_guidelines(full_mapping: dict, discipline_key: str, active) -> list:
     extra_keys = set(mapping.get("extra_guideline_check_keys", []))
     extras = [g for g in active
               if g.check_key in extra_keys and g.discipline_key != discipline_key]
+    # A row tagged to another discipline that belongs to this type, named by
+    # its structural identity (the function diagram: tagged תנועה, belongs to
+    # architecture).
+    wanted = {(e["section_key"], e["sort_order"])
+              for e in mapping.get("include_guidelines", [])}
+    extras += [g for g in active if (g.section_key, g.sort_order) in wanted]
     out, seen = [], set()
     for g in own + extras:
         if g.id not in seen and in_scope(g):
