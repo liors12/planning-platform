@@ -1058,3 +1058,82 @@ Vision spike 2026-10-20 (read-only, gemini-2.5-flash via the vision_verify
 path, 5 questions x 3 runs): basement plan + levels 1-4, the table, 1.3:1
 and 0.1:1 all correct 3/3; "total car spaces" answered 70 - the supply
 table, read correctly - not the requirement total 1009, 3/3. ~$0.001/call.
+
+--------------------------------------------------------------------------
+
+B-26: the PUBLIC repository holds client and authority material - HIGH, DECISION PENDING
+RECORDED 2026-10-20. Ruling (Lior): stays public for now, pending Ellen's answer.
+
+The public repo contains the real audit report sent to the architect, the
+real submission extracts, the municipality guidelines, and TLV protocols with
+applicant names. Ellen to be asked. Purge plan (4b) and the synthetic-pilot
+prerequisite are recorded below so the decision can be taken and executed.
+
+Repo: liors12/planning-platform, PUBLIC, 0 forks, 0 stars, no Pages. Anything
+already cloned or archived cannot be recalled.
+
+1. IN THE TREE TODAY (417 tracked files)
+ A. From the real submission (אאורה / KIKA BRAZ design plan v24.3):
+    data/projects/407-1048248/submissions/v24.3/ (19 files, ~1.3 MB) -
+      vision findings, page manifests, inventories, audit results + run logs,
+      verification reports, all extracted from the real plan
+    audit_outputs/407-1048248/v24.3/audit_results.m4.json (329 KB)
+    app/sidecar/seed/audit_outputs/.../audit_results.m4.sanitized.json
+      (346 KB) - SHIPPED IN THE APP as the pilot project's data
+    projects/407-1048248/submissions/v24.3/extracts.json, discipline_findings.json (40 KB)
+    templates/v24_3_discipline_feedback_*.docx (4 x ~224 KB) - feedback
+      forms for this submission; fields blank, project/tava/version filled
+ B. Statutory plan (public on Mavat):
+    data/projects/407-1048248/takanon_cad/*.dwg (blue line, plots; 170 KB)
+    project-schema-*.json (3), canonical_clauses.json, takanon_cad_dataset.json
+    reports/407-0977595/tashrit-analysis-2026-04-30.pdf/.md (our analysis)
+ C. Authority and third-party documents:
+    docs/הנחיות_עיצוב_נס_ציונה_לגוגל_דוקס.docx (240 KB) + guidelines_seed.json
+      (98 KB) - the municipality's guidelines, full text
+    compliance_engine/reference_docs/*.pdf (17.3 MB + 1 MB) - Tel Aviv
+      municipality public guides
+    src/corpus/fixtures/tlv-*.pdf (20 files, ~65 MB) - Tel Aviv local
+      committee decision protocols; published, but they name applicants
+ Not found: no real email or meeting notes; no email address or phone number
+ in any text file. Ellen is named in 75 files. docs/evidence/B-22-*.jpeg is
+ a screenshot of the test app (synthetic data).
+
+2. IN HISTORY, deleted from the tree (on every branch, main included)
+    audit_outputs/407-1048248/v24.3/audit_report_24.3.pdf (305 KB) + .html
+      (93 KB) - THE REAL REPORT on the real submission
+    an older audit_results.m4.sanitized.json (331 KB)
+    tests/ui-dev/.qa-ui-data/ - a test database (platform.db-wal 2.5 MB) and
+      job outputs of runs on the pilot
+    plus everything in section 1.
+
+3. WHAT GOING PRIVATE COSTS
+    Actions, last 30 days: 293 Windows + 48 Linux minutes = 634 of 2,000
+    billable (Windows x2). A July-like month (44 builds, 44 UI smokes, 46 QA
+    runs) is ~2,300 - over quota; with the default $0 spending limit CI stops
+    for the rest of the month. (The PR-triggered Windows build was removed
+    2026-10-20, 4b202ed.) Options: Pro (3,000 min).
+    ELLEN'S DOWNLOAD LINK BREAKS: she installs from the GitHub release asset;
+    a private repo needs a GitHub account with access. Options: a
+    collaborator account for her, or distribute the installer elsewhere.
+    Dependabot keeps working (ensure the dependency graph is on). Free secret
+    scanning / push protection is lost. Branch protection, rulesets, Pages:
+    not used today.
+
+4a. MAKE PRIVATE: `gh repo edit --visibility private
+    --accept-visibility-change-consequences`, after Ellen's download and the
+    minutes question are solved. Reversible.
+
+4b. PURGE FROM HISTORY (irreversible), on a copy:
+    1. freeze pushes; `git clone --mirror` to a private backup
+    2. `git filter-repo --invert-paths --paths-from-file purge.txt` with the
+       approved path list
+    3. force-push every branch and tag; delete branches no longer needed
+    4. contact GitHub Support: old commits stay reachable by SHA and through
+       refs/pull/* until they purge them - only they can
+    5. every working copy re-clones
+    Breaks: every commit SHA (backlog/commit references), the July 27 draft
+    release and every tag, open Dependabot PRs #1-#40 (close; they reopen),
+    ci/baseline-0.2.1 (the probe artifact is stored by run id - unaffected).
+    PREREQUISITE: purging app/sidecar/seed/audit_outputs removes the app's
+    pilot project - the findings tab, the main report and dozens of tests
+    depend on it. A SYNTHETIC replacement pilot must be built first.
