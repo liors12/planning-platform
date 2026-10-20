@@ -967,6 +967,8 @@ export interface PlanAttachmentOut {
   project_id: number;
   discipline_key: string;
   version_string: string;
+  /** v0.2.3: assigned by the server; shown as "גרסה N". */
+  version_number: number | null;
   file_path: string;
   status: "prepared" | "sent" | "response_received" | "closed";
   source_attachment_id: number | null;
@@ -996,11 +998,11 @@ export async function listProjectAttachments(projectId: number): Promise<PlanAtt
 }
 
 export async function uploadPlanAttachment(
-  projectId: number, disciplineKey: string, version: string, file: File,
+  projectId: number, disciplineKey: string, file: File,
 ): Promise<PlanAttachmentOut> {
+  // v0.2.3: no version from the client - the server numbers it.
   const form = new FormData();
   form.append("discipline_key", disciplineKey);
-  form.append("version_string", version);
   form.append("file", file, file.name);
   return jsonOrThrow<PlanAttachmentOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/attachments`,
@@ -1024,10 +1026,9 @@ export async function getAttachmentReview(attId: number): Promise<AttachmentRevi
 }
 
 export async function uploadPlanAttachmentRevision(
-  attId: number, version: string, file: File,
+  attId: number, file: File,
 ): Promise<PlanAttachmentOut> {
   const form = new FormData();
-  form.append("version_string", version);
   form.append("file", file, file.name);
   return jsonOrThrow<PlanAttachmentOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/revision`,

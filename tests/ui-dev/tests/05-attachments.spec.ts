@@ -11,7 +11,6 @@ async function openAttachments(page: import("@playwright/test").Page) {
 
 async function uploadTraffic(page: import("@playwright/test").Page) {
   await page.getByTestId("attachment-type").selectOption("sec-3-4");
-  await page.getByTestId("attachment-version").fill("v1");
   await page.getByTestId("attachment-file").setInputFiles({
     name: "traffic.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
   });
@@ -103,6 +102,23 @@ test("attachments: revision auto-runs the review", async ({ page, request }) => 
   await expect(rev.locator('[data-testid^="attachment-report-"]')).toBeVisible();
 });
 
+test("v0.2.3: versions are numbered by the app - גרסה 1, then 2, then 3", async ({ page, request }) => {
+  await openAttachments(page);
+  await expect(page.getByTestId("attachment-version")).toHaveCount(0);   // no free-text input
+  await uploadTraffic(page);
+  const api = "http://127.0.0.1:17321";
+  const first = (await (await request.get(`${api}/projects/1/attachments`)).json()).pop();
+  expect(first.version_number).toBe(1);
+  await expect(page.getByTestId(`attachment-version-${first.id}`)).toHaveText("גרסה 1");
+  // two revisions of the SAME source: 2 and 3, never two 2s
+  for (const expected of [2, 3]) {
+    const r = await request.post(`${api}/attachments/${first.id}/revision`, {
+      multipart: { file: { name: `traffic-r${expected}.pdf`, mimeType: "application/pdf", buffer: MIN_PDF } },
+    });
+    expect((await r.json()).version_number).toBe(expected);
+  }
+});
+
 test("1f closure: UI-added guideline flows into its discipline's attachment review", async ({ page, request }) => {
   // Add a gardens guideline via the UI...
   await page.goto("/#/guidelines");
@@ -117,7 +133,6 @@ test("1f closure: UI-added guideline flows into its discipline's attachment revi
   // ...upload a gardens attachment and run its review - zero extra config.
   await openAttachments(page);
   await page.getByTestId("attachment-type").selectOption("sec-3-2");
-  await page.getByTestId("attachment-version").fill("v1");
   await page.getByTestId("attachment-file").setInputFiles({
     name: "gardens.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
   });
@@ -183,14 +198,13 @@ test("v0.2.2: no text layer SUPPRESSES לא הוגש entirely", async ({ page, r
   // say לא הוגש, and a notice must say why detection did not run.
   await openAttachments(page);
   await page.getByTestId("attachment-type").selectOption("sec-3-4");
-  await page.getByTestId("attachment-version").fill("v-notext");
   await page.getByTestId("attachment-file").setInputFiles({
     name: "vector-only.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
-  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-notext").pop();
+  const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("vector-only.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
   await card.getByTestId(`attachment-run-review-${att.id}`).click();
@@ -215,14 +229,13 @@ test("v0.2.2: 60 sheets of title blocks only - ZERO לא הוגש", async ({ pag
   // ~34 characters. Readability must be judged PER PAGE.
   await openAttachments(page);
   await page.getByTestId("attachment-type").selectOption("sec-3-4");
-  await page.getByTestId("attachment-version").fill("v-titleblocks");
   await page.getByTestId("attachment-file").setInputFiles({
     name: "sheets.pdf", mimeType: "application/pdf", buffer: TITLE_BLOCK_ONLY_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
-  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-titleblocks").pop();
+  const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("sheets.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
   await card.getByTestId(`attachment-run-review-${att.id}`).click();
@@ -242,14 +255,13 @@ test("v0.2.2: densely annotated PDF with no matching markers yields לא הוג�
   // Without this the suppression could be satisfied by never emitting לא הוגש.
   await openAttachments(page);
   await page.getByTestId("attachment-type").selectOption("sec-3-4");
-  await page.getByTestId("attachment-version").fill("v-annotated");
   await page.getByTestId("attachment-file").setInputFiles({
     name: "annotated.pdf", mimeType: "application/pdf", buffer: ANNOTATED_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
-  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-annotated").pop();
+  const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("annotated.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
   await card.getByTestId(`attachment-run-review-${att.id}`).click();
@@ -273,14 +285,13 @@ test("v0.2.2: MIXED document - readable overall, some vector sheets", async ({ p
   // to warn Ellen. ZERO לא הוגש, and a notice naming the page count.
   await openAttachments(page);
   await page.getByTestId("attachment-type").selectOption("sec-3-4");
-  await page.getByTestId("attachment-version").fill("v-mixed");
   await page.getByTestId("attachment-file").setInputFiles({
     name: "mixed.pdf", mimeType: "application/pdf", buffer: MIXED_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
-  const att = atts.filter((a: { version_string: string }) => a.version_string === "v-mixed").pop();
+  const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("mixed.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
   await card.getByTestId(`attachment-run-review-${att.id}`).click();

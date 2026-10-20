@@ -41,6 +41,12 @@ const VERDICT_CLASS: Record<string, string> = {
   manual_review: "v-review", not_submitted: "v-fail",
 };
 
+// v0.2.3: the version is the server's number, read as "גרסה 2". A row from
+// before v0.2.3 whose free-text label has no number shows the label as is.
+export function versionLabel(att: PlanAttachmentOut): string {
+  return att.version_number !== null ? `גרסה ${att.version_number}` : `גרסה ${att.version_string}`;
+}
+
 export function AttachmentsTab({ project }: { project: ProjectOut }) {
   const [attachments, setAttachments] = useState<PlanAttachmentOut[] | null>(null);
   const [disciplines, setDisciplines] = useState<DisciplineDef[]>([]);
@@ -48,7 +54,6 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
 
   // Upload form
   const [type, setType] = useState("");
-  const [version, setVersion] = useState("v1");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -72,9 +77,8 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
     setUploading(true);
     setErr(null);
     try {
-      await uploadPlanAttachment(project.id, type, version, file);
+      await uploadPlanAttachment(project.id, type, file);
       if (fileRef.current) fileRef.current.value = "";
-      setVersion("v1");
       await refresh();
     } catch (e) {
       setErr(String(e));
@@ -97,8 +101,6 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
               <option key={d.key} value={d.key}>{d.label}</option>
             ))}
           </select>
-          <input value={version} onChange={(e) => setVersion(e.target.value)}
-                 dir="ltr" placeholder="גרסה" data-testid="attachment-version" />
           <input ref={fileRef} type="file" accept=".pdf,.dxf,.dwfx,.dwf"
                  data-testid="attachment-file" />
           <button type="button" className="primary-btn"
@@ -160,8 +162,7 @@ function AttachmentCard({
     setBusy(true);
     setErr(null);
     try {
-      const nextVer = "v" + (parseInt(att.version_string.replace(/^v/, ""), 10) + 1 || 2);
-      await uploadPlanAttachmentRevision(att.id, nextVer, file);
+      await uploadPlanAttachmentRevision(att.id, file);
       onChanged();
     } catch (e2) { setErr(String(e2)); }
     setBusy(false);
@@ -196,7 +197,9 @@ function AttachmentCard({
          data-testid={`attachment-card-${att.id}`}>
       <div className="attachment-card-header">
         <b>{typeLabel}</b>
-        <span dir="ltr" className="muted">{att.version_string}</span>
+        <span className="muted" data-testid={`attachment-version-${att.id}`}>
+          {versionLabel(att)}
+        </span>
         {att.source_attachment_id !== null && (
           <span className="badge badge-manual">גרסה מתוקנת</span>
         )}

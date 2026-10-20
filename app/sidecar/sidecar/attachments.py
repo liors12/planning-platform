@@ -51,6 +51,9 @@ class AttachmentOut(BaseModel):
     project_id: int
     discipline_key: str
     version_string: str
+    # v0.2.3: assigned by the server, shown as "גרסה N". None only for a row
+    # from before v0.2.3 whose free-text label carries no number.
+    version_number: Optional[int] = None
     file_path: str
     status: str
     source_attachment_id: Optional[int]
@@ -60,6 +63,41 @@ class AttachmentOut(BaseModel):
 
 class StatusIn(BaseModel):
     status: str
+
+
+def version_number_of(version_string: str | None) -> int | None:
+    """The number in a version label: "3" -> 3, legacy "v2" -> 2."""
+    m = re.fullmatch(r"\s*v?(\d+)\s*", version_string or "")
+    return int(m.group(1)) if m else None
+
+
+def _att_out(att: Attachment) -> "AttachmentOut":
+    d = att.to_dict()
+    d["version_number"] = version_number_of(att.version_string)
+    return AttachmentOut(**d)
+
+
+def _next_revision_number(sess, src: Attachment) -> int:
+    """One more than the highest version in src's revision chain.
+
+    The chain is every attachment reachable through source_attachment_id
+    from the same root - so two revisions of one source get 2 and 3, never
+    two 2s.
+    """
+    root = src
+    while root.source_attachment_id is not None:
+        parent = sess.get(Attachment, root.source_attachment_id)
+        if parent is None:
+            break
+        root = parent
+    chain, frontier = {root.id: root}, [root.id]
+    while frontier:
+        kids = sess.execute(select(Attachment).where(
+            Attachment.source_attachment_id.in_(frontier))).scalars().all()
+        frontier = [k.id for k in kids if k.id not in chain]
+        chain.update({k.id: k for k in kids})
+    nums = [version_number_of(a.version_string) or 1 for a in chain.values()]
+    return max(nums) + 1
 
 
 def _load_mapping(cfg) -> dict:
@@ -567,6 +605,11 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     }
 
 
+def _version_he(att: Attachment) -> str:
+    n = version_number_of(att.version_string)
+    return f"גרסה {n}" if n is not None else f"גרסה {att.version_string}"
+
+
 def _att_dir(cfg, project_id: int, att_id: int) -> Path:
     p = cfg.data_dir / "attachments" / str(project_id) / str(att_id)
     p.mkdir(parents=True, exist_ok=True)
@@ -587,13 +630,12 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                 select(Attachment).where(Attachment.project_id == project_id)
                 .order_by(Attachment.id)
             ).scalars().all()
-            return [AttachmentOut(**r.to_dict()) for r in rows]
+            return [_att_out(r) for r in rows]
 
     @router.post("/projects/{project_id}/attachments",
                  response_model=AttachmentOut, status_code=201)
     async def upload_attachment(project_id: int,
                                 discipline_key: str = Form(...),
-                                version_string: str = Form(...),
                                 file: UploadFile = File(...)):
         if discipline_key not in _DISC_LABEL:
             raise HTTPException(422, "יש לבחור סוג נספח מהרשימה")
@@ -603,7 +645,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
         with _session() as sess:
             att = Attachment(project_id=project_id,
                              discipline_key=discipline_key,
-                             version_string=version_string.strip() or "v1",
+                             version_string="1",   # v0.2.3: a new attachment is גרסה 1
                              file_path="", status="prepared")
             sess.add(att)
             sess.flush()
@@ -613,7 +655,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             att.file_path = str(dst)
             sess.commit()
             sess.refresh(att)
-            return AttachmentOut(**att.to_dict())
+            return _att_out(att)
 
     @router.post("/attachments/{att_id}/run-review")
     def run_review(att_id: int):
@@ -642,7 +684,6 @@ def make_router(cfg, engine: Engine) -> APIRouter:
     @router.post("/attachments/{att_id}/revision",
                  response_model=AttachmentOut, status_code=201)
     async def upload_revision(att_id: int,
-                              version_string: str = Form(...),
                               file: UploadFile = File(...)):
         content = await file.read()
         if len(content) > _MAX_FILE_BYTES:
@@ -653,7 +694,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                 raise HTTPException(404, "הנספח לא נמצא")
             att = Attachment(project_id=src.project_id,
                              discipline_key=src.discipline_key,
-                             version_string=version_string.strip() or "v2",
+                             version_string=str(_next_revision_number(sess, src)),
                              file_path="", status="prepared",
                              source_attachment_id=src.id)
             sess.add(att)
@@ -670,7 +711,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             att.review_json_path = str(rdest)
             sess.commit()
             sess.refresh(att)
-            return AttachmentOut(**att.to_dict())
+            return _att_out(att)
 
     @router.post("/attachments/{att_id}/status", response_model=AttachmentOut)
     def set_status(att_id: int, body: StatusIn):
@@ -683,7 +724,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             att.status = body.status
             sess.commit()
             sess.refresh(att)
-            return AttachmentOut(**att.to_dict())
+            return _att_out(att)
 
     def _build_attachment_report_pdf(att_id: int) -> bytes:
         from .guidelines import _render_pdf
@@ -752,10 +793,10 @@ def _build_attachment_report_html(att: Attachment, review: dict,
 
     cover = cover_html(
         title="דו\"ח התייחסות לנספח",
-        subtitles=[label, f"גרסה {att.version_string}"],
+        subtitles=[label, _version_he(att)],
         pill="דו\"ח התייחסות",
         meta_rows=[("תחום:", label),
-                   ("גרסת הנספח:", att.version_string),
+                   ("גרסת הנספח:", _version_he(att)),
                    ("תאריך הפקה:", now_str)],
         note=review.get("notice_he") or None,
     )
