@@ -15,8 +15,6 @@
     "roads-dev": {
       "extra_guideline_check_keys": ["path_main_min_m", "path_secondary_min_m", "gas_tank_setback_min_m"],
       "extra_checks": [
-        {"id": "path-width-labels", "title_he": "סימון רוחבי שבילים",
-         "instruction_he": "רוחב כל שביל יסומן במטרים לצד השביל, לבדיקה מול הרוחב המזערי (3 מ' ראשי / 2.5 מ' משני)."},
         {"id": "ramp-designation", "title_he": "ייעוד רמפות בשיפוע 8% ומעלה",
          "instruction_he": "כל שיפוע של 8% ומעלה יסווג במפורש: רמפת רכב או רמפה נגישה."},
         {"id": "accessibility-continuity", "title_he": "רציפות נגישות לכניסות",

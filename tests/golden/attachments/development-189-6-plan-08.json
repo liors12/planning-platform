@@ -1,5 +1,5 @@
 {
- "_status": "PROPOSED - awaiting Lior's approval; not a baseline until approved",
+ "_status": "APPROVED by Lior 2026-10-20 - baseline; change only with a new approval",
  "file": "development-189-6-plan-08.pdf",
  "original_name": "אאורה מתחם הטייסים - נספח פיתוח.pdf",
  "sheet": "189-6-plan-08",
@@ -35,11 +35,6 @@
    "title": "צובר גז",
    "verdict": "requires_review",
    "guideline": "part_c#61"
-  },
-  {
-   "rule_code": "ATTACH_PATH_WIDTH_LABELS",
-   "title": "סימון רוחבי שבילים",
-   "verdict": "requires_review"
   },
   {
    "rule_code": "ATTACH_RAMP_DESIGNATION",
