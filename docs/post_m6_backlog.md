@@ -1020,3 +1020,33 @@ the guidelines database, which is where the main report files it. For
 attachments it is excluded from traffic and included in architecture
 (include_guidelines). Retagging the row itself changes the main report and
 is a guidelines-content decision, not done.
+
+--------------------------------------------------------------------------
+
+B-25: a garbled text layer produced "לא הוגש" for items drawn on the sheet - SHIPPED DEFECT, HIGH
+SHIPPED IN: v0.2.2 (status semantics) - before that the same miss said
+"נדרשת בדיקה". FIXED ON feat/v0.2.3 (6ebfee4), not yet in main.
+
+Ellen's traffic sheet 12753.1/3 (md5 ff37760e): the basement plan and the
+parking table are on the sheet, both reported "לא הוגש". The sheet's labels
+and tables are vector paths; its text layer is 518 characters of garbled
+labels (reversed, ם mapped to ח). The 250-character page bar measured
+quantity, not readability, so detection ran on text that cannot match.
+Fix: a per-page readability test (well-formed Hebrew + known-word ratio,
+thresholds measured on 14 real PDFs); a garbled page counts as unreadable
+and the report leads with "לא ניתן לקרוא את הטקסט בקובץ".
+Blind spot (measured, in the test): a light substitution of a few letters in
+otherwise-correct text stays inside the readable range.
+
+FOR B-14 (recorded 2026-10-20, read off the image - the text layer has none):
+the sheet carries a full "דרישת חניה" table, per plot 01-05:
+  units:          05: 196, 04: 98, 03: 130, 02: 44, 01: 232 (+4 kindergarten classes)
+  ratios:         residents 1.3:1, guests 0.1:1 per unit, motorcycles 1:10, bikes 1:1
+  grand total:    1009 private cars, 70 motorcycles, 700 bikes
+  basis printed:  "בהתאם לתקנות התכנון והבנייה, 2016 - אזור ג'" - NOT the
+                  guideline's "תקן חניה לאומי 3.1 (ינואר 2023)"
+Two observations for Ellen, not adjudicated: the guest ratio printed is
+0.1:1 per unit, where the מינהלת addition asks for 30% of the residential
+standard; and the sheet cites the 2016 regulations, not standard 3.1.
+Can any path today feed these numbers to a check? NO. The table area has an
+empty text layer; only OCR/vision could read it - option C, rejected (D-3).
