@@ -51,7 +51,8 @@ jobs:
                            tests/test_ui_smoke_verdict.py \
                            tests/test_dependency_lock.py \
                            tests/test_attachment_scope.py \
-                           tests/test_attachment_readability.py -q
+                           tests/test_attachment_readability.py \
+                           tests/test_duration_he.py -q
 
   ui-suite:
     runs-on: ubuntu-latest

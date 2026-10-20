@@ -32,6 +32,10 @@ export interface ProjectOut {
   created_at: string;
   archived_at: string | null;
   has_schema: boolean;
+  /** v0.2.3: the design plan's architecture firm, entered by Ellen. */
+  design_architect: string | null;
+  /** v0.2.3: ISO date the תב"ע was approved, from the project record. */
+  tava_approval_date: string | null;
   latest_submission: SubmissionSummary | null;
   submission_count: number | null;
 }
@@ -249,7 +253,7 @@ export async function createProject(payload: ProjectCreatePayload): Promise<Proj
 
 export async function patchProject(
   id: number,
-  patch: Partial<ProjectCreatePayload>,
+  patch: Partial<ProjectCreatePayload> & { design_architect?: string | null },
 ): Promise<ProjectOut> {
   return jsonOrThrow<ProjectOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/projects/${id}`, {

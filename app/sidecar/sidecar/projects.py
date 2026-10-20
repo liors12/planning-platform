@@ -48,6 +48,7 @@ class ProjectPatch(BaseModel):
     name_en: str | None = Field(None, max_length=255)
     tava_number: str | None = Field(None, min_length=1, max_length=64)
     address: str | None = Field(None, max_length=512)
+    design_architect: str | None = Field(None, max_length=255)
 
 
 class ProjectOut(BaseModel):
@@ -60,9 +61,37 @@ class ProjectOut(BaseModel):
     created_at: str
     archived_at: str | None
     has_schema: bool                  # whether engine can run on this project
+    design_architect: str | None = None
+    # ISO date the תב"ע was approved, from the project's schema; None when
+    # the record has none. Never inferred.
+    tava_approval_date: str | None = None
     # Only present in /projects list with include_summary=true and in GET-by-id:
     latest_submission: dict | None = None
     submission_count: int | None = None
+
+
+def tava_approval_date(tava_number: str) -> str | None:
+    """The plan (tava) approval date from the project schema, or None.
+
+    meta.approval_gazette_date is מתן תוקף - publication, the date the plan
+    takes effect; Mavat shows the same date as "אישור" (407-1048248:
+    06/08/2025, checked 2026-10-20). meta.approval_date is the older field
+    name. Anything that is not a plain ISO date is treated as missing: the
+    screen says "תאריך אישור חסר" rather than show a guess.
+    """
+    import json as _json
+    import re as _re
+    from .engine_bridge import resolve_schema
+    try:
+        meta = _json.loads(resolve_schema(tava_number).read_text(encoding="utf-8"))
+        meta = meta.get("project", {}).get("meta", {})
+    except Exception:
+        return None
+    for key in ("approval_gazette_date", "approval_date"):
+        v = meta.get(key)
+        if isinstance(v, str) and _re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+            return v
+    return None
 
 
 # ── Endpoints ─────────────────────────────────────────────────────────────
@@ -74,6 +103,7 @@ def make_router(get_engine, cfg=None):
     def _serialize(p: Project, *, include_summary: bool = False) -> ProjectOut:
         d = p.to_dict(include_submissions_summary=include_summary)
         d["has_schema"] = has_schema(p.tava_number)
+        d["tava_approval_date"] = tava_approval_date(p.tava_number)
         return ProjectOut(**d)
 
     @_router.post("", response_model=ProjectOut, status_code=201)

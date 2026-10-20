@@ -46,6 +46,10 @@ class Project(Base):
     # Phase 2a additions:
     name_en: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     address: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    # v0.2.3: the architecture firm that prepared the design plan. Entered by
+    # Ellen - on the real submission the firm appears only as a logo image on
+    # the cover, so it cannot be read from the file's text.
+    design_architect: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active",
                                         server_default="active")
     archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True),
@@ -69,6 +73,7 @@ class Project(Base):
             "name_en": self.name_en,
             "tava_number": self.tava_number,
             "address": self.address,
+            "design_architect": self.design_architect,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "archived_at": self.archived_at.isoformat() if self.archived_at else None,

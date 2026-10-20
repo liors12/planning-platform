@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { archiveProject, getProject, getFindings, listSubmissions, type ProjectOut, type SubmissionOut } from "../api";
+import { archiveProject, getProject, getFindings, listSubmissions, patchProject, type ProjectOut, type SubmissionOut } from "../api";
 import { AttachmentsTab } from "../components/AttachmentsTab";
 import { CommentsTab } from "../components/CommentsTab";
 import { ErrorNotice } from "../components/ErrorNotice";
@@ -10,6 +10,7 @@ import { FindingsView } from "../components/FindingsView";
 import { PdfViewer } from "../components/PdfViewer";
 import { SplitPane } from "../components/SplitPane";
 import { buildHash, type Route } from "../route";
+import { displayDate, timeSince } from "../lib/duration";
 
 const SIDECAR_BASE = "http://127.0.0.1:17321";
 
@@ -25,7 +26,7 @@ interface Props {
 type TabKey = "overview" | "submissions" | "attachments" | "findings" | "comments" | "cad_layers";
 
 const TAB_LABELS: Record<TabKey, string> = {
-  overview: "סקירה",
+  overview: "סקירה כללית",
   submissions: "הגשות",
   attachments: "נספחי תוכנית עיצוב",
   findings: "ממצאים",
@@ -138,7 +139,7 @@ export function ProjectWorkspace({ projectId, navigate, onProjectChanged }: Prop
       </nav>
 
       <section className="tab-content">
-        {tab === "overview" && <OverviewTab project={project} />}
+        {tab === "overview" && <OverviewTab project={project} onSaved={setProject} />}
         {tab === "submissions" && (
           <SubmissionsTab
             project={project}
@@ -183,7 +184,8 @@ const SUBMISSION_STATUS_HE: Record<string, string> = {
   failed: "נכשל",
 };
 
-function OverviewTab({ project }: { project: ProjectOut }) {
+function OverviewTab({ project, onSaved }: { project: ProjectOut; onSaved: (p: ProjectOut) => void }) {
+  const since = project.tava_approval_date ? timeSince(project.tava_approval_date) : null;
   return (
     <div className="card overview-card">
       <dl className="kv">
@@ -191,6 +193,19 @@ function OverviewTab({ project }: { project: ProjectOut }) {
         {project.name_en && <><dt>שם באנגלית</dt><dd dir="ltr">{project.name_en}</dd></>}
         <dt>מספר תב"ע</dt><dd dir="ltr">{project.tava_number}</dd>
         <dt>כתובת</dt><dd>{project.address ?? "-"}</dd>
+        <dt>משרד האדריכלים</dt>
+        <dd><ArchitectField project={project} onSaved={onSaved} /></dd>
+        <dt>זמן מאז אישור התב"ע</dt>
+        <dd data-testid="overview-tava-age">
+          {project.tava_approval_date && since ? (
+            <>
+              {since}
+              <span className="muted"> (אושרה ב-<span dir="ltr">{displayDate(project.tava_approval_date)}</span>)</span>
+            </>
+          ) : (
+            <span className="warn">תאריך אישור חסר</span>
+          )}
+        </dd>
         <dt>סטטוס</dt><dd>{PROJECT_STATUS_HE[project.status] ?? project.status}</dd>
         <dt>נוצר</dt><dd>{project.created_at.replace("T", " ").slice(0, 16)}</dd>
         <dt>בדיקה אוטומטית</dt>
@@ -216,6 +231,61 @@ function OverviewTab({ project }: { project: ProjectOut }) {
         </dd>
       </dl>
     </div>
+  );
+}
+
+// The firm is read by Ellen, not from the file: on the real submission it
+// appears only as a logo on the cover, never as text (checked on all 63 pages).
+function ArchitectField({ project, onSaved }: { project: ProjectOut; onSaved: (p: ProjectOut) => void }) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(project.design_architect ?? "");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function save() {
+    setSaving(true);
+    setErr(null);
+    try {
+      onSaved(await patchProject(project.id, { design_architect: value.trim() || null }));
+      setEditing(false);
+    } catch {
+      setErr("השמירה לא הצליחה. נסי שוב.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!editing) {
+    return (
+      <span className="architect-field">
+        <span data-testid="overview-architect">
+          {project.design_architect ?? <span className="muted">לא זוהה</span>}
+        </span>
+        {" "}
+        <button type="button" className="ghost-btn small" data-testid="overview-architect-edit"
+                onClick={() => { setValue(project.design_architect ?? ""); setEditing(true); }}>
+          {project.design_architect ? "עריכה" : "הוסיפי"}
+        </button>
+      </span>
+    );
+  }
+  return (
+    <span className="architect-field">
+      <input type="text" value={value} maxLength={255} autoFocus
+             data-testid="overview-architect-input"
+             placeholder="שם משרד האדריכלים"
+             onChange={(e) => setValue(e.target.value)}
+             onKeyDown={(e) => { if (e.key === "Enter") void save(); if (e.key === "Escape") setEditing(false); }} />
+      {" "}
+      <button type="button" className="primary-btn small" disabled={saving}
+              data-testid="overview-architect-save" onClick={() => void save()}>
+        {saving ? "שומרת..." : "שמירה"}
+      </button>
+      {" "}
+      <button type="button" className="ghost-btn small" disabled={saving}
+              onClick={() => setEditing(false)}>ביטול</button>
+      {err && <span className="warn"> {err}</span>}
+    </span>
   );
 }
 

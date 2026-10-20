@@ -194,6 +194,13 @@ def initialize(engine: Engine) -> dict:
                     log.info("migration: remapped %d discipline_comments rows %s -> %s",
                              res.rowcount, old_key, new_key)
 
+    # v0.2.3 migration - the design plan's architecture firm (Ellen enters it).
+    with engine.begin() as conn:
+        p_cols = {c[1] for c in conn.execute(text("PRAGMA table_info(projects)")).fetchall()}
+        if p_cols and "design_architect" not in p_cols:
+            conn.execute(text("ALTER TABLE projects ADD COLUMN design_architect TEXT"))
+            log.info("migration: added design_architect to projects")
+
     # Full-seed migration - document-structure columns on guidelines.
     with engine.begin() as conn:
         g_exists = conn.execute(text(
