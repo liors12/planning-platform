@@ -26,11 +26,11 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
 from .disciplines import DISCIPLINES  # noqa: I001 - puts compliance_engine on sys.path in dev
 from compliance_engine.text_utils import patch_rtl_artifacts
-from .models import Attachment, DisciplineComment, Guideline
+from .models import Attachment, AttachmentFile, DisciplineComment, Guideline
 from .storage import sanitize_upload_filename
 
 log = logging.getLogger(__name__)
@@ -54,6 +54,8 @@ class AttachmentOut(BaseModel):
     # v0.2.3: assigned by the server, shown as "גרסה N". None only for a row
     # from before v0.2.3 whose free-text label carries no number.
     version_number: Optional[int] = None
+    # v0.2.3: every file of this attachment, in upload order.
+    files: list[dict] = []
     file_path: str
     status: str
     source_attachment_id: Optional[int]
@@ -71,9 +73,24 @@ def version_number_of(version_string: str | None) -> int | None:
     return int(m.group(1)) if m else None
 
 
+def attachment_files(sess, att: Attachment) -> list[tuple[str, Path]]:
+    """(display name, path) of every file of the attachment, in order. A row
+    with no attachment_files (not yet backfilled) falls back to file_path."""
+    rows = sess.execute(select(AttachmentFile)
+                        .where(AttachmentFile.attachment_id == att.id)
+                        .order_by(AttachmentFile.sort_order, AttachmentFile.id)
+                        ).scalars().all() if att.id is not None else []
+    if rows:
+        return [(r.original_name, Path(r.file_path)) for r in rows]
+    return [(Path(att.file_path).name, Path(att.file_path))] if att.file_path else []
+
+
 def _att_out(att: Attachment) -> "AttachmentOut":
     d = att.to_dict()
     d["version_number"] = version_number_of(att.version_string)
+    sess = object_session(att)
+    d["files"] = ([{"name": n} for n, _ in attachment_files(sess, att)]
+                  if sess is not None else [])
     return AttachmentOut(**d)
 
 
@@ -542,8 +559,39 @@ def select_guidelines(full_mapping: dict, discipline_key: str, active) -> list:
     return out
 
 
+def _aggregate_file_checks(per_file: list[dict]) -> list[dict]:
+    """The top-level file checks of a MULTI-file attachment: the worst of
+    each check across the files. The per-file detail lives in review["files"]."""
+    order = {"fail": 3, "requires_review": 2, "pass": 1}
+    out, codes = [], []
+    for f in per_file:
+        for c in f["checks"]:
+            if c["rule_code"] not in codes:
+                codes.append(c["rule_code"])
+    for code in codes:
+        rows = [(f["name"], c) for f in per_file for c in f["checks"] if c["rule_code"] == code]
+        worst = max(rows, key=lambda r: order.get(r[1]["verdict"], 2))[1]
+        if code == "ATTACH_FILE_PAGES":
+            pages = sum(f["pages"] for f in per_file)
+            out.append({**worst, "verdict": "pass",
+                        "notes_he": f"הנספח מכיל {len(per_file)} קבצים, {pages} עמודים בסך הכל."})
+            continue
+        bad = [n for n, c in rows if c["verdict"] != "pass"]
+        notes = worst["notes_he"] if not bad else f'{worst["notes_he"]} (בקבצים: {", ".join(bad)})'
+        out.append({**worst, "notes_he": notes})
+    return out
+
+
 def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
-    """Execute ONLY the mapped checks for this attachment's type."""
+    """Execute ONLY the mapped checks for this attachment's type.
+
+    v0.2.3: an attachment may hold several files (one PDF per תא שטח). They
+    are checked AS ONE DOCUMENT: an item is present if it is found in any
+    file, and "לא הוגש" needs every page of every file to be readable - the
+    same rule a single file already had, so a file that cannot be read can
+    never turn into "the architect omitted it". Each file also gets its own
+    section: pages, readability, file checks, and the items found in it.
+    """
     full_mapping = _load_mapping(cfg)
     mapping = full_mapping.get("types", {}).get(att.discipline_key, {})
     checks: list[dict] = []
@@ -552,12 +600,37 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
         active = sess.execute(
             select(Guideline).where(Guideline.is_active == 1)
         ).scalars().all()
+        files = attachment_files(sess, att)
     candidates = select_guidelines(full_mapping, att.discipline_key, active)
 
     # v0.2.2 status semantics: read the attachment ONCE, then let each
     # guideline's declared check_mode decide what we are allowed to say.
-    doc_text = _extract_text(Path(att.file_path))
-    states = [_page_state(t) for t in _page_texts(Path(att.file_path))]
+    per_file: list[dict] = []
+    states: list[str] = []
+    texts: list[str] = []
+    for name, path in files:
+        page_texts = _page_texts(path)
+        f_states = [_page_state(x) for x in page_texts]
+        f_text = " ".join(page_texts)
+        f_readable, f_unreadable = _page_census(f_states)
+        per_file.append({
+            "name": name,
+            "pages": len(page_texts),
+            "readable_pages": f_readable,
+            "unreadable_pages": f_unreadable,
+            "garbled": "garbled" in f_states,
+            "found": ([g.title for g in candidates
+                       if (getattr(g, "check_mode", None) or "needs_context") == "auto_detect"
+                       and _marker_found(g.title, f_text)]
+                      if _detection_allowed(f_states) else []),
+            "checks": _file_quality_checks(path),
+        })
+        # A file we could not open at all (no pages) must still block
+        # "לא הוגש": alone it yields an empty census, which already does;
+        # merged with readable files it would simply vanish.
+        states += f_states or ["sparse"]
+        texts.append(f_text)
+    doc_text = " ".join(texts)
     readable_pages, unreadable_pages = _page_census(states)
     text_ok = _detection_allowed(states)
     mostly_readable = _has_usable_text(states)
@@ -590,8 +663,11 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
                                "requires_review", c["instruction_he"],
                                cross_cite=c.get("cross_cite")))
 
-    # 4. File-quality checks - always run.
-    checks.extend(_file_quality_checks(Path(att.file_path)))
+    # 4. File-quality checks - always run; one file reports them as before.
+    if len(per_file) == 1:
+        checks.extend(per_file[0]["checks"])
+    elif per_file:
+        checks.extend(_aggregate_file_checks(per_file))
 
     return {
         "attachment_id": att.id,
@@ -602,6 +678,7 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
         "notice_he": notice_he,
         "reviewed_at": datetime.now(timezone.utc).isoformat(),
         "checks": checks,
+        "files": per_file,
     }
 
 
@@ -632,16 +709,49 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             ).scalars().all()
             return [_att_out(r) for r in rows]
 
+    async def _read_uploads(file: Optional[UploadFile],
+                            files: Optional[list[UploadFile]]) -> list[tuple[str, bytes]]:
+        """Both the old single `file` field and the v0.2.3 `files` list."""
+        ups = [u for u in ([file] if file else []) + list(files or []) if u is not None]
+        if not ups:
+            raise HTTPException(422, "יש לבחור לפחות קובץ אחד")
+        out = []
+        for u in ups:
+            content = await u.read()
+            if len(content) > _MAX_FILE_BYTES:
+                raise HTTPException(413, "הקובץ גדול מדי - עד 200MB")
+            out.append((u.filename or "attachment.pdf", content))
+        return out
+
+    def _store_files(sess, att: Attachment, uploads: list[tuple[str, bytes]]) -> None:
+        """Write each file under the attachment's folder, one row per file.
+        Two uploads with the same name get distinct leaves (_2, _3)."""
+        folder = _att_dir(cfg, att.project_id, att.id)
+        used: set[str] = set()
+        for i, (orig, content) in enumerate(uploads):
+            leaf = sanitize_upload_filename(orig)
+            stem, suffix = Path(leaf).stem, Path(leaf).suffix
+            n = 2
+            while leaf in used:
+                leaf = f"{stem}_{n}{suffix}"
+                n += 1
+            used.add(leaf)
+            dst = folder / leaf
+            dst.write_bytes(content)
+            sess.add(AttachmentFile(attachment_id=att.id, file_path=str(dst),
+                                    original_name=orig, sort_order=i))
+            if i == 0:
+                att.file_path = str(dst)
+
     @router.post("/projects/{project_id}/attachments",
                  response_model=AttachmentOut, status_code=201)
     async def upload_attachment(project_id: int,
                                 discipline_key: str = Form(...),
-                                file: UploadFile = File(...)):
+                                file: Optional[UploadFile] = File(None),
+                                files: Optional[list[UploadFile]] = File(None)):
         if discipline_key not in _DISC_LABEL:
             raise HTTPException(422, "יש לבחור סוג נספח מהרשימה")
-        content = await file.read()
-        if len(content) > _MAX_FILE_BYTES:
-            raise HTTPException(413, "הקובץ גדול מדי - עד 200MB")
+        uploads = await _read_uploads(file, files)
         with _session() as sess:
             att = Attachment(project_id=project_id,
                              discipline_key=discipline_key,
@@ -649,10 +759,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                              file_path="", status="prepared")
             sess.add(att)
             sess.flush()
-            leaf = sanitize_upload_filename(file.filename or "attachment.pdf")
-            dst = _att_dir(cfg, project_id, att.id) / leaf
-            dst.write_bytes(content)
-            att.file_path = str(dst)
+            _store_files(sess, att, uploads)
             sess.commit()
             sess.refresh(att)
             return _att_out(att)
@@ -684,10 +791,9 @@ def make_router(cfg, engine: Engine) -> APIRouter:
     @router.post("/attachments/{att_id}/revision",
                  response_model=AttachmentOut, status_code=201)
     async def upload_revision(att_id: int,
-                              file: UploadFile = File(...)):
-        content = await file.read()
-        if len(content) > _MAX_FILE_BYTES:
-            raise HTTPException(413, "הקובץ גדול מדי - עד 200MB")
+                              file: Optional[UploadFile] = File(None),
+                              files: Optional[list[UploadFile]] = File(None)):
+        uploads = await _read_uploads(file, files)
         with _session() as sess:
             src = sess.get(Attachment, att_id)
             if src is None:
@@ -699,10 +805,9 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                              source_attachment_id=src.id)
             sess.add(att)
             sess.flush()
-            leaf = sanitize_upload_filename(file.filename or "attachment.pdf")
-            dst = _att_dir(cfg, src.project_id, att.id) / leaf
-            dst.write_bytes(content)
-            att.file_path = str(dst)
+            _store_files(sess, att, uploads)
+            # Commit first: the review reads the files in its own session.
+            sess.commit()
             # Revision auto-runs the mapped review.
             review = run_attachment_review(cfg, engine, att)
             rdest = _att_dir(cfg, src.project_id, att.id) / "review.json"
@@ -774,6 +879,18 @@ _VERDICT_HE = {
 }
 
 
+def _readability_he(f: dict) -> str:
+    """How readable one file was, in words Ellen uses."""
+    if f.get("garbled"):
+        return "לא ניתן לקרוא את הטקסט בקובץ"
+    pages, unreadable = f.get("pages", 0), f.get("unreadable_pages", 0)
+    if pages and unreadable == 0:
+        return "קריא"
+    if unreadable >= pages:
+        return "אין בקובץ טקסט קריא"
+    return f"קריא בחלקו ({pages - unreadable} מתוך {pages} עמודים)"
+
+
 def _build_attachment_report_html(att: Attachment, review: dict,
                                   comments: list) -> str:
     """The דו"ח התייחסות, in the same chrome as the main סקירת תוכנית עיצוב.
@@ -816,6 +933,21 @@ def _build_attachment_report_html(att: Attachment, review: dict,
             f"<td>{_iso(c.get('notes_he', ''))}</td></tr>"
         )
     parts.append("</tbody></table>")
+
+    # v0.2.3: one section per file of the attachment.
+    files = review.get("files") or []
+    if files:
+        parts.append("<h2>קבצי הנספח</h2>")
+        parts.append("<p>הבדיקה רואה את כל הקבצים כמסמך אחד: פריט נחשב כמופיע אם נמצא "
+                     "באחד הקבצים, ו\"לא הוגש\" נקבע רק כשכל עמודי כל הקבצים קריאים.</p>")
+        parts.append("<table><thead><tr><th>קובץ</th><th>עמודים</th><th>קריאות הטקסט</th>"
+                     "<th>פריטים שנמצאו בקובץ</th></tr></thead><tbody>")
+        for f in files:
+            parts.append(
+                f"<tr><td>{_iso(f.get('name', ''))}</td><td>{f.get('pages', 0)}</td>"
+                f"<td>{escape(_readability_he(f))}</td>"
+                f"<td>{_iso(', '.join(f.get('found') or [])) or '-'}</td></tr>")
+        parts.append("</tbody></table>")
 
     if comments:
         parts.append("<h2>הערות מקושרות</h2>")

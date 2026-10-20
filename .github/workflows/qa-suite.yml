@@ -52,7 +52,8 @@ jobs:
                            tests/test_dependency_lock.py \
                            tests/test_attachment_scope.py \
                            tests/test_attachment_readability.py \
-                           tests/test_duration_he.py -q
+                           tests/test_duration_he.py \
+                           tests/test_attachment_multifile.py -q
 
   ui-suite:
     runs-on: ubuntu-latest

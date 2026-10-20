@@ -47,6 +47,14 @@ export function versionLabel(att: PlanAttachmentOut): string {
   return att.version_number !== null ? `גרסה ${att.version_number}` : `גרסה ${att.version_string}`;
 }
 
+// Same words as the דו"ח התייחסות (attachments.py _readability_he).
+function readabilityHe(f: NonNullable<AttachmentReview["files"]>[number]): string {
+  if (f.garbled) return "לא ניתן לקרוא את הטקסט בקובץ";
+  if (f.pages && f.unreadable_pages === 0) return "קריא";
+  if (f.unreadable_pages >= f.pages) return "אין בקובץ טקסט קריא";
+  return `קריא בחלקו (${f.pages - f.unreadable_pages} מתוך ${f.pages} עמודים)`;
+}
+
 export function AttachmentsTab({ project }: { project: ProjectOut }) {
   const [attachments, setAttachments] = useState<PlanAttachmentOut[] | null>(null);
   const [disciplines, setDisciplines] = useState<DisciplineDef[]>([]);
@@ -72,12 +80,12 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
   }, [refresh]);
 
   async function onUpload() {
-    const file = fileRef.current?.files?.[0];
-    if (!file || !type) return;
+    const files = Array.from(fileRef.current?.files ?? []);
+    if (files.length === 0 || !type) return;
     setUploading(true);
     setErr(null);
     try {
-      await uploadPlanAttachment(project.id, type, file);
+      await uploadPlanAttachment(project.id, type, files);
       if (fileRef.current) fileRef.current.value = "";
       await refresh();
     } catch (e) {
@@ -101,7 +109,8 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
               <option key={d.key} value={d.key}>{d.label}</option>
             ))}
           </select>
-          <input ref={fileRef} type="file" accept=".pdf,.dxf,.dwfx,.dwf"
+          <input ref={fileRef} type="file" accept=".pdf,.dxf,.dwfx,.dwf" multiple
+                 aria-label="קובצי הנספח - אפשר לבחור כמה קבצים"
                  data-testid="attachment-file" />
           <button type="button" className="primary-btn"
                   data-testid="attachment-upload-submit"
@@ -156,13 +165,13 @@ function AttachmentCard({
   }
 
   async function onRevision(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files ?? []);
+    if (files.length === 0) return;
     e.target.value = "";
     setBusy(true);
     setErr(null);
     try {
-      await uploadPlanAttachmentRevision(att.id, file);
+      await uploadPlanAttachmentRevision(att.id, files);
       onChanged();
     } catch (e2) { setErr(String(e2)); }
     setBusy(false);
@@ -224,7 +233,7 @@ function AttachmentCard({
         </button>
         <label className="ghost-btn attachment-revision-label">
           העלאת גרסה מתוקנת ↑
-          <input ref={revisionRef} type="file" className="sr-only"
+          <input ref={revisionRef} type="file" className="sr-only" multiple
                  accept=".pdf,.dxf,.dwfx,.dwf" onChange={onRevision}
                  data-testid={`attachment-revision-${att.id}`} />
         </label>
@@ -242,6 +251,29 @@ function AttachmentCard({
       </div>
 
       {err && <MaybeApiError error={err} title={errTitle} />}
+
+      <div className="attachment-files muted" data-testid={`attachment-files-${att.id}`}>
+        {att.files.length === 1 ? "קובץ: " : `${att.files.length} קבצים: `}
+        {att.files.map((f, i) => (
+          <span key={i}>{i > 0 && " · "}<bdi>{f.name}</bdi></span>
+        ))}
+      </div>
+
+      {review?.files && review.files.length > 1 && (
+        <table className="attachment-files-table" data-testid={`attachment-files-review-${att.id}`}>
+          <thead><tr><th>קובץ</th><th>עמודים</th><th>קריאות הטקסט</th><th>פריטים שנמצאו בקובץ</th></tr></thead>
+          <tbody>
+            {review.files.map((f, i) => (
+              <tr key={i}>
+                <td><bdi>{f.name}</bdi></td>
+                <td>{f.pages}</td>
+                <td>{readabilityHe(f)}</td>
+                <td>{f.found.length ? f.found.join(", ") : "-"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       {review && (
         <ul className="attachment-review-list"

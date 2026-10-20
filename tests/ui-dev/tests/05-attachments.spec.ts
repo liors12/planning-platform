@@ -307,3 +307,23 @@ test("v0.2.2: MIXED document - readable overall, some vector sheets", async ({ p
   expect(review.notice_he).toContain("4 מתוך 8");
   expect(review.checks[0].rule_code).toBe("ATTACH_NO_TEXT_LAYER_NOTICE");
 });
+
+test("v0.2.3: one attachment, several files (one PDF per תא שטח)", async ({ page, request }) => {
+  await openAttachments(page);
+  await page.getByTestId("attachment-type").selectOption("sec-3-4");
+  await page.getByTestId("attachment-file").setInputFiles([
+    { name: "plot-1.pdf", mimeType: "application/pdf", buffer: ANNOTATED_PDF },
+    { name: "plot-2.pdf", mimeType: "application/pdf", buffer: ANNOTATED_PDF },
+    { name: "plot-3.pdf", mimeType: "application/pdf", buffer: MIN_PDF },
+  ]);
+  await page.getByTestId("attachment-upload-submit").click();
+  const api = "http://127.0.0.1:17321";
+  const atts = await (await request.get(`${api}/projects/1/attachments`)).json();
+  const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("plot-1.pdf")).pop();
+  expect(att.files.map((f: { name: string }) => f.name)).toEqual(["plot-1.pdf", "plot-2.pdf", "plot-3.pdf"]);
+  await expect(page.getByTestId(`attachment-files-${att.id}`)).toContainText("3 קבצים");
+  const review = await (await request.post(`${api}/attachments/${att.id}/run-review`)).json();
+  expect(review.files).toHaveLength(3);
+  // plot-3 has no text layer: absence proves nothing, for ANY file.
+  expect(review.checks.filter((c: { verdict: string }) => c.verdict === "not_submitted")).toHaveLength(0);
+});

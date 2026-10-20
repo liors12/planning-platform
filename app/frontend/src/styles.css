@@ -2200,6 +2200,22 @@ details.guidelines-group > summary::-webkit-details-marker { margin-inline-start
 }
 .attachment-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .attachment-revision-label { cursor: pointer; }
+/* v0.2.3: an attachment's files, and the per-file section of its review */
+.attachment-files { font-size: 12.5px; }
+.attachment-files-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  border: 1px solid var(--rule);
+}
+.attachment-files-table th,
+.attachment-files-table td {
+  text-align: start;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+}
+.attachment-files-table th { color: var(--muted); font-weight: 600; background: var(--card-bg); }
 .attachment-review-list {
   list-style: none;
   margin: 0;

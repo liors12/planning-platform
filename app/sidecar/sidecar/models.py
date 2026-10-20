@@ -661,6 +661,25 @@ class Attachment(Base):
         }
 
 
+class AttachmentFile(Base):
+    """v0.2.3: one file of an attachment. An attachment is ONE record with N
+    files - e.g. a traffic appendix delivered as one PDF per תא שטח - and one
+    combined review. Attachment.file_path stays the first file, for code and
+    rows from before v0.2.3."""
+    __tablename__ = "attachment_files"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    attachment_id: Mapped[int] = mapped_column(
+        ForeignKey("attachments.id", ondelete="CASCADE"), nullable=False, index=True,
+    )
+    file_path: Mapped[str] = mapped_column(Text, nullable=False)
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    def to_dict(self) -> dict:
+        return {"id": self.id, "name": self.original_name, "file_path": self.file_path}
+
+
 class AuditGuidelineSnapshot(Base):
     __tablename__ = "audit_guideline_snapshots"
 

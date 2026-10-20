@@ -969,6 +969,8 @@ export interface PlanAttachmentOut {
   version_string: string;
   /** v0.2.3: assigned by the server; shown as "גרסה N". */
   version_number: number | null;
+  /** v0.2.3: an attachment holds one or more files (e.g. one PDF per תא שטח). */
+  files: Array<{ name: string }>;
   file_path: string;
   status: "prepared" | "sent" | "response_received" | "closed";
   source_attachment_id: number | null;
@@ -988,6 +990,15 @@ export interface AttachmentReview {
     guideline_id?: number;
     guideline_version?: number;
   }>;
+  /** v0.2.3: one entry per file of the attachment. */
+  files?: Array<{
+    name: string;
+    pages: number;
+    readable_pages: number;
+    unreadable_pages: number;
+    garbled: boolean;
+    found: string[];
+  }>;
 }
 
 export async function listProjectAttachments(projectId: number): Promise<PlanAttachmentOut[]> {
@@ -998,12 +1009,13 @@ export async function listProjectAttachments(projectId: number): Promise<PlanAtt
 }
 
 export async function uploadPlanAttachment(
-  projectId: number, disciplineKey: string, file: File,
+  projectId: number, disciplineKey: string, files: File[],
 ): Promise<PlanAttachmentOut> {
-  // v0.2.3: no version from the client - the server numbers it.
+  // v0.2.3: no version from the client - the server numbers it; and one
+  // attachment may carry several files.
   const form = new FormData();
   form.append("discipline_key", disciplineKey);
-  form.append("file", file, file.name);
+  for (const f of files) form.append("files", f, f.name);
   return jsonOrThrow<PlanAttachmentOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/attachments`,
       { method: "POST", body: form }),
@@ -1026,10 +1038,10 @@ export async function getAttachmentReview(attId: number): Promise<AttachmentRevi
 }
 
 export async function uploadPlanAttachmentRevision(
-  attId: number, file: File,
+  attId: number, files: File[],
 ): Promise<PlanAttachmentOut> {
   const form = new FormData();
-  form.append("file", file, file.name);
+  for (const f of files) form.append("files", f, f.name);
   return jsonOrThrow<PlanAttachmentOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/revision`,
       { method: "POST", body: form }),
