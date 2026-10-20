@@ -50,7 +50,11 @@ REAL_GARBLE = ("הסינכ הסינ מנ חדריח: הפשכ הישסייח ח�
 LATIN = ("ROOM SCHEDULE lobby 24.5 sqm storage 8.2 sqm plant room 11.0 sqm "
          "corridor width 1.80 m clear headroom 2.40 m finished floor level ") * 4
 
-REAL_SHEET = Path.home() / "Downloads" / "אאורה מתחם הטייסים - נספח תנועה ראשוני תא שטח 2.pdf"
+# Real sheet 12753.1/3 - kept outside the public repo (tests/fixtures/real/README.md).
+import os  # noqa: E402
+REAL_SHEET = Path(os.environ.get("GOLDEN_FIXTURES_DIR",
+                                 Path.home() / "planning-platform-fixtures" / "real")
+                  ) / "traffic-12753.1-3_ts-2.pdf"
 
 
 @pytest.mark.parametrize("text", [READABLE, LATIN], ids=["hebrew", "latin"])
