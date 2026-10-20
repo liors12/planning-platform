@@ -7,6 +7,6 @@ pyyaml==6.0.3
 weasyprint==70.0
 pypdf==6.21.1
 # The lock gate re-runs the lock command to prove the locks are in sync.
-uv==0.12.23
+uv==0.13.4
 # starlette 1.9's TestClient (used by the attachment gates) imports httpx2.
 httpx2==2.15.1
