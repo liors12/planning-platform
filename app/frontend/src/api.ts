@@ -32,6 +32,10 @@ export interface ProjectOut {
   created_at: string;
   archived_at: string | null;
   has_schema: boolean;
+  /** v0.2.3: the design plan's architecture firm, entered by Ellen. */
+  design_architect: string | null;
+  /** v0.2.3: ISO date the תב"ע was approved, from the project record. */
+  tava_approval_date: string | null;
   latest_submission: SubmissionSummary | null;
   submission_count: number | null;
 }
@@ -249,7 +253,7 @@ export async function createProject(payload: ProjectCreatePayload): Promise<Proj
 
 export async function patchProject(
   id: number,
-  patch: Partial<ProjectCreatePayload>,
+  patch: Partial<ProjectCreatePayload> & { design_architect?: string | null },
 ): Promise<ProjectOut> {
   return jsonOrThrow<ProjectOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/projects/${id}`, {
@@ -963,6 +967,10 @@ export interface PlanAttachmentOut {
   project_id: number;
   discipline_key: string;
   version_string: string;
+  /** v0.2.3: assigned by the server; shown as "גרסה N". */
+  version_number: number | null;
+  /** v0.2.3: an attachment holds one or more files (e.g. one PDF per תא שטח). */
+  files: Array<{ name: string }>;
   file_path: string;
   status: "prepared" | "sent" | "response_received" | "closed";
   source_attachment_id: number | null;
@@ -982,6 +990,15 @@ export interface AttachmentReview {
     guideline_id?: number;
     guideline_version?: number;
   }>;
+  /** v0.2.3: one entry per file of the attachment. */
+  files?: Array<{
+    name: string;
+    pages: number;
+    readable_pages: number;
+    unreadable_pages: number;
+    garbled: boolean;
+    found: string[];
+  }>;
 }
 
 export async function listProjectAttachments(projectId: number): Promise<PlanAttachmentOut[]> {
@@ -992,12 +1009,13 @@ export async function listProjectAttachments(projectId: number): Promise<PlanAtt
 }
 
 export async function uploadPlanAttachment(
-  projectId: number, disciplineKey: string, version: string, file: File,
+  projectId: number, disciplineKey: string, files: File[],
 ): Promise<PlanAttachmentOut> {
+  // v0.2.3: no version from the client - the server numbers it; and one
+  // attachment may carry several files.
   const form = new FormData();
   form.append("discipline_key", disciplineKey);
-  form.append("version_string", version);
-  form.append("file", file, file.name);
+  for (const f of files) form.append("files", f, f.name);
   return jsonOrThrow<PlanAttachmentOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/projects/${projectId}/attachments`,
       { method: "POST", body: form }),
@@ -1020,11 +1038,10 @@ export async function getAttachmentReview(attId: number): Promise<AttachmentRevi
 }
 
 export async function uploadPlanAttachmentRevision(
-  attId: number, version: string, file: File,
+  attId: number, files: File[],
 ): Promise<PlanAttachmentOut> {
   const form = new FormData();
-  form.append("version_string", version);
-  form.append("file", file, file.name);
+  for (const f of files) form.append("files", f, f.name);
   return jsonOrThrow<PlanAttachmentOut>(
     await fetchOrThrow(`${SIDECAR_BASE}/attachments/${attId}/revision`,
       { method: "POST", body: form }),

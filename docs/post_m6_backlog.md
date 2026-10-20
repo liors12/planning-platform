@@ -930,7 +930,228 @@ That is the only real measurement available, and it inverts. Options A
 (Ellen enters the values) and B (architect data sheet) remain open for
 whatever thresholds 4.1 keeps.
 
+D-3 REOPENED 2026-10-20 (Lior) on vision-spike evidence. Read-only spikes,
+gemini-2.5-flash through the vision_verify path, one call per question,
+3 runs each; ground truth read from the images by hand first:
+  round 1, sheet 12753.1/3: Q1-Q4 correct 3/3; Q5 "total car spaces"
+    answered 70 - the supply table, read correctly - the question was
+    ambiguous (Lior's ruling: his question, not the model).
+  round 2, 8 more sheets (TRP TS01-05, 12753.1/1, 12753.1/5, development
+    plan), Q5 naming the table, Q6 waste-truck maneuver added: 109/144 runs
+    correct. Per question: table present 24/24, basement plan + levels
+    20/24, guest ratio 19/24, maneuver 19/24, total 17/24, residential ratio
+    10/24 (reads the 1:1 bicycle column). Best sheet TS02 18/18, worst TS01
+    6/18 (the largest image, JPEG re-encoded to fit the 20 MB inline cap).
+    Development plan Q6: "yes" 3/3 quoting a label ("כביש גישה נגיש למשאית
+    אשפה") not found on the sheet - a fabricated citation. ~$0.0019/call.
+  API reports ~450 prompt tokens per call regardless of sheet size, so the
+  model works from a heavily downscaled image; accuracy falls with sheet size.
+  Raw results: ~/Downloads/golden-review/vision-round2-results.json.
+
 D-4: The draft release v0.2.1-20260727-b744fd3 STAYS DRAFT until the
 attachment-mapping fix (v0.2.3 section 1) ships. /releases/latest returns
 404 until then.
 
+
+--------------------------------------------------------------------------
+
+B-22: flaky viewport test - the comments form is "not rendered" at 1024x700
+FOUND 2026-10-19 on main after the fix/release-safety merge. NOT FIXED.
+
+Test:   tests/ui-dev/tests/01-layer2-viewports.spec.ts:28
+        "layout 1024x700: home / overview / submissions / findings / cad /
+        guidelines / settings", assertion at line 64:
+        "comments form clipped controls: form not rendered"
+Runs:   QA Suite 39312456426 (main, 9975d2e) attempt 1 FAILED,
+        attempt 2 (rerun of the failed job, same commit) PASSED.
+        The identical tree passed on fix/release-safety in 39309715615.
+Evidence: docs/evidence/B-22-comments-1024x700-failed.jpeg - the last
+        screencast frame of the failed attempt (artifact qa-suite-traces
+        12216956740, expires with the run's retention).
+
+What the frame shows: the הערות רפרנטים tab rendered its "לא זמין" card
+(run the check before entering reviewer comments) instead of the form. So
+the form was legitimately absent at that instant - the assertion is not
+reading a clipped layout, it is reading a project with no completed check.
+
+Not the cause: parallel tests - playwright.config.ts has workers: 1.
+Two hypotheses, neither verified:
+  1. ordering/state - an earlier spec leaves project 1 without a completed
+     check when this one reaches the tab;
+  2. loading race - the tab shows "לא זמין" before its status request
+     returns, and page.evaluate runs right after click() with no wait.
+
+Why it matters: a test that fails without a code change is a test nobody
+will trust when it fails for real. Fix needs the cause first (the trace in
+the artifact has the network log), then a wait on the real condition - not
+a retry and not a sleep.
+
+--------------------------------------------------------------------------
+
+B-23: every attachment report ran 25 unrelated general checks, on every type - SHIPPED DEFECT, HIGH
+SHIPPED IN: v0.2.1 (2200184) through v0.2.2 (main 9975d2e). FIXED ON
+feat/v0.2.3 (ea33905 + the include follow-up), not yet in main.
+
+Since v0.2.1, attachment_check_mapping.json marked the whole כללי section
+'חלק א - פורמט קבצים' always-on for EVERY attachment type, matched by its
+Hebrew title. Its 25 rows are booklet rules (page size, fonts, file name),
+the booklet's required-files list (CAD, development plan, basement plan,
+sections), CAD-file rules (DWG/DXF/XREF/layers/coordinates) and other
+annexes (hydrology, green building, environment). None is a property of a
+single sheet.
+
+  v0.2.1  the rows answered "נדרשת בדיקה" - wrong scope, but silent.
+  v0.2.2  status semantics let a presence check say "לא הוגש"; the same rows
+          now told architects they had omitted work a traffic sheet never
+          contains. Found by Ellen on sheet 12753.1/3: 44 checks, 31 "לא הוגש".
+
+Measured on the real file through the API: v0.2.1 and main run the SAME 44
+checks in the same order; only the verdicts differ. No Hebrew key broke
+between the versions - the mapping was too wide from the day it shipped.
+
+Per type, checks before -> after the fix: traffic 44->17, waste 43->18,
+landscape 34->7, infrastructure 32->6, roads 38->11, drainage 34->9,
+architecture 60->26, environment 32->4, tenant services 28->3, public
+buildings 36->11, general 84->25.
+
+Fix: scope keyed on section_key/sort_order (structural), part_a and part_g
+never on an attachment, cross-discipline rows only by explicit mapping.
+Gate: tests/test_attachment_scope.py. Ellen approves the per-type lists:
+~/Downloads/מיפוי_בדיקות_לפי_נספח.xlsx (2026-10-20). Open decision for her:
+"שירותים לדיירים" has no guideline at all - delete the type or say what
+belongs to it.
+
+--------------------------------------------------------------------------
+
+B-24: discipline rows inside part_a run on no attachment - LOW
+DECIDED 2026-10-20 (Lior): part_a is booklet-only for every discipline.
+
+Consequence: the discipline-tagged rows of part_a - e.g. נספח אקוסטי
+(sec-3-8, part_a#31), שכבת קווי בניין (sec-3-3, part_a#21), נספח חומריות,
+רשימת צמחייה, פוליגונים סגורים - now run on no attachment. They still run
+in the main audit. Reopen when an attachment type exists that matches one
+(e.g. an acoustic annex, or a CAD file as an attachment): add the row to
+that type with include_guidelines, by (section_key, sort_order).
+
+Note, same family: "דיאגרמת פונקציות" (part_b#42) is still TAGGED תנועה in
+the guidelines database, which is where the main report files it. For
+attachments it is excluded from traffic and included in architecture
+(include_guidelines). Retagging the row itself changes the main report and
+is a guidelines-content decision, not done.
+
+--------------------------------------------------------------------------
+
+B-25: a garbled text layer produced "לא הוגש" for items drawn on the sheet - SHIPPED DEFECT, HIGH
+SHIPPED IN: v0.2.2 (status semantics) - before that the same miss said
+"נדרשת בדיקה". FIXED ON feat/v0.2.3 (6ebfee4), not yet in main.
+
+Ellen's traffic sheet 12753.1/3 (md5 ff37760e): the basement plan and the
+parking table are on the sheet, both reported "לא הוגש". The sheet's labels
+and tables are vector paths; its text layer is 518 characters of garbled
+labels (reversed, ם mapped to ח). The 250-character page bar measured
+quantity, not readability, so detection ran on text that cannot match.
+Fix: a per-page readability test (well-formed Hebrew + known-word ratio,
+thresholds measured on 14 real PDFs); a garbled page counts as unreadable
+and the report leads with "לא ניתן לקרוא את הטקסט בקובץ".
+Blind spot (measured, in the test): a light substitution of a few letters in
+otherwise-correct text stays inside the readable range.
+
+FOR B-14 (recorded 2026-10-20, read off the image - the text layer has none):
+the sheet carries a "מאזן חניה" (underlined title) made of two tables -
+"דרישת חניה", the requirement for ALL plots, and "היצע חניה", the supply in
+THIS plot's four basements (front 15+16+16+15 = 62, rear 0+3+3+2 = 8,
+total 70). Corrected 2026-10-20: first recorded as one "דרישת חניה" table.
+The requirement table, per plot 01-05:
+  units:          05: 196, 04: 98, 03: 130, 02: 44, 01: 232 (+4 kindergarten classes)
+  ratios:         residents 1.3:1, guests 0.1:1 per unit, motorcycles 1:10, bikes 1:1
+  grand total:    1009 private cars, 70 motorcycles, 700 bikes
+  basis printed:  "בהתאם לתקנות התכנון והבנייה, 2016 - אזור ג'" - NOT the
+                  guideline's "תקן חניה לאומי 3.1 (ינואר 2023)"
+Two observations for Ellen, not adjudicated: the guest ratio printed is
+0.1:1 per unit, where the מינהלת addition asks for 30% of the residential
+standard; and the sheet cites the 2016 regulations, not standard 3.1.
+Can any path today feed these numbers to a check? NO. The table area has an
+empty text layer; only OCR/vision could read it - option C, rejected (D-3).
+Vision spike 2026-10-20 (read-only, gemini-2.5-flash via the vision_verify
+path, 5 questions x 3 runs): basement plan + levels 1-4, the table, 1.3:1
+and 0.1:1 all correct 3/3; "total car spaces" answered 70 - the supply
+table, read correctly - not the requirement total 1009, 3/3. ~$0.001/call.
+
+--------------------------------------------------------------------------
+
+B-26: the PUBLIC repository holds client and authority material - HIGH, DECISION PENDING
+RECORDED 2026-10-20. Ruling (Lior): stays public for now, pending Ellen's answer.
+
+The public repo contains the real audit report sent to the architect, the
+real submission extracts, the municipality guidelines, and TLV protocols with
+applicant names. Ellen to be asked. Purge plan (4b) and the synthetic-pilot
+prerequisite are recorded below so the decision can be taken and executed.
+
+Repo: liors12/planning-platform, PUBLIC, 0 forks, 0 stars, no Pages. Anything
+already cloned or archived cannot be recalled.
+
+1. IN THE TREE TODAY (417 tracked files)
+ A. From the real submission (אאורה / KIKA BRAZ design plan v24.3):
+    data/projects/407-1048248/submissions/v24.3/ (19 files, ~1.3 MB) -
+      vision findings, page manifests, inventories, audit results + run logs,
+      verification reports, all extracted from the real plan
+    audit_outputs/407-1048248/v24.3/audit_results.m4.json (329 KB)
+    app/sidecar/seed/audit_outputs/.../audit_results.m4.sanitized.json
+      (346 KB) - SHIPPED IN THE APP as the pilot project's data
+    projects/407-1048248/submissions/v24.3/extracts.json, discipline_findings.json (40 KB)
+    templates/v24_3_discipline_feedback_*.docx (4 x ~224 KB) - feedback
+      forms for this submission; fields blank, project/tava/version filled
+ B. Statutory plan (public on Mavat):
+    data/projects/407-1048248/takanon_cad/*.dwg (blue line, plots; 170 KB)
+    project-schema-*.json (3), canonical_clauses.json, takanon_cad_dataset.json
+    reports/407-0977595/tashrit-analysis-2026-04-30.pdf/.md (our analysis)
+ C. Authority and third-party documents:
+    docs/הנחיות_עיצוב_נס_ציונה_לגוגל_דוקס.docx (240 KB) + guidelines_seed.json
+      (98 KB) - the municipality's guidelines, full text
+    compliance_engine/reference_docs/*.pdf (17.3 MB + 1 MB) - Tel Aviv
+      municipality public guides
+    src/corpus/fixtures/tlv-*.pdf (20 files, ~65 MB) - Tel Aviv local
+      committee decision protocols; published, but they name applicants
+ Not found: no real email or meeting notes; no email address or phone number
+ in any text file. Ellen is named in 75 files. docs/evidence/B-22-*.jpeg is
+ a screenshot of the test app (synthetic data).
+
+2. IN HISTORY, deleted from the tree (on every branch, main included)
+    audit_outputs/407-1048248/v24.3/audit_report_24.3.pdf (305 KB) + .html
+      (93 KB) - THE REAL REPORT on the real submission
+    an older audit_results.m4.sanitized.json (331 KB)
+    tests/ui-dev/.qa-ui-data/ - a test database (platform.db-wal 2.5 MB) and
+      job outputs of runs on the pilot
+    plus everything in section 1.
+
+3. WHAT GOING PRIVATE COSTS
+    Actions, last 30 days: 293 Windows + 48 Linux minutes = 634 of 2,000
+    billable (Windows x2). A July-like month (44 builds, 44 UI smokes, 46 QA
+    runs) is ~2,300 - over quota; with the default $0 spending limit CI stops
+    for the rest of the month. (The PR-triggered Windows build was removed
+    2026-10-20, 4b202ed.) Options: Pro (3,000 min).
+    ELLEN'S DOWNLOAD LINK BREAKS: she installs from the GitHub release asset;
+    a private repo needs a GitHub account with access. Options: a
+    collaborator account for her, or distribute the installer elsewhere.
+    Dependabot keeps working (ensure the dependency graph is on). Free secret
+    scanning / push protection is lost. Branch protection, rulesets, Pages:
+    not used today.
+
+4a. MAKE PRIVATE: `gh repo edit --visibility private
+    --accept-visibility-change-consequences`, after Ellen's download and the
+    minutes question are solved. Reversible.
+
+4b. PURGE FROM HISTORY (irreversible), on a copy:
+    1. freeze pushes; `git clone --mirror` to a private backup
+    2. `git filter-repo --invert-paths --paths-from-file purge.txt` with the
+       approved path list
+    3. force-push every branch and tag; delete branches no longer needed
+    4. contact GitHub Support: old commits stay reachable by SHA and through
+       refs/pull/* until they purge them - only they can
+    5. every working copy re-clones
+    Breaks: every commit SHA (backlog/commit references), the July 27 draft
+    release and every tag, open Dependabot PRs #1-#40 (close; they reopen),
+    ci/baseline-0.2.1 (the probe artifact is stored by run id - unaffected).
+    PREREQUISITE: purging app/sidecar/seed/audit_outputs removes the app's
+    pilot project - the findings tab, the main report and dozens of tests
+    depend on it. A SYNTHETIC replacement pilot must be built first.

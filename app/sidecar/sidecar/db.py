@@ -194,6 +194,32 @@ def initialize(engine: Engine) -> dict:
                     log.info("migration: remapped %d discipline_comments rows %s -> %s",
                              res.rowcount, old_key, new_key)
 
+    # v0.2.3 backfill - every attachment from before multi-file gets its one
+    # file as an attachment_files row (the table itself comes from create_all).
+    with engine.begin() as conn:
+        a_exists = conn.execute(text(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='attachments'"
+        )).fetchone()
+        if a_exists:
+            missing = conn.execute(text(
+                "SELECT a.id, a.file_path FROM attachments a WHERE a.file_path != '' "
+                "AND NOT EXISTS (SELECT 1 FROM attachment_files f WHERE f.attachment_id = a.id)"
+            )).fetchall()
+            for att_id, fpath in missing:
+                conn.execute(text(
+                    "INSERT INTO attachment_files (attachment_id, file_path, original_name, sort_order) "
+                    "VALUES (:a, :p, :n, 0)"),
+                    {"a": att_id, "p": fpath, "n": Path(fpath).name})
+            if missing:
+                log.info("migration: backfilled %d attachment_files rows", len(missing))
+
+    # v0.2.3 migration - the design plan's architecture firm (Ellen enters it).
+    with engine.begin() as conn:
+        p_cols = {c[1] for c in conn.execute(text("PRAGMA table_info(projects)")).fetchall()}
+        if p_cols and "design_architect" not in p_cols:
+            conn.execute(text("ALTER TABLE projects ADD COLUMN design_architect TEXT"))
+            log.info("migration: added design_architect to projects")
+
     # Full-seed migration - document-structure columns on guidelines.
     with engine.begin() as conn:
         g_exists = conn.execute(text(

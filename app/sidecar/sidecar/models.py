@@ -46,6 +46,10 @@ class Project(Base):
     # Phase 2a additions:
     name_en: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     address: Mapped[Optional[str]] = mapped_column(String(512), nullable=True)
+    # v0.2.3: the architecture firm that prepared the design plan. Entered by
+    # Ellen - on the real submission the firm appears only as a logo image on
+    # the cover, so it cannot be read from the file's text.
+    design_architect: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="active",
                                         server_default="active")
     archived_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True),
@@ -69,6 +73,7 @@ class Project(Base):
             "name_en": self.name_en,
             "tava_number": self.tava_number,
             "address": self.address,
+            "design_architect": self.design_architect,
             "status": self.status,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "archived_at": self.archived_at.isoformat() if self.archived_at else None,
@@ -654,6 +659,25 @@ class Attachment(Base):
             "has_review": self.review_json_path is not None,
             "uploaded_at": self.uploaded_at.isoformat() if self.uploaded_at else None,
         }
+
+
+class AttachmentFile(Base):
+    """v0.2.3: one file of an attachment. An attachment is ONE record with N
+    files - e.g. a traffic appendix delivered as one PDF per תא שטח - and one
+    combined review. Attachment.file_path stays the first file, for code and
+    rows from before v0.2.3."""
+    __tablename__ = "attachment_files"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    attachment_id: Mapped[int] = mapped_column(
+        ForeignKey("attachments.id", ondelete="CASCADE"), nullable=False, index=True,
+    )
+    file_path: Mapped[str] = mapped_column(Text, nullable=False)
+    original_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    sort_order: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+
+    def to_dict(self) -> dict:
+        return {"id": self.id, "name": self.original_name, "file_path": self.file_path}
 
 
 class AuditGuidelineSnapshot(Base):

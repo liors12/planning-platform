@@ -296,7 +296,7 @@ test("flow 6: delete → re-upload → buttons return to correct state", async (
   const projectId = await projectIdForTava(PILOT_TAVA);
   const TEST_VERSION = "v99.0";
   await uploadSubmissionViaApi(projectId, TEST_VERSION);
-  await p.getByRole("button", { name: "סקירה" }).click();      // away
+  await p.getByRole("button", { name: "סקירה כללית" }).click();      // away
   await p.getByRole("button", { name: "הגשות" }).click();      // back → refetch
 
   const newCard = p.getByTestId(`submission-card-${TEST_VERSION}`);
@@ -318,7 +318,7 @@ test("flow 6: delete → re-upload → buttons return to correct state", async (
   // after a delete. Bounce tabs again to trigger the refetch (same
   // reason as the first upload — API bypasses the UI's refresh path).
   await uploadSubmissionViaApi(projectId, TEST_VERSION);
-  await p.getByRole("button", { name: "סקירה" }).click();
+  await p.getByRole("button", { name: "סקירה כללית" }).click();
   await p.getByRole("button", { name: "הגשות" }).click();
   await expect(newCard).toBeVisible({ timeout: 15_000 });
 

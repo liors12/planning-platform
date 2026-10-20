@@ -159,3 +159,4 @@ tests/ui-dev/playwright-report/
 # ── SQLite sidecar files (B-8: never commit WAL/SHM journals) ─────────
 *.db-wal
 *.db-shm
+.venv-lock/

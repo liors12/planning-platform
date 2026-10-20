@@ -52,6 +52,15 @@ a fresh-install simulation. Never point it at real data.
 - **New convention → new gate.** Every time a wording/style convention is
   established (e.g. "no em-dashes", "no סכמה"), it becomes a Layer-0 gate
   the same day, with a planted-violation self-test proving the gate fires.
+- **Local runs use the LOCKED versions - a venv built from the lock, never
+  the machine's own Python.** (Standing since 2026-10-20.) The Mac's system
+  Python had fastapi 0.136 / starlette 1.0 while the lock pins 0.149 / 1.9;
+  tests passed locally and failed in CI (TestClient needs httpx2 under 1.9).
+  Build it once per lock change:
+  `uv venv -p 3.12 .venv-lock && grep -v '^sqlcipher3' app/sidecar/requirements-linux.txt > /tmp/reqs.txt && uv pip install -p .venv-lock/bin/python -r /tmp/reqs.txt`
+  then run pytest with `.venv-lock/bin/python -m pytest ...` and the UI
+  suite with `QA_SUITE_PYTHON=$PWD/.venv-lock/bin/python npx playwright test`.
+  A result from any other interpreter is not evidence.
 - **Selectors:** data-testid / data-check-key only; never getByText() on
   Hebrew copy.
 - **Hebrew-only UI.** Any English or technical string reaching the screen is
@@ -115,12 +124,19 @@ proceed.
 
 ## 5. Release mechanics
 
-1. Confirm `Build Windows Installer` green on the main tip (the only
-   tolerated red is the known non-fatal cleanup check).
-2. Tag: `v0.1.0-<yyyymmdd>-<short-sha>` on the main tip, push the tag.
-3. Wait for the tagged build; verify the GitHub Release exists, has the
-   `.exe` asset, and the direct download URL answers 200.
-4. Note: releases are marked Pre-release, so `/releases/latest` does NOT
-   resolve — always hand Ellen the direct asset URL.
-5. Run the Layer-4 VM checklist on the downloaded artifact before telling
+(Rewritten 2026-10-20 to match the workflow after B-20; the old
+`v0.1.0-<date>-<sha>` / pre-release procedure no longer applies.)
+
+1. Bump the version in all six places (tests/test_version_agreement.py
+   names them) and let the gate pass. Merge to main.
+2. Confirm `Build Windows Installer` green on the main tip. A push to main
+   builds but NEVER releases.
+3. Tag `v<version>` exactly as in tauri.conf.json (e.g. `v0.2.3`) on the
+   main tip and push the tag. The tagged build creates a DRAFT release with
+   the installer; a tag that does not match the version fails the build.
+4. Verify the draft: the `.exe` asset is there, its size is sane, and the
+   run that built it is the tag's run.
+5. A person publishes the draft. Once published (not a prerelease)
+   `/releases/latest` resolves to it - the link Ellen uses.
+6. Run the Layer-4 VM checklist on the downloaded artifact before telling
    anyone the release is ready.

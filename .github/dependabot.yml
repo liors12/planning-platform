@@ -1,6 +1,7 @@
 # B-21: every dependency is pinned exactly, so nothing moves on its own. This
 # is how the pins move ON PURPOSE: once a month, one grouped PR per ecosystem.
-# A PR runs the full CI like any other and is merged by a person, never
+# A PR runs the QA suite and the lock gate (not the Windows build - minutes,
+# decided 2026-10-20) and is merged by a person, never
 # automatically - do not add an auto-merge workflow for these.
 #
 # pip: Dependabot bumps the exact pins in requirements*.in. The per-platform

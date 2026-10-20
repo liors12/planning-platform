@@ -26,10 +26,11 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.engine import Engine
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, object_session
 
-from .disciplines import DISCIPLINES
-from .models import Attachment, DisciplineComment, Guideline
+from .disciplines import DISCIPLINES  # noqa: I001 - puts compliance_engine on sys.path in dev
+from compliance_engine.text_utils import patch_rtl_artifacts
+from .models import Attachment, AttachmentFile, DisciplineComment, Guideline
 from .storage import sanitize_upload_filename
 
 log = logging.getLogger(__name__)
@@ -50,6 +51,11 @@ class AttachmentOut(BaseModel):
     project_id: int
     discipline_key: str
     version_string: str
+    # v0.2.3: assigned by the server, shown as "גרסה N". None only for a row
+    # from before v0.2.3 whose free-text label carries no number.
+    version_number: Optional[int] = None
+    # v0.2.3: every file of this attachment, in upload order.
+    files: list[dict] = []
     file_path: str
     status: str
     source_attachment_id: Optional[int]
@@ -59,6 +65,56 @@ class AttachmentOut(BaseModel):
 
 class StatusIn(BaseModel):
     status: str
+
+
+def version_number_of(version_string: str | None) -> int | None:
+    """The number in a version label: "3" -> 3, legacy "v2" -> 2."""
+    m = re.fullmatch(r"\s*v?(\d+)\s*", version_string or "")
+    return int(m.group(1)) if m else None
+
+
+def attachment_files(sess, att: Attachment) -> list[tuple[str, Path]]:
+    """(display name, path) of every file of the attachment, in order. A row
+    with no attachment_files (not yet backfilled) falls back to file_path."""
+    rows = sess.execute(select(AttachmentFile)
+                        .where(AttachmentFile.attachment_id == att.id)
+                        .order_by(AttachmentFile.sort_order, AttachmentFile.id)
+                        ).scalars().all() if att.id is not None else []
+    if rows:
+        return [(r.original_name, Path(r.file_path)) for r in rows]
+    return [(Path(att.file_path).name, Path(att.file_path))] if att.file_path else []
+
+
+def _att_out(att: Attachment) -> "AttachmentOut":
+    d = att.to_dict()
+    d["version_number"] = version_number_of(att.version_string)
+    sess = object_session(att)
+    d["files"] = ([{"name": n} for n, _ in attachment_files(sess, att)]
+                  if sess is not None else [])
+    return AttachmentOut(**d)
+
+
+def _next_revision_number(sess, src: Attachment) -> int:
+    """One more than the highest version in src's revision chain.
+
+    The chain is every attachment reachable through source_attachment_id
+    from the same root - so two revisions of one source get 2 and 3, never
+    two 2s.
+    """
+    root = src
+    while root.source_attachment_id is not None:
+        parent = sess.get(Attachment, root.source_attachment_id)
+        if parent is None:
+            break
+        root = parent
+    chain, frontier = {root.id: root}, [root.id]
+    while frontier:
+        kids = sess.execute(select(Attachment).where(
+            Attachment.source_attachment_id.in_(frontier))).scalars().all()
+        frontier = [k.id for k in kids if k.id not in chain]
+        chain.update({k.id: k for k in kids})
+    nums = [version_number_of(a.version_string) or 1 for a in chain.values()]
+    return max(nums) + 1
 
 
 def _load_mapping(cfg) -> dict:
@@ -93,11 +149,14 @@ def _file_quality_checks(file_path: Path) -> list[dict]:
             import fitz  # noqa: PLC0415
             doc = fitz.open(file_path)
             pages = doc.page_count
-            page_lens = [len(p.get_text().strip()) for p in doc]
+            states = [_page_state(patch_rtl_artifacts(p.get_text())) for p in doc]
             doc.close()
             out.append(_finding("FILE_PAGES", "מספר עמודים", "pass",
                                 f"הקובץ מכיל {pages} עמודים."))
-            if not _has_usable_text(page_lens):
+            if "garbled" in states:
+                out.append(_finding("FILE_TEXT_LAYER", "שכבת טקסט", "requires_review",
+                                    GARBLED_TEXT_NOTICE_HE))
+            elif not _has_usable_text(states):
                 out.append(_finding("FILE_TEXT_LAYER", "שכבת טקסט", "requires_review",
                                     "לא אותרה שכבת טקסט קריאה - ייתכן שהקובץ סרוק. "
                                     "מומלץ להגיש PDF טקסטואלי."))
@@ -190,6 +249,18 @@ PARTIAL_TEXT_NOTICE_HE = (
     "בדיקה ולא כחסרים, מכיוון שייתכן שהם מופיעים באותם עמודים."
 )
 
+# v0.2.3 (§2, B-25): a text layer can be present and still unreadable. CAD
+# exports draw their labels and tables as vector paths and keep a handful of
+# labels as text with broken glyph mapping - reversed ("הסינכ" for "כניסה")
+# or with letters substituted ("דייריח" for "דיירים"). Such a page clears the
+# 250-character bar, so detection ran and every miss became "לא הוגש".
+GARBLED_TEXT_TITLE_HE = "לא ניתן לקרוא את הטקסט בקובץ"
+GARBLED_TEXT_NOTICE_HE = (
+    "לא ניתן לקרוא את הטקסט בקובץ. בקובץ יש טקסט, אבל הוא משובש - האותיות "
+    "הפוכות או מוחלפות, כפי שקורה בייצוא מתוכנת שרטוט. לכן בדיקת הימצאות "
+    "הפריטים לא בוצעה, והסעיפים מסומנים כטעונים בדיקה ולא כחסרים."
+)
+
 NO_TEXT_NOTICE_HE = (
     "לא ניתן היה לקרוא טקסט מהקובץ, ולכן בדיקת הימצאות הפריטים לא בוצעה. "
     "הסעיפים מסומנים כטעונים בדיקה, ואין לראות בהם קביעה שפריט חסר. "
@@ -197,38 +268,129 @@ NO_TEXT_NOTICE_HE = (
 )
 
 
-def _page_text_lengths(file_path: Path) -> list[int]:
-    """Extractable characters per page. Empty list when the file is not a
-    readable PDF at all."""
+# ── Is a page's text layer READABLE, not merely present? ────────────────────
+# Two signals, measured 2026-10-20 on every real PDF at hand (pages with at
+# least 10 Hebrew words):
+#
+#                                     well-formed     known words
+#   readable: draft 4.1, Ellen's        99-100%         31-76%
+#   report, meeting summary, the 63-    (82% before
+#   page submission, נספח השתלבות       abbreviations
+#                                       were skipped)
+#   garbled: 8 CAD sheets (TRP TS01-     14-75%          0-18%
+#   05, the three אאורה traffic sheets,
+#   the development plan)
+#
+# WELL-FORMED: a final letter (ךםןףץ) only at the end of a word, and no word
+# ending in its non-final twin (כמנפצ). Real Hebrew obeys this; reversed text
+# breaks it at once. Abbreviations (שצ"פ, ת"י) are skipped - the gershayim
+# splits them into fragments like "השצ".
+# KNOWN: the word, or the word minus one or two prefix letters, occurs in the
+# guideline corpus. Catches substitution that stays well-formed ("דייריח",
+# or every glyph mapped to one letter).
+# A page is GARBLED when it has >= 10 Hebrew words and fails either bar.
+# Fewer than 10 Hebrew words is too little evidence either way, so the
+# character bar alone decides, as before.
+MIN_HEBREW_WORDS_TO_JUDGE = 10
+MIN_WELLFORMED_RATIO = 0.90
+MIN_KNOWN_WORD_RATIO = 0.25
+
+_FINALS = set("ךםןףץ")
+_NONFINAL_TWINS = set("כמנפצ")
+_PREFIXES = set("הובלמשכ")
+_vocab_cache: set[str] | None = None
+
+
+def _vocabulary() -> set[str]:
+    """Hebrew words of the bundled guideline corpus - the seed, not the live
+    table, so the verdict does not drift with Ellen's edits."""
+    global _vocab_cache
+    if _vocab_cache is None:
+        seed = Path(__file__).resolve().parent.parent / "seed" / "guidelines_seed.json"
+        words: set[str] = set()
+        try:
+            for g in json.loads(seed.read_text(encoding="utf-8"))["guidelines"]:
+                words.update(re.findall(r"[א-ת]{3,}", f"{g.get('title') or ''} "
+                                                       f"{g.get('body_text') or ''}"))
+        except Exception as exc:          # no corpus: the known-word bar is off
+            log.warning("guideline corpus unavailable for readability: %s", exc)
+        _vocab_cache = words
+    return _vocab_cache
+
+
+def _hebrew_words(text: str) -> list[str]:
+    """Hebrew words of 3+ letters, abbreviations (with gershayim) skipped."""
+    out = []
+    for tok in re.findall(r"[א-ת\"'\u05f3\u05f4]+", text):
+        if any(q in tok for q in "\"'\u05f3\u05f4"):
+            continue
+        if len(tok) >= 3:
+            out.append(tok)
+    return out
+
+
+def _known(word: str, vocab: set[str]) -> bool:
+    if word in vocab:
+        return True
+    for i in (1, 2):
+        if (len(word) - i >= 3 and all(c in _PREFIXES for c in word[:i])
+                and word[i:] in vocab):
+            return True
+    return False
+
+
+def _wellformed(word: str) -> bool:
+    return (not any(c in _FINALS for c in word[:-1])
+            and word[-1] not in _NONFINAL_TWINS)
+
+
+def _page_state(text: str) -> str:
+    """"readable" | "sparse" (below the character bar) | "garbled"."""
+    if len(text.strip()) < MIN_TEXT_CHARS_PER_PAGE:
+        return "sparse"
+    words = _hebrew_words(text)
+    if len(words) < MIN_HEBREW_WORDS_TO_JUDGE:
+        return "readable"
+    wellformed = sum(map(_wellformed, words)) / len(words)
+    vocab = _vocabulary()
+    known = (sum(_known(w, vocab) for w in words) / len(words)) if vocab else 1.0
+    if wellformed < MIN_WELLFORMED_RATIO or known < MIN_KNOWN_WORD_RATIO:
+        return "garbled"
+    return "readable"
+
+
+def _page_texts(file_path: Path) -> list[str]:
+    """Text per page, after the shared RTL cleanup. Empty list when the file
+    is not a readable PDF at all."""
     if file_path.suffix.lower() != ".pdf":
         return []
     try:
         import fitz  # noqa: PLC0415
         doc = fitz.open(file_path)
-        lengths = [len(p.get_text().strip()) for p in doc]
+        texts = [patch_rtl_artifacts(p.get_text()) for p in doc]
         doc.close()
-        return lengths
+        return texts
     except Exception:
         return []
 
 
-def _page_census(page_lengths: list[int]) -> tuple[int, int]:
-    """(readable pages, unreadable pages) by the per-page bar."""
-    readable = sum(1 for n in page_lengths if n >= MIN_TEXT_CHARS_PER_PAGE)
-    return readable, len(page_lengths) - readable
+def _page_census(states: list[str]) -> tuple[int, int]:
+    """(readable pages, unreadable pages). Garbled counts as unreadable."""
+    readable = sum(1 for s in states if s == "readable")
+    return readable, len(states) - readable
 
 
-def _has_usable_text(page_lengths: list[int]) -> bool:
+def _has_usable_text(states: list[str]) -> bool:
     """Is the document readable ENOUGH to be worth scanning at all? Used for
     the file-quality warning and to choose which notice to show. Detection
     permission is a stricter test - see _detection_allowed."""
-    if not page_lengths:
+    if not states:
         return False
-    readable, _ = _page_census(page_lengths)
-    return readable / len(page_lengths) >= READABLE_PAGE_RATIO
+    readable, _ = _page_census(states)
+    return readable / len(states) >= READABLE_PAGE_RATIO
 
 
-def _detection_allowed(page_lengths: list[int]) -> bool:
+def _detection_allowed(states: list[str]) -> bool:
     """"לא הוגש" requires that we could read EVERY page.
 
     The ratio rule alone leaves a silent hole: a submission half-exported with
@@ -249,9 +411,9 @@ def _detection_allowed(page_lengths: list[int]) -> bool:
     submitted, in a form that looks entirely credible. Only the second kind of
     error damages trust in the tool.
     """
-    if not page_lengths:
+    if not states:
         return False
-    _, unreadable = _page_census(page_lengths)
+    _, unreadable = _page_census(states)
     return unreadable == 0
 
 
@@ -280,7 +442,7 @@ def _extract_text(file_path: Path) -> str:
     try:
         import fitz  # noqa: PLC0415
         doc = fitz.open(file_path)
-        text = " ".join(p.get_text() for p in doc)
+        text = " ".join(patch_rtl_artifacts(p.get_text()) for p in doc)
         doc.close()
         return text
     except Exception:
@@ -317,7 +479,7 @@ def _guideline_finding(g, doc_text: str, text_ok: bool) -> dict:
             # Suppressed: we cannot read the file, so absence proves nothing.
             return _finding(
                 code, g.title, "requires_review",
-                f"לא בוצעה בדיקת הימצאות אוטומטית - לא נקרא טקסט מהקובץ. {cite}",
+                f"לא בוצעה בדיקת הימצאות אוטומטית - לא ניתן לקרוא את הטקסט בקובץ. {cite}",
                 guideline=gd)
         if not _marker_found(g.title, doc_text):
             return _finding(code, g.title, "not_submitted",
@@ -345,50 +507,146 @@ def _guideline_finding(g, doc_text: str, text_ok: bool) -> dict:
                     f"נדרשת בדיקה מול הנספח. {cite}", guideline=gd)
 
 
+def attachment_scope(full_mapping: dict, discipline_key: str):
+    """Predicate: may this guideline row run on an attachment of this type?
+
+    Keyed on section_key (+ sort_order), the structural row identity - never
+    on the Hebrew section title, which is display text and has been reworded
+    before (the pattern behind B-13 and B-16).
+    """
+    scope = full_mapping.get("attachment_scope", {})
+    mapping = full_mapping.get("types", {}).get(discipline_key, {})
+    blocked_sections = (set(scope.get("submission_only_sections", []))
+                        | set(mapping.get("exclude_sections", [])))
+    blocked_rows = {(e["section_key"], e["sort_order"])
+                    for e in mapping.get("exclude_guidelines", [])}
+
+    def in_scope(g) -> bool:
+        if g.section_key in blocked_sections:
+            return False
+        return (g.section_key, g.sort_order) not in blocked_rows
+    return in_scope
+
+
+def select_guidelines(full_mapping: dict, discipline_key: str, active) -> list:
+    """The guideline rows a review of this attachment type runs, in order.
+
+    1. guidelines tagged with THIS discipline;
+    2. mapped extra check_keys and include_guidelines from other
+       disciplines - the ONLY ways a row from another discipline (כללי
+       included) reaches this type. Until
+       v0.2.2 every כללי row of 'חלק א' rode along on every type: 25 rows a
+       traffic sheet answered 'לא הוגש' to (B-23);
+    3. minus anything attachment_scope() rules out.
+    """
+    mapping = full_mapping.get("types", {}).get(discipline_key, {})
+    in_scope = attachment_scope(full_mapping, discipline_key)
+    own = [g for g in active if g.discipline_key == discipline_key]
+    extra_keys = set(mapping.get("extra_guideline_check_keys", []))
+    extras = [g for g in active
+              if g.check_key in extra_keys and g.discipline_key != discipline_key]
+    # A row tagged to another discipline that belongs to this type, named by
+    # its structural identity (the function diagram: tagged תנועה, belongs to
+    # architecture).
+    wanted = {(e["section_key"], e["sort_order"])
+              for e in mapping.get("include_guidelines", [])}
+    extras += [g for g in active if (g.section_key, g.sort_order) in wanted]
+    out, seen = [], set()
+    for g in own + extras:
+        if g.id not in seen and in_scope(g):
+            seen.add(g.id)
+            out.append(g)
+    return out
+
+
+def _aggregate_file_checks(per_file: list[dict]) -> list[dict]:
+    """The top-level file checks of a MULTI-file attachment: the worst of
+    each check across the files. The per-file detail lives in review["files"]."""
+    order = {"fail": 3, "requires_review": 2, "pass": 1}
+    out, codes = [], []
+    for f in per_file:
+        for c in f["checks"]:
+            if c["rule_code"] not in codes:
+                codes.append(c["rule_code"])
+    for code in codes:
+        rows = [(f["name"], c) for f in per_file for c in f["checks"] if c["rule_code"] == code]
+        worst = max(rows, key=lambda r: order.get(r[1]["verdict"], 2))[1]
+        if code == "ATTACH_FILE_PAGES":
+            pages = sum(f["pages"] for f in per_file)
+            out.append({**worst, "verdict": "pass",
+                        "notes_he": f"הנספח מכיל {len(per_file)} קבצים, {pages} עמודים בסך הכל."})
+            continue
+        bad = [n for n, c in rows if c["verdict"] != "pass"]
+        notes = worst["notes_he"] if not bad else f'{worst["notes_he"]} (בקבצים: {", ".join(bad)})'
+        out.append({**worst, "notes_he": notes})
+    return out
+
+
 def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
-    """Execute ONLY the mapped checks for this attachment's type."""
+    """Execute ONLY the mapped checks for this attachment's type.
+
+    v0.2.3: an attachment may hold several files (one PDF per תא שטח). They
+    are checked AS ONE DOCUMENT: an item is present if it is found in any
+    file, and "לא הוגש" needs every page of every file to be readable - the
+    same rule a single file already had, so a file that cannot be read can
+    never turn into "the architect omitted it". Each file also gets its own
+    section: pages, readability, file checks, and the items found in it.
+    """
     full_mapping = _load_mapping(cfg)
     mapping = full_mapping.get("types", {}).get(att.discipline_key, {})
-    subgroup_cfg = full_mapping.get("general_subgroups", {})
-    always_on = set(subgroup_cfg.get("always_on_attachments", []))
     checks: list[dict] = []
 
     with Session(engine) as sess:
         active = sess.execute(
             select(Guideline).where(Guideline.is_active == 1)
         ).scalars().all()
-
-    # 1. Guidelines tagged with THIS discipline.
-    own = [g for g in active if g.discipline_key == att.discipline_key]
-    # 2. Mapped extra guideline check_keys from other disciplines.
-    extra_keys = set(mapping.get("extra_guideline_check_keys", []))
-    extras = [g for g in active
-              if g.check_key in extra_keys and g.discipline_key != att.discipline_key]
-    # 3. v0.2.1: כללי sub-groups marked always_on_attachments (file formats)
-    # apply to every attachment type. The booklet-structure and checklist
-    # sub-groups are submission-only and deliberately never reach here.
-    general_always = [
-        g for g in active
-        if g.discipline_key == "general"
-        and (g.section_title or "").strip() in always_on
-    ]
+        files = attachment_files(sess, att)
+    candidates = select_guidelines(full_mapping, att.discipline_key, active)
 
     # v0.2.2 status semantics: read the attachment ONCE, then let each
     # guideline's declared check_mode decide what we are allowed to say.
-    doc_text = _extract_text(Path(att.file_path))
-    page_lengths = _page_text_lengths(Path(att.file_path))
-    readable_pages, unreadable_pages = _page_census(page_lengths)
-    text_ok = _detection_allowed(page_lengths)
-    mostly_readable = _has_usable_text(page_lengths)
+    per_file: list[dict] = []
+    states: list[str] = []
+    texts: list[str] = []
+    for name, path in files:
+        page_texts = _page_texts(path)
+        f_states = [_page_state(x) for x in page_texts]
+        f_text = " ".join(page_texts)
+        f_readable, f_unreadable = _page_census(f_states)
+        per_file.append({
+            "name": name,
+            "pages": len(page_texts),
+            "readable_pages": f_readable,
+            "unreadable_pages": f_unreadable,
+            "garbled": "garbled" in f_states,
+            "found": ([g.title for g in candidates
+                       if (getattr(g, "check_mode", None) or "needs_context") == "auto_detect"
+                       and _marker_found(g.title, f_text)]
+                      if _detection_allowed(f_states) else []),
+            "checks": _file_quality_checks(path),
+        })
+        # A file we could not open at all (no pages) must still block
+        # "לא הוגש": alone it yields an empty census, which already does;
+        # merged with readable files it would simply vanish.
+        states += f_states or ["sparse"]
+        texts.append(f_text)
+    doc_text = " ".join(texts)
+    readable_pages, unreadable_pages = _page_census(states)
+    text_ok = _detection_allowed(states)
+    mostly_readable = _has_usable_text(states)
 
     # The notice leads the list so it is the first thing Ellen reads, on the
     # screen and at the top of the דו"ח התייחסות.
     notice_he = None
     if not text_ok:
-        if mostly_readable and readable_pages:
+        if "garbled" in states:
+            # Text is there but scrambled - say so; "no text" would be untrue.
+            notice_he = GARBLED_TEXT_NOTICE_HE
+            notice_title = GARBLED_TEXT_TITLE_HE
+        elif mostly_readable and readable_pages:
             # Mixed document: readable overall, but some sheets are vector.
             notice_he = PARTIAL_TEXT_NOTICE_HE.format(
-                unreadable=unreadable_pages, total=len(page_lengths))
+                unreadable=unreadable_pages, total=len(states))
             notice_title = "בדיקת הימצאות חלקית"
         else:
             notice_he = NO_TEXT_NOTICE_HE
@@ -396,11 +654,7 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
         checks.append(_finding("NO_TEXT_LAYER_NOTICE", notice_title,
                                "requires_review", notice_he))
 
-    seen_ids = set()
-    for g in own + extras + general_always:
-        if g.id in seen_ids:
-            continue
-        seen_ids.add(g.id)
+    for g in candidates:
         checks.append(_guideline_finding(g, doc_text, text_ok))
 
     # 3. The type's named extra checks (learned cross-links).
@@ -409,8 +663,11 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
                                "requires_review", c["instruction_he"],
                                cross_cite=c.get("cross_cite")))
 
-    # 4. File-quality checks - always run.
-    checks.extend(_file_quality_checks(Path(att.file_path)))
+    # 4. File-quality checks - always run; one file reports them as before.
+    if len(per_file) == 1:
+        checks.extend(per_file[0]["checks"])
+    elif per_file:
+        checks.extend(_aggregate_file_checks(per_file))
 
     return {
         "attachment_id": att.id,
@@ -421,7 +678,23 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
         "notice_he": notice_he,
         "reviewed_at": datetime.now(timezone.utc).isoformat(),
         "checks": checks,
+        "files": per_file,
     }
+
+
+def _version_he(att: Attachment) -> str:
+    n = version_number_of(att.version_string)
+    return f"גרסה {n}" if n is not None else f"גרסה {att.version_string}"
+
+
+def _write_review(dest: Path, review: dict) -> None:
+    """Write review.json ATOMICALLY. An upload now starts its check by itself
+    (§3f), so a second run-review or a GET /review can arrive while the file
+    is being written; a plain write_text let GET read half a file (500, seen
+    in CI). Write beside it, then rename over - readers see old or new."""
+    tmp = dest.with_name(dest.name + ".tmp")
+    tmp.write_text(json.dumps(review, ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp.replace(dest)
 
 
 def _att_dir(cfg, project_id: int, att_id: int) -> Path:
@@ -444,33 +717,62 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                 select(Attachment).where(Attachment.project_id == project_id)
                 .order_by(Attachment.id)
             ).scalars().all()
-            return [AttachmentOut(**r.to_dict()) for r in rows]
+            return [_att_out(r) for r in rows]
+
+    async def _read_uploads(file: Optional[UploadFile],
+                            files: Optional[list[UploadFile]]) -> list[tuple[str, bytes]]:
+        """Both the old single `file` field and the v0.2.3 `files` list."""
+        ups = [u for u in ([file] if file else []) + list(files or []) if u is not None]
+        if not ups:
+            raise HTTPException(422, "יש לבחור לפחות קובץ אחד")
+        out = []
+        for u in ups:
+            content = await u.read()
+            if len(content) > _MAX_FILE_BYTES:
+                raise HTTPException(413, "הקובץ גדול מדי - עד 200MB")
+            out.append((u.filename or "attachment.pdf", content))
+        return out
+
+    def _store_files(sess, att: Attachment, uploads: list[tuple[str, bytes]]) -> None:
+        """Write each file under the attachment's folder, one row per file.
+        Two uploads with the same name get distinct leaves (_2, _3)."""
+        folder = _att_dir(cfg, att.project_id, att.id)
+        used: set[str] = set()
+        for i, (orig, content) in enumerate(uploads):
+            leaf = sanitize_upload_filename(orig)
+            stem, suffix = Path(leaf).stem, Path(leaf).suffix
+            n = 2
+            while leaf in used:
+                leaf = f"{stem}_{n}{suffix}"
+                n += 1
+            used.add(leaf)
+            dst = folder / leaf
+            dst.write_bytes(content)
+            sess.add(AttachmentFile(attachment_id=att.id, file_path=str(dst),
+                                    original_name=orig, sort_order=i))
+            if i == 0:
+                att.file_path = str(dst)
 
     @router.post("/projects/{project_id}/attachments",
                  response_model=AttachmentOut, status_code=201)
     async def upload_attachment(project_id: int,
                                 discipline_key: str = Form(...),
-                                version_string: str = Form(...),
-                                file: UploadFile = File(...)):
+                                file: Optional[UploadFile] = File(None),
+                                files: Optional[list[UploadFile]] = File(None)):
         if discipline_key not in _DISC_LABEL:
             raise HTTPException(422, "יש לבחור סוג נספח מהרשימה")
-        content = await file.read()
-        if len(content) > _MAX_FILE_BYTES:
-            raise HTTPException(413, "הקובץ גדול מדי - עד 200MB")
+        uploads = await _read_uploads(file, files)
         with _session() as sess:
             att = Attachment(project_id=project_id,
                              discipline_key=discipline_key,
-                             version_string=version_string.strip() or "v1",
+                             version_string="1",   # v0.2.3: a new attachment is גרסה 1
                              file_path="", status="prepared")
             sess.add(att)
             sess.flush()
-            leaf = sanitize_upload_filename(file.filename or "attachment.pdf")
-            dst = _att_dir(cfg, project_id, att.id) / leaf
-            dst.write_bytes(content)
-            att.file_path = str(dst)
+            _store_files(sess, att, uploads)
             sess.commit()
             sess.refresh(att)
-            return AttachmentOut(**att.to_dict())
+            return _att_out(att)
 
     @router.post("/attachments/{att_id}/run-review")
     def run_review(att_id: int):
@@ -480,8 +782,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                 raise HTTPException(404, "הנספח לא נמצא")
             review = run_attachment_review(cfg, engine, att)
             dest = _att_dir(cfg, att.project_id, att.id) / "review.json"
-            dest.write_text(json.dumps(review, ensure_ascii=False, indent=1),
-                            encoding="utf-8")
+            _write_review(dest, review)
             att.review_json_path = str(dest)
             sess.commit()
             return review
@@ -499,35 +800,31 @@ def make_router(cfg, engine: Engine) -> APIRouter:
     @router.post("/attachments/{att_id}/revision",
                  response_model=AttachmentOut, status_code=201)
     async def upload_revision(att_id: int,
-                              version_string: str = Form(...),
-                              file: UploadFile = File(...)):
-        content = await file.read()
-        if len(content) > _MAX_FILE_BYTES:
-            raise HTTPException(413, "הקובץ גדול מדי - עד 200MB")
+                              file: Optional[UploadFile] = File(None),
+                              files: Optional[list[UploadFile]] = File(None)):
+        uploads = await _read_uploads(file, files)
         with _session() as sess:
             src = sess.get(Attachment, att_id)
             if src is None:
                 raise HTTPException(404, "הנספח לא נמצא")
             att = Attachment(project_id=src.project_id,
                              discipline_key=src.discipline_key,
-                             version_string=version_string.strip() or "v2",
+                             version_string=str(_next_revision_number(sess, src)),
                              file_path="", status="prepared",
                              source_attachment_id=src.id)
             sess.add(att)
             sess.flush()
-            leaf = sanitize_upload_filename(file.filename or "attachment.pdf")
-            dst = _att_dir(cfg, src.project_id, att.id) / leaf
-            dst.write_bytes(content)
-            att.file_path = str(dst)
+            _store_files(sess, att, uploads)
+            # Commit first: the review reads the files in its own session.
+            sess.commit()
             # Revision auto-runs the mapped review.
             review = run_attachment_review(cfg, engine, att)
             rdest = _att_dir(cfg, src.project_id, att.id) / "review.json"
-            rdest.write_text(json.dumps(review, ensure_ascii=False, indent=1),
-                             encoding="utf-8")
+            _write_review(rdest, review)
             att.review_json_path = str(rdest)
             sess.commit()
             sess.refresh(att)
-            return AttachmentOut(**att.to_dict())
+            return _att_out(att)
 
     @router.post("/attachments/{att_id}/status", response_model=AttachmentOut)
     def set_status(att_id: int, body: StatusIn):
@@ -540,7 +837,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             att.status = body.status
             sess.commit()
             sess.refresh(att)
-            return AttachmentOut(**att.to_dict())
+            return _att_out(att)
 
     def _build_attachment_report_pdf(att_id: int) -> bytes:
         from .guidelines import _render_pdf
@@ -590,6 +887,18 @@ _VERDICT_HE = {
 }
 
 
+def _readability_he(f: dict) -> str:
+    """How readable one file was, in words Ellen uses."""
+    if f.get("garbled"):
+        return "לא ניתן לקרוא את הטקסט בקובץ"
+    pages, unreadable = f.get("pages", 0), f.get("unreadable_pages", 0)
+    if pages and unreadable == 0:
+        return "קריא"
+    if unreadable >= pages:
+        return "אין בקובץ טקסט קריא"
+    return f"קריא בחלקו ({pages - unreadable} מתוך {pages} עמודים)"
+
+
 def _build_attachment_report_html(att: Attachment, review: dict,
                                   comments: list) -> str:
     """The דו"ח התייחסות, in the same chrome as the main סקירת תוכנית עיצוב.
@@ -609,10 +918,10 @@ def _build_attachment_report_html(att: Attachment, review: dict,
 
     cover = cover_html(
         title="דו\"ח התייחסות לנספח",
-        subtitles=[label, f"גרסה {att.version_string}"],
+        subtitles=[label, _version_he(att)],
         pill="דו\"ח התייחסות",
         meta_rows=[("תחום:", label),
-                   ("גרסת הנספח:", att.version_string),
+                   ("גרסת הנספח:", _version_he(att)),
                    ("תאריך הפקה:", now_str)],
         note=review.get("notice_he") or None,
     )
@@ -632,6 +941,21 @@ def _build_attachment_report_html(att: Attachment, review: dict,
             f"<td>{_iso(c.get('notes_he', ''))}</td></tr>"
         )
     parts.append("</tbody></table>")
+
+    # v0.2.3: one section per file of the attachment.
+    files = review.get("files") or []
+    if files:
+        parts.append("<h2>קבצי הנספח</h2>")
+        parts.append("<p>הבדיקה רואה את כל הקבצים כמסמך אחד: פריט נחשב כמופיע אם נמצא "
+                     "באחד הקבצים, ו\"לא הוגש\" נקבע רק כשכל עמודי כל הקבצים קריאים.</p>")
+        parts.append("<table><thead><tr><th>קובץ</th><th>עמודים</th><th>קריאות הטקסט</th>"
+                     "<th>פריטים שנמצאו בקובץ</th></tr></thead><tbody>")
+        for f in files:
+            parts.append(
+                f"<tr><td>{_iso(f.get('name', ''))}</td><td>{f.get('pages', 0)}</td>"
+                f"<td>{escape(_readability_he(f))}</td>"
+                f"<td>{_iso(', '.join(f.get('found') or [])) or '-'}</td></tr>")
+        parts.append("</tbody></table>")
 
     if comments:
         parts.append("<h2>הערות מקושרות</h2>")

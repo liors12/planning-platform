@@ -222,3 +222,14 @@ def test_upgrades_arrive_as_monthly_prs_never_auto_merged():
     for wf in WORKFLOWS:
         assert "merge --auto" not in wf.read_text(encoding="utf-8"), (
             f"{wf.name}: auto-merge - upgrade PRs are merged by a person")
+
+
+def test_windows_build_runs_only_on_main_tags_and_dispatch():
+    """Decided 2026-10-20 (minutes): no full Windows build on pull requests.
+    Dependency PRs are covered by the QA suite and this lock gate."""
+    import yaml
+    wf = yaml.safe_load((ROOT / ".github/workflows/build-windows.yml").read_text(encoding="utf-8"))
+    on = wf.get("on", wf.get(True))      # PyYAML reads the bare key `on` as True
+    assert "pull_request" not in on and "pull_request_target" not in on, on
+    assert set(on) == {"workflow_dispatch", "push"}, set(on)
+    assert on["push"]["branches"] == ["main"] and "v*" in on["push"]["tags"]

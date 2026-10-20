@@ -1,12 +1,8 @@
 {
   "_comment": "v0.2.0 attachment check mapping. Default for every type: run the guidelines tagged with ITS discipline_key. extra_guideline_disciplines pulls in additional disciplines' guidelines (cross-links); extra_checks are named review items with a Hebrew instruction, optionally citing (cross_cite) another discipline in the finding text. Editable data - the review runner reads this file from the data dir.",
-  "_comment_general_subgroups": "v0.2.1. The כללי discipline is split into sub-groups by source document section. always_on_attachments sub-groups run on EVERY attachment type (a file-format rule applies to any sheet you hand in), merged with the built-in file-quality checks without duplicates. submission_only sub-groups describe the full submission booklet and must NEVER run on a single attachment.",
-  "general_subgroups": {
-    "always_on_attachments": ["חלק א - פורמט קבצים"],
-    "submission_only": [
-      "חלק ב - מבנה החוברת הראשית",
-      "חלק ז - רשימת בדיקה למינהלת (קבלת ההגשה)"
-    ]
+  "_comment_attachment_scope": "v0.2.3. Which guideline rows may run on a SINGLE attachment. Keyed on section_key (part_a..part_g, appendix_a) - the structural id the seed and the database share - never on the Hebrew section title, which a readability pass is free to reword. (1) A guideline from another discipline runs only if its check_key is in the type's extra_guideline_check_keys; כללי rows no longer ride along on every type. Until v0.2.2 the whole 'חלק א - פורמט קבצים' section ran on every attachment: 25 rows, of which the file-format ones are booklet rules (page size, fonts, file name) and the rest are the booklet's required-files list, CAD-file rules and other annexes - a traffic sheet answered 'לא הוגש' to all of them. The attachment's own file quality is covered by the built-in ATTACH_FILE_* checks. (2) submission_only_sections never run on an attachment, whatever the row's discipline: part_a is the submission's file list, part_g the acceptance checklist ('החוברת תכלול ...'). (3) Per type, exclude_sections, exclude_guidelines and include_guidelines [{section_key, sort_order, why}] - (section_key, sort_order) is the row identity db.py seeds by, and a guideline edit keeps it.",
+  "attachment_scope": {
+    "submission_only_sections": ["part_a", "part_g"]
   },
   "types": {
     "sec-3-5": {
@@ -19,8 +15,6 @@
     "roads-dev": {
       "extra_guideline_check_keys": ["path_main_min_m", "path_secondary_min_m", "gas_tank_setback_min_m"],
       "extra_checks": [
-        {"id": "path-width-labels", "title_he": "סימון רוחבי שבילים",
-         "instruction_he": "רוחב כל שביל יסומן במטרים לצד השביל, לבדיקה מול הרוחב המזערי (3 מ' ראשי / 2.5 מ' משני)."},
         {"id": "ramp-designation", "title_he": "ייעוד רמפות בשיפוע 8% ומעלה",
          "instruction_he": "כל שיפוע של 8% ומעלה יסווג במפורש: רמפת רכב או רמפה נגישה."},
         {"id": "accessibility-continuity", "title_he": "רציפות נגישות לכניסות",
@@ -31,6 +25,10 @@
       ]
     },
     "sec-3-4": {
+      "exclude_guidelines": [
+        {"section_key": "part_b", "sort_order": 42,
+         "why": "דיאגרמת פונקציות - שימושי קומת הקרקע בחוברת; תויגה תנועה בגלל אזכור החניון, ואינה תוכן של נספח תנועה"}
+      ],
       "extra_checks": [
         {"id": "parking-balance-complete", "title_he": "שלמות מאזן החניה",
          "instruction_he": "מאזן החניה יציג את כל תאי השטח; אין תא חסר."},
@@ -74,9 +72,14 @@
     },
     "sec-3-2": {"extra_checks": []},
     "sec-3-3": {"extra_checks": []},
-    "sec-3-7": {"extra_checks": []},
+    "sec-3-7": {
+      "include_guidelines": [
+        {"section_key": "part_b", "sort_order": 42,
+         "why": "דיאגרמת פונקציות - שימושי קומת הקרקע; שייכת לאדריכלות. תיוג הדיסציפלינה במאגר נשאר תנועה"}
+      ],
+      "extra_checks": []},
     "sec-3-8": {"extra_checks": []},
     "sec-3-9": {"extra_checks": []},
-    "general": {"extra_checks": []}
+    "general": {"exclude_sections": ["part_b"], "extra_checks": []}
   }
 }

@@ -1,0 +1,70 @@
+{
+ "_status": "APPROVED by Lior 2026-10-20 - baseline; change only with a new approval",
+ "file": "development-189-6-plan-08.pdf",
+ "original_name": "אאורה מתחם הטייסים - נספח פיתוח.pdf",
+ "sheet": "189-6-plan-08",
+ "md5": "017560b5a7c4170624b7864691fd5609",
+ "attachment_type": "roads-dev",
+ "text_layer_ok": false,
+ "checks": [
+  {
+   "rule_code": "ATTACH_NO_TEXT_LAYER_NOTICE",
+   "title": "לא ניתן לקרוא את הטקסט בקובץ",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_144",
+   "title": "סימון רוחבי שבילים בתכנית",
+   "verdict": "requires_review",
+   "guideline": "part_b#144"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_145",
+   "title": "סימון מרחק צובר הגז מהמבנים",
+   "verdict": "requires_review",
+   "guideline": "part_c#145"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_50",
+   "title": "שצ”פ - שטח ציבורי פתוח",
+   "verdict": "requires_review",
+   "guideline": "part_b#50"
+  },
+  {
+   "rule_code": "ATTACH_GUIDE_61",
+   "title": "צובר גז",
+   "verdict": "requires_review",
+   "guideline": "part_c#61"
+  },
+  {
+   "rule_code": "ATTACH_RAMP_DESIGNATION",
+   "title": "ייעוד רמפות בשיפוע 8% ומעלה",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_ACCESSIBILITY_CONTINUITY",
+   "title": "רציפות נגישות לכניסות",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_SLOPE_MIN_NOTE",
+   "title": "שיפועי ניקוז מזעריים",
+   "verdict": "requires_review"
+  },
+  {
+   "rule_code": "ATTACH_FILE_FORMAT",
+   "title": "פורמט קובץ",
+   "verdict": "pass"
+  },
+  {
+   "rule_code": "ATTACH_FILE_PAGES",
+   "title": "מספר עמודים",
+   "verdict": "pass"
+  },
+  {
+   "rule_code": "ATTACH_FILE_TEXT_LAYER",
+   "title": "שכבת טקסט",
+   "verdict": "requires_review"
+  }
+ ]
+}
