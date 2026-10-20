@@ -64,6 +64,9 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
   const [type, setType] = useState("");
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  // v0.2.3 §3f: after an upload the check runs by itself. Per attachment:
+  // "checking" while it runs, "done" once the report is ready.
+  const [phase, setPhase] = useState<Record<number, "checking" | "done">>({});
 
   const refresh = useCallback(async () => {
     try {
@@ -84,14 +87,32 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
     if (files.length === 0 || !type) return;
     setUploading(true);
     setErr(null);
+    let att: PlanAttachmentOut;
     try {
-      await uploadPlanAttachment(project.id, type, files);
+      att = await uploadPlanAttachment(project.id, type, files);
       if (fileRef.current) fileRef.current.value = "";
-      await refresh();
     } catch (e) {
       setErr(String(e));
+      setUploading(false);
+      return;
     }
     setUploading(false);
+    await checkNow(att.id);
+  }
+
+  // Shared by upload and revision: show "בודקת...", run (or await) the
+  // check, then "הבדיקה הסתיימה - הדו"ח מוכן".
+  async function checkNow(attId: number, alreadyRun = false) {
+    setPhase((p) => ({ ...p, [attId]: "checking" }));
+    await refresh();
+    try {
+      if (!alreadyRun) await runAttachmentReview(attId);
+      setPhase((p) => ({ ...p, [attId]: "done" }));
+    } catch (e) {
+      setErr(String(e));
+      setPhase((p) => { const n = { ...p }; delete n[attId]; return n; });
+    }
+    await refresh();
   }
 
   const label = (key: string) =>
@@ -116,7 +137,7 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
                   data-testid="attachment-upload-submit"
                   disabled={uploading || !type}
                   onClick={onUpload}>
-            {uploading ? "מעלה..." : "העלי נספח"}
+            {uploading ? "מעלה את הקבצים..." : "העלי נספח"}
           </button>
         </div>
       </div>
@@ -130,6 +151,8 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
 
       {attachments?.map((att) => (
         <AttachmentCard key={att.id} att={att} typeLabel={label(att.discipline_key)}
+                        phase={phase[att.id] ?? null}
+                        onRevised={(next) => checkNow(next.id, true)}
                         onChanged={refresh} />
       ))}
     </div>
@@ -137,8 +160,14 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
 }
 
 function AttachmentCard({
-  att, typeLabel, onChanged,
-}: { att: PlanAttachmentOut; typeLabel: string; onChanged: () => void }) {
+  att, typeLabel, phase, onRevised, onChanged,
+}: {
+  att: PlanAttachmentOut;
+  typeLabel: string;
+  phase: "checking" | "done" | null;
+  onRevised: (next: PlanAttachmentOut) => void;
+  onChanged: () => void;
+}) {
   const [review, setReview] = useState<AttachmentReview | null>(null);
   const [busy, setBusy] = useState(false);
   const [reportState, setReportState] =
@@ -149,10 +178,10 @@ function AttachmentCard({
   const revisionRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (att.has_review) {
+    if (att.has_review && phase !== "checking") {
       getAttachmentReview(att.id).then(setReview).catch(() => {});
     }
-  }, [att.id, att.has_review]);
+  }, [att.id, att.has_review, phase]);
 
   async function onRun() {
     setBusy(true);
@@ -171,8 +200,8 @@ function AttachmentCard({
     setBusy(true);
     setErr(null);
     try {
-      await uploadPlanAttachmentRevision(att.id, files);
-      onChanged();
+      // The server runs the check as part of the revision upload.
+      onRevised(await uploadPlanAttachmentRevision(att.id, files));
     } catch (e2) { setErr(String(e2)); }
     setBusy(false);
   }
@@ -225,11 +254,30 @@ function AttachmentCard({
         </span>
       </div>
 
+      {phase === "checking" && (
+        <div className="banner attachment-phase" role="status"
+             data-testid={`attachment-checking-${att.id}`}>
+          <span className="spinner" aria-hidden="true" /> בודקת...
+        </div>
+      )}
+      {phase === "done" && (
+        <div className="banner banner-ok attachment-phase" role="status"
+             data-testid={`attachment-done-${att.id}`}>
+          <span>הבדיקה הסתיימה - הדו"ח מוכן</span>
+          <button type="button" className="primary-btn small"
+                  disabled={reportState === "working"}
+                  data-testid={`attachment-open-report-${att.id}`}
+                  onClick={onReport}>
+            {reportState === "working" ? "מכינה את הקובץ..." : 'פתחי את הדו"ח'}
+          </button>
+        </div>
+      )}
+
       <div className="attachment-actions">
         <button type="button" className="primary-btn" disabled={busy}
                 data-testid={`attachment-run-review-${att.id}`}
                 onClick={onRun}>
-          {busy ? "בודקת..." : "הריצי בדיקה"}
+          {busy ? "בודקת..." : att.has_review ? "בדיקה חוזרת" : "הריצי בדיקה"}
         </button>
         <label className="ghost-btn attachment-revision-label">
           העלאת גרסה מתוקנת ↑

@@ -327,3 +327,21 @@ test("v0.2.3: one attachment, several files (one PDF per תא שטח)", async ({
   // plot-3 has no text layer: absence proves nothing, for ANY file.
   expect(review.checks.filter((c: { verdict: string }) => c.verdict === "not_submitted")).toHaveLength(0);
 });
+
+test("v0.2.3: after upload the check runs by itself and says when the report is ready", async ({ page, request }) => {
+  await openAttachments(page);
+  await page.getByTestId("attachment-type").selectOption("sec-3-4");
+  await page.getByTestId("attachment-file").setInputFiles({
+    name: "auto-check.pdf", mimeType: "application/pdf", buffer: ANNOTATED_PDF,
+  });
+  await page.getByTestId("attachment-upload-submit").click();
+  const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
+  const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("auto-check.pdf")).pop();
+  const done = page.getByTestId(`attachment-done-${att.id}`);
+  await expect(done).toHaveText(/הבדיקה הסתיימה - הדו"ח מוכן/);
+  await expect(page.getByTestId(`attachment-checking-${att.id}`)).toHaveCount(0);
+  await expect(page.getByTestId(`attachment-open-report-${att.id}`)).toHaveText('פתחי את הדו"ח');
+  // no button had to be pressed for the review to exist
+  const review = await request.get(`http://127.0.0.1:17321/attachments/${att.id}/review`);
+  expect(review.status()).toBe(200);
+});

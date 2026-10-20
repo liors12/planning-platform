@@ -1955,6 +1955,9 @@ code, .path {
 .layer-mapping-empty { padding: 20px; font-size: 14px; color: var(--text-muted); }
 .banner { padding: 10px 14px; border-radius: 6px; font-size: 13px; }
 .banner-warn { background: #fff8e1; border: 1px solid #f9a825; color: #6d4c00; }
+.banner-ok { background: #e8f5e9; border: 1px solid #81c784; color: #1b5e20; }
+.attachment-phase { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.attachment-phase .spinner { vertical-align: -2px; }
 .layer-mapping-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .layer-mapping-table th { text-align: right; padding: 8px 10px; border-bottom: 2px solid var(--border); font-weight: 600; white-space: nowrap; }
 .layer-mapping-table td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
