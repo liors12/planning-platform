@@ -930,6 +930,24 @@ That is the only real measurement available, and it inverts. Options A
 (Ellen enters the values) and B (architect data sheet) remain open for
 whatever thresholds 4.1 keeps.
 
+D-3 REOPENED 2026-10-20 (Lior) on vision-spike evidence. Read-only spikes,
+gemini-2.5-flash through the vision_verify path, one call per question,
+3 runs each; ground truth read from the images by hand first:
+  round 1, sheet 12753.1/3: Q1-Q4 correct 3/3; Q5 "total car spaces"
+    answered 70 - the supply table, read correctly - the question was
+    ambiguous (Lior's ruling: his question, not the model).
+  round 2, 8 more sheets (TRP TS01-05, 12753.1/1, 12753.1/5, development
+    plan), Q5 naming the table, Q6 waste-truck maneuver added: 109/144 runs
+    correct. Per question: table present 24/24, basement plan + levels
+    20/24, guest ratio 19/24, maneuver 19/24, total 17/24, residential ratio
+    10/24 (reads the 1:1 bicycle column). Best sheet TS02 18/18, worst TS01
+    6/18 (the largest image, JPEG re-encoded to fit the 20 MB inline cap).
+    Development plan Q6: "yes" 3/3 quoting a label ("כביש גישה נגיש למשאית
+    אשפה") not found on the sheet - a fabricated citation. ~$0.0019/call.
+  API reports ~450 prompt tokens per call regardless of sheet size, so the
+  model works from a heavily downscaled image; accuracy falls with sheet size.
+  Raw results: ~/Downloads/golden-review/vision-round2-results.json.
+
 D-4: The draft release v0.2.1-20260727-b744fd3 STAYS DRAFT until the
 attachment-mapping fix (v0.2.3 section 1) ships. /releases/latest returns
 404 until then.
