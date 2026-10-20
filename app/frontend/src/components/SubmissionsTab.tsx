@@ -349,7 +349,11 @@ export function SubmissionsTab({ project, onSubmissionsChanged }: Props) {
   }
 
   async function onOpenMavat() {
-    const url = `https://mavat.iplan.gov.il/SV4/1/1001/${encodeURIComponent(project.tava_number)}`;
+    // v0.2.3: SV4/1/<id> wants Mavat's INTERNAL entity id, not the plan
+    // number - with the number it answers "לא ניתן לצפות בפרטי הישות בשלב
+    // זה". The search form takes the plan number and redirects to the plan
+    // page (407-1048248 -> SV4/1/4005200730/310, verified 2026-10-20).
+    const url = `https://mavat.iplan.gov.il/SV3?text=${encodeURIComponent(project.tava_number)}`;
     try { await openUrl(url); }
     catch { /* silently ignore - worst case the browser doesn't open */ }
   }
