@@ -1039,7 +1039,11 @@ Blind spot (measured, in the test): a light substitution of a few letters in
 otherwise-correct text stays inside the readable range.
 
 FOR B-14 (recorded 2026-10-20, read off the image - the text layer has none):
-the sheet carries a full "דרישת חניה" table, per plot 01-05:
+the sheet carries a "מאזן חניה" (underlined title) made of two tables -
+"דרישת חניה", the requirement for ALL plots, and "היצע חניה", the supply in
+THIS plot's four basements (front 15+16+16+15 = 62, rear 0+3+3+2 = 8,
+total 70). Corrected 2026-10-20: first recorded as one "דרישת חניה" table.
+The requirement table, per plot 01-05:
   units:          05: 196, 04: 98, 03: 130, 02: 44, 01: 232 (+4 kindergarten classes)
   ratios:         residents 1.3:1, guests 0.1:1 per unit, motorcycles 1:10, bikes 1:1
   grand total:    1009 private cars, 70 motorcycles, 700 bikes
@@ -1050,3 +1054,7 @@ Two observations for Ellen, not adjudicated: the guest ratio printed is
 standard; and the sheet cites the 2016 regulations, not standard 3.1.
 Can any path today feed these numbers to a check? NO. The table area has an
 empty text layer; only OCR/vision could read it - option C, rejected (D-3).
+Vision spike 2026-10-20 (read-only, gemini-2.5-flash via the vision_verify
+path, 5 questions x 3 runs): basement plan + levels 1-4, the table, 1.3:1
+and 0.1:1 all correct 3/3; "total car spaces" answered 70 - the supply
+table, read correctly - not the requirement total 1009, 3/3. ~$0.001/call.
