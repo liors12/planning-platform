@@ -687,6 +687,16 @@ def _version_he(att: Attachment) -> str:
     return f"גרסה {n}" if n is not None else f"גרסה {att.version_string}"
 
 
+def _write_review(dest: Path, review: dict) -> None:
+    """Write review.json ATOMICALLY. An upload now starts its check by itself
+    (§3f), so a second run-review or a GET /review can arrive while the file
+    is being written; a plain write_text let GET read half a file (500, seen
+    in CI). Write beside it, then rename over - readers see old or new."""
+    tmp = dest.with_name(dest.name + ".tmp")
+    tmp.write_text(json.dumps(review, ensure_ascii=False, indent=1), encoding="utf-8")
+    tmp.replace(dest)
+
+
 def _att_dir(cfg, project_id: int, att_id: int) -> Path:
     p = cfg.data_dir / "attachments" / str(project_id) / str(att_id)
     p.mkdir(parents=True, exist_ok=True)
@@ -772,8 +782,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
                 raise HTTPException(404, "הנספח לא נמצא")
             review = run_attachment_review(cfg, engine, att)
             dest = _att_dir(cfg, att.project_id, att.id) / "review.json"
-            dest.write_text(json.dumps(review, ensure_ascii=False, indent=1),
-                            encoding="utf-8")
+            _write_review(dest, review)
             att.review_json_path = str(dest)
             sess.commit()
             return review
@@ -811,8 +820,7 @@ def make_router(cfg, engine: Engine) -> APIRouter:
             # Revision auto-runs the mapped review.
             review = run_attachment_review(cfg, engine, att)
             rdest = _att_dir(cfg, src.project_id, att.id) / "review.json"
-            rdest.write_text(json.dumps(review, ensure_ascii=False, indent=1),
-                             encoding="utf-8")
+            _write_review(rdest, review)
             att.review_json_path = str(rdest)
             sess.commit()
             sess.refresh(att)
