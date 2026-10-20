@@ -61,22 +61,25 @@ test("attachments v0.2.1: כללי format sub-group runs, booklet sub-group does
   // a booklet section in חלק ב), so a title comparison reports false leaks.
   const codes: string[] = review.checks.map((c: { rule_code: string }) => c.rule_code);
 
-  // Pull the real sub-group membership from the API so the spec cannot drift
-  // from the seed.
+  // Pull the real rows from the API so the spec cannot drift from the seed.
+  // Keyed on section_key, the structural id - never on the Hebrew section
+  // title (B-23: the old mapping matched 'חלק א - פורמט קבצים' by title).
   const rows = await (await request.get("http://127.0.0.1:17321/guidelines")).json();
-  const idsInSub = (section: string) => rows
-    .filter((g: { discipline_key: string; section_title: string | null }) =>
-      g.discipline_key === "general" && (g.section_title || "").startsWith(section))
+  const generalIds = (section: string) => rows
+    .filter((g: { discipline_key: string; section_key: string | null }) =>
+      g.discipline_key === "general" && g.section_key === section)
     .map((g: { id: number }) => `ATTACH_GUIDE_${g.id}`);
 
-  const formatCodes = idsInSub("חלק א");
-  const bookletCodes = idsInSub("חלק ב");
+  const formatCodes = generalIds("part_a");
+  const bookletCodes = generalIds("part_b");
   expect(formatCodes.length).toBeGreaterThan(0);
   expect(bookletCodes.length).toBeGreaterThan(0);
 
-  // Format rules apply to any sheet you hand in - all of them.
-  expect(codes).toEqual(expect.arrayContaining(formatCodes));
-  // ...booklet-structure rules describe the whole submission and must not.
+  // v0.2.3 (B-23): NO כללי row runs on a traffic sheet. Until v0.2.2 all 25
+  // 'חלק א' rows did - the booklet's file rules and required-files list - and
+  // a real traffic appendix answered 'לא הוגש' to fonts, page size and the
+  // hydrology annex. The sheet's own file quality is ATTACH_FILE_*.
+  for (const c of formatCodes) expect(codes).not.toContain(c);
   for (const c of bookletCodes) expect(codes).not.toContain(c);
 });
 

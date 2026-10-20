@@ -345,33 +345,62 @@ def _guideline_finding(g, doc_text: str, text_ok: bool) -> dict:
                     f"נדרשת בדיקה מול הנספח. {cite}", guideline=gd)
 
 
+def attachment_scope(full_mapping: dict, discipline_key: str):
+    """Predicate: may this guideline row run on an attachment of this type?
+
+    Keyed on section_key (+ sort_order), the structural row identity - never
+    on the Hebrew section title, which is display text and has been reworded
+    before (the pattern behind B-13 and B-16).
+    """
+    scope = full_mapping.get("attachment_scope", {})
+    mapping = full_mapping.get("types", {}).get(discipline_key, {})
+    blocked_sections = (set(scope.get("submission_only_sections", []))
+                        | set(mapping.get("exclude_sections", [])))
+    blocked_rows = {(e["section_key"], e["sort_order"])
+                    for e in mapping.get("exclude_guidelines", [])}
+
+    def in_scope(g) -> bool:
+        if g.section_key in blocked_sections:
+            return False
+        return (g.section_key, g.sort_order) not in blocked_rows
+    return in_scope
+
+
+def select_guidelines(full_mapping: dict, discipline_key: str, active) -> list:
+    """The guideline rows a review of this attachment type runs, in order.
+
+    1. guidelines tagged with THIS discipline;
+    2. mapped extra check_keys from other disciplines - the ONLY way a row
+       from another discipline (כללי included) reaches this type. Until
+       v0.2.2 every כללי row of 'חלק א' rode along on every type: 25 rows a
+       traffic sheet answered 'לא הוגש' to (B-23);
+    3. minus anything attachment_scope() rules out.
+    """
+    mapping = full_mapping.get("types", {}).get(discipline_key, {})
+    in_scope = attachment_scope(full_mapping, discipline_key)
+    own = [g for g in active if g.discipline_key == discipline_key]
+    extra_keys = set(mapping.get("extra_guideline_check_keys", []))
+    extras = [g for g in active
+              if g.check_key in extra_keys and g.discipline_key != discipline_key]
+    out, seen = [], set()
+    for g in own + extras:
+        if g.id not in seen and in_scope(g):
+            seen.add(g.id)
+            out.append(g)
+    return out
+
+
 def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     """Execute ONLY the mapped checks for this attachment's type."""
     full_mapping = _load_mapping(cfg)
     mapping = full_mapping.get("types", {}).get(att.discipline_key, {})
-    subgroup_cfg = full_mapping.get("general_subgroups", {})
-    always_on = set(subgroup_cfg.get("always_on_attachments", []))
     checks: list[dict] = []
 
     with Session(engine) as sess:
         active = sess.execute(
             select(Guideline).where(Guideline.is_active == 1)
         ).scalars().all()
-
-    # 1. Guidelines tagged with THIS discipline.
-    own = [g for g in active if g.discipline_key == att.discipline_key]
-    # 2. Mapped extra guideline check_keys from other disciplines.
-    extra_keys = set(mapping.get("extra_guideline_check_keys", []))
-    extras = [g for g in active
-              if g.check_key in extra_keys and g.discipline_key != att.discipline_key]
-    # 3. v0.2.1: כללי sub-groups marked always_on_attachments (file formats)
-    # apply to every attachment type. The booklet-structure and checklist
-    # sub-groups are submission-only and deliberately never reach here.
-    general_always = [
-        g for g in active
-        if g.discipline_key == "general"
-        and (g.section_title or "").strip() in always_on
-    ]
+    candidates = select_guidelines(full_mapping, att.discipline_key, active)
 
     # v0.2.2 status semantics: read the attachment ONCE, then let each
     # guideline's declared check_mode decide what we are allowed to say.
@@ -396,11 +425,7 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
         checks.append(_finding("NO_TEXT_LAYER_NOTICE", notice_title,
                                "requires_review", notice_he))
 
-    seen_ids = set()
-    for g in own + extras + general_always:
-        if g.id in seen_ids:
-            continue
-        seen_ids.add(g.id)
+    for g in candidates:
         checks.append(_guideline_finding(g, doc_text, text_ok))
 
     # 3. The type's named extra checks (learned cross-links).
