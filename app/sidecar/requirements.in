@@ -12,7 +12,7 @@ uvicorn[standard]==0.54.0
 sqlalchemy==2.1.5
 pydantic==2.14.1
 # sqlcipher3 has no Windows wheels; Windows falls back to stdlib sqlite3.
-sqlcipher3==0.6.2 ; sys_platform != "win32"   # last version run locally with SQLCipher 4.12
+sqlcipher3==0.6.4 ; sys_platform != "win32"   # last version run locally with SQLCipher 4.12
 python-multipart==0.0.32
 # openpyxl is used by compliance_engine.excel_export for the
 # "הפיקי אקסל" workbook export. Lazy-imported (function-body), so
