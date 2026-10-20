@@ -9,19 +9,29 @@ async function openAttachments(page: import("@playwright/test").Page) {
   await page.getByTestId("tab-attachments").click();
 }
 
+// v0.2.3: an upload runs its check by itself and ends on "הבדיקה הסתיימה".
+// Wait for THAT, and return the new card by its id - with newest-on-top,
+// "the first card" is whatever was on top before the upload landed.
+async function awaitUploaded(page: import("@playwright/test").Page) {
+  const done = page.locator('[data-testid^="attachment-done-"]');
+  await expect(done).toBeVisible();
+  const id = Number((await done.getAttribute("data-testid"))!.split("-").pop());
+  return { id, card: page.getByTestId(`attachment-card-${id}`) };
+}
+
 async function uploadTraffic(page: import("@playwright/test").Page) {
   await page.getByTestId("attachment-type").selectOption("sec-3-4");
   await page.getByTestId("attachment-file").setInputFiles({
     name: "traffic.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
+  return awaitUploaded(page);
 }
 
 test("attachments: upload with type renders a card", async ({ page }) => {
   await openAttachments(page);
   await expect(page.getByTestId("attachments-empty")).toBeVisible();
-  await uploadTraffic(page);
-  const card = page.locator('[data-testid^="attachment-card-"]').first();
+  const { id: newId, card } = await uploadTraffic(page);
   await expect(card).toBeVisible();
   await expect(card).toContainText("תנועה");
   await expect(card).toContainText("הוכן");
@@ -29,8 +39,8 @@ test("attachments: upload with type renders a card", async ({ page }) => {
 
 test("attachments: mapped-only review - traffic checks in, gan-yard out", async ({ page }) => {
   await openAttachments(page);
-  await uploadTraffic(page);
-  const card = page.locator('[data-testid^="attachment-card-"]').first();
+  const { id: newId, card } = await uploadTraffic(page);
+  await card.locator('[data-testid^="attachment-toggle-"]').click();   // rows start collapsed
   await card.locator('[data-testid^="attachment-run-review-"]').click();
   const review = card.locator('[data-testid^="attachment-review-"]');
   await expect(review).toBeVisible();
@@ -47,14 +57,14 @@ test("attachments: mapped-only review - traffic checks in, gan-yard out", async 
 test("attachments v0.2.1: כללי format sub-group runs, booklet sub-group does not",
   async ({ page, request }) => {
   await openAttachments(page);
-  await uploadTraffic(page);
-  const card = page.locator('[data-testid^="attachment-card-"]').first();
+  const { id: newId, card } = await uploadTraffic(page);
+  await card.locator('[data-testid^="attachment-toggle-"]').click();   // rows start collapsed
   await card.locator('[data-testid^="attachment-run-review-"]').click();
   await expect(card.locator('[data-testid^="attachment-review-"]')).toBeVisible();
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const review = await (await request.get(
-    `http://127.0.0.1:17321/attachments/${atts[0].id}/review`)).json();
+    `http://127.0.0.1:17321/attachments/${newId}/review`)).json();
   // Match on rule_code (GUIDE_<id>), NOT on title: titles legitimately repeat
   // across sub-groups (e.g. "חתכים" is both a required CAD file in חלק א and
   // a booklet section in חלק ב), so a title comparison reports false leaks.
@@ -92,12 +102,13 @@ test("attachments: revision auto-runs the review", async ({ page, request }) => 
   await expect(cards).toHaveCount(before);
   await uploadTraffic(page);
   await expect(cards).toHaveCount(before + 1);
+  await cards.first().locator('[data-testid^="attachment-toggle-"]').click();
   await cards.first().locator('[data-testid^="attachment-revision-"]').setInputFiles({
     name: "traffic-v2.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
   });
   // A new card appears, marked as revision, ALREADY reviewed (auto-run).
   await expect(cards).toHaveCount(before + 2);
-  const rev = cards.last();
+  const rev = cards.first();   // v0.2.3: newest on top
   await expect(rev).toContainText("גרסה מתוקנת");
   await expect(rev.locator('[data-testid^="attachment-report-"]')).toBeVisible();
 });
@@ -137,12 +148,14 @@ test("1f closure: UI-added guideline flows into its discipline's attachment revi
     name: "gardens.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
+  await awaitUploaded(page);
   // Pin the exact new card by its API id (last() is fragile in the
   // shared-DB run where earlier specs left attachments behind).
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const gardens = atts.filter((a: { discipline_key: string }) => a.discipline_key === "sec-3-2").pop();
   const card = page.getByTestId(`attachment-card-${gardens.id}`);
   await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-toggle-${gardens.id}`).click();   // rows start collapsed
   await card.getByTestId(`attachment-run-review-${gardens.id}`).click();
   await expect(card.getByTestId(`attachment-review-${gardens.id}`))
     .toContainText("הנחיית גינון לבדיקת נספח");
@@ -150,8 +163,8 @@ test("1f closure: UI-added guideline flows into its discipline's attachment revi
 
 test("attachments: comment linkage + דוח התייחסות", async ({ page, request }) => {
   await openAttachments(page);
-  await uploadTraffic(page);
-  const card = page.locator('[data-testid^="attachment-card-"]').first();
+  const { id: newId, card } = await uploadTraffic(page);
+  await card.locator('[data-testid^="attachment-toggle-"]').click();   // rows start collapsed
   await card.locator('[data-testid^="attachment-run-review-"]').click();
   await expect(card.locator('[data-testid^="attachment-review-"]')).toBeVisible();
 
@@ -202,11 +215,13 @@ test("v0.2.2: no text layer SUPPRESSES לא הוגש entirely", async ({ page, r
     name: "vector-only.pdf", mimeType: "application/pdf", buffer: MIN_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
+  await awaitUploaded(page);
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("vector-only.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-toggle-${att.id}`).click();   // rows start collapsed
   await card.getByTestId(`attachment-run-review-${att.id}`).click();
   await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
 
@@ -233,11 +248,13 @@ test("v0.2.2: 60 sheets of title blocks only - ZERO לא הוגש", async ({ pag
     name: "sheets.pdf", mimeType: "application/pdf", buffer: TITLE_BLOCK_ONLY_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
+  await awaitUploaded(page);
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("sheets.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-toggle-${att.id}`).click();   // rows start collapsed
   await card.getByTestId(`attachment-run-review-${att.id}`).click();
   await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
 
@@ -259,11 +276,13 @@ test("v0.2.2: densely annotated PDF with no matching markers yields לא הוג�
     name: "annotated.pdf", mimeType: "application/pdf", buffer: ANNOTATED_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
+  await awaitUploaded(page);
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("annotated.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-toggle-${att.id}`).click();   // rows start collapsed
   await card.getByTestId(`attachment-run-review-${att.id}`).click();
   await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
 
@@ -289,11 +308,13 @@ test("v0.2.2: MIXED document - readable overall, some vector sheets", async ({ p
     name: "mixed.pdf", mimeType: "application/pdf", buffer: MIXED_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
+  await awaitUploaded(page);
 
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("mixed.pdf")).pop();
   const card = page.getByTestId(`attachment-card-${att.id}`);
   await expect(card).toBeVisible();
+  await card.getByTestId(`attachment-toggle-${att.id}`).click();   // rows start collapsed
   await card.getByTestId(`attachment-run-review-${att.id}`).click();
   await expect(card.getByTestId(`attachment-review-${att.id}`)).toBeVisible();
 
@@ -317,10 +338,12 @@ test("v0.2.3: one attachment, several files (one PDF per תא שטח)", async ({
     { name: "plot-3.pdf", mimeType: "application/pdf", buffer: MIN_PDF },
   ]);
   await page.getByTestId("attachment-upload-submit").click();
+  await awaitUploaded(page);
   const api = "http://127.0.0.1:17321";
   const atts = await (await request.get(`${api}/projects/1/attachments`)).json();
   const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("plot-1.pdf")).pop();
   expect(att.files.map((f: { name: string }) => f.name)).toEqual(["plot-1.pdf", "plot-2.pdf", "plot-3.pdf"]);
+  await page.getByTestId(`attachment-toggle-${att.id}`).click();   // rows start collapsed
   await expect(page.getByTestId(`attachment-files-${att.id}`)).toContainText("3 קבצים");
   const review = await (await request.post(`${api}/attachments/${att.id}/run-review`)).json();
   expect(review.files).toHaveLength(3);
@@ -335,6 +358,7 @@ test("v0.2.3: after upload the check runs by itself and says when the report is 
     name: "auto-check.pdf", mimeType: "application/pdf", buffer: ANNOTATED_PDF,
   });
   await page.getByTestId("attachment-upload-submit").click();
+  await awaitUploaded(page);
   const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
   const att = atts.filter((a: { file_path: string }) => a.file_path.endsWith("auto-check.pdf")).pop();
   const done = page.getByTestId(`attachment-done-${att.id}`);
@@ -344,4 +368,27 @@ test("v0.2.3: after upload the check runs by itself and says when the report is 
   // no button had to be pressed for the review to exist
   const review = await request.get(`http://127.0.0.1:17321/attachments/${att.id}/review`);
   expect(review.status()).toBe(200);
+});
+
+test("v0.2.3: newest on top, every row collapsed until opened", async ({ page, request }) => {
+  await openAttachments(page);
+  await uploadTraffic(page);
+  const atts = await (await request.get("http://127.0.0.1:17321/projects/1/attachments")).json();
+  const newest = Math.max(...atts.map((a: { id: number }) => a.id));
+  const cards = page.locator('[data-testid^="attachment-card-"]');
+  await expect(cards.first()).toHaveAttribute("data-testid", `attachment-card-${newest}`);
+  // collapsed: the row shows type, version, date, status - and nothing else
+  const card = page.getByTestId(`attachment-card-${newest}`);
+  await expect(card).toContainText("תנועה");
+  await expect(card).toContainText("גרסה 1");
+  await expect(page.getByTestId(`attachment-row-status-${newest}`)).toHaveText("הוכן");
+  await expect(page.getByTestId(`attachment-body-${newest}`)).toHaveCount(0);
+  for (const c of await cards.all()) {
+    await expect(c.locator('[data-testid^="attachment-body-"]')).toHaveCount(0);
+  }
+  // the report button is on the row itself, once the check has run
+  await expect(page.getByTestId(`attachment-report-${newest}`)).toBeVisible();
+  await page.getByTestId(`attachment-toggle-${newest}`).click();
+  await expect(page.getByTestId(`attachment-body-${newest}`)).toBeVisible();
+  await expect(page.getByTestId(`attachment-toggle-${newest}`)).toHaveAttribute("aria-expanded", "true");
 });

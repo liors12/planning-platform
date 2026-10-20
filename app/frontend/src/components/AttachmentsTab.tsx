@@ -14,6 +14,8 @@ import {
   type ProjectOut,
 } from "../api";
 import { MaybeApiError } from "./ErrorNotice";
+import { displayDate } from "../lib/duration";
+import { IsolateLtr } from "../lib/bidi";
 
 // v0.2.0: נספחי תוכנית עיצוב - typed, versioned attachments with a status
 // flow and MAPPED reviews (only the checks mapped to the attachment's type
@@ -149,7 +151,8 @@ export function AttachmentsTab({ project }: { project: ProjectOut }) {
         </p>
       )}
 
-      {attachments?.map((att) => (
+      {/* v0.2.3 §3h: newest on top. */}
+      {[...(attachments ?? [])].sort((a, b) => b.id - a.id).map((att) => (
         <AttachmentCard key={att.id} att={att} typeLabel={label(att.discipline_key)}
                         phase={phase[att.id] ?? null}
                         onRevised={(next) => checkNow(next.id, true)}
@@ -176,6 +179,8 @@ function AttachmentCard({
   const [errTitle, setErrTitle] = useState("לא ניתן להשלים את הפעולה");
   const [err, setErr] = useState<string | null>(null);
   const revisionRef = useRef<HTMLInputElement>(null);
+  // v0.2.3 §3h: a row is collapsed until Ellen opens it.
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (att.has_review && phase !== "checking") {
@@ -233,25 +238,37 @@ function AttachmentCard({
   return (
     <div className="card attachment-card"
          data-testid={`attachment-card-${att.id}`}>
-      <div className="attachment-card-header">
-        <b>{typeLabel}</b>
-        <span className="muted" data-testid={`attachment-version-${att.id}`}>
-          {versionLabel(att)}
-        </span>
-        {att.source_attachment_id !== null && (
-          <span className="badge badge-manual">גרסה מתוקנת</span>
+      <div className="attachment-row">
+        <button type="button" className="attachment-row-toggle"
+                aria-expanded={open}
+                data-testid={`attachment-toggle-${att.id}`}
+                onClick={() => setOpen((o) => !o)}>
+          <span className="attachment-row-chevron" aria-hidden="true">{open ? "▾" : "◂"}</span>
+          <b>{typeLabel}</b>
+          <span className="muted" data-testid={`attachment-version-${att.id}`}>
+            {versionLabel(att)}
+          </span>
+          {att.source_attachment_id !== null && (
+            <span className="badge badge-manual">גרסה מתוקנת</span>
+          )}
+          {att.uploaded_at && (
+            <span className="muted" dir="ltr">{displayDate(att.uploaded_at.slice(0, 10))}</span>
+          )}
+          <span className="attachment-row-status" data-testid={`attachment-row-status-${att.id}`}>
+            {STATUS_HE[att.status]}
+          </span>
+        </button>
+        {att.has_review && (
+          <button type="button" className="ghost-btn"
+                  disabled={busy || reportState === "working"}
+                  data-pdf-state={reportState}
+                  data-testid={`attachment-report-${att.id}`}
+                  onClick={onReport}>
+            {reportState === "working" && "מכינה את הקובץ..."}
+            {reportState === "opened" && "הקובץ נפתח"}
+            {reportState === "idle" && 'הפיקי דו"ח התייחסות'}
+          </button>
         )}
-        <span className="attachment-status-stepper">
-          {STATUS_FLOW.map((s) => (
-            <button key={s} type="button"
-                    className={"status-step" + (att.status === s ? " current" : "")}
-                    disabled={busy}
-                    data-testid={`attachment-status-${att.id}-${s}`}
-                    onClick={() => onStatus(s)}>
-              {STATUS_HE[s]}
-            </button>
-          ))}
-        </span>
       </div>
 
       {phase === "checking" && (
@@ -273,6 +290,21 @@ function AttachmentCard({
         </div>
       )}
 
+      {err && <MaybeApiError error={err} title={errTitle} />}
+
+      {open && (<div className="attachment-body" data-testid={`attachment-body-${att.id}`}>
+      <span className="attachment-status-stepper">
+        {STATUS_FLOW.map((s) => (
+          <button key={s} type="button"
+                  className={"status-step" + (att.status === s ? " current" : "")}
+                  disabled={busy}
+                  data-testid={`attachment-status-${att.id}-${s}`}
+                  onClick={() => onStatus(s)}>
+            {STATUS_HE[s]}
+          </button>
+        ))}
+      </span>
+
       <div className="attachment-actions">
         <button type="button" className="primary-btn" disabled={busy}
                 data-testid={`attachment-run-review-${att.id}`}
@@ -285,25 +317,12 @@ function AttachmentCard({
                  accept=".pdf,.dxf,.dwfx,.dwf" onChange={onRevision}
                  data-testid={`attachment-revision-${att.id}`} />
         </label>
-        {att.has_review && (
-          <button type="button" className="ghost-btn"
-                  disabled={busy || reportState === "working"}
-                  data-pdf-state={reportState}
-                  data-testid={`attachment-report-${att.id}`}
-                  onClick={onReport}>
-            {reportState === "working" && "מכינה את הקובץ..."}
-            {reportState === "opened" && "הקובץ נפתח"}
-            {reportState === "idle" && 'הפיקי דו"ח התייחסות'}
-          </button>
-        )}
       </div>
-
-      {err && <MaybeApiError error={err} title={errTitle} />}
 
       <div className="attachment-files muted" data-testid={`attachment-files-${att.id}`}>
         {att.files.length === 1 ? "קובץ: " : `${att.files.length} קבצים: `}
         {att.files.map((f, i) => (
-          <span key={i}>{i > 0 && " · "}<bdi>{f.name}</bdi></span>
+          <span key={i}>{i > 0 && " · "}<IsolateLtr text={f.name} /></span>
         ))}
       </div>
 
@@ -313,7 +332,7 @@ function AttachmentCard({
           <tbody>
             {review.files.map((f, i) => (
               <tr key={i}>
-                <td><bdi>{f.name}</bdi></td>
+                <td><IsolateLtr text={f.name} /></td>
                 <td>{f.pages}</td>
                 <td>{readabilityHe(f)}</td>
                 <td>{f.found.length ? f.found.join(", ") : "-"}</td>
@@ -343,6 +362,7 @@ function AttachmentCard({
           ))}
         </ul>
       )}
+      </div>)}
     </div>
   );
 }
