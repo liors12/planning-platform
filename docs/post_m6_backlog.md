@@ -947,6 +947,30 @@ gemini-2.5-flash through the vision_verify path, one call per question,
   API reports ~450 prompt tokens per call regardless of sheet size, so the
   model works from a heavily downscaled image; accuracy falls with sheet size.
   Raw results: ~/Downloads/golden-review/vision-round2-results.json.
+  round 3 (2026-10-20), same 8 sheets and questions: the parking-table
+    questions got a crop of the table, Q1 strips of the basement titles,
+    Q6 the full sheet with a required «quote» checked by a second call.
+    114/144 (round 2: 109). Table crops work: residential ratio 24/24 (was
+    10), guest ratio 22/24, requirement total 21/24. Q1 strips fell to
+    5/24. ~$0.0015/call; 166 calls + 8 locator calls, $0.31 in all.
+    Raw results: ~/Downloads/golden-review/vision-round3-*.json.
+  VERDICT (Lior, 2026-10-20): NO AUTOMATIC VISION CHECKS. Three failure
+  classes, none solved:
+    1. CANNOT LOCATE. Asked for the box of the "מאזן חניה" table, the model
+       pointed at the wrong area on 3 of 7 sheets and cut off the total row
+       on a fourth. Round 3's crops were located by hand - the only reason
+       the table questions improved.
+    2. CONSISTENT WRONG COLUMN. On 12753.1/5 the requirement total came back
+       "700" (the bicycles column, not 1009 cars) 3 runs out of 3; round 2
+       read the residential ratio as 1:1 (bicycles) on most sheets. A wrong
+       answer that repeats cannot be caught by running it again and voting.
+    3. QUOTE CHECKER CONFIRMS ABSENT LABELS. The second, "independent" call
+       confirmed 3/3 that "תמרון רכב פינוי אשפה" appears on TS05; the sheet
+       says "תמרון משאיות פינוי אשפה". Round 2's development plan quoted
+       a label that is not on the sheet at all. The same model checking
+       itself is not an independent check.
+  What did work, for the record: the required quote removed round 2's
+  fabricated citation (development plan Q6 now "no" 3/3). See B-27.
 
 D-4: The draft release v0.2.1-20260727-b744fd3 STAYS DRAFT until the
 attachment-mapping fix (v0.2.3 section 1) ships. /releases/latest returns
@@ -1155,3 +1179,24 @@ already cloned or archived cannot be recalled.
     PREREQUISITE: purging app/sidecar/seed/audit_outputs removes the app's
     pilot project - the findings tab, the main report and dozens of tests
     depend on it. A SYNTHETIC replacement pilot must be built first.
+
+--------------------------------------------------------------------------
+
+B-27: a parking-table READING AID (not a check) - LOW, CONDITIONAL
+RECORDED 2026-10-20. Do not start unless Ellen's answer justifies it.
+
+Idea from vision round 3 (D-3): the one thing vision did well is read the
+numbers off a cropped parking table (residential ratio 24/24, guest ratio
+22/24, requirement total 21/24). A reading aid would show Ellen the values
+it read - ratios, per-plot units, the requirement total - beside the crop
+they came from, for HER to confirm or correct. It never sets a status and
+never says "לא הוגש" or "נדרש תיקון".
+
+CONDITION: ask Ellen "how long does reading the parking table take you
+today?". If the answer is minutes per sheet, this is not worth building.
+
+Prerequisites if it goes ahead: a reliable way to find the table (the
+model's own locator failed on 3 of 7 sheets - D-3, failure 1), and a
+display that makes the source cell obvious, because the model repeats the
+same wrong column consistently (D-3, failure 2).
+
