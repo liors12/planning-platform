@@ -35,7 +35,11 @@ jobs:
           # python-docx: test_check_mode_structural imports the extraction
           # script, which parses the source docx. Without it the gate errors
           # on import and reports a failure that is not a convention breach.
-          pip install --quiet -c app/sidecar/requirements-linux.txt pytest python-docx pyyaml uv
+          # The attachment gates import the sidecar (fastapi, sqlalchemy, fitz),
+          # so layer 0 installs the whole Linux lock - minus sqlcipher3, which
+          # needs a system library the runner does not have.
+          grep -v "^sqlcipher3" app/sidecar/requirements-linux.txt > /tmp/reqs.txt
+          pip install --quiet -r /tmp/reqs.txt
           python -m pytest tests/test_no_emdash.py tests/test_jargon_lexicon.py \
                            tests/test_no_download_anchor.py \
                            tests/test_check_key_attachment.py \
@@ -46,7 +50,8 @@ jobs:
                            tests/test_version_agreement.py \
                            tests/test_ui_smoke_verdict.py \
                            tests/test_dependency_lock.py \
-                           tests/test_attachment_scope.py -q
+                           tests/test_attachment_scope.py \
+                           tests/test_attachment_readability.py -q
 
   ui-suite:
     runs-on: ubuntu-latest

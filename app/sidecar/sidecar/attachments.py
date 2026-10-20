@@ -28,7 +28,8 @@ from sqlalchemy import select
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session
 
-from .disciplines import DISCIPLINES
+from .disciplines import DISCIPLINES  # noqa: I001 - puts compliance_engine on sys.path in dev
+from compliance_engine.text_utils import patch_rtl_artifacts
 from .models import Attachment, DisciplineComment, Guideline
 from .storage import sanitize_upload_filename
 
@@ -93,11 +94,14 @@ def _file_quality_checks(file_path: Path) -> list[dict]:
             import fitz  # noqa: PLC0415
             doc = fitz.open(file_path)
             pages = doc.page_count
-            page_lens = [len(p.get_text().strip()) for p in doc]
+            states = [_page_state(patch_rtl_artifacts(p.get_text())) for p in doc]
             doc.close()
             out.append(_finding("FILE_PAGES", "מספר עמודים", "pass",
                                 f"הקובץ מכיל {pages} עמודים."))
-            if not _has_usable_text(page_lens):
+            if "garbled" in states:
+                out.append(_finding("FILE_TEXT_LAYER", "שכבת טקסט", "requires_review",
+                                    GARBLED_TEXT_NOTICE_HE))
+            elif not _has_usable_text(states):
                 out.append(_finding("FILE_TEXT_LAYER", "שכבת טקסט", "requires_review",
                                     "לא אותרה שכבת טקסט קריאה - ייתכן שהקובץ סרוק. "
                                     "מומלץ להגיש PDF טקסטואלי."))
@@ -190,6 +194,18 @@ PARTIAL_TEXT_NOTICE_HE = (
     "בדיקה ולא כחסרים, מכיוון שייתכן שהם מופיעים באותם עמודים."
 )
 
+# v0.2.3 (§2, B-25): a text layer can be present and still unreadable. CAD
+# exports draw their labels and tables as vector paths and keep a handful of
+# labels as text with broken glyph mapping - reversed ("הסינכ" for "כניסה")
+# or with letters substituted ("דייריח" for "דיירים"). Such a page clears the
+# 250-character bar, so detection ran and every miss became "לא הוגש".
+GARBLED_TEXT_TITLE_HE = "לא ניתן לקרוא את הטקסט בקובץ"
+GARBLED_TEXT_NOTICE_HE = (
+    "לא ניתן לקרוא את הטקסט בקובץ. בקובץ יש טקסט, אבל הוא משובש - האותיות "
+    "הפוכות או מוחלפות, כפי שקורה בייצוא מתוכנת שרטוט. לכן בדיקת הימצאות "
+    "הפריטים לא בוצעה, והסעיפים מסומנים כטעונים בדיקה ולא כחסרים."
+)
+
 NO_TEXT_NOTICE_HE = (
     "לא ניתן היה לקרוא טקסט מהקובץ, ולכן בדיקת הימצאות הפריטים לא בוצעה. "
     "הסעיפים מסומנים כטעונים בדיקה, ואין לראות בהם קביעה שפריט חסר. "
@@ -197,38 +213,129 @@ NO_TEXT_NOTICE_HE = (
 )
 
 
-def _page_text_lengths(file_path: Path) -> list[int]:
-    """Extractable characters per page. Empty list when the file is not a
-    readable PDF at all."""
+# ── Is a page's text layer READABLE, not merely present? ────────────────────
+# Two signals, measured 2026-10-20 on every real PDF at hand (pages with at
+# least 10 Hebrew words):
+#
+#                                     well-formed     known words
+#   readable: draft 4.1, Ellen's        99-100%         31-76%
+#   report, meeting summary, the 63-    (82% before
+#   page submission, נספח השתלבות       abbreviations
+#                                       were skipped)
+#   garbled: 8 CAD sheets (TRP TS01-     14-75%          0-18%
+#   05, the three אאורה traffic sheets,
+#   the development plan)
+#
+# WELL-FORMED: a final letter (ךםןףץ) only at the end of a word, and no word
+# ending in its non-final twin (כמנפצ). Real Hebrew obeys this; reversed text
+# breaks it at once. Abbreviations (שצ"פ, ת"י) are skipped - the gershayim
+# splits them into fragments like "השצ".
+# KNOWN: the word, or the word minus one or two prefix letters, occurs in the
+# guideline corpus. Catches substitution that stays well-formed ("דייריח",
+# or every glyph mapped to one letter).
+# A page is GARBLED when it has >= 10 Hebrew words and fails either bar.
+# Fewer than 10 Hebrew words is too little evidence either way, so the
+# character bar alone decides, as before.
+MIN_HEBREW_WORDS_TO_JUDGE = 10
+MIN_WELLFORMED_RATIO = 0.90
+MIN_KNOWN_WORD_RATIO = 0.25
+
+_FINALS = set("ךםןףץ")
+_NONFINAL_TWINS = set("כמנפצ")
+_PREFIXES = set("הובלמשכ")
+_vocab_cache: set[str] | None = None
+
+
+def _vocabulary() -> set[str]:
+    """Hebrew words of the bundled guideline corpus - the seed, not the live
+    table, so the verdict does not drift with Ellen's edits."""
+    global _vocab_cache
+    if _vocab_cache is None:
+        seed = Path(__file__).resolve().parent.parent / "seed" / "guidelines_seed.json"
+        words: set[str] = set()
+        try:
+            for g in json.loads(seed.read_text(encoding="utf-8"))["guidelines"]:
+                words.update(re.findall(r"[א-ת]{3,}", f"{g.get('title') or ''} "
+                                                       f"{g.get('body_text') or ''}"))
+        except Exception as exc:          # no corpus: the known-word bar is off
+            log.warning("guideline corpus unavailable for readability: %s", exc)
+        _vocab_cache = words
+    return _vocab_cache
+
+
+def _hebrew_words(text: str) -> list[str]:
+    """Hebrew words of 3+ letters, abbreviations (with gershayim) skipped."""
+    out = []
+    for tok in re.findall(r"[א-ת\"'\u05f3\u05f4]+", text):
+        if any(q in tok for q in "\"'\u05f3\u05f4"):
+            continue
+        if len(tok) >= 3:
+            out.append(tok)
+    return out
+
+
+def _known(word: str, vocab: set[str]) -> bool:
+    if word in vocab:
+        return True
+    for i in (1, 2):
+        if (len(word) - i >= 3 and all(c in _PREFIXES for c in word[:i])
+                and word[i:] in vocab):
+            return True
+    return False
+
+
+def _wellformed(word: str) -> bool:
+    return (not any(c in _FINALS for c in word[:-1])
+            and word[-1] not in _NONFINAL_TWINS)
+
+
+def _page_state(text: str) -> str:
+    """"readable" | "sparse" (below the character bar) | "garbled"."""
+    if len(text.strip()) < MIN_TEXT_CHARS_PER_PAGE:
+        return "sparse"
+    words = _hebrew_words(text)
+    if len(words) < MIN_HEBREW_WORDS_TO_JUDGE:
+        return "readable"
+    wellformed = sum(map(_wellformed, words)) / len(words)
+    vocab = _vocabulary()
+    known = (sum(_known(w, vocab) for w in words) / len(words)) if vocab else 1.0
+    if wellformed < MIN_WELLFORMED_RATIO or known < MIN_KNOWN_WORD_RATIO:
+        return "garbled"
+    return "readable"
+
+
+def _page_texts(file_path: Path) -> list[str]:
+    """Text per page, after the shared RTL cleanup. Empty list when the file
+    is not a readable PDF at all."""
     if file_path.suffix.lower() != ".pdf":
         return []
     try:
         import fitz  # noqa: PLC0415
         doc = fitz.open(file_path)
-        lengths = [len(p.get_text().strip()) for p in doc]
+        texts = [patch_rtl_artifacts(p.get_text()) for p in doc]
         doc.close()
-        return lengths
+        return texts
     except Exception:
         return []
 
 
-def _page_census(page_lengths: list[int]) -> tuple[int, int]:
-    """(readable pages, unreadable pages) by the per-page bar."""
-    readable = sum(1 for n in page_lengths if n >= MIN_TEXT_CHARS_PER_PAGE)
-    return readable, len(page_lengths) - readable
+def _page_census(states: list[str]) -> tuple[int, int]:
+    """(readable pages, unreadable pages). Garbled counts as unreadable."""
+    readable = sum(1 for s in states if s == "readable")
+    return readable, len(states) - readable
 
 
-def _has_usable_text(page_lengths: list[int]) -> bool:
+def _has_usable_text(states: list[str]) -> bool:
     """Is the document readable ENOUGH to be worth scanning at all? Used for
     the file-quality warning and to choose which notice to show. Detection
     permission is a stricter test - see _detection_allowed."""
-    if not page_lengths:
+    if not states:
         return False
-    readable, _ = _page_census(page_lengths)
-    return readable / len(page_lengths) >= READABLE_PAGE_RATIO
+    readable, _ = _page_census(states)
+    return readable / len(states) >= READABLE_PAGE_RATIO
 
 
-def _detection_allowed(page_lengths: list[int]) -> bool:
+def _detection_allowed(states: list[str]) -> bool:
     """"לא הוגש" requires that we could read EVERY page.
 
     The ratio rule alone leaves a silent hole: a submission half-exported with
@@ -249,9 +356,9 @@ def _detection_allowed(page_lengths: list[int]) -> bool:
     submitted, in a form that looks entirely credible. Only the second kind of
     error damages trust in the tool.
     """
-    if not page_lengths:
+    if not states:
         return False
-    _, unreadable = _page_census(page_lengths)
+    _, unreadable = _page_census(states)
     return unreadable == 0
 
 
@@ -280,7 +387,7 @@ def _extract_text(file_path: Path) -> str:
     try:
         import fitz  # noqa: PLC0415
         doc = fitz.open(file_path)
-        text = " ".join(p.get_text() for p in doc)
+        text = " ".join(patch_rtl_artifacts(p.get_text()) for p in doc)
         doc.close()
         return text
     except Exception:
@@ -317,7 +424,7 @@ def _guideline_finding(g, doc_text: str, text_ok: bool) -> dict:
             # Suppressed: we cannot read the file, so absence proves nothing.
             return _finding(
                 code, g.title, "requires_review",
-                f"לא בוצעה בדיקת הימצאות אוטומטית - לא נקרא טקסט מהקובץ. {cite}",
+                f"לא בוצעה בדיקת הימצאות אוטומטית - לא ניתן לקרוא את הטקסט בקובץ. {cite}",
                 guideline=gd)
         if not _marker_found(g.title, doc_text):
             return _finding(code, g.title, "not_submitted",
@@ -412,19 +519,23 @@ def run_attachment_review(cfg, engine: Engine, att: Attachment) -> dict:
     # v0.2.2 status semantics: read the attachment ONCE, then let each
     # guideline's declared check_mode decide what we are allowed to say.
     doc_text = _extract_text(Path(att.file_path))
-    page_lengths = _page_text_lengths(Path(att.file_path))
-    readable_pages, unreadable_pages = _page_census(page_lengths)
-    text_ok = _detection_allowed(page_lengths)
-    mostly_readable = _has_usable_text(page_lengths)
+    states = [_page_state(t) for t in _page_texts(Path(att.file_path))]
+    readable_pages, unreadable_pages = _page_census(states)
+    text_ok = _detection_allowed(states)
+    mostly_readable = _has_usable_text(states)
 
     # The notice leads the list so it is the first thing Ellen reads, on the
     # screen and at the top of the דו"ח התייחסות.
     notice_he = None
     if not text_ok:
-        if mostly_readable and readable_pages:
+        if "garbled" in states:
+            # Text is there but scrambled - say so; "no text" would be untrue.
+            notice_he = GARBLED_TEXT_NOTICE_HE
+            notice_title = GARBLED_TEXT_TITLE_HE
+        elif mostly_readable and readable_pages:
             # Mixed document: readable overall, but some sheets are vector.
             notice_he = PARTIAL_TEXT_NOTICE_HE.format(
-                unreadable=unreadable_pages, total=len(page_lengths))
+                unreadable=unreadable_pages, total=len(states))
             notice_title = "בדיקת הימצאות חלקית"
         else:
             notice_he = NO_TEXT_NOTICE_HE
