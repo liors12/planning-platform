@@ -16,17 +16,9 @@ on:
       - 'app/**'
       - '.github/workflows/build-windows.yml'
       - '.github/workflows/ui-smoke.yml'
-  # B-21: a dependency-upgrade PR (Dependabot, monthly) must pass the PACKAGED
-  # build, not only the dev-server suite - PyMuPDF 2.0 broke only the packaged
-  # app. Release steps are tag-gated, so a PR run can never publish.
-  pull_request:
-    branches: [main]
-    paths:
-      - 'app/sidecar/requirements*'
-      - 'app/frontend/package*.json'
-      - 'app/tauri/Cargo.*'
-      - '.github/workflows/**'
-      - '.github/dependabot.yml'
+  # No pull_request trigger (decided 2026-10-20): a Windows build costs ~20
+  # minutes at the 2x Windows rate. Dependency PRs get the QA suite and the
+  # lock gate; the packaged build runs on main, on version tags and by hand.
 
 permissions:
   contents: write          # softprops/action-gh-release needs write to create tags + releases
