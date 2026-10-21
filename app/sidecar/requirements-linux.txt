@@ -11,7 +11,7 @@ anyio==4.15.1
     #   watchfiles
 brotli==1.2.0
     # via fonttools
-certifi==2026.10.18
+certifi==2026.10.19
     # via requests
 cffi==2.1.1
     # via
