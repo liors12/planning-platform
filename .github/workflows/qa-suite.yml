@@ -48,6 +48,7 @@ jobs:
                            tests/test_bidi_isolation.py \
                            tests/test_release_safety.py \
                            tests/test_version_agreement.py \
+                           tests/test_static_vcruntime.py \
                            tests/test_ui_smoke_verdict.py \
                            tests/test_dependency_lock.py \
                            tests/test_attachment_scope.py \

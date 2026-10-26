@@ -34,6 +34,14 @@ jobs:
     # below), 60 min is generous headroom for the Tauri NSIS build
     # itself.
     timeout-minutes: 60
+    env:
+      # v0.2.4: link the VC++ runtime into planning-platform.exe. tauri-build
+      # does it only when this is exactly "true"; without it the exe imports
+      # VCRUNTIME140.dll / VCRUNTIME140_1.dll and dies on launch on a Windows
+      # without the redistributable (0.2.2 and 0.2.3 on the test VM,
+      # 2026-10-26). Job level so the debug build further down gets it too.
+      # app/tauri/.cargo/config.toml sets the same for local builds.
+      STATIC_VCRUNTIME: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
@@ -238,6 +246,14 @@ jobs:
         run: |
           ls -la app/tauri/target/release/bundle/ || true
           ls -la app/tauri/target/release/bundle/nsis/ || true
+
+      - name: Gate - planning-platform.exe needs no VC++ redistributable
+        # The proof is on the binary, not the flag: list its DLL imports and
+        # fail if VCRUNTIME140*.dll / MSVCP140*.dll is among them. A cached
+        # build script that never saw STATIC_VCRUNTIME would pass a flag
+        # check and still ship the dynamic import.
+        shell: bash
+        run: python scripts/pe_imports.py --forbid-vcruntime app/tauri/target/release/planning-platform.exe
 
       - name: Boot smoke-test (sidecar on windows-latest — no SQLCipher)
         # Exercises the EXACT failure surface that broke Ellen's first install

@@ -1,0 +1,8 @@
+# v0.2.4: link the VC++ runtime statically into planning-platform.exe on
+# Windows, for local builds (`cargo tauri build` on a Windows machine).
+# tauri-build acts only when STATIC_VCRUNTIME is exactly "true", and only for
+# the msvc target, so this is a no-op on macOS. CI sets the same variable in
+# .github/workflows/build-windows.yml. Without it the exe imports
+# VCRUNTIME140.dll and fails to start where the redistributable is missing.
+[env]
+STATIC_VCRUNTIME = "true"
