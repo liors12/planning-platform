@@ -901,7 +901,19 @@ platform.db (data dir == install dir, see the FACT above) for no
 demonstrated benefit. Do not reopen without a failure install-over cannot fix,
 and never before the data dir has moved out (D-2).
 
-D-2: Move the data dir out of the install dir - BACKLOG, LOW.
+D-2: Move the data dir out of the install dir - BACKLOG, HIGH (raised
+2026-10-26 from LOW, Lior). Not built in 0.2.4.
+Evidence, Windows 11 VM, 2026-10-26: the installer's own default for an
+existing install is "Uninstall before installing" - the old uninstaller runs
+over the folder that holds platform.db on every upgrade, whatever D-1 decided
+about building it ourselves. Its page shows "Uninstalling from:
+C:\Users\<user>\AppData\Local\Planning Platform" and one checkbox, "Delete the
+application data", UNCHECKED by default. Left unchecked (0.2.1 -> 0.2.2 ->
+0.2.3) the data survived: platform.db 4 KB, platform.db-wal 2,527 KB,
+attachments/1/1/, projects/407-1048248, jobs, logs, exports. One tick of that
+box by Ellen removes her database. Screenshots:
+~/planning-platform-fixtures/screens/v0.2.3/0-data-dir-*.png and
+2-023-installer-4-uninstall-options.png (on Lior's Mac).
 Proposal as reported 2026-10-19 (section 6), nothing built:
   - new default data folder outside %LOCALAPPDATA%\Planning Platform
   - migration on the new version's first launch: copy with SQLite's backup
@@ -1155,3 +1167,45 @@ already cloned or archived cannot be recalled.
     PREREQUISITE: purging app/sidecar/seed/audit_outputs removes the app's
     pilot project - the findings tab, the main report and dozens of tests
     depend on it. A SYNTHETIC replacement pilot must be built first.
+
+--------------------------------------------------------------------------
+
+B-27: v0.2.3 was PUBLISHED as a full release, not left as a draft - HIGH, PROCESS
+RECORDED 2026-10-26.
+
+Procedure (548642e, tests/test_release_safety.py): CI creates releases as
+DRAFT only; a person checks the asset and presses Publish. v0.2.3 was created
+as a draft by build-windows.yml on the tag (run 39382289819, 2026-10-20
+06:45Z) and published 2026-10-24 13:24:57Z, marked Latest, before any
+install test on Windows. That build does not start on a Windows without the
+VC++ redistributable (B-28).
+
+Who/what: a Claude Code session on Lior's Mac, in ~/Desktop/planning-platform
+(session 2a485c34), ran `gh release edit v0.2.3 --draft=false --latest` at
+13:24:56Z, seven seconds after a message in that session asked it to
+("Publish the v0.2.3 draft release now (gh release edit --draft=false)").
+GitHub's event log shows the publish under github-actions[bot], the release's
+author - no workflow ran on 2026-10-23..25. CI was not involved and the
+workflow gate held; the gap is that a session with `gh` auth can publish
+without the Windows install test having run.
+
+Open: whether to require the VM install test before any publish, and how to
+enforce it (a checklist line in qa/RELEASE_QA_SKILL.md, or a repo rule that
+no agent session publishes).
+
+--------------------------------------------------------------------------
+
+B-28: planning-platform.exe needs the VC++ redistributable - FIXED ON BRANCH
+FOUND 2026-10-26 (Windows 11 VM). Branch fix/static-vcruntime, 0.2.4.
+
+0.2.2 and 0.2.3 install, then fail on launch: "VCRUNTIME140.dll was not
+found", then VCRUNTIME140_1.dll. The exe imports both; tauri-build 2.6.2 links
+the runtime statically only when STATIC_VCRUNTIME is exactly "true", and
+nothing set it. The installer ships no vc_redist (the DLLs under
+binaries/sidecar/_internal are PyInstaller's and not on the exe's search
+path). The July 0.2.1 installer's exe imports neither DLL - it did not need
+the runtime; see the 0.2.4 report for what changed between July and October.
+Fix: STATIC_VCRUNTIME "true" in build-windows.yml (job env) and
+app/tauri/.cargo/config.toml, rerun-if-env-changed in build.rs, and a CI gate
+(scripts/pe_imports.py --forbid-vcruntime) on the built exe before any
+release step. tests/test_static_vcruntime.py.
