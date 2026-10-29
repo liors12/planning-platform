@@ -147,7 +147,7 @@ pyparsing==3.3.3
     # via
     #   ezdxf
     #   httplib2
-pypdf==6.21.1
+pypdf==6.21.2
     # via -r requirements-dev.in
 pypdfium2==5.14.0
     # via pdfplumber
