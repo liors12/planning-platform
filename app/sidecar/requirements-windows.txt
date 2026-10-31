@@ -145,7 +145,7 @@ pyyaml==6.0.3
     # via uvicorn
 requests==2.34.2
     # via google-api-core
-setuptools==84.0.0
+setuptools==84.1.0
     # via pyinstaller
 shapely==2.2.0
     # via -r requirements.in
