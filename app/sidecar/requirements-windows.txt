@@ -10,7 +10,7 @@ anyio==4.15.1
     # via
     #   starlette
     #   watchfiles
-certifi==2026.10.18
+certifi==2026.10.23
     # via requests
 cffi==2.1.1
     # via cryptography
@@ -30,13 +30,13 @@ et-xmlfile==2.0.0
     # via openpyxl
 ezdxf==1.4.5
     # via -r requirements.in
-fastapi==0.149.0
+fastapi==0.162.0
     # via -r requirements.in
-fonttools==4.67.0
+fonttools==4.68.0
     # via ezdxf
-google-ai-generativelanguage==0.6.15
+google-ai-generativelanguage==0.12.1
     # via google-generativeai
-google-api-core==2.33.0
+google-api-core==2.43.1
     # via
     #   google-ai-generativelanguage
     #   google-api-python-client
@@ -54,19 +54,19 @@ google-auth-httplib2==0.4.4
     # via google-api-python-client
 google-generativeai==0.8.6
     # via -r requirements.in
-googleapis-common-protos==1.75.0
+googleapis-common-protos==1.76.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio==1.84.0
+grpcio==1.85.0
     # via
     #   google-api-core
     #   grpcio-status
-grpcio-status==1.71.2
+grpcio-status==1.85.0
     # via google-api-core
 h11==0.16.0
     # via uvicorn
-httplib2==0.32.0
+httplib2==0.32.1
     # via
     #   google-api-python-client
     #   google-auth-httplib2
@@ -76,7 +76,7 @@ idna==3.20
     # via
     #   anyio
     #   requests
-numpy==2.4.6
+numpy==2.5.4
     # via
     #   ezdxf
     #   shapely
@@ -96,11 +96,11 @@ pefile==2024.8.26
     # via pyinstaller
 pillow==13.0.0
     # via pdfplumber
-proto-plus==1.28.2
+proto-plus==1.29.0
     # via
     #   google-ai-generativelanguage
     #   google-api-core
-protobuf==5.29.6
+protobuf==7.36.2
     # via
     #   google-ai-generativelanguage
     #   google-api-core
@@ -108,11 +108,11 @@ protobuf==5.29.6
     #   googleapis-common-protos
     #   grpcio-status
     #   proto-plus
-pyasn1==0.6.4
+pyasn1==0.6.5
     # via pyasn1-modules
 pyasn1-modules==0.4.2
     # via google-auth
-pycparser==3.11
+pycparser==3.12
     # via cffi
 pydantic==2.14.1
     # via
@@ -123,15 +123,15 @@ pydantic-core==2.50.1
     # via pydantic
 pyinstaller==6.22.3
     # via -r requirements-build.in
-pyinstaller-hooks-contrib==2026.8
+pyinstaller-hooks-contrib==2026.9
     # via pyinstaller
-pymupdf==1.28.2
+pymupdf==2.0
     # via -r requirements.in
 pyparsing==3.3.3
     # via
     #   ezdxf
     #   httplib2
-pypdf==6.21.1
+pypdf==6.21.4
     # via -r requirements-build.in
 pypdfium2==5.14.0
     # via pdfplumber
@@ -145,13 +145,13 @@ pyyaml==6.0.3
     # via uvicorn
 requests==2.34.2
     # via google-api-core
-setuptools==84.0.0
+setuptools==84.2.1
     # via pyinstaller
 shapely==2.2.0
     # via -r requirements.in
-sqlalchemy==2.1.5
+sqlalchemy==2.1.6
     # via -r requirements.in
-starlette==1.9.0
+starlette==1.10.0
     # via fastapi
 tqdm==4.70.1
     # via google-generativeai

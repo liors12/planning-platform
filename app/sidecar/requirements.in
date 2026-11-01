@@ -7,12 +7,12 @@
 # 2026-10-19). Bumps arrive monthly as a Dependabot PR; never auto-merged.
 # tests/test_dependency_lock.py fails on any unpinned line or an out-of-sync lock.
 
-fastapi==0.149.0
+fastapi==0.162.0
 uvicorn[standard]==0.54.0
-sqlalchemy==2.1.5
+sqlalchemy==2.1.6
 pydantic==2.14.1
 # sqlcipher3 has no Windows wheels; Windows falls back to stdlib sqlite3.
-sqlcipher3==0.6.2 ; sys_platform != "win32"   # last version run locally with SQLCipher 4.12
+sqlcipher3==0.6.4 ; sys_platform != "win32"   # last version run locally with SQLCipher 4.12
 python-multipart==0.0.32
 # openpyxl is used by compliance_engine.excel_export for the
 # "הפיקי אקסל" workbook export. Lazy-imported (function-body), so
@@ -20,7 +20,7 @@ python-multipart==0.0.32
 openpyxl==3.1.5
 # PyMuPDF (import fitz) — PDF text extraction for referent-comments ingestion.
 # Already listed as a hidden import in backend.spec for PyInstaller.
-PyMuPDF==1.28.2   # capped below 2.0 in ad2b4cf: 2.0 breaks the packaged engine (B-21)
+PyMuPDF==2.0   # capped below 2.0 in ad2b4cf: 2.0 breaks the packaged engine (B-21)
 # DXF geometry analysis (Phase 1 CAD checks).
 # collect_submodules/collect_data_files in backend.spec depend on these being
 # installed at PyInstaller analysis time — missing entries here cause CI to fail.
